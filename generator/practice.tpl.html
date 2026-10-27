@@ -195,6 +195,32 @@ body.run > header.nav, body.run > footer { display: none }
 .opt2 > span:last-child { min-width: 0 } .opt2.mono > span:last-child { font: 400 13px/18px var(--font-mono) }
 .opts2.long .opt2 { font: 400 14px/20px var(--font-sans); align-items: flex-start; padding: 12px 14px } .opts2.long .opt2 .k { margin-top: 1px }
 @media (max-width: 999px) { .qz { grid-template-rows: minmax(160px, 1fr) auto } .board { padding: 18px } .bcols { grid-template-columns: 1fr } .move { max-height: 58vh } }
+
+/* one focal column: board above, the active question right where the answer lands */
+.qcol { max-width: 860px; margin: 0 auto; padding: 28px 20px 40px; display: grid; gap: 18px }
+.main:has(.qcol) { background: radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground) }
+.qtop { display: grid; gap: 10px } .qtt { font: 400 30px/1.1 var(--font-serif) }
+.board2 { display: grid; gap: 14px } .board2 .bh { font: 400 20px/1.2 var(--font-hand); color: var(--sketch) }
+.board2 .bghost { display: none }
+.act { display: grid; gap: 14px; padding: 22px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--hairline); box-shadow: var(--shadow-float); scroll-margin: 24px; animation: rise .3s ease-out }
+.act .ah { display: flex; justify-content: space-between; align-items: center } .cnt2 { font: 500 12px/1 var(--font-mono); color: var(--ink-muted) }
+.act .mq { margin: 0; font: 400 26px/1.2 var(--font-serif) }
+.act .opts2 { grid-template-columns: 1fr 1fr } .act .opts2.long { grid-template-columns: 1fr }
+@media (max-width: 640px) { .act .opts2 { grid-template-columns: 1fr } .act { padding: 16px } .act .mq { font-size: 22px } .qcol { padding: 18px 14px 28px } }
+.act.done { box-shadow: none }
+.calcd { border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--hairline) } .calcd summary { cursor: pointer; padding: 12px 16px; font: 500 13px/1 var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .05em } .calcd .calc { border: 0; padding-top: 0 }
+/* bottom bar: Back and the main button sit together in the middle, under the content */
+.bot { justify-content: center } .bot .sp { display: none } .bot #bExtra:empty { display: none }
+.bot .pill.primary { min-width: 240px }
+@media (max-width: 560px) { .bot .pill.primary { min-width: 0 } }
+
+/* design: the canvas is the stage, the turn card floats over it near where blocks land */
+@media (min-width: 700px) {
+  .dz { position: relative; grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 1fr) !important }
+  .dz .move { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(780px, calc(100% - 40px)); max-height: 52%; border: 1px solid var(--hairline) !important; border-radius: var(--r-lg); box-shadow: var(--shadow-float); padding: 18px 20px; gap: 12px }
+  .dz .move .opts2 { grid-template-columns: 1fr 1fr }
+  .dz .move .mq { font-size: 22px }
+}
 </style>
 </head><body>
 <header class="nav gut"><div class="wrap">
@@ -386,12 +412,14 @@ function revealNext() { const next = Q.nodes[blk]; sub("picks", { [blk]: false }
 /* canvas camera: fit the blocks placed so far, glide between steps */
 function camFor(k) {
   const [W, H] = Q.size, bx = Q.nodes.slice(0, k).map(x => Q.boxes[x.id]).filter(Boolean);
-  if (k >= Q.nodes.length || !bx.length) return [0, 0, W, H];
+  if (!bx.length) return [0, 0, W, H];
   let x0 = Math.min(...bx.map(b => b[0])), y0 = Math.min(...bx.map(b => b[1])), x1 = Math.max(...bx.map(b => b[0] + b[2])), y1 = Math.max(...bx.map(b => b[1] + b[3]));
-  const cv = $("#cv"), ar = cv ? cv.clientWidth / Math.max(1, cv.clientHeight) : 1.6, pad = 110;
-  let w = Math.max(x1 - x0 + pad * 2, 640), h = Math.max(y1 - y0 + pad * 2, 400);
+  if (k >= Q.nodes.length) { x0 = 0; y0 = 0; x1 = W; y1 = H; }
+  const cv = $("#cv"), mv = $("#mv"), over = innerWidth >= 700 && mv, CH = cv ? cv.clientHeight : 600, avail = Math.max(160, CH - (over ? mv.offsetHeight + 40 : 0));
+  const ar = cv ? cv.clientWidth / avail : 1.6, pad = k >= Q.nodes.length ? 10 : 90;
+  let w = Math.max(x1 - x0 + pad * 2, 640), h = Math.max(y1 - y0 + pad * 2, 360);
   if (w / h > ar) h = w / ar; else w = h * ar;
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; return [cx - w / 2, cy - h / 2, w, h];
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, VH = h * CH / avail; return [cx - w / 2, cy - h / 2, w, VH];
 }
 function glide(svg, to) {
   const from = cam || to, t0 = performance.now(), D = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 520, ease = t => 1 - Math.pow(1 - t, 3);
@@ -457,7 +485,7 @@ function qi(k) { return ((rec().qi || {})[k]) || 0; }
 function boardHTML(k, R, n) {
   const done = R.slice(0, n), fresh = i => i === n - 1 && qlast && qlast.ok ? " fresh" : "";
   if (k === "req") { const col = g => done.map((r, i) => r.g === g ? `<div class="note ${g}${fresh(i)}">${esc(r.a)}</div>` : "").join(""); return `<div class="bcols"><div><div class="bh">What it does</div>${col("f") || `<div class="bghost">Functional requirements land here</div>`}</div><div><div class="bh">How well</div>${col("n") || `<div class="bghost">Non-functional requirements land here</div>`}</div></div>`; }
-  if (k === "est") return calcHTML() + `<div class="bh">Your estimates</div><div class="ests">${done.map((r, i) => `<div class="estc${fresh(i)}">${esc(r.info || r.full || r.a)}</div>`).join("") || `<div class="bghost">Each estimate lands here</div>`}</div>`;
+  if (k === "est") return `<div class="bh">Your estimates</div><div class="ests">${done.map((r, i) => `<div class="estc${fresh(i)}">${esc(r.info || r.full || r.a)}</div>`).join("") || `<div class="bghost">Each estimate lands here</div>`}</div>`;
   if (k === "api") return `<div class="bh">API</div><div class="code">${done.map((r, i) => `<div class="cl${fresh(i)}">${esc(r.a)}</div>`).join("") || `<div class="bghost">Endpoints land here</div>`}</div>`;
   if (k === "data") return `<div class="bh">Data model</div><div class="tables">${done.map((r, i) => { const [h, ...rest] = r.a.split(":"); return `<div class="tbl${fresh(i)}"><b>${esc(rest.length ? h : r.a)}</b>${rest.length ? `<span>${esc(rest.join(":"))}</span>` : ""}</div>`; }).join("") || `<div class="bghost">Tables land here</div>`}</div>`;
   if (k === "deep") return `<div class="bh">Answers you can give</div>${done.map((r, i) => `<div class="qa${fresh(i)}"><b>${esc(r.q)}</b><span>${esc(r.a)}</span></div>`).join("") || `<div class="bghost">Each strong answer lands here</div>`}`;
@@ -465,25 +493,29 @@ function boardHTML(k, R, n) {
 }
 function renderQuiz(k) {
   const R = rounds(k); let n = qi(k);
-  while (n < R.length && R[n].info) n++; // info lines just land
-  const st = $("#stage"), picks = ((rec().qp || {})[k]) || {};
-  st.innerHTML = `<div class="dz qz"><div class="board" id="bd">${boardHTML(k, R, n)}</div><aside class="move" id="mv"></aside></div>`;
-  hookTools();
+  while (n < R.length && R[n].info) n++; // plain facts just land
+  const st = $("#stage"), picks = ((rec().qp || {})[k]) || {}, S = STEPS[step];
   const dots = R.map((r, i) => `<i class="${i < n ? (picks[i] === false ? "hp" : "ok") : i === n ? "now" : ""}"></i>`).join("");
-  const fb = qlast ? `<div class="fb2 ${qlast.ok ? "ok" : "no"}" role="status"><b>${qlast.ok ? "✓ Right" : "Not yet"}</b><span>${esc(qlast.text)}</span></div>` : `<div class="fb2"><span>${esc(STEPS[step].look)}</span></div>`;
-  const S = STEPS[step], label = S.t;
+  const fbHTML = qlast && !qlast.ok ? `<div class="fb2 no" role="status"><b>Not yet</b><span>${esc(qlast.text)}</span></div>` : "";
+  let active;
   if (n >= R.length) {
-    const qs = R.filter(r => !r.info).length, first = R.map((r, i) => r.info ? null : picks[i]).filter(v => v !== null && v !== undefined && v !== false).length;
-    $("#mv").innerHTML = `<div class="mh"><span class="gl">${label} complete</span><div class="dots">${dots}</div></div>${fb}<p class="big2">${first} of ${qs} <small>right first time</small></p>${rateHTML(k === "deep" ? "deep0" : k)}`;
-    buttons(step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your&nbsp;</span>scorecard<span class="kbd">↵</span>`, "", step > 0);
-    return;
+    const qs = R.filter(r => !r.info).length, first = R.map((r, i) => r.info ? null : picks[i]).filter(v => v === true).length;
+    active = `<div class="act done"><div class="ah"><span class="gl">${S.t} done</span></div><p class="big2">${first} of ${qs} <small>right first time</small></p>${rateHTML(k === "deep" ? "deep0" : k)}</div>`;
+    buttons(step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `See your scorecard<span class="kbd">↵</span>`, "", step > 0);
+  } else {
+    const r = R[n], hard = qtries.size >= 2;
+    active = `<div class="act" id="act"><div class="ah"><span class="gl">${k === "deep" ? "The interviewer asks" : "Your turn"}</span><span class="cnt2">${n + 1} of ${R.length}</span></div>
+      <p class="mq">${esc(r.q)}</p>${fbHTML}
+      <div class="opts2${r.long ? " long" : ""}">${r.opts.map((o, i) => { const no = qtries.has(o.t), glow = hard && o.ok; return `<button type="button" class="opt2${no ? " no" : ""}${glow ? " glow" : ""}${r.code ? " mono" : ""}" data-qp="${i}"${no ? " disabled" : ""}><span class="k">${i + 1}</span><span>${esc(o.t)}</span></button>`; }).join("")}</div></div>`;
+    buttons(`Show me the answer<span class="kbd">→</span>`, "", true);
   }
-  const r = R[n], hard = qtries.size >= 2;
-  $("#mv").innerHTML = `<div class="mh"><span class="gl">${label} · ${n + 1} of ${R.length}</span><div class="dots">${dots}</div></div>${fb}<p class="mq">${esc(r.q)}</p>
-    <div class="opts2${r.long ? " long" : ""}">${r.opts.map((o, i) => { const no = qtries.has(o.t), glow = hard && o.ok; return `<button type="button" class="opt2${no ? " no" : ""}${glow ? " glow" : ""}${r.code ? " mono" : ""}" data-qp="${i}"${no ? " disabled" : ""}><span class="k">${i + 1}</span><span>${esc(o.t)}</span></button>`; }).join("")}</div>`;
-  buttons(`Show me<span class="lg">&nbsp;the answer</span><span class="kbd">→</span>`, "", true);
-  const bd = $("#bd"), fr = bd.querySelector(".fresh"); if (fr) fr.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  st.innerHTML = `<div class="qcol"><div class="qtop"><span class="qtt">${esc(S.t)}</span><div class="dots">${dots}</div></div>
+    ${k === "est" ? `<details class="calcd" open><summary>Calculator</summary>${calcHTML()}</details>` : ""}
+    ${n > 0 || k === "req" ? `<div class="board2 b-${k}">${boardHTML(k, R, n)}</div>` : ""}${active}</div>`;
+  hookTools();
+  const a = st.querySelector(".act"); if (a) requestAnimationFrame(() => a.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
 }
+
 function quizPick(i) {
   const k = STEPS[step].k, R = rounds(k); let n = qi(k); while (n < R.length && R[n].info) n++;
   const r = R[n], o = r.opts[i];
@@ -522,13 +554,17 @@ function renderDeep() {
   hookNotes(key);
   buttons(!open_ ? `Show<span class="lg">&nbsp;a strong</span> answer<span class="kbd">↵</span>` : dv < C.dives.length - 1 ? `Next question<span class="kbd">↵</span>` : `Next: Wrap-up<span class="kbd">↵</span>`);
 }
-function stepScore() { const r = rec().rate || {}, v = { nail: 2, part: 1, miss: 0 }; const keys = ["req", "est", "api", "data", "hld", "deep", "wrap"]; return keys.map(k => { if (k === "deep") { const ds = Q.c.dives.map((_, i) => r["deep" + i]).filter(Boolean); return ds.length ? ds.reduce((a, x) => a + v[x], 0) / ds.length : null; } return r[k] ? v[r[k]] : null; }); }
+function stepScore() { // your own rating if you gave one, else how many you got right first time
+  const r = rec().rate || {}, v = { nail: 2, part: 1, miss: 0 }, qp = rec().qp || {}, pk = rec().picks || {};
+  const ratio = o => { const vals = Object.values(o || {}); return vals.length ? vals.filter(x => x === true).length / vals.length * 2 : null; };
+  return ["req", "est", "api", "data", "hld", "deep", "wrap"].map(k => { const rk = k === "deep" ? r.deep0 : r[k]; if (rk) return v[rk]; return k === "hld" ? ratio(pk) : ratio(qp[k]); });
+}
 function renderScore() {
   const sc = stepScore(), got = sc.filter(x => x !== null), pct = got.length ? Math.round(got.reduce((a, b) => a + b, 0) / (got.length * 2) * 100) : 0;
   const weak = sc.map((x, i) => [x, i]).filter(([x]) => x !== null && x < 1.5).map(([, i]) => i);
   const nxt = D.filter(d => d !== Q && d.track === Q.track && !(store.get()[d.slug] || {}).done)[0] || D[(D.indexOf(Q) + 1) % D.length];
   const bar = x => x === null ? `<i class="sb"></i>` : `<i class="sb" style="--w:${x / 2 * 100}%" data-v="${x >= 1.5 ? "nail" : x >= 0.5 ? "part" : "miss"}"></i>`;
-  $("#stage").innerHTML = `<div class="col"><span class="dvn">Scorecard</span><h3 class="qn">${pct}% <small>of a strong answer, by your own rating</small></h3>
+  $("#stage").innerHTML = `<div class="col"><span class="dvn">Scorecard</span><h3 class="qn">${pct}% <small>overall, from first-try answers and your ratings</small></h3>
     <div class="scard">${STEPS.map((x, i) => `<button type="button" class="srow" data-step="${i}"><span>${x.t}</span>${bar(sc[i])}<em>${sc[i] === null ? "not rated" : sc[i] >= 1.5 ? "Strong" : sc[i] >= 0.5 ? "Partly" : "Review"}</em></button>`).join("")}</div>
     <p class="look">${weak.length ? `Practise ${weak.map(i => STEPS[i].t.toLowerCase()).join(", ")} again, then redraw the whole design from memory tomorrow.` : "Strong across the board. Redraw it from memory tomorrow to lock it in."}</p>
     <div class="row">${weak.length ? `<button class="pill primary" type="button" data-step="${weak[0]}">Practise ${STEPS[weak[0]].t.toLowerCase()}</button>` : ""}<button class="pill ghost" type="button" data-x="copy">Copy design to Excalidraw</button><a class="pill ghost" href="../#i=${Q.kit}">Open in the kit</a><button class="pill ghost" type="button" data-x="restart">Start again</button></div></div>`;
