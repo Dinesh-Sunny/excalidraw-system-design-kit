@@ -46,8 +46,8 @@ print('sponsor page',len(sp)//1024,'KB')
 
 # ---- thank-you + stats pages (share the site CSS) ----
 ptpl=open('page.tpl.html').read()
-for slug,title,robots,body,js in (('thanks','Thank you - System Design Kit','noindex','thanks.body.html','thanks.js'),('stats','Sponsor stats - System Design Kit','index','stats.body.html','stats.js')):
-    t=ptpl.replace('__BASECSS__',base.replace('url(../fonts/','url(../../fonts/')).replace('__HEADINIT__',headinit.replace('href="../fonts/','href="../../fonts/')).replace('__THEMEBTN__',themebtn).replace('__SPONSOR__',SPJ).replace('__TITLE__',title).replace('__ROBOTS__',robots).replace('__BODY__',open(body).read()).replace('__SCRIPT__',open(js).read())
+for slug,title,robots,body,js in (('thanks','Thank you - System Design Kit','noindex','thanks.body.html','thanks.js'),('stats','Sponsor stats - System Design Kit','index','stats.body.html','stats.js'),('terms','Sponsor terms - System Design Kit','index','terms.body.html',None)):
+    t=ptpl.replace('__BASECSS__',base.replace('url(../fonts/','url(../../fonts/')).replace('__HEADINIT__',headinit.replace('href="../fonts/','href="../../fonts/')).replace('__THEMEBTN__',themebtn).replace('__SPONSOR__',SPJ).replace('__TITLE__',title).replace('__ROBOTS__',robots).replace('__BODY__',open(body).read()).replace('__SCRIPT__',open(js).read() if js else '')
     os.makedirs(f'out/pages/sponsor/{slug}',exist_ok=True); open(f'out/pages/sponsor/{slug}/index.html','w').write(t)
 if not os.path.exists('out/pages/stats.json'): json.dump({'sponsors':{}},open('out/pages/stats.json','w'))
 print('thanks + stats pages')
