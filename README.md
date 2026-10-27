@@ -30,10 +30,10 @@ Every card is colour-coded by category (legend item included) and every multi-pa
 
 ## Install
 
-**Option A - one click** (once the listing is approved): open the kit on [libraries.excalidraw.com](https://libraries.excalidraw.com) and press **Add to Excalidraw**.
+**Option A - one click** (submitted, in review: [excalidraw-libraries#2967](https://github.com/excalidraw/excalidraw-libraries/pull/2967)): once approved, open the kit on [libraries.excalidraw.com](https://libraries.excalidraw.com) and press **Add to Excalidraw**.
 
 **Option B - import the file** (works now, everywhere):
-1. Download [`library/system-design-ai-kit.excalidrawlib`](library/system-design-ai-kit.excalidrawlib).
+1. Download `system-design-ai-kit.excalidrawlib` from the [latest release](../../releases/latest) (or from [`library/`](library/system-design-ai-kit.excalidrawlib)).
 2. In Excalidraw open the **Library** (book icon, top right) > **...** > **Open**, and pick the file. Or drag the file onto the canvas.
 
 **Obsidian:** with the [Excalidraw plugin](https://github.com/zsviczian/obsidian-excalidraw-plugin), put the file in your library folder (default `Excalidraw/Libraries/`).
