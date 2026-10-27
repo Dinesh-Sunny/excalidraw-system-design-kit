@@ -220,7 +220,11 @@ const $ = s => document.querySelector(s);
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const gh = SP.github ? "https://github.com/sponsors/" + SP.github : null;
 const kofi = SP.kofi ? "https://ko-fi.com/" + SP.kofi : null;
-const payURL = t => t.card || tierURL(t);
+/* A/B test on the headline: sticky per visitor, ?ab=a|b to force. Checkout links carry the variant + tier so revenue traces back. */
+const AB = (() => { try { const q = new URLSearchParams(location.search).get("ab"); if (q === "a" || q === "b") return q; let v = localStorage.getItem("sdk-ab-hero"); if (!v) { v = Math.random() < .5 ? "a" : "b"; localStorage.setItem("sdk-ab-hero", v); } return v; } catch (e) { return "a"; } })();
+const HERO = { a: "Be seen by engineers <i>mid-prep</i>.", b: "Your logo, where engineers <i>learn</i> systems." };
+const tagged = (u, id) => u + (u.includes("?") ? "&" : "?") + "client_reference_id=sp_" + AB + "_" + id;
+const payURL = t => t.card ? tagged(t.card, t.id) : tierURL(t);
 const hasCard = SP.companies.some(t => t.card);
 const tierURL = t => gh ? (t.gh_tier ? `${gh}/sponsorships?tier_id=${t.gh_tier}` : gh) : kofi;
 /* where each tier shows up */
@@ -236,7 +240,7 @@ function tab(which) {
   const co = which !== "you";
   $("#tabCo").setAttribute("aria-selected", String(co)); $("#tabYou").setAttribute("aria-selected", String(!co));
   $("#companies").hidden = !co; $("#you").hidden = co; syncSticky();
-  $("#hh").innerHTML = co ? "Be seen by engineers <i>mid-prep</i>." : "Keep the kit <i>free</i>.";
+  $("#hh").innerHTML = co ? HERO[AB] : "Keep the kit <i>free</i>.";
   $("#hp").textContent = co ? "Put your logo on the kit engineers use to practise system design. Pay by card in two minutes, live within a day." : "A coffee or a few dollars a month keeps new blocks coming, free for everyone.";
 }
 $("#tabCo").onclick = () => { tab("co"); try { history.replaceState(null, "", location.search + "#companies"); } catch (e) {} };
@@ -254,7 +258,7 @@ function renderPicks() {
       <span class="pr">${esc(t.price)}<small>/mo</small></span><span class="wh">${esc(WHERE[t.id])}</span></button>`;
   }).join("");
 }
-$("#picks").addEventListener("click", e => { const b = e.target.closest(".pick"); if (!b || b.disabled) return; tier = b.dataset.t; update(); });
+$("#picks").addEventListener("click", e => { const b = e.target.closest(".pick"); if (!b || b.disabled) return; tier = b.dataset.t; update(); gcEvent("sp-tier/" + tier); });
 $("#picks").addEventListener("keydown", e => {
   if (!/Arrow(Up|Down|Left|Right)/.test(e.key)) return; e.preventDefault();
   const ids = SP.companies.map(t => t.id).filter(id => !(id === "featured" && taken()));
@@ -324,7 +328,12 @@ function renderBackers() {
   $("#names").innerHTML = names.length ? "Thank you " + names.join(", ") + "." : "";
   watchSponsors(document);
 }
-if (location.hash === "#you") tab("you");
+if (location.hash === "#you") tab("you"); else $("#hh").innerHTML = HERO[AB];
+/* funnel: page view per variant, tier picks, checkout clicks by method */
+const via = h => /buy\.stripe\.com/.test(h) ? "card" : /github\.com/.test(h) ? "github" : /ko-fi/.test(h) ? "kofi" : "other";
+setTimeout(() => gcEvent("sp-view/" + AB), 1200);
+["#go", "#stGo", "#alt"].forEach(id => $(id).addEventListener("click", e => gcEvent(`sp-checkout/${AB}/${tier}/${via(e.currentTarget.href)}`)));
+$("#chips").addEventListener("click", e => { const a = e.target.closest("a.chip"); if (a) gcEvent(`sp-checkout/${AB}/${(SP.people.find(p => a.href.includes(p.card || "@@")) || {}).id || "coffee"}/${via(a.href)}`); });
 if (hasCard) { $("#faqCard").hidden = false; $("#payHow").textContent = "Card, Apple Pay or Google Pay"; $("#flow1").textContent = "Pick the tier and pay by card. No account needed, receipt by email."; }
 renderBackers(); update(); syncSticky();
 fetch("__SPJSON__", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && Array.isArray(j.sponsors)) { live = j.sponsors; renderBackers(); update(); } }).catch(() => {});

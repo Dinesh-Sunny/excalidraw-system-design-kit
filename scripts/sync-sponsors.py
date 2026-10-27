@@ -3,6 +3,7 @@ Runs in .github/workflows/sponsors.yml. Needs a token in SPONSORS_TOKEN (or GITH
 import json, os, subprocess, sys, urllib.request, datetime, smtplib, ssl
 from email.message import EmailMessage
 EMAILS = {}
+SOURCES = {}  # private: where each card sponsor came from (sp_<variant>_<tier>) + billing interval
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CFG = os.path.join(ROOT, 'generator', 'sponsor.json')
@@ -77,6 +78,7 @@ if SK:
             if lk.split('_')[1:2] and lk.split('_')[1] in ('featured', 'gold', 'silver', 'bronze', 'supporter', 'backer'): t = lk.split('_')[1]
             k = org or host or name
             if (cs.get('customer_details') or {}).get('email'): EMAILS[k] = cs['customer_details']['email']
+            SOURCES[k] = f"{cs.get('client_reference_id') or 'direct'}, {'yearly' if any(((it['price'].get('recurring') or {}).get('interval') == 'year') for it in items) else 'monthly'}"
             sponsors.append({'name': name, 'login': k, 'url': site or (f'https://github.com/{org}' if org else ''), 'logo': logo, 'tier': t, 'amount': amt, 'org': co, 'since': sub.get('start_date') or 0})
         if not page.get('has_more'): break
         after = page['data'][-1]['id']
@@ -162,7 +164,7 @@ To change how your name shows, reply to this email. Receipts come from Stripe; m
 
 Thanks for keeping it free,
 Dinesh""")
-    send(GU, f"New sponsor: {sp['name']} ({sp['tier']})", f"{sp['name']} is now a {sp['tier']} sponsor.\nLink: {sp['url']}\nStats: {stats_link}" + ("\nTo do: thank them in the next release note and on LinkedIn (Featured perk)." if sp['tier'] == 'featured' else ""))
+    send(GU, f"New sponsor: {sp['name']} ({sp['tier']})", f"{sp['name']} is now a {sp['tier']} sponsor.\nLink: {sp['url']}\nSource: {SOURCES.get(k, 'GitHub Sponsors')}\nStats: {stats_link}" + ("\nTo do: thank them in the next release note and on LinkedIn (Featured perk)." if sp['tier'] == 'featured' else ""))
 if bumped and prev_stats.get('bumped') != bumped:
     send(GU, 'Featured clash: refund the difference', 'Featured is already taken, so these show as Gold until it frees up: ' + ', '.join(bumped) + '. Refund the Featured - Gold difference in Stripe (Payments > the payment > Refund), or move them to Gold in the billing portal.')
 prev_stats['bumped'] = bumped

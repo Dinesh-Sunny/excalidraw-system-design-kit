@@ -28,7 +28,7 @@ lines+=['','</div>','<!-- sponsors:end -->']
 block='\n'.join(lines)
 def link(t,label):
     if t['per']=='once' and S.get('kofi'): return f"[{label}](https://ko-fi.com/{S['kofi']})"
-    if t.get('card'): return f"[{label}]({t['card']})"
+    if t.get('card'): return f"[{label}]({t['card']}?client_reference_id=readme_{t['id']})"
     if S.get('github') and t.get('gh_tier'): return f"[{label}](https://github.com/sponsors/{S['github']}/sponsorships?tier_id={t['gh_tier']})"
     return label
 sec=f'''## 💖 Sponsors

@@ -371,7 +371,7 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 
 | For you | For your company |
 |---|---|
-| [Coffee $5](https://ko-fi.com/dineshsunny) · [Backer $5/mo](https://buy.stripe.com/3cI7sK1F0g9yf5EfJrgjC05) · [Supporter $15/mo](https://buy.stripe.com/aFabJ097saPecXw0OxgjC04) | [Featured $600/mo](https://buy.stripe.com/14A28qgzU3mMf5E68RgjC00) · [Gold $300/mo](https://buy.stripe.com/4gMdR8erM6yYf5E0OxgjC01) · [Silver $150/mo](https://buy.stripe.com/4gMdR8erM2iI8HggNvgjC02) · [Bronze $50/mo](https://buy.stripe.com/bJe7sK83o1eE2iS9l3gjC03) |
+| [Coffee $5](https://ko-fi.com/dineshsunny) · [Backer $5/mo](https://buy.stripe.com/3cI7sK1F0g9yf5EfJrgjC05?client_reference_id=readme_backer) · [Supporter $15/mo](https://buy.stripe.com/aFabJ097saPecXw0OxgjC04?client_reference_id=readme_supporter) | [Featured $600/mo](https://buy.stripe.com/14A28qgzU3mMf5E68RgjC00?client_reference_id=readme_featured) · [Gold $300/mo](https://buy.stripe.com/4gMdR8erM6yYf5E0OxgjC01?client_reference_id=readme_gold) · [Silver $150/mo](https://buy.stripe.com/4gMdR8erM2iI8HggNvgjC02?client_reference_id=readme_silver) · [Bronze $50/mo](https://buy.stripe.com/bJe7sK83o1eE2iS9l3gjC03?client_reference_id=readme_bronze) |
 | Pay by card above, or [sponsor on GitHub](https://github.com/sponsors/Dinesh-Sunny) · [Buy me a coffee](https://ko-fi.com/dineshsunny) | [See tiers and perks](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/#companies) |
 
 > [!TIP]
