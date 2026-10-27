@@ -1,63 +1,120 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sponsor the System Design Kit</title>
-<meta name="description" content="Keep the System Design Kit for Excalidraw free. Sponsor as a person or put your company in front of engineers preparing for system design interviews.">
+<meta name="description" content="Put your logo where engineers practise system design. Pick a spot, see exactly where it shows, sponsor on GitHub in two minutes. Live within a day, cancel any time.">
 <meta property="og:title" content="Sponsor the System Design Kit">
-<meta property="og:description" content="Keep it free. Reach engineers preparing for system design interviews.">
+<meta property="og:description" content="Your logo where engineers practise system design. Live within a day.">
 <meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">
 <meta name="twitter:card" content="summary_large_image">
 __HEADINIT__
 <style>
 __BASECSS__
-/* sponsor page */
-.sp-hero { background: radial-gradient(70% 60% at 50% 0%, var(--atmo-haze), transparent 70%), radial-gradient(40% 45% at 85% 20%, var(--atmo-dusk-2), transparent 70%), radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground) }
-.sp-hero .wrap { padding-block: 64px 48px; display: grid; justify-items: center; text-align: center; gap: 16px }
-.sp-hero h1 { margin: 0; font: 400 clamp(44px, 7.5vw, 76px)/1 var(--font-serif); text-wrap: balance }
+/* ---------- sponsor page: pick a spot, see it, sponsor ---------- */
+.sp-hero { background: radial-gradient(70% 60% at 50% 0%, var(--atmo-haze), transparent 70%), radial-gradient(40% 45% at 88% 15%, var(--atmo-dusk-2), transparent 70%), radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground) }
+.sp-hero .wrap { padding-block: 56px 28px; display: grid; justify-items: center; text-align: center; gap: 14px }
+.sp-hero h1 { margin: 0; font: 400 clamp(42px, 7vw, 72px)/1 var(--font-serif); letter-spacing: -.01em; text-wrap: balance }
 .sp-hero h1 i { font-style: italic }
 .sp-hero p { margin: 0; max-width: 560px; color: var(--ink-muted); font: 400 17px/24px var(--font-sans) }
-.sp-hero .row2 { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px }
-.facts { display: flex; gap: 8px 22px; justify-content: center; flex-wrap: wrap; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); margin-top: 6px }
-.facts b { font: 500 13px/1 var(--font-mono); color: var(--ink) }
-.sec .wrap { padding-block: 40px; display: grid; gap: 18px }
-.sec h2 { margin: 0; font: 400 34px/1.1 var(--font-serif) }
-.sec .lead { margin: -8px 0 0; color: var(--ink-muted); max-width: 640px }
-.tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px }
-.tier { border: 1px solid var(--hairline); border-radius: var(--r-lg); background: var(--surface); padding: 22px; display: flex; flex-direction: column; gap: 12px; position: relative }
-.tier.hot { border-color: var(--ink); box-shadow: var(--shadow-float) }
-.tier .badge { position: absolute; top: -11px; left: 20px; height: 22px; padding: 0 10px; border-radius: 9999px; background: var(--pill); color: var(--on-ink); font: 500 11px/22px var(--font-mono) }
-.tier h3 { margin: 0; font: 500 15px/1 var(--font-sans) }
-.tier .price { font: 400 40px/1 var(--font-serif) }
-.tier .price small { font: 400 13px/1 var(--font-sans); color: var(--ink-muted); margin-left: 4px }
-.tier ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
-.tier li { display: grid; grid-template-columns: 18px 1fr; gap: 8px }
-.tier li::before { content: ""; width: 14px; height: 14px; margin-top: 3px; border-radius: 50%; background: var(--sketch-soft); box-shadow: inset 0 0 0 4px var(--sketch-soft), inset 0 0 0 7px var(--sketch) }
-.tier .pill { justify-content: center; margin-top: auto }
-.tier ul { margin-bottom: 6px }
-.offer { display: flex; gap: 12px; align-items: center; padding: 14px 18px; border-radius: var(--r-md); background: linear-gradient(90deg, var(--atmo-dusk-2), var(--surface)); border: 1px solid var(--hairline); font: 400 14px/20px var(--font-sans) }
-.offer b { font-weight: 500 }
-.offer .scribble { font: 400 20px/1 var(--font-hand); color: var(--sketch); white-space: nowrap }
-.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px }
-.why div { border-radius: var(--r-xl); padding: 20px; min-height: 120px; display: grid; align-content: end; gap: 4px }
-.why div:nth-child(1) { background: linear-gradient(180deg, var(--atmo-sky-mid), var(--atmo-haze)) }
-.why div:nth-child(2) { background: linear-gradient(180deg, var(--atmo-lav-1), var(--atmo-lav-2)) }
-.why div:nth-child(3) { background: linear-gradient(180deg, var(--atmo-dusk-1), var(--atmo-dusk-2)) }
-.why b { font: 400 24px/1.1 var(--font-serif); color: #141414 }
-.why span { font: 400 13px/18px var(--font-sans); color: rgba(20,20,20,.72) }
-:root[data-theme="dark"] .why b { color: var(--ink) } :root[data-theme="dark"] .why span { color: var(--ink-muted) }
-.how3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; counter-reset: h }
-.how3 div { counter-increment: h; border: 1px solid var(--hairline); border-radius: var(--r-md); padding: 16px 18px; background: var(--surface); font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
-.how3 div::before { content: "0" counter(h); display: block; font: 500 12px/1 var(--font-mono); color: var(--ink); margin-bottom: 10px }
-.how3 b { display: block; color: var(--ink); font-weight: 500 }
-.faq { display: grid; gap: 8px; max-width: 760px }
+.seg2 { display: inline-flex; padding: 4px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--hairline); box-shadow: var(--shadow-float); margin-top: 10px }
+.seg2 button { height: 40px; padding: 0 20px; border: 0; border-radius: 9999px; background: transparent; font: 500 14px/1 var(--font-sans); color: var(--ink-muted); cursor: pointer }
+.seg2 button[aria-selected="true"] { background: var(--pill); color: var(--on-ink) }
+.panel[hidden] { display: none }
+
+/* company builder */
+.build .wrap { padding-block: 28px 40px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; align-items: start }
+@media (max-width: 960px) { .build .wrap { grid-template-columns: minmax(0, 1fr) } }
+.step-h { display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px; font: 400 26px/1.1 var(--font-serif) }
+.step-h b { font: 500 12px/1 var(--font-mono); color: var(--ink-muted) }
+.picks { display: grid; gap: 10px }
+.pick { position: relative; display: grid; grid-template-columns: 22px 1fr auto; gap: 4px 12px; align-items: center; text-align: left; width: 100%; padding: 16px 18px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); cursor: pointer; transition: border-color .15s, box-shadow .15s }
+.pick:hover { border-color: var(--slate) }
+.pick[aria-checked="true"] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink), var(--shadow-float) }
+.pick .dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--hairline); grid-row: span 2; box-sizing: border-box }
+.pick[aria-checked="true"] .dot { border: 5px solid var(--ink) }
+.pick .nm { font: 500 16px/1.2 var(--font-sans); display: flex; gap: 8px; align-items: center }
+.pick .pr { font: 400 22px/1 var(--font-serif); text-align: right; white-space: nowrap }
+.pick .pr small { font: 400 12px/1 var(--font-sans); color: var(--ink-muted) }
+.pick .wh { grid-column: 2 / 4; font: 400 13px/18px var(--font-sans); color: var(--ink-muted) }
+.pick .tag { height: 20px; padding: 0 8px; border-radius: 9999px; background: var(--sketch-soft); color: var(--sketch); font: 500 11px/20px var(--font-mono) }
+.pick[disabled] { opacity: .5; cursor: not-allowed }
+.cta { display: grid; gap: 10px; margin-top: 16px }
+.cta .pill { height: 52px; justify-content: center; font-size: 16px }
+.micro { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+.micro span::before { content: "✓ "; color: var(--sketch) }
+
+/* live preview */
+.pv { border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface-sunk); padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0 }
+@media (max-width: 420px) { .pv { padding: 12px } }
+.pv-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between }
+.org { display: flex; align-items: center; gap: 4px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 9999px; padding: 4px 4px 4px 14px; min-width: 0; flex: 1 1 220px; max-width: 300px }
+.org span { font: 400 13px/1 var(--font-mono); color: var(--ink-muted); white-space: nowrap }
+.org input { flex: 1; min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; font: 400 14px/1 var(--font-sans); height: 30px }
+.shots { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.shot { border-radius: 12px; border: 1px solid var(--hairline); background: #fff; color: #141414; overflow: hidden; position: relative; min-width: 0 }
+.shot.wide { grid-column: 1 / -1 }
+.shot .bar { height: 22px; display: flex; align-items: center; gap: 4px; padding: 0 8px; border-bottom: 1px solid #e3e4e8; background: #fff; min-width: 0 }
+.shot .bar i { width: 6px; height: 6px; border-radius: 50%; background: #e3e4e8; flex: none }
+.shot .bar em { margin-left: 8px; font: 400 9px/1 var(--font-mono); color: #8a8f9c; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.shot .cap { position: absolute; left: 8px; bottom: 8px; font: 500 10px/1 var(--font-mono); background: rgba(20,20,20,.78); color: #fff; padding: 4px 7px; border-radius: 6px }
+.mini { padding: 14px 16px 32px; display: grid; gap: 8px; justify-items: center; text-align: center; background: radial-gradient(circle, #e3e5ea 1px, transparent 1.2px) 0 0 / 14px 14px, #f9f9fa }
+.mini h4 { margin: 2px 0 0; font: 400 24px/1 var(--font-serif) }
+.mini h4 i { font-style: italic }
+.mini .sb { width: 80%; height: 22px; border-radius: 9999px; background: #fff; border: 1px solid #e3e4e8; box-shadow: 0 2px 6px rgba(0,0,0,.06) }
+.spot { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 4px 8px; transition: opacity .2s, outline-color .2s; outline: 2px dashed transparent; outline-offset: 2px; min-width: 0; max-width: 100% }
+.spot.on { outline-color: #6965db; background: rgba(105,101,219,.08) }
+.spot.off { opacity: .25; filter: grayscale(1) }
+.spot .lbl { font: 400 9px/1 var(--font-mono); color: #5c6273 }
+.lg { display: inline-flex; align-items: center; gap: 6px; font: 600 12px/1 var(--font-sans); color: #141414; white-space: nowrap; min-width: 0; max-width: 100% }
+.lg > span:last-child { overflow: hidden; text-overflow: ellipsis }
+.lg img { width: 18px; height: 18px; border-radius: 4px; flex: none }
+.lg .gl { width: 18px; height: 18px; border-radius: 5px; background: #141414; color: #fff; display: grid; place-items: center; font: 600 10px/1 var(--font-sans); flex: none }
+.big .lg { font-size: 15px } .big .lg img, .big .lg .gl { width: 24px; height: 24px }
+.small .lg { font-size: 10px } .small .lg img, .small .lg .gl { width: 14px; height: 14px }
+.row3 { padding: 14px 16px 34px; display: grid; gap: 8px; background: #f9f9fa }
+.row3 h5 { margin: 0; font: 400 16px/1 var(--font-serif); text-align: left }
+.row3 .tiles { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 6px }
+.row3 .tile { height: 46px; border-radius: 8px; border: 1px dashed #d3d6de; display: grid; place-items: center; font: 400 10px/1.1 var(--font-hand); color: #8a8f9c; text-align: center; min-width: 0; overflow: hidden }
+.row3 .tile.spot { border-style: solid; border-color: #e3e4e8; background: #fff; padding: 0 6px; display: flex; justify-content: center }
+.gh { background: #fff; padding: 12px 16px 34px; display: grid; gap: 7px; text-align: left }
+.gh .file { font: 600 10px/1 var(--font-sans); color: #1f2328; padding-bottom: 7px; border-bottom: 1px solid #e3e4e8 }
+.gh .ln { height: 6px; border-radius: 3px; background: #eef0f3 }
+.gh .ln.s { width: 60% } .gh .ln.m { width: 82% }
+.gh .h { font: 600 11px/1 var(--font-sans); color: #1f2328; margin-top: 4px }
+.gh .center { display: grid; justify-items: center; gap: 4px; justify-self: center }
+.gh sub { font: 500 8px/1 var(--font-mono); color: #8a8f9c; letter-spacing: .06em }
+.pv-note { font: 400 12px/16px var(--font-sans); color: var(--ink-muted); text-align: center }
+@media (max-width: 560px) { .shots { grid-template-columns: minmax(0, 1fr) } .mini h4 { font-size: 20px } }
+
+/* steps, people, faq */
+.sec .wrap { padding-block: 36px; display: grid; gap: 16px }
+.sec h2 { margin: 0; font: 400 32px/1.1 var(--font-serif) }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; counter-reset: f }
+.flow div { counter-increment: f; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); padding: 16px 18px; font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
+.flow div::before { content: counter(f); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--sketch-soft); color: var(--sketch); font: 500 12px/1 var(--font-mono); margin-bottom: 10px }
+.flow b { display: block; color: var(--ink); font-weight: 500 }
+.you .wrap { padding-block: 28px 44px; display: grid; gap: 14px; justify-items: center; text-align: center }
+.chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; width: min(760px, 100%) }
+.chip { display: grid; gap: 6px; padding: 20px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface); text-decoration: none; text-align: left; transition: border-color .15s, box-shadow .15s }
+.chip:hover { border-color: var(--ink); box-shadow: var(--shadow-float) }
+.chip .e { font-size: 26px; line-height: 1 }
+.chip .p { font: 400 30px/1 var(--font-serif) }
+.chip .p small { font: 400 13px/1 var(--font-sans); color: var(--ink-muted) }
+.chip .g { font: 400 13px/18px var(--font-sans); color: var(--ink-muted) }
+.chip .go2 { font: 500 13px/1 var(--font-sans); margin-top: 4px; align-self: end }
+.chip { grid-template-rows: auto auto 1fr auto }
+.faq { display: grid; gap: 4px; max-width: 760px }
 .faq details { border-bottom: 1px solid var(--hairline); padding: 12px 0 }
 .faq summary { cursor: pointer; font: 500 15px/22px var(--font-sans); list-style: none; display: flex; justify-content: space-between; gap: 12px }
+.faq summary::-webkit-details-marker { display: none }
 .faq summary::after { content: "+"; font: 400 20px/22px var(--font-sans); color: var(--ink-muted) }
 .faq details[open] summary::after { content: "-" }
 .faq p { margin: 8px 0 0; color: var(--ink-muted); font: 400 14px/21px var(--font-sans) }
-.names { font: 400 14px/22px var(--font-sans); color: var(--ink-muted) }
-.soon { font: 400 13px/18px var(--font-sans); color: var(--ink-muted); text-align: center }
-.soonrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border: 1px dashed var(--hairline); border-radius: var(--r-md); font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
-.soonrow[hidden] { display: none }
+.names { margin: 0; font: 400 14px/22px var(--font-sans); color: var(--ink-muted) }
+.sticky { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: none; gap: 10px; align-items: center; padding: 10px max(16px, env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom)); background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--hairline) }
+.sticky .s1 { flex: 1; min-width: 0; font: 500 14px/18px var(--font-sans) }
+.sticky .s1 small { display: block; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.sticky .pill { height: 44px; flex: none }
+@media (max-width: 960px) { .sticky.show { display: flex } body.has-sticky footer .wrap { padding-bottom: 90px } }
 </style>
 </head><body>
 <header class="nav gut"><div class="wrap">
@@ -69,102 +126,182 @@ __BASECSS__
 </div></header>
 
 <section class="sp-hero gut"><div class="wrap">
-  <h1>Keep the kit <i>free</i>.</h1>
-  <p>Sponsors pay for new blocks, new designs and updates. Everyone else keeps getting it for free.</p>
-  <div class="row2" id="heroCta"></div>
-  <div class="facts"><span><b>__N__</b> blocks</span><span><b>21</b> full designs</span><span>MIT licence</span><span>Free forever</span></div>
+  <h1 id="hh">Be seen by engineers <i>mid-prep</i>.</h1>
+  <p id="hp">Put your logo on the kit engineers use to practise system design. Two minutes on GitHub, live within a day.</p>
+  <div class="seg2" role="tablist" aria-label="Who is sponsoring">
+    <button role="tab" type="button" id="tabCo" aria-selected="true" aria-controls="companies">For companies</button>
+    <button role="tab" type="button" id="tabYou" aria-selected="false" aria-controls="you">For you</button>
+  </div>
 </div></section>
 
-<section class="sec gut" id="people"><div class="wrap">
-  <h2>For you</h2>
-  <p class="lead">Like buying the author a coffee. Once, or every month.</p>
-  <div class="tiers" id="peopleTiers"></div>
-  <div class="soonrow" id="peopleSoon" hidden><span>Personal sponsoring opens soon. Today, a star helps just as much.</span><a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener">__GH__Star on GitHub</a></div>
-</div></section>
-
-<section class="sec gut" id="companies"><div class="wrap">
-  <h2>For your company</h2>
-  <p class="lead">Put your brand in front of engineers getting ready for system design interviews, every time they open the kit's site or README.</p>
-  <div class="tiers" id="companyTiers"></div>
-  <div class="why">
-    <div><b>Hiring</b><span>Engineers practising system design are the people you want to hire.</span></div>
-    <div><b>Brand</b><span>Your logo sits on a tool people use while they learn.</span></div>
-    <div><b>Goodwill</b><span>Keep a free, open tool alive for the whole community.</span></div>
+<div class="panel" id="companies" role="tabpanel" aria-labelledby="tabCo">
+<section class="build gut"><div class="wrap">
+  <div>
+    <h2 class="step-h"><b>1</b>Pick your spot</h2>
+    <div class="picks" id="picks" role="radiogroup" aria-label="Sponsor tier"></div>
+    <div class="cta">
+      <a class="pill primary" id="go" href="#" target="_blank" rel="noopener">Sponsor</a>
+      <div class="micro"><span>Card or GitHub invoice</span><span>Live within a day</span><span>Cancel any time</span></div>
+    </div>
+  </div>
+  <div class="pv" aria-live="polite">
+    <div class="pv-top">
+      <h2 class="step-h" style="margin:0"><b>2</b>See where you show up</h2>
+      <label class="org"><span>github.com/</span><input id="org" placeholder="your-org" autocomplete="off" spellcheck="false" aria-label="Your GitHub organisation, to preview your logo"></label>
+    </div>
+    <div class="shots">
+      <div class="shot wide"><div class="bar"><i></i><i></i><i></i><em>dinesh-sunny.github.io/excalidraw-system-design-kit</em></div>
+        <div class="mini"><h4>Draw systems by <i>typing</i>.</h4><div class="sb"></div><div class="spot" data-spot="hero"><span class="lbl">sponsored by</span><span class="lg"></span></div></div>
+        <span class="cap">Homepage, under the search</span></div>
+      <div class="shot"><div class="bar"><i></i><i></i><i></i><em>kit site</em></div>
+        <div class="row3"><h5>Backed by</h5><div class="tiles"><div class="tile spot" data-spot="row"><span class="lg"></span></div><div class="tile">your logo here</div><div class="tile">your logo here</div></div></div>
+        <span class="cap">Homepage sponsor row</span></div>
+      <div class="shot"><div class="bar"><i></i><i></i><i></i><em>github.com</em></div>
+        <div class="gh"><div class="file">README.md</div><div class="center spot" data-spot="readmeTop"><sub>FEATURED SPONSOR</sub><span class="lg"></span></div><div class="ln m"></div><div class="ln s"></div><div class="h">💖 Sponsors</div><div class="center spot" data-spot="readme"><span class="lg"></span></div><div class="ln m"></div></div>
+        <span class="cap">GitHub README</span></div>
+    </div>
+    <div class="pv-note" id="pvNote"></div>
   </div>
 </div></section>
 
 <section class="sec gut"><div class="wrap">
   <h2>How it works</h2>
-  <div class="how3">
-    <div><b>Pick a tier</b>On GitHub Sponsors. Monthly, cancel any time.</div>
-    <div><b>Pay your way</b>Card, or an invoice through GitHub for your organisation.</div>
-    <div><b>That's it</b>Your logo and link appear here and in the README within a day, automatically.</div>
+  <div class="flow">
+    <div><b>Sponsor on GitHub</b>Pick the tier, pay by card or GitHub invoice. Two minutes.</div>
+    <div><b>We add you, automatically</b>Your GitHub logo and website go live within a day. Nothing to send.</div>
+    <div><b>Stay or stop</b>Monthly. Cancel any time and your spot frees up.</div>
   </div>
 </div></section>
 
 <section class="sec gut" id="backers"><div class="wrap">
   <h2>Backed by</h2>
   <div class="logos" id="logos"></div>
-  <div class="names" id="names"></div>
+  <p class="names" id="names"></p>
 </div></section>
+</div>
+
+<div class="panel" id="you" role="tabpanel" aria-labelledby="tabYou" hidden>
+<section class="you gut"><div class="wrap">
+  <h2 class="step-h" style="margin:0">Keep it free, your way</h2>
+  <div class="chips" id="chips"></div>
+  <p class="names">Every tip pays for new blocks and full interview answers, free for everyone.</p>
+</div></section>
+</div>
 
 <section class="sec gut"><div class="wrap">
   <h2>Questions</h2>
   <div class="faq">
-    <details><summary>Will the kit stay free?</summary><p>Yes. The kit is MIT licensed and always will be. Sponsoring never locks anything away.</p></details>
-    <details><summary>Can my company get an invoice?</summary><p>Yes. Sponsor from your organisation's GitHub account and GitHub handles receipts and invoices for you.</p></details>
-    <details><summary>Which logo do you show?</summary><p>Your GitHub organisation's avatar, linked to your website (or your GitHub page). Change your avatar on GitHub and the site updates within a day.</p></details>
-    <details><summary>Where does the money go?</summary><p>Time to design new blocks and full answers, keep icons and docs up to date, and run the site.</p></details>
-    <details><summary>Who can sponsor?</summary><p>Developer tools, learning platforms, hiring teams and anyone building for engineers. We say no to gambling, crypto schemes and anything misleading.</p></details>
-    <details><summary>Does a logo go inside the library file?</summary><p>No. The library file stays clean. Logos appear on this site and in the GitHub README.</p></details>
+    <details><summary>Who sees my logo?</summary><p>Engineers practising system design and AI architecture: people opening the kit's site to find a block, and developers reading the README on GitHub.</p></details>
+    <details><summary>Which logo do you show?</summary><p>Your GitHub organisation's avatar, linked to your website. Update your avatar on GitHub and the site follows within a day.</p></details>
+    <details><summary>Can my company get an invoice?</summary><p>Yes. Sponsor from your organisation's GitHub account and GitHub sends receipts and invoices.</p></details>
+    <details><summary>Will the kit stay free?</summary><p>Yes, MIT forever. No logos ever go inside the library file itself.</p></details>
   </div>
 </div></section>
 
 <section class="band gut"><div class="wrap">
-  <h2>Thank you for keeping it <i>free</i>.</h2>
-  <div class="row2" id="bandCta"></div>
+  <h2>Thanks for keeping it <i>free</i>.</h2>
+  <div class="row2"><a class="pill primary" href="#companies" data-tab="co">For companies</a><a class="pill ghost" href="#you" data-tab="you">For you</a></div>
 </div></section>
 
 <footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span><a href="../">Back to the kit</a></span></div></footer>
 
+<div class="sticky" id="sticky"><div class="s1" id="stTxt"></div><a class="pill primary" id="stGo" href="#" target="_blank" rel="noopener">Sponsor</a></div>
+
 <script>
 const SP = __SPONSOR__;
 const $ = s => document.querySelector(s);
-const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const HEART = '__HEART__';
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const gh = SP.github ? "https://github.com/sponsors/" + SP.github : null;
 const kofi = SP.kofi ? "https://ko-fi.com/" + SP.kofi : null;
-const tierURL = t => gh ? (t.gh_tier ? `${gh}/sponsorships?tier_id=${t.gh_tier}` : gh) : null;
-const btn = (href, label, cls = "ghost", ext = true) => `<a class="pill ${cls}" href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${label}</a>`;
+const tierURL = t => gh ? (t.gh_tier ? `${gh}/sponsorships?tier_id=${t.gh_tier}` : gh) : kofi;
+/* where each tier shows up */
+const SPOTS = { featured: ["hero", "row", "readmeTop", "readme"], gold: ["row", "readme"], silver: ["row", "readme"], bronze: ["readme"] };
+const SIZE = { featured: "big", gold: "big", silver: "", bronze: "small" };
+const WHERE = { featured: "Under the search on the homepage, top of the README. One company only.", gold: "Big logo in the homepage sponsor row and the README.", silver: "Logo in the homepage sponsor row and the README.", bronze: "Small logo in the README and the Backers list." };
+const MIN = { hero: "Featured only", readmeTop: "Featured only", row: "Silver and up", readme: "Every tier" };
+let tier = "gold", live = SP.sponsors || [], org = "";
+try { const q = new URLSearchParams(location.search).get("tier"); if (q && SPOTS[q]) tier = q; } catch (e) {}
+
+/* tabs */
+function tab(which) {
+  const co = which !== "you";
+  $("#tabCo").setAttribute("aria-selected", String(co)); $("#tabYou").setAttribute("aria-selected", String(!co));
+  $("#companies").hidden = !co; $("#you").hidden = co; syncSticky();
+  $("#hh").innerHTML = co ? "Be seen by engineers <i>mid-prep</i>." : "Keep the kit <i>free</i>.";
+  $("#hp").textContent = co ? "Put your logo on the kit engineers use to practise system design. Two minutes on GitHub, live within a day." : "A coffee or a few dollars a month keeps new blocks coming, free for everyone.";
+}
+$("#tabCo").onclick = () => { tab("co"); try { history.replaceState(null, "", location.search + "#companies"); } catch (e) {} };
+$("#tabYou").onclick = () => { tab("you"); try { history.replaceState(null, "", location.search + "#you"); } catch (e) {} };
+document.querySelectorAll("[data-tab]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); tab(a.dataset.tab); scrollTo({ top: 0, behavior: "smooth" }); }));
+
+/* tier picker */
+const taken = () => live.some(x => x.tier === "featured");
+function renderPicks() {
+  if (taken() && tier === "featured") tier = "gold";
+  $("#picks").innerHTML = SP.companies.map(t => {
+    const off = t.id === "featured" && taken();
+    return `<button class="pick" type="button" role="radio" data-t="${t.id}" aria-checked="${t.id === tier}" tabindex="${t.id === tier ? 0 : -1}" ${off ? "disabled" : ""}>
+      <span class="dot"></span><span class="nm">${esc(t.name)}${t.id === "featured" ? `<span class="tag">${off ? "taken" : "1 spot"}</span>` : t.id === "gold" ? '<span class="tag">best value</span>' : ""}</span>
+      <span class="pr">${esc(t.price)}<small>/mo</small></span><span class="wh">${esc(WHERE[t.id])}</span></button>`;
+  }).join("");
+}
+$("#picks").addEventListener("click", e => { const b = e.target.closest(".pick"); if (!b || b.disabled) return; tier = b.dataset.t; update(); });
+$("#picks").addEventListener("keydown", e => {
+  if (!/Arrow(Up|Down|Left|Right)/.test(e.key)) return; e.preventDefault();
+  const ids = SP.companies.map(t => t.id).filter(id => !(id === "featured" && taken()));
+  tier = ids[(ids.indexOf(tier) + (/Up|Left/.test(e.key) ? -1 : 1) + ids.length) % ids.length]; update(); $(`.pick[data-t="${tier}"]`).focus();
+});
+
+/* live preview, with their own logo */
+function logoHTML() {
+  const name = org || "Your logo";
+  const img = org ? `<img src="https://github.com/${encodeURIComponent(org)}.png?size=64" alt="" data-fallback="${esc((org[0] || "Y").toUpperCase())}">` : `<span class="gl">Y</span>`;
+  return img + `<span>${esc(name)}</span>`;
+}
+function update() {
+  renderPicks();
+  const t = SP.companies.find(x => x.id === tier), on = SPOTS[tier];
+  document.querySelectorAll(".spot").forEach(s => {
+    const yes = on.includes(s.dataset.spot);
+    s.classList.toggle("on", yes); s.classList.toggle("off", !yes);
+    s.classList.remove("big", "small"); if (yes && SIZE[tier]) s.classList.add(SIZE[tier]);
+    s.querySelector(".lg").innerHTML = logoHTML(); s.title = yes ? "" : MIN[s.dataset.spot];
+  });
+  document.querySelectorAll(".lg img[data-fallback]").forEach(i => i.addEventListener("error", () => { const g = document.createElement("span"); g.className = "gl"; g.textContent = i.dataset.fallback; i.replaceWith(g); }, { once: true }));
+  const n = on.length;
+  $("#pvNote").textContent = `${t.name}: ${n} ${n > 1 ? "places" : "place"}, outlined. Faded spots come with a higher tier.`;
+  $("#go").textContent = `Sponsor as ${t.name} · ${t.price}/mo`; $("#go").href = tierURL(t);
+  $("#stTxt").innerHTML = `${esc(t.name)} · ${esc(t.price)}/mo<small>${esc(WHERE[tier].split(".")[0])}</small>`; $("#stGo").href = tierURL(t);
+  try { const u = new URL(location); u.searchParams.set("tier", tier); history.replaceState(null, "", u); } catch (e) {}
+}
+let ot; $("#org").addEventListener("input", e => { clearTimeout(ot); ot = setTimeout(() => { org = e.target.value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/^@/, "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 39); update(); }, 250); });
+
+/* sticky CTA on small screens while the main button is off screen */
+function syncSticky() {
+  const st = $("#sticky"), onCo = !$("#companies").hidden;
+  const r = $("#go").getBoundingClientRect(), inView = r.top < innerHeight && r.bottom > 0;
+  st.classList.toggle("show", onCo && !inView && scrollY > 200); document.body.classList.toggle("has-sticky", st.classList.contains("show"));
+}
+addEventListener("scroll", syncSticky, { passive: true }); addEventListener("resize", syncSticky);
 
 /* people */
-if (gh || kofi) {
-  $("#peopleTiers").innerHTML = SP.people.map((t, i) => {
-    const href = t.per === "once" ? (kofi || tierURL(t)) : (tierURL(t) || kofi);
-    return `<div class="tier${i === 2 ? " hot" : ""}">${i === 2 ? '<span class="badge">most loved</span>' : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>${t.per === "once" ? "once" : "/ month"}</small></div><ul><li>${esc(t.gets)}</li></ul>${btn(href, t.per === "once" ? "Buy a coffee" : "Sponsor", i === 2 ? "primary" : "ghost")}</div>`;
-  }).join("");
-} else { $("#peopleTiers").hidden = true; $("#peopleSoon").hidden = false; }
-
-/* companies */
-function renderCompanies(list) {
-const taken = list.some(x => x.tier === "featured");
-$("#companyTiers").innerHTML = SP.companies.map(t => `<div class="tier${t.id === "gold" ? " hot" : ""}">${t.id === "gold" ? '<span class="badge">best value</span>' : t.only ? `<span class="badge">${taken ? "taken" : esc(t.only)}</span>` : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>/ month</small></div><ul>${t.gets.map(g => `<li>${esc(g)}</li>`).join("")}</ul>${t.only && taken ? '<span class="soon">Taken right now - Gold is open</span>' : btn(tierURL(t), "Sponsor on GitHub", t.id === "gold" ? "primary" : "ghost")}</div>`).join("");
-}
-
-/* hero + band CTAs */
-const ctas = (gh || kofi ? btn(kofi || gh, HEART + (kofi ? "Buy me a coffee" : "Sponsor"), "primary") : "") + btn("#companies", "For companies", gh || kofi ? "ghost" : "primary", false);
-$("#heroCta").innerHTML = ctas; $("#bandCta").innerHTML = ctas + (gh ? btn(gh, "All tiers on GitHub") : "");
+const EMOJI = { coffee: "☕", backer: "💛", supporter: "⭐" };
+$("#chips").innerHTML = SP.people.map(p => {
+  const href = p.per === "once" ? (kofi || tierURL(p)) : (tierURL(p) || kofi);
+  return `<a class="chip" href="${esc(href)}" target="_blank" rel="noopener"><span class="e">${EMOJI[p.id] || "💛"}</span><span class="p">${esc(p.price)}<small> ${p.per === "once" ? "once" : "/ month"}</small></span><span class="g">${esc(p.gets)}</span><span class="go2">${p.per === "once" ? "Buy a coffee →" : "Sponsor on GitHub →"}</span></a>`;
+}).join("");
 
 /* backers */
-function renderBackers(list) {
-const logos = list.filter(x => ["featured", "gold", "silver", "bronze"].includes(x.tier));
-$("#logos").innerHTML = logos.map(x => `<a class="logo" href="${esc(x.url)}" target="_blank" rel="noopener sponsored">${x.logo ? `<img src="${esc(x.logo)}" alt="${esc(x.name)}">` : esc(x.name)}</a>`).join("") + Array.from({ length: Math.max(1, 3 - logos.length) }, () => `<a class="logo slot" href="#companies">your logo here</a>`).join("");
-const names = list.filter(x => ["backer", "supporter"].includes(x.tier)).map(x => esc(x.name));
-$("#names").textContent = ""; if (names.length) $("#names").innerHTML = "Thank you " + names.join(", ") + ".";
+function renderBackers() {
+  const logos = live.filter(x => ["featured", "gold", "silver", "bronze"].includes(x.tier));
+  $("#logos").innerHTML = logos.map(x => `<a class="logo" href="${esc(x.url)}" target="_blank" rel="noopener sponsored">${x.logo ? `<img src="${esc(x.logo)}" alt="${esc(x.name)}">` : esc(x.name)}</a>`).join("") +
+    Array.from({ length: Math.max(1, 3 - logos.length) }, () => `<a class="logo slot" href="#companies">your logo here</a>`).join("");
+  const names = live.filter(x => ["backer", "supporter"].includes(x.tier)).map(x => esc(x.name));
+  $("#names").innerHTML = names.length ? "Thank you " + names.join(", ") + "." : "";
 }
-const renderAll = list => { renderCompanies(list); renderBackers(list); };
-renderAll(SP.sponsors);
-fetch("__SPJSON__", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && Array.isArray(j.sponsors)) renderAll(j.sponsors); }).catch(() => {});
+if (location.hash === "#you") tab("you");
+renderBackers(); update(); syncSticky();
+fetch("__SPJSON__", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && Array.isArray(j.sponsors)) { live = j.sponsors; renderBackers(); update(); } }).catch(() => {});
 
 /* theme + stars */
 $("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
