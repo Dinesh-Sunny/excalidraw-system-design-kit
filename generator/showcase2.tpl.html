@@ -218,6 +218,28 @@ body.has-board footer .wrap { padding-bottom: 96px }
 .empty { text-align: center; padding: 48px 0; color: var(--ink-muted) }
 .empty b { display: block; font: 400 30px/1.1 var(--font-serif); color: var(--ink); margin-bottom: 6px }
 
+/* growth: what's new, trust, works with, proof */
+.newp { display: inline-flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px 0 4px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); text-decoration: none; font: 500 13px/1 var(--font-sans); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.05); transition: box-shadow .2s, transform .2s; animation: rise .7s cubic-bezier(.2,.8,.2,1) both; max-width: 100% }
+.newp:hover { box-shadow: var(--shadow-float); transform: translateY(-1px) }
+.newp .nb { height: 26px; padding: 0 10px; border-radius: 9999px; background: var(--sketch-soft); color: var(--sketch); display: inline-flex; align-items: center; font: 500 11px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .04em; flex: none }
+.newp svg { width: 12px; height: 12px; flex: none; color: var(--ink-muted) }
+.newp { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.stats span[hidden] { display: none }
+.works { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 14px; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); animation: rise .7s .3s cubic-bezier(.2,.8,.2,1) both }
+.works span:not(.sub) { opacity: .85 }
+.proof .wrap { padding-block: 8px 48px; display: grid; gap: 18px }
+.proof h2 { margin: 0; font: 400 30px/1.1 var(--font-serif) } .proof h2 i { font-style: italic }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px }
+.pc { display: grid; gap: 12px; align-content: start; padding: 20px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface); min-width: 0 }
+.pc b { font: 500 16px/22px var(--font-sans) }
+.pc .small, .privacy { font: 400 13px/19px var(--font-sans); color: var(--ink-muted) }
+.privacy { margin: 0; text-align: center }
+.badge { display: flex; flex-wrap: wrap; align-items: center; gap: 10px }
+.mk-row { display: flex; align-items: center; gap: 12px } .mk-row img { border-radius: 50%; border: 1px solid var(--hairline) } .mk-row div { display: grid; gap: 2px }
+.love blockquote { margin: 0; display: grid; gap: 8px } .love blockquote p { margin: 0; font: 400 20px/1.3 var(--font-serif) }
+.love cite { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); font-style: normal } .love cite a { color: inherit }
+.love .empty-love { display: grid; gap: 10px } .love .empty-love p { margin: 0; font: 400 20px/1.3 var(--font-serif) }
+
 /* how */
 .how .wrap { padding-block: 8px 48px }
 .how h2 { margin: 0 0 16px; font: 400 30px/1.1 var(--font-serif) }
@@ -403,6 +425,7 @@ html.mo .rv.in { opacity: 1; transform: none }
 
 <section class="hero gut" id="top"><div class="wrap">
   <div class="island" aria-hidden="true"><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.5V4.8a1.3 1.3 0 0 1 2.6 0V9M9.6 8.5V3.8a1.3 1.3 0 0 1 2.6 0V9M12.2 9V5a1.3 1.3 0 0 1 2.6 0v6c0 3.5-2.3 6-5.3 6-2.2 0-3.4-1.2-4.6-3.2L3.6 10.9a1.3 1.3 0 0 1 2.1-1.4L7 11"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5l10 6-4.6 1.2L8.4 15z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="13" height="11" rx="2"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l7 7-7 7-7-7z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4M10 4h6v6"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16c1-3 2.5-4 4-3s2 2.5 4 .5 2-5 4-8"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h10M10 5v11"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="13" height="12" rx="2"/><circle cx="7.5" cy="8" r="1.3"/><path d="m4 15 4.5-4.5 3 3 2-2 3 3"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16h8M4.5 12.5l6-7.5 5 4-6 7.5H6.5z"/></svg></span><span class="div"></span><span class="lib on"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h4.5v11H4zM8.5 4.5H13v11H8.5zM13.5 5l3.6-1 2.6 10.5-3.6 1z"/></svg>Library</span></div>
+  <a class="newp" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener"><span class="nb">New</span>__NEWS__<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 2l5 5-5 5"/></svg></a>
   <h1>Draw systems by <i>typing</i>.</h1>
   <p>__N__ Excalidraw blocks for system design and AI agents.</p>
   <div class="sbox">
@@ -414,7 +437,8 @@ html.mo .rv.in { opacity: 1; transform: none }
     </form>
   </div>
   <div class="tries" id="tries"></div>
-  <div class="stats"><span><b>__N__</b> blocks</span><span><b>21</b> full designs</span><span><b>12</b> agent patterns</span><span>Free · MIT</span></div>
+  <div class="stats" id="trust"><span><b>__N__</b> blocks</span><span><b>21</b> full designs</span><span><b>12</b> agent patterns</span><span id="t-stars" hidden></span><span id="t-dl" hidden></span><span id="t-upd" hidden></span><span>Free · MIT · no sign-up</span></div>
+  <div class="works" aria-label="Paste into"><span class="sub">Paste into</span><span>Excalidraw</span><span>Excalidraw+</span><span>Obsidian</span><span>Figma</span><span>Google Docs</span><span>Notion</span><span>Slides</span><span>Slack</span></div>
   <div class="feat" id="feat" hidden></div>
   <div class="win"><div class="win-bar"><span><i></i><i></i><i></i></span><code>excalidraw.com</code><span></span></div>
     <video id="demo" src="demo.mp4" poster="demo.webp" muted loop playsinline preload="metadata" aria-label="Demo: typing kafka in Excalidraw drops the Kafka block on the canvas"></video></div>
@@ -431,6 +455,27 @@ html.mo .rv.in { opacity: 1; transform: none }
     <div class="step s2"><span class="k">02</span><div><b>Press ⌘ /</b><span>Ctrl + / on Windows</span></div></div>
     <div class="step s3"><span class="k">03</span><div><b>Type, Enter</b><span>It lands on the board</span></div></div>
   </div>
+</div></section>
+
+<section class="proof gut" id="community"><div class="wrap">
+  <h2>Made in the <i>open</i></h2>
+  <div class="pgrid">
+    <div class="pc love"><span class="sub">From people using it</span><div id="love"></div></div>
+    <div class="pc"><span class="sub">Spread the word</span><b>Know someone prepping for interviews?</b>
+      <div class="chips" id="shareRow"><a class="chip" data-sh="x" href="#" target="_blank" rel="noopener">Post on X</a><a class="chip" data-sh="li" href="#" target="_blank" rel="noopener">LinkedIn</a><a class="chip" data-sh="rd" href="#" target="_blank" rel="noopener">Reddit</a><button class="chip" type="button" data-sh="copy">Copy link</button></div>
+      <span class="small">Using it in your notes or repo? Add the badge:</span>
+      <div class="badge"><img alt="Made with System Design Kit" src="https://img.shields.io/badge/made%20with-System%20Design%20Kit-6965db" height="20" loading="lazy"><button class="chip" type="button" id="badgeCopy">Copy markdown</button></div>
+    </div>
+    <div class="pc"><span class="sub">Stay in the loop</span><b>New blocks and designs ship most weeks.</b>
+      <div class="chips"><a class="chip" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/subscription" target="_blank" rel="noopener">Watch on GitHub</a><a class="chip" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases.atom" target="_blank" rel="noopener">RSS for releases</a><a class="chip" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">What changed</a></div>
+      <span class="small" id="lastUpd">Built and maintained in the open on GitHub.</span>
+    </div>
+    <div class="pc maker"><span class="sub">Made by</span><div class="mk-row"><img alt="" src="https://github.com/Dinesh-Sunny.png?size=96" width="48" height="48" loading="lazy" onerror="this.remove()"><div><b>Dinesh Sunny</b><span class="small">Full-stack engineer, IIT Bombay</span></div></div>
+      <span class="small">Every block, design and change is public. Requests are reviewed every week.</span>
+      <div class="chips"><a class="chip" href="https://github.com/Dinesh-Sunny" target="_blank" rel="noopener">GitHub</a><a class="chip" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a block</a></div>
+    </div>
+  </div>
+  <p class="privacy">No sign-up, no cookies, no ads in the library file. Your board stays in your browser.</p>
 </div></section>
 
 <section class="backers gut" id="sponsors"><div class="wrap">
@@ -497,6 +542,7 @@ html.mo .rv.in { opacity: 1; transform: none }
         <a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="m10 2.8 2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L2.8 8l5-.6z"/></svg>Star on GitHub</a>
         <a class="pill ghost" id="tipbtn" href="__SPURL__" target="_blank" rel="noopener"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg><span id="tiplbl">Sponsor</span></a>
       </div>
+      <a class="pill ghost" data-sh="x" href="#" target="_blank" rel="noopener" style="justify-self:start">Tell a friend on X</a>
       <a class="work" href="__SPURL__#companies">Using it at work? Your team can sponsor →</a>
     </div>
     <div class="kit-foot">Free and MIT. <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/how-to-use.md" target="_blank" rel="noopener">Full guide</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener">Star it on GitHub</a></div>
@@ -698,7 +744,7 @@ function flash(btn) { if (!btn) return; btn.classList.add("done"); clearTimeout(
 async function copyExc(list, btn) {
   const ok = await writeClip(Promise.all(list.map(els)).then(gs => clipJSON(arrange(gs))));
   say(ok ? `Copied${list.length > 1 ? " " + list.length + " blocks" : ""}. Paste in Excalidraw with ${pasteHint}` : "Copy didn't go through. Try the download");
-  if (ok) { flash(btn); gcEvent("copy-excalidraw/" + (list.length > 1 ? "set-" + list.length : slug(list[0]))); }
+  if (ok) { flash(btn); gcEvent("copy-excalidraw/" + (list.length > 1 ? "set-" + list.length : slug(list[0]))); dispatchEvent(new Event("sdk-copied")); }
 }
 function svgText(i) { return fetch(DATA + "s/" + i.id + ".svg").then(r => r.text()); }
 function pngBlob(i, scale = 2) {
@@ -890,6 +936,30 @@ draw(false); renderTray();
 if (startItem && BYSLUG.has(startItem)) open(BYSLUG.get(startItem));
 /* contact links: address assembled at runtime to keep scrapers off it */
 (() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
+/* growth: live trust numbers (shown only once they are big enough to help), freshness, love wall, share loop */
+const KIT_URL = "https://dinesh-sunny.github.io/excalidraw-system-design-kit/";
+const SHARE_TXT = "Free Excalidraw kit for system design and AI agent interviews: type a block name, it lands on the board.";
+const fmtN = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "k" : String(n);
+const ago = d => { const s = (Date.now() - new Date(d)) / 1000; return s < 86400 ? "today" : s < 172800 ? "yesterday" : s < 86400 * 30 ? Math.floor(s / 86400) + " days ago" : Math.floor(s / 86400 / 30) + " months ago"; };
+function cached(key, url, mapper) { try { const c = JSON.parse(sessionStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 3600e3) return Promise.resolve(c.v); } catch (e) {} return fetch(url).then(r => r.ok ? r.json() : Promise.reject()).then(j => { const v = mapper(j); try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch (e) {} return v; }); }
+cached("sdk-repo", "https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit", j => ({ stars: j.stargazers_count, pushed: j.pushed_at })).then(v => {
+  if (v.stars >= 25) { const e = $("#t-stars"); e.innerHTML = `<b>${fmtN(v.stars)}</b> GitHub stars`; e.hidden = false; }
+  if (v.pushed) { const e = $("#t-upd"); e.innerHTML = `Updated <b>${ago(v.pushed)}</b>`; e.hidden = false; $("#lastUpd").textContent = `Last update ${ago(v.pushed)}. Built and maintained in the open on GitHub.`; }
+}).catch(() => {});
+cached("sdk-dl", "https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit/releases?per_page=100", j => j.reduce((a, r) => a + r.assets.reduce((b, x) => b + x.download_count, 0), 0)).then(n => { if (n >= 100) { const e = $("#t-dl"); e.innerHTML = `<b>${fmtN(n)}</b> downloads`; e.hidden = false; } }).catch(() => {});
+function renderLove(list) {
+  const el = $("#love"), ok = (list || []).filter(x => x.quote && x.name);
+  if (!ok.length) { el.innerHTML = `<div class="empty-love"><p>Used it to prepare or in a real interview?</p><span class="small">Your story helps the next person decide. Two lines is plenty.</span><div class="chips"><a class="chip" href="${REPO}/discussions/new?category=show-and-tell" target="_blank" rel="noopener">Share how it helped</a></div></div>`; return; }
+  let k = 0; const show = () => { const x = ok[k % ok.length]; el.innerHTML = `<blockquote><p>"${esc(x.quote)}"</p><cite>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>` : esc(x.name)}${x.role ? " · " + esc(x.role) : ""}</cite></blockquote>`; k++; };
+  show(); if (ok.length > 1 && !matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(show, 7000);
+}
+fetch("love.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : []).then(renderLove).catch(() => renderLove([]));
+const shareURL = (k, url = KIT_URL, text = SHARE_TXT) => ({ x: `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, li: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, rd: `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}` })[k];
+document.querySelectorAll("[data-sh]").forEach(a => { if (a.tagName === "A") a.href = shareURL(a.dataset.sh); a.addEventListener("click", () => { gcEvent("share/" + a.dataset.sh); if (a.dataset.sh === "copy") writeClip(Promise.resolve(KIT_URL)).then(ok => say(ok ? "Link copied. Thanks for sharing!" : KIT_URL)); }); });
+$("#badgeCopy").onclick = () => writeClip(Promise.resolve(`[![Made with System Design Kit](https://img.shields.io/badge/made%20with-System%20Design%20Kit-6965db)](${KIT_URL})`)).then(ok => { say(ok ? "Badge markdown copied" : "Copy didn't go through"); gcEvent("badge-copy"); });
+/* gentle share nudge: once, after the second successful copy */
+let copies = 0; const _say = say;
+window.addEventListener("sdk-copied", () => { copies++; let asked = false; try { asked = localStorage.getItem("sdk-ask-share") === "1"; } catch (e) {} if (copies === 2 && !asked) { try { localStorage.setItem("sdk-ask-share", "1"); } catch (e) {} setTimeout(() => say("Nice! Know someone prepping for interviews?", "Share", () => { gcEvent("share/nudge"); share("System Design Kit", KIT_URL); }), 2600); } });
 /* motion: reveal on scroll, staggered per parent */
 (() => {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;

@@ -43,6 +43,8 @@ __BASECSS__
 .alt[hidden] { display: none }
 .micro { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
 .micro span::before { content: "✓ "; color: var(--sketch) }
+.micro a { color: inherit }
+.aud { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; font: 400 12px/16px var(--font-mono); color: var(--ink-muted) } .aud:empty { display: none } .aud b { color: var(--ink); font-weight: 500 }
 
 /* live preview */
 .pv { border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface-sunk); padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0 }
@@ -165,7 +167,8 @@ __BASECSS__
     <div class="cta">
       <a class="pill primary" id="go" href="#" target="_blank" rel="noopener">Sponsor</a>
       <a class="alt" id="alt" href="#" target="_blank" rel="noopener" hidden></a>
-      <div class="micro"><span id="payHow">Card or GitHub invoice</span><span>Live within a day</span><span>Cancel any time</span></div>
+      <div class="micro"><span id="payHow">Card or GitHub invoice</span><span>Secure checkout by Stripe</span><span>Live within a day</span><span>Cancel any time</span><span><a href="stats/">Public stats</a></span></div>
+      <div class="aud" id="aud"></div>
     </div>
   </div>
   <div class="pv" aria-live="polite">
@@ -367,6 +370,10 @@ fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").
 
 /* contact links: address assembled at runtime to keep scrapers off it */
 (() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
+/* audience proof: real numbers only, shown once they help */
+(() => { const out = [`<span><b>__N__</b> blocks people copy into designs</span>`];
+  fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r => r.ok ? r.json() : null).then(j => { if (j) { if (j.stargazers_count >= 25) out.push(`<span><b>${j.stargazers_count}</b> GitHub stars</span>`); const d = (Date.now() - new Date(j.pushed_at)) / 864e5; if (d < 14) out.push(`<span>Updated <b>${d < 1 ? "today" : Math.floor(d) + "d ago"}</b></span>`); } document.getElementById("aud").innerHTML = out.join(""); }).catch(() => { document.getElementById("aud").innerHTML = out.join(""); });
+})();
 /* motion: reveal on scroll */
 (() => {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;

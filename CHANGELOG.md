@@ -3,6 +3,9 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Site: a "New" pill under the toolbar, live trust line (stars and downloads once they pass a threshold, last updated), "Paste into" strip, and a "Made in the open" section: stories from people using the kit (`docs/love.json`, real quotes only), share buttons, a "Made with System Design Kit" badge, release notifications (Watch, RSS) and who makes it.
+- Site: one gentle "Share" nudge after your second copy; share on the download thank-you; structured data for search engines.
+- Sponsor page: secure checkout and public stats called out, plus a live audience line.
 - Site: "How is this block?" in every preview - one tap opens a short GitHub form with the block already filled in (or say it's useful with a heart). New issue forms: block feedback, request a block, something to polish.
 - Site: help links go straight to the right place (Q&A for questions, Ideas for ideas); end-of-list links to request a block, show what you built and share an idea.
 - Site: gentle motion (content rises in as you scroll, hover lifts, smoother pop-ups and FAQ), off when your system asks for reduced motion.
