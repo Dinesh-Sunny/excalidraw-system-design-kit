@@ -147,6 +147,34 @@ body.run > header.nav, body.run > footer { display: none }
 .srow em { font: 400 12px/1 var(--font-mono); color: var(--ink-muted); font-style: normal; text-align: right }
 .sb { height: 8px; border-radius: 9999px; background: var(--hairline); position: relative; overflow: hidden } .sb::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w, 0); border-radius: inherit; background: #e03131 } .sb[data-v="part"]::after { background: #e67700 } .sb[data-v="nail"]::after { background: #2f9e44 }
 .col .row { display: flex; flex-wrap: wrap; gap: 10px }
+
+/* design step v2 */
+.dz { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; min-height: 0 }
+@media (min-width: 1000px) { .dz { grid-template-columns: minmax(0, 1fr) 380px; grid-template-rows: minmax(0, 1fr) } .move { border-top: 0 !important; border-left: 1px solid var(--hairline) } }
+.dz .canvas { padding: 0; place-items: stretch; overflow: hidden }
+.dz .canvas svg { width: 100%; height: 100%; display: block; animation: none }
+.hits .hit { fill: transparent; stroke: transparent; cursor: pointer; transition: stroke .2s }
+.hits .hit:hover { stroke: #6965db; stroke-width: 3; stroke-dasharray: 6 6 }
+.hits .fresh { stroke: #6965db; stroke-width: 4; animation: fresh 1.6s ease-out forwards }
+@keyframes fresh { 0% { stroke-opacity: 1; stroke-width: 10 } 100% { stroke-opacity: 0; stroke-width: 3 } }
+.move { display: grid; gap: 14px; align-content: start; padding: 20px; background: var(--surface); border-top: 1px solid var(--hairline); overflow: auto; max-height: 46vh }
+@media (min-width: 1000px) { .move { max-height: none } }
+.mh { display: grid; gap: 8px }
+.dots { display: flex; gap: 4px } .dots i { flex: 1; height: 6px; border-radius: 9999px; background: var(--hairline) } .dots i.ok { background: #2f9e44 } .dots i.hp { background: #e67700 } .dots i.now { background: var(--sketch) }
+.fb2 { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-sunk); font: 400 15px/22px var(--font-sans); color: var(--ink-muted); animation: rise .25s ease-out }
+.fb2 b { font: 600 15px/22px var(--font-sans); color: var(--ink) } .fb2.ok { background: #ebfbee } .fb2.ok b { color: #2b8a3e } .fb2.no { background: #fff4e6 } .fb2.no b { color: #d9480f }
+:root[data-theme="dark"] .fb2.ok { background: #1b2e22 } :root[data-theme="dark"] .fb2.no { background: #33261a }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fb2.ok { background: #1b2e22 } :root:not([data-theme="light"]) .fb2.no { background: #33261a } }
+.mq { margin: 4px 0 0; font: 400 22px/1.2 var(--font-serif) }
+.opts2 { display: grid; grid-template-columns: 1fr; gap: 8px }
+@media (min-width: 560px) and (max-width: 999px) { .opts2 { grid-template-columns: 1fr 1fr } }
+.opt2 { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 14px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--ground); cursor: pointer; text-align: left; font: 500 16px/1.25 var(--font-sans); color: var(--ink); transition: border-color .15s, background .15s, transform .1s }
+.opt2:hover:not(:disabled) { border-color: var(--sketch); background: var(--sketch-soft) } .opt2:active:not(:disabled) { transform: scale(.98) }
+.opt2 .k { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; font: 500 12px/1 var(--font-mono); color: var(--ink-muted); border: 1px solid var(--hairline); flex: none }
+.opt2.no { opacity: .45; text-decoration: line-through; cursor: default } .opt2.glow { border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
+.opt2.shake { animation: shake .35s }
+@keyframes shake { 20%, 60% { transform: translateX(-5px) } 40%, 80% { transform: translateX(5px) } }
+.big2 { margin: 0; font: 400 40px/1 var(--font-serif) } .big2 small { font: 400 15px/1 var(--font-sans); color: var(--ink-muted) }
 </style>
 </head><body>
 <header class="nav gut"><div class="wrap">
@@ -233,7 +261,7 @@ function sub(key, val) { const r = rec(); put({ [key]: { ...(r[key] || {}), ...v
 function route() {
   const h = new URLSearchParams(location.hash.slice(1)), q = BY[h.get("q")];
   if (!q) { Q = null; document.body.classList.remove("run"); $("#vRun").hidden = true; $("#vPick").hidden = false; stopClock(); drawPick(); document.title = "Practice system design interviews - System Design Kit"; return; }
-  if (Q !== q) { const st = store.get()[q.slug] || {}; Q = q; step = st.done ? 0 : st.step || 0; blk = st.blk || 1; dv = 0; resetClock(); ev("practice-start/" + q.slug); }
+  if (Q !== q) { const st = store.get()[q.slug] || {}; $("#stage").innerHTML = ""; tries = new Set(); last = null; cam = null; Q = q; step = st.done ? 0 : st.step || 0; blk = st.blk || 1; dv = 0; resetClock(); ev("practice-start/" + q.slug); }
   if (h.get("s")) step = Math.max(0, Math.min(6, +h.get("s") - 1));
   open_ = false; finished = h.get("s") === "done"; pick = null;
   document.body.classList.add("run"); $("#vPick").hidden = true; $("#vRun").hidden = false;
@@ -242,7 +270,7 @@ function route() {
 }
 addEventListener("hashchange", route);
 $("#bBack").onclick = () => { history.pushState(null, "", location.pathname); route(); };
-function setStep(s) { step = Math.max(0, Math.min(6, s)); open_ = false; finished = false; dv = 0; pick = null; put({ step, blk }); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); }
+function setStep(s) { step = Math.max(0, Math.min(6, s)); open_ = false; finished = false; dv = 0; pick = null; tries = new Set(); last = null; cam = null; const st0 = $("#stage"); if (st0) st0.innerHTML = ""; put({ step, blk }); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); }
 function modelList(k) { const C = Q.c; return k === "req" ? [...C.reqF, ...C.reqN] : k === "est" ? C.est : k === "api" ? C.api : k === "data" ? C.data : C.wrap; }
 const RATE = [["miss", "Missed it"], ["part", "Partly"], ["nail", "Nailed it"]];
 function rateHTML(key) { const v = (rec().rate || {})[key]; return `<div class="rate"><span>How did you do?</span>${RATE.map(([k, t]) => `<button type="button" data-rate="${key}:${k}" class="${v === k ? "on " + k : ""}">${t}</button>`).join("")}</div>`; }
@@ -282,15 +310,89 @@ function dataHTML() {
 }
 function apiText() { return ((rec().mine || {}).api || []).map(x => `${x.m} ${x.p} ${x.r}`).join(" \n "); }
 function dataText() { return ((rec().mine || {}).data || []).map(x => `${x.n} ${x.f} ${x.s} ${x.k}`).join(" \n "); }
-function optsFor(b) { // the next block plus three that are not next
+
+/* ---- design step: you build it. Pick the next block, it lands at once, the camera follows, feedback inline ---- */
+let tries = new Set(), last = null, cam = null;
+function optsFor(b) { // the next block, one that comes later, and two that don't belong
   const n = Q.nodes, next = n[b], placed = new Set(n.slice(0, b).map(x => x.title));
   const later = n.slice(b + 1).map(x => x.title);
-  const seed = Q.slug.length * 7 + b * 13, rnd = i => (Math.sin(seed + i) + 1) / 2;
-  const pool = POOL.filter(x => !placed.has(x) && !n.some(y => y.title.toLowerCase().includes(x.toLowerCase().split(" ")[0])));
+  const seed = Q.slug.length * 7 + b * 13, rnd = i => (Math.sin(seed + i * 1.7) + 1) / 2;
+  const pool = POOL.filter(x => !placed.has(x) && !n.some(y => y.title.toLowerCase().includes(x.toLowerCase().split(" ")[0].replace(/s$/, ""))));
   const d = []; if (later.length) d.push(later[Math.floor(rnd(1) * later.length)]);
-  while (d.length < 3 && pool.length) { const x = pool.splice(Math.floor(rnd(d.length + 2) * pool.length), 1)[0]; d.push(x); }
+  if (later.length > 2 && rnd(2) > .5) { const l2 = later.filter(x => !d.includes(x)); d.push(l2[Math.floor(rnd(3) * l2.length)]); }
+  while (d.length < 3 && pool.length) d.push(pool.splice(Math.floor(rnd(d.length + 4) * pool.length), 1)[0]);
   return [next.title, ...d].map((t, i) => [t, rnd(i + 9)]).sort((a, c) => a[1] - c[1]).map(x => x[0]);
 }
+function nudge(wrongTitle) { // a thinking prompt, not the answer
+  const n = Q.nodes, next = n[blk], placed = new Set(n.slice(0, blk).map(x => x.id)), byId = Object.fromEntries(n.map(x => [x.id, x]));
+  const e = Q.edges.find(x => x[1] === next.id && placed.has(x[0])) || Q.edges.find(x => x[0] === next.id && placed.has(x[1]));
+  const later = n.slice(blk + 1).some(x => x.title === wrongTitle);
+  const why = later ? `${wrongTitle} is part of this design, just not yet.` : `${wrongTitle} isn't part of this design.`;
+  if (!e) return why + " Think about what the system still can't do.";
+  const from = byId[e[0]] && placed.has(e[0]) ? byId[e[0]].title : byId[e[1]].title;
+  return `${why} Follow the request: what does ${from} talk to next${e[2] ? ` to ${e[2].replace(/^\d+\.\s*/, "")}` : ""}?`;
+}
+function renderDesign() {
+  const n = Q.nodes.length, st = $("#stage");
+  if (!$("#dz")) { st.innerHTML = `<div class="dz" id="dz"><div class="canvas" id="cv"></div><aside class="move" id="mv"></aside></div>`; cam = null; }
+  renderMove(); loadSvg();
+  buttons(blk < n ? `Show me the next block<span class="kbd">→</span>` : `Next: Deep dives<span class="kbd">↵</span>`, blk >= n ? `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>` : "");
+}
+function renderMove() {
+  const n = Q.nodes.length, mv = $("#mv"), picks = rec().picks || {};
+  const dots = Q.nodes.map((x, i) => `<i class="${i < blk ? (picks[i] === false ? "hp" : "ok") : i === blk ? "now" : ""}"></i>`).join("");
+  const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span></div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") : "Tap any block on the canvas to see why it's there."}</span></div>`;
+  if (blk >= n) {
+    const first = Object.values(picks).filter(v => v === true).length, total = n - 1;
+    mv.innerHTML = `<div class="mh"><span class="gl">Design complete</span><div class="dots">${dots}</div></div>${fb}<p class="big2">${first} of ${total} <small>right first time</small></p>${rateHTML("hld")}`;
+    return;
+  }
+  const opts = optsFor(blk), hard = tries.size >= 2;
+  mv.innerHTML = `<div class="mh"><span class="gl">Block ${blk + 1} of ${n}</span><div class="dots">${dots}</div></div>${fb}
+    <p class="mq">What does the system need next?</p>
+    <div class="opts2">${opts.map((t, i) => { const no = tries.has(t), glow = hard && t === Q.nodes[blk].title; return `<button type="button" class="opt2${no ? " no" : ""}${glow ? " glow" : ""}" data-pick="${esc(t)}"${no ? " disabled" : ""}><span class="k">${i + 1}</span>${esc(t)}</button>`; }).join("")}</div>`;
+}
+function pickBlock(t) {
+  const next = Q.nodes[blk];
+  if (t === next.title) {
+    sub("picks", { [blk]: tries.size === 0 }); ev("practice-pick/" + (tries.size ? "retry" : "ok"));
+    last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "" }; tries = new Set(); blk++; put({ blk }); renderDesign();
+  } else {
+    tries.add(t); last = { ok: false, text: nudge(t) }; ev("practice-pick/no");
+    renderMove(); const b = [...document.querySelectorAll(".opt2")].find(x => x.dataset.pick === t); if (b) b.classList.add("shake");
+  }
+}
+function revealNext() { const next = Q.nodes[blk]; sub("picks", { [blk]: false }); last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "" }; tries = new Set(); blk++; put({ blk }); renderDesign(); }
+/* canvas camera: fit the blocks placed so far, glide between steps */
+function camFor(k) {
+  const [W, H] = Q.size, bx = Q.nodes.slice(0, k).map(x => Q.boxes[x.id]).filter(Boolean);
+  if (k >= Q.nodes.length || !bx.length) return [0, 0, W, H];
+  let x0 = Math.min(...bx.map(b => b[0])), y0 = Math.min(...bx.map(b => b[1])), x1 = Math.max(...bx.map(b => b[0] + b[2])), y1 = Math.max(...bx.map(b => b[1] + b[3]));
+  const cv = $("#cv"), ar = cv ? cv.clientWidth / Math.max(1, cv.clientHeight) : 1.6, pad = 110;
+  let w = Math.max(x1 - x0 + pad * 2, 640), h = Math.max(y1 - y0 + pad * 2, 400);
+  if (w / h > ar) h = w / ar; else w = h * ar;
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; return [cx - w / 2, cy - h / 2, w, h];
+}
+function glide(svg, to) {
+  const from = cam || to, t0 = performance.now(), D = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 520, ease = t => 1 - Math.pow(1 - t, 3);
+  const f = now => { const t = D ? Math.min(1, (now - t0) / D) : 1, e = ease(t), v = from.map((a, i) => a + (to[i] - a) * e); svg.setAttribute("viewBox", v.join(" ")); cam = v; if (t < 1) requestAnimationFrame(f); };
+  requestAnimationFrame(f);
+}
+const SVGC = new Map();
+function loadSvg() {
+  const k = blk, key = Q.slug + "/" + k;
+  const show = t => {
+    const cv = $("#cv"); if (!cv || blk !== k) return;
+    cv.innerHTML = t; const svg = cv.querySelector("svg"); svg.removeAttribute("width"); svg.removeAttribute("height"); const bg = svg.querySelector(":scope > rect"); if (bg && bg.getAttribute("fill") === "#ffffff") bg.remove(); svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    const NS = "http://www.w3.org/2000/svg", g = document.createElementNS(NS, "g"); g.setAttribute("class", "hits");
+    Q.nodes.slice(0, k).forEach((x, i) => { const b = Q.boxes[x.id]; if (!b) return; const r = document.createElementNS(NS, "rect"); r.setAttribute("x", b[0] - 6); r.setAttribute("y", b[1] - 6); r.setAttribute("width", b[2] + 12); r.setAttribute("height", b[3] + 12); r.setAttribute("rx", 16); r.dataset.node = x.id; r.setAttribute("class", i === k - 1 && k > 1 && k <= Q.nodes.length ? "hit fresh" : "hit"); const tt = document.createElementNS(NS, "title"); tt.textContent = x.title; r.append(tt); g.append(r); });
+    svg.append(g);
+    if (cam) svg.setAttribute("viewBox", cam.join(" ")); glide(svg, camFor(k));
+  };
+  if (SVGC.has(key)) show(SVGC.get(key)); else fetch(`../p/${key}.svg`).then(r => r.text()).then(t => { SVGC.set(key, t); show(t); }).catch(() => {});
+  const nk = Q.slug + "/" + (k + 1); if (k < Q.nodes.length && !SVGC.has(nk)) fetch(`../p/${nk}.svg`).then(r => r.text()).then(t => SVGC.set(nk, t)).catch(() => {});
+}
+addEventListener("resize", () => { const svg = $("#cv svg"); if (svg && Q && STEPS[step].k === "hld") { cam = camFor(blk); svg.setAttribute("viewBox", cam.join(" ")); } });
 
 /* ---- render ---- */
 function buttons(main, extra = "", prevVisible = true) { $("#bMain").innerHTML = main; $("#bExtra").innerHTML = extra; $("#bPrev").style.visibility = prevVisible ? "visible" : "hidden"; }
@@ -311,20 +413,6 @@ function render() {
   hookNotes(S.k); hookTools();
   const nh = (rec().hints || {})[S.k] || 0, ml = modelList(S.k).length;
   buttons(!open_ ? `Compare<span class="lg"> with a strong answer</span><span class="kbd">↵</span>` : step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your </span>scorecard<span class="kbd">↵</span>`, !open_ && S.k !== "est" && nh < ml ? `<button class="link" type="button" data-x="hint">Hint<span class="lg"> (${ml - nh} left)</span></button>` : "", step > 0);
-}
-function renderDesign() {
-  const C = Q.c, n = Q.nodes.length, node = Q.nodes[blk - 1], st = $("#stage"), auto = rec().watch;
-  const nextNode = blk < n ? Q.nodes[blk] : null;
-  let cap;
-  if (pick) { const ok = pick === nextNode.title, later = Q.nodes.slice(blk + 1).some(x => x.title === pick); cap = `<div class="fb ${ok ? "ok" : "no"}"><b>${ok ? "Right." : later ? "Good block, but later." : "Not needed here."}</b> <span>${ok ? "" : "Next is " + esc(nextNode.title) + ". "}${esc(C.blocks[nextNode.id] || "")}</span></div>`; }
-  else if (blk < n && !auto) cap = `<div class="pickq"><span class="gl">Your move: which block comes next?</span><div class="opts">${optsFor(blk).map(t => `<button type="button" class="opt" data-pick="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`;
-  else cap = `<div><span class="n">${blk}/${n}</span> <b>${esc(node.title)}</b></div><span>${esc(C.blocks[node.id] || "")}</span>`;
-  st.innerHTML = `<div class="stagecv"><div class="canvas" id="cv"><span class="cnt">${blk}/${n} blocks</span></div><div class="cap">${cap}</div></div>`;
-  loadSvg();
-  const extra = blk < n ? `<label class="tog"><input type="checkbox" data-x="watch"${auto ? " checked" : ""}> <span class="lg">Just </span>show me</label>` : `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>`;
-  const main = blk >= n ? `Next: Deep dives<span class="kbd">↵</span>` : (pick || auto) ? `Add ${esc(nextNode.title)}<span class="kbd">→</span>` : `Skip and show<span class="kbd">→</span>`;
-  buttons(main, extra);
-  if (blk >= n && !(rec().rate || {}).hld) $(".cap").insertAdjacentHTML("beforeend", rateHTML("hld"));
 }
 function renderDeep() {
   const C = Q.c, [q, a] = C.dives[dv], key = "deep" + dv, st = $("#stage");
@@ -362,7 +450,7 @@ function primary() {
   const S = STEPS[step], C = Q.c;
   if ($("#bMain").dataset.next) { location.hash = "q=" + $("#bMain").dataset.next; return; }
   if (finished) return;
-  if (S.k === "hld") { if (blk < Q.nodes.length) { blk++; pick = null; put({ blk }); render(); } else setStep(5); return; }
+  if (S.k === "hld") { if (blk < Q.nodes.length) revealNext(); else setStep(5); return; }
   if (S.k === "deep") { if (!open_) { open_ = true; render(); } else if (dv < C.dives.length - 1) { dv++; open_ = false; render(); } else setStep(6); return; }
   if (!open_) { open_ = true; render(); const a = $("#ans"); if (a) a.scrollIntoView({ behavior: "smooth", block: "start" }); ev("practice-compare/" + S.k); return; }
   if (step < 6) setStep(step + 1); else { finished = true; history.replaceState(null, "", "#q=" + Q.slug + "&s=done"); ev("practice-done/" + Q.slug); render(); }
@@ -370,15 +458,15 @@ function primary() {
 function back() {
   const S = STEPS[step];
   if (finished) { finished = false; open_ = true; render(); return; }
-  if (S.k === "hld" && blk > 1) { blk--; pick = null; put({ blk }); render(); return; }
+  if (S.k === "hld" && blk > 1) { blk--; tries = new Set(); last = null; put({ blk }); renderDesign(); return; }
   if (S.k === "deep" && dv > 0) { dv--; open_ = true; render(); return; }
   if (step === 5) { setStep(4); blk = Q.nodes.length; render(); return; }
   setStep(step - 1);
 }
 $("#bMain").onclick = primary; $("#bPrev").onclick = back;
-$("#vRun").addEventListener("change", e => { if (e.target.matches('[data-x="watch"]')) { put({ watch: e.target.checked }); pick = null; render(); } });
 $("#vRun").addEventListener("click", e => {
-  const pk = e.target.closest("[data-pick]"); if (pk) { pick = pk.dataset.pick; const ok = pick === Q.nodes[blk].title; sub("picks", { [blk]: ok }); ev("practice-pick/" + (ok ? "ok" : "no")); render(); return; }
+  const pk = e.target.closest("[data-pick]"); if (pk) { pickBlock(pk.dataset.pick); return; }
+  const hn = e.target.closest("[data-node]"); if (hn) { const x = Q.nodes.find(y => y.id === hn.dataset.node); last = { ok: true, title: x.title, text: Q.c.blocks[x.id] || "" }; renderMove(); return; }
   const rt = e.target.closest("[data-rate]"); if (rt) { const [k, v] = rt.dataset.rate.split(":"); sub("rate", { [k]: v }); rt.parentNode.querySelectorAll("button").forEach(b => b.className = b === rt ? "on " + v : ""); tabs(); return; }
   const del = e.target.closest("[data-del]"); if (del) { const [key, g, i] = del.dataset.del.split(":"), m = (rec().mine || {})[key] || {}; (m[g] || []).splice(+i, 1); sub("mine", { [key]: m }); render(); return; }
   const ad = e.target.closest("[data-apidel]"); if (ad) { const rows = (rec().mine || {}).api || []; rows.splice(+ad.dataset.apidel, 1); sub("mine", { api: rows }); render(); return; }
@@ -392,12 +480,6 @@ $("#vRun").addEventListener("click", e => {
     return; }
   const t = e.target.closest("[data-step]"); if (t) { if (finished) finished = false; setStep(+t.dataset.step); }
 });
-const SVGC = new Map();
-function loadSvg() {
-  const k = Q.slug + "/" + blk, putSvg = t => { const cv = $("#cv"); if (!cv || Q.slug + "/" + blk !== k) return; cv.querySelectorAll("svg").forEach(s => s.remove()); cv.insertAdjacentHTML("beforeend", t); if (cv.scrollWidth > cv.clientWidth + 4) { const n = Q.nodes.length; cv.scrollLeft = (cv.scrollWidth - cv.clientWidth) * (n > 1 ? (blk - 1) / (n - 1) : 0); } };
-  if (SVGC.has(k)) putSvg(SVGC.get(k)); else fetch(`../p/${k}.svg`).then(r => r.text()).then(t => { SVGC.set(k, t); putSvg(t); }).catch(() => {});
-  const nk = Q.slug + "/" + (blk + 1); if (blk < Q.nodes.length && !SVGC.has(nk)) fetch(`../p/${nk}.svg`).then(r => r.text()).then(t => SVGC.set(nk, t)).catch(() => {});
-}
 async function copyDesign() {
   try {
     const p = fetch(`../e/${Q.kitId}.json`).then(r => r.json()).then(els => new Blob([JSON.stringify({ type: "excalidraw/clipboard", elements: els, files: {} })], { type: "text/plain" }));
@@ -412,7 +494,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); primary(); return; }
   if (typing || e.metaKey || e.ctrlKey) return;
   if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); primary(); } else if (e.key === "ArrowLeft") { e.preventDefault(); back(); }
-  else if (STEPS[step].k === "hld" && !pick && /^[1-4]$/.test(e.key)) { const o = document.querySelectorAll(".opt")[+e.key - 1]; if (o) o.click(); }
+  else if (STEPS[step].k === "hld" && /^[1-4]$/.test(e.key)) { const o = document.querySelectorAll(".opt2")[+e.key - 1]; if (o && !o.disabled) o.click(); }
 });
 /* 45-minute timer */
 let left = 45 * 60, tick = null;

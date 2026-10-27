@@ -71,7 +71,7 @@ if os.path.exists('out/practice.json'):
     for m in PM:
         kid=byname.get('sd:tpl/ '+m['name'])
         c=PC[m['slug']]
-        P.append({'slug':m['slug'],'title':m['title'],'level':c['level'],'track':c['track'],'companies':c['companies'],'nodes':[{'id':n['id'],'title':n['title']} for n in m['nodes']],
+        P.append({'slug':m['slug'],'title':m['title'],'edges':m.get('edges',[]),'boxes':m.get('boxes',{}),'size':m.get('size'),'level':c['level'],'track':c['track'],'companies':c['companies'],'nodes':[{'id':n['id'],'title':n['title']} for n in m['nodes']],
                   'c':{k:c[k] for k in ('reqF','reqN','est','api','data','blocks','dives','wrap')},'kitId':kid,'kit':kid.replace('sdk-',''),'thumb':f"t/{kid}.webp"})
     P.sort(key=lambda d:(d['track']!='Classic',order[d['level']]))
     t=open('practice.tpl.html').read()

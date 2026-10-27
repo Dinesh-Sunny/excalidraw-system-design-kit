@@ -8,6 +8,6 @@ const slug=s=>s.toLowerCase().split(' - ')[0].replace(/[^a-z0-9]+/g,'-').replace
 await pg.goto('http://localhost:8766/');await pg.waitForFunction(()=>window.PRACTICE&&window.__fontsReady,null,{timeout:60000});
 const res=await pg.evaluate(()=>window.PRACTICE());
 fs.rmSync('out/pages/p',{recursive:true,force:true});const man=[];
-for(const t of res){const s=slug(t.name);fs.mkdirSync('out/pages/p/'+s,{recursive:true});t.steps.forEach((svg,k)=>fs.writeFileSync(`out/pages/p/${s}/${k+1}.svg`,svg.replace(/<style class="style-fonts">[\s\S]*?<\/style>/,'')));man.push({slug:s,name:t.name,title:t.title,nodes:t.nodes,edges:t.edges,notes:t.notes,n:t.steps.length});}
+for(const t of res){const s=slug(t.name);fs.mkdirSync('out/pages/p/'+s,{recursive:true});t.steps.forEach((svg,k)=>fs.writeFileSync(`out/pages/p/${s}/${k+1}.svg`,svg.replace(/<style class="style-fonts">[\s\S]*?<\/style>/,'')));man.push({slug:s,boxes:t.boxes,size:t.size,name:t.name,title:t.title,nodes:t.nodes,edges:t.edges,notes:t.notes,n:t.steps.length});}
 fs.writeFileSync('out/practice.json',JSON.stringify(man,null,1));console.log('practice designs',man.length,'svgs',man.reduce((a,m)=>a+m.n,0));
 await b.close();srv.close()})().catch(e=>{console.error(e);process.exit(1)});

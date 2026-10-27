@@ -179,6 +179,9 @@ window.PRACTICE = async () => {
     const full = finalize(diagram({ ...spec, notes: undefined }).map(applyDefaults));
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
     for (const e of full) { const pts = e.points ? e.points.map((p) => [e.x + p[0], e.y + p[1]]) : [[e.x, e.y], [e.x + e.width, e.y + e.height]]; for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } }
+    const sk = diagram({ ...spec, notes: undefined }), OX = x0 - 10 - 14, OY = y0 - 10 - 14;
+    const boxes = {};
+    for (const n of spec.nodes) { const r = sk.find((e) => e.type === "rectangle" && String(e.id || "").startsWith("n" + n[0] + "_")); if (r) boxes[n[0]] = [r.x - OX, r.y - OY, r.width, r.height]; }
     const frame = { type: "rectangle", x: x0 - 10, y: y0 - 10, width: x1 - x0 + 20, height: y1 - y0 + 20, strokeColor: "transparent", backgroundColor: "transparent" };
     const steps = [];
     for (let k = 1; k <= spec.nodes.length; k++) {
@@ -187,7 +190,7 @@ window.PRACTICE = async () => {
       const els = finalize([frame, ...diagram(sub)].map(applyDefaults));
       steps.push(await window.SVG(els));
     }
-    out.push({ name: t.name, title: spec.title, nodes: spec.nodes.map((n) => ({ id: n[0], title: n[1].replace(/\n/g, " "), icon: n[2] })), edges: spec.edges.map((e) => [e[0], e[1], e[2] || ""]), notes: spec.notes || "", steps });
+    out.push({ boxes, size: [x1 - x0 + 20 + 28, y1 - y0 + 20 + 28], name: t.name, title: spec.title, nodes: spec.nodes.map((n) => ({ id: n[0], title: n[1].replace(/\n/g, " "), icon: n[2] })), edges: spec.edges.map((e) => [e[0], e[1], e[2] || ""]), notes: spec.notes || "", steps });
   }
   return out;
 };
