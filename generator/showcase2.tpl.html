@@ -1,0 +1,317 @@
+<title>System Design Kit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+/* Layout: SixthSense / Hark system. Sky atmosphere hero with one serif line and an Airbnb-style search pill,
+   sticky category rail with line icons, image-first card rows per section, sheet preview, dusk closing band. */
+:root {
+  --ground: #f9f9fa; --surface: #ffffff; --surface-sunk: #efefec; --ink: #141414; --ink-muted: #5c6273;
+  --hairline: #e3e4e8; --sky-100: #f3f5fa; --sky-300: #c9d4e6; --slate: #636e86; --on-ink: #ffffff; --pill: #141414;
+  --atmo-sky-deep: #3f6c9f; --atmo-sky-mid: #8fb0d3; --atmo-haze: #dfe8f1; --atmo-dusk-1: #e9a77c; --atmo-dusk-2: #f6e1cf;
+  --atmo-lav-1: #8e86c4; --atmo-lav-2: #e4e0f3; --glass: rgba(255,255,255,0.72); --thumb: #ffffff;
+  --shadow-float: 0 1px 2px rgba(29,29,31,.10), 0 3px 9px rgba(29,29,31,.07), 0 8px 24px rgba(29,29,31,.12);
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --r-md: 14px; --r-lg: 24px; --r-xl: 26px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #0f1012; --surface: #17181b; --surface-sunk: #1e1f24; --ink: #f3f4f6; --ink-muted: #9aa2b4; --hairline: #2a2c33;
+  --sky-100: #151a25; --sky-300: #2a3550; --slate: #8994aa; --on-ink: #141414; --pill: #f3f4f6;
+  --atmo-sky-deep: #1b2c44; --atmo-sky-mid: #2a4060; --atmo-haze: #151a25; --atmo-dusk-1: #7a4a33; --atmo-dusk-2: #2e231d;
+  --atmo-lav-1: #3c3762; --atmo-lav-2: #1f1d30; --glass: rgba(23,24,27,0.72); --thumb: #f4f4f2;
+  --shadow-float: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --ground: #0f1012; --surface: #17181b; --surface-sunk: #1e1f24; --ink: #f3f4f6; --ink-muted: #9aa2b4; --hairline: #2a2c33;
+  --sky-100: #151a25; --sky-300: #2a3550; --slate: #8994aa; --on-ink: #141414; --pill: #f3f4f6;
+  --atmo-sky-deep: #1b2c44; --atmo-sky-mid: #2a4060; --atmo-haze: #151a25; --atmo-dusk-1: #7a4a33; --atmo-dusk-2: #2e231d;
+  --atmo-lav-1: #3c3762; --atmo-lav-2: #1f1d30; --glass: rgba(23,24,27,0.72); --thumb: #f4f4f2;
+  --shadow-float: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); color-scheme: dark }
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 400 15px/22px var(--font-sans); -webkit-font-smoothing: antialiased }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--glass) }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.wrap { max-width: 1240px; margin: 0 auto }
+button, input { font: inherit; color: inherit }
+a { color: inherit }
+:focus-visible { outline: 2px solid var(--slate); outline-offset: 2px }
+
+/* nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
+.nav .wrap { display: flex; align-items: center; gap: 12px; height: 64px }
+.mark { font: 400 26px/1 var(--font-serif); text-decoration: none; white-space: nowrap }
+.mark i { font-style: italic }
+.nav .sp { flex: 1 }
+.pill { height: 40px; padding: 0 18px; border-radius: 9999px; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 8px; font: 500 14px/1 var(--font-sans); text-decoration: none; cursor: pointer; white-space: nowrap; transition: transform .15s ease-out, background .15s }
+.pill:active { transform: scale(.98) }
+.pill.primary { background: var(--pill); color: var(--on-ink) }
+.pill.ghost { background: transparent; border-color: var(--hairline) }
+.pill.ghost:hover { background: var(--surface) }
+.pill svg { width: 16px; height: 16px }
+.navsearch { display: none; flex: 1; max-width: 360px }
+
+/* hero */
+.hero { position: relative; overflow: hidden; background: linear-gradient(180deg, var(--atmo-sky-deep) 0%, var(--atmo-sky-mid) 42%, var(--atmo-haze) 78%, var(--ground) 100%) }
+.hero::after { content: ""; position: absolute; inset: auto -10% -40% -10%; height: 70%; background: radial-gradient(60% 60% at 70% 30%, var(--atmo-lav-2), transparent 70%); opacity: .55; pointer-events: none }
+.hero .wrap { position: relative; z-index: 1; padding-block: 72px 56px; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
+.hero .wrap > * { max-width: 100% }
+.hero h1 { margin: 0; font: 400 clamp(44px, 8vw, 84px)/1 var(--font-serif); letter-spacing: -.01em; color: #fff; text-wrap: balance }
+.hero h1 i { font-style: italic }
+.hero p { margin: 0; color: rgba(255,255,255,.88); font: 400 17px/24px var(--font-sans) }
+:root[data-theme="dark"] .hero h1 { color: var(--ink) }
+.search { width: min(680px, 100%); display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 9999px; padding: 8px 8px 8px 22px; box-shadow: var(--shadow-float); margin-top: 10px }
+.search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 400 17px/24px var(--font-sans) }
+.search input::placeholder { color: var(--ink-muted) }
+.search kbd { font: 400 12px/1 var(--font-mono); color: var(--ink-muted); border: 1px solid var(--hairline); border-radius: 6px; padding: 4px 6px }
+.go { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--pill); color: var(--on-ink); display: grid; place-items: center; cursor: pointer; flex: none }
+.go svg { width: 18px; height: 18px }
+.tries { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px }
+.try { height: 32px; padding: 0 14px; border-radius: 9999px; border: 1px solid rgba(255,255,255,.45); background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); font: 400 13px/1 var(--font-mono); cursor: pointer }
+.stats { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
+.stats b { font: 500 13px/1 var(--font-mono) }
+:root[data-theme="dark"] .hero p { color: var(--ink-muted) }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero h1 { color: var(--ink) } :root:not([data-theme="light"]) .hero p { color: var(--ink-muted) } }
+
+/* rail */
+.rail { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
+.rail .wrap { display: flex; gap: 28px; overflow-x: auto; scrollbar-width: none; padding-top: 12px }
+.rail .wrap::-webkit-scrollbar { display: none }
+.cat { flex: none; display: grid; justify-items: center; gap: 8px; padding: 0 2px 12px; border: 0; border-bottom: 2px solid transparent; background: none; cursor: pointer; color: var(--ink-muted); font: 500 12px/16px var(--font-sans); transition: color .15s, border-color .15s }
+.cat svg { width: 24px; height: 24px }
+.cat:hover { color: var(--ink); border-bottom-color: var(--hairline) }
+.cat[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink) }
+
+/* rows + grid */
+main .wrap { padding-block: 32px 24px; display: grid; gap: 44px }
+main .wrap > *, .row { min-width: 0 }
+.nav-arrows { display: flex; gap: 8px; margin-left: 12px }
+.arr { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; display: grid; place-items: center; transition: transform .15s ease-out, box-shadow .15s }
+.arr:hover { box-shadow: var(--shadow-float) }
+.arr:disabled { opacity: .35; cursor: default; box-shadow: none }
+.arr svg { width: 14px; height: 14px }
+@media (max-width: 640px) { .nav-arrows { display: none } }
+.row h2 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 14px; font: 400 30px/1.1 var(--font-serif) }
+.row h2 .n { font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
+.row h2 .more { margin-left: auto; font: 500 13px/1 var(--font-sans); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; color: var(--ink) }
+.track { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: thin }
+.track > * { scroll-snap-align: start }
+@media (min-width: 900px) { .track { grid-auto-columns: calc((100% - 60px) / 4) } }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 28px 20px }
+.card { display: grid; gap: 10px; border: 0; padding: 0; background: none; text-align: left; cursor: zoom-in; min-width: 0 }
+.ph { aspect-ratio: 3 / 2; border-radius: var(--r-md); background: var(--thumb); border: 1px solid var(--hairline); overflow: hidden; display: grid; place-items: center; transition: box-shadow .15s ease-out, transform .15s ease-out }
+.ph img { width: 100%; height: 100%; object-fit: contain; display: block }
+.card:hover .ph { box-shadow: var(--shadow-float) }
+.card:active .ph { transform: scale(.99) }
+.ct { font: 500 15px/20px var(--font-sans); overflow-wrap: anywhere }
+.cm { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); margin-top: -6px }
+.empty { text-align: center; padding: 48px 0; color: var(--ink-muted) }
+.empty b { display: block; font: 400 30px/1.1 var(--font-serif); color: var(--ink); margin-bottom: 6px }
+
+/* how */
+.how .wrap { padding-block: 8px 48px }
+.how h2 { margin: 0 0 16px; font: 400 30px/1.1 var(--font-serif) }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px }
+.step { border-radius: var(--r-xl); padding: 22px; min-height: 168px; display: grid; align-content: space-between; gap: 18px }
+.step.s1 { background: linear-gradient(180deg, var(--atmo-sky-mid), var(--atmo-haze)) }
+.step.s2 { background: linear-gradient(180deg, var(--atmo-lav-1), var(--atmo-lav-2)) }
+.step.s3 { background: linear-gradient(180deg, var(--atmo-dusk-1), var(--atmo-dusk-2)) }
+.step .k { justify-self: start; height: 28px; padding: 0 12px; border-radius: 9999px; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); display: inline-flex; align-items: center; font: 500 12px/1 var(--font-mono) }
+.step b { font: 400 28px/1.1 var(--font-serif); font-weight: 400; color: #141414 }
+.step span { display: block; font: 400 13px/18px var(--font-sans); color: rgba(20,20,20,.72); margin-top: 6px }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .step b { color: var(--ink) } :root:not([data-theme="light"]) .step span { color: var(--ink-muted) } }
+:root[data-theme="dark"] .step b { color: var(--ink) } :root[data-theme="dark"] .step span { color: var(--ink-muted) }
+
+/* close band */
+.band { margin-top: 8px; background: linear-gradient(180deg, var(--atmo-dusk-2), var(--atmo-dusk-1)) }
+.band .wrap { padding-block: 64px; display: grid; justify-items: center; gap: 18px; text-align: center }
+.band h2 { margin: 0; font: 400 clamp(32px, 5vw, 52px)/1.05 var(--font-serif); text-wrap: balance; color: #141414 }
+.band h2 i { font-style: italic }
+.band .row2 { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center }
+.band .pill.ghost { border-color: rgba(20,20,20,.25); color: #141414 }
+.band .pill.primary { background: #141414; color: #fff }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .band h2 { color: var(--ink) } :root:not([data-theme="light"]) .band .pill.ghost { color: var(--ink); border-color: var(--hairline) } :root:not([data-theme="light"]) .band .pill.primary { background: var(--pill); color: var(--on-ink) } }
+:root[data-theme="dark"] .band h2 { color: var(--ink) } :root[data-theme="dark"] .band .pill.ghost { color: var(--ink); border-color: var(--hairline) } :root[data-theme="dark"] .band .pill.primary { background: var(--pill); color: var(--on-ink) }
+footer .wrap { padding-block: 22px 32px; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; font: 400 12px/16px var(--font-mono); color: var(--ink-muted) }
+
+/* sheet */
+dialog { border: 0; padding: 0; border-radius: var(--r-lg); background: var(--surface); color: var(--ink); width: min(760px, calc(100vw - 32px)); box-shadow: var(--shadow-float) }
+dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
+.sh-img { background: var(--thumb); border-bottom: 1px solid var(--hairline); aspect-ratio: 3 / 2; display: grid; place-items: center }
+.sh-img img { width: 100%; height: 100%; object-fit: contain }
+.sh-body { padding: 18px 20px 20px; display: grid; gap: 14px }
+.sh-top { display: flex; align-items: start; gap: 12px }
+.sh-top h3 { margin: 0; font: 400 30px/1.1 var(--font-serif); flex: 1 }
+.x { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; display: grid; place-items: center; flex: none }
+.x svg { width: 14px; height: 14px }
+.name { display: flex; gap: 8px; align-items: center; background: var(--surface-sunk); border-radius: 9999px; padding: 6px 6px 6px 16px; min-width: 0 }
+.name code { flex: 1; min-width: 0; font: 400 13px/18px var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.hint { font: 400 13px/18px var(--font-sans); color: var(--ink-muted) }
+.hint kbd { font: 400 12px/1 var(--font-mono); border: 1px solid var(--hairline); border-radius: 6px; padding: 2px 5px; color: var(--ink) }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); opacity: 0; background: var(--pill); color: var(--on-ink); padding: 10px 18px; border-radius: 9999px; font: 500 14px/1 var(--font-sans); transition: .2s ease-out; pointer-events: none; z-index: 50 }
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0) }
+
+@media (max-width: 640px) {
+  .nav .gh-label { display: none }
+  .mark { font-size: 22px }
+  .nav .pill { height: 36px; padding: 0 12px; font-size: 13px }
+  .nav .wrap { gap: 8px; height: 58px }
+  .rail { top: calc(58px + env(safe-area-inset-top, 0px)) }
+  .search { padding-left: 16px }
+  .search kbd { display: none }
+  .hero .wrap { padding-block: 48px 40px }
+  .rail .wrap { gap: 20px }
+  main .wrap { gap: 36px }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important } }
+</style>
+
+<header class="nav gut"><div class="wrap">
+  <a class="mark" href="#top" aria-label="System design kit, home">System design <i>kit</i></a>
+  <span class="sp"></span>
+  <a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener">
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
+    <span class="gh-label">GitHub</span></a>
+  <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest" target="_blank" rel="noopener">Get the kit</a>
+</div></header>
+
+<section class="hero gut" id="top"><div class="wrap">
+  <h1>Draw systems by <i>typing</i>.</h1>
+  <p>__N__ Excalidraw blocks for system design and AI agents.</p>
+  <form class="search" role="search" id="sf">
+    <input id="q" type="search" placeholder="Search __N__ blocks" autocomplete="off" aria-label="Search the kit">
+    <kbd aria-hidden="true">/</kbd>
+    <button class="go" type="submit" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+  </form>
+  <div class="tries" id="tries"></div>
+  <div class="stats"><span><b>__N__</b> blocks</span><span><b>21</b> full designs</span><span><b>12</b> agent patterns</span><span>Free · MIT</span></div>
+</div></section>
+
+<nav class="rail gut" aria-label="Categories"><div class="wrap" id="rail"></div></nav>
+
+<main class="gut" id="main"><div class="wrap" id="rows"></div></main>
+
+<section class="how gut" id="install"><div class="wrap">
+  <h2>Three steps</h2>
+  <div class="steps">
+    <div class="step s1"><span class="k">01</span><div><b>Import once</b><span>Library › ⋯ › Open</span></div></div>
+    <div class="step s2"><span class="k">02</span><div><b>Press ⌘ /</b><span>Ctrl + / on Windows</span></div></div>
+    <div class="step s3"><span class="k">03</span><div><b>Type, Enter</b><span>It lands on the board</span></div></div>
+  </div>
+</div></section>
+
+<section class="band gut"><div class="wrap">
+  <h2>Bring it to your next <i>interview</i>.</h2>
+  <div class="row2">
+    <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest" target="_blank" rel="noopener">Get the kit</a>
+    <a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a>
+  </div>
+</div></section>
+
+<footer class="gut"><div class="wrap"><span>v__VERSION__ · MIT · by Dinesh Sunny</span><span>sd:&lt;section&gt;/ Item - tags</span></div></footer>
+
+<dialog id="sheet" aria-labelledby="st">
+  <div class="sh-img"><img id="si" alt=""></div>
+  <div class="sh-body">
+    <div class="sh-top"><h3 id="st"></h3><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
+    <div class="name"><code id="sn"></code><button class="pill primary" id="sc" type="button" style="height:34px">Copy</button></div>
+    <div class="hint">In Excalidraw press <kbd>⌘</kbd> <kbd>/</kbd>, paste, <kbd>Enter</kbd>.</div>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const ITEMS = __ITEMS__;
+const SECTIONS = __SECTIONS__;
+const I = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON = {
+  all: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
+  tpl: '<rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M9 9v11"/>',
+  agentic: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+  agent: '<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V4.5"/><circle cx="12" cy="4" r="1"/><circle cx="9.5" cy="13" r="1"/><circle cx="14.5" cy="13" r="1"/>',
+  ai: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+  rag: '<path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><circle cx="11.5" cy="14" r="2.6"/><path d="m13.4 15.9 2.1 2.1"/>',
+  llmops: '<path d="M12 3l7 3v6c0 4.2-3 7.4-7 8.8C8 19.4 5 16.2 5 12V6z"/><path d="m9 12 2 2 4-4"/>',
+  client: '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+  edge: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/>',
+  svc: '<rect x="4" y="4" width="16" height="5" rx="1.5"/><rect x="4" y="10.5" width="16" height="5" rx="1.5"/><path d="M7 19h10"/><circle cx="16.5" cy="6.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="13" r=".6" fill="currentColor"/>',
+  data: '<ellipse cx="12" cy="6" rx="7" ry="2.5"/><path d="M5 6v12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/>',
+  cache: '<path d="M13.5 3 6 13.5h5.5L10.5 21 18 10.5h-5.5z"/>',
+  msg: '<rect x="3.5" y="8.5" width="13" height="7" rx="1"/><path d="M7.8 8.5v7M12.2 8.5v7M16.5 12h4M18.5 10l2 2-2 2"/>',
+  ops: '<path d="M4 19h16"/><path d="M5 15l4-5 3.5 3L19 6"/>',
+  ext: '<path d="M7 18h10.5a3.5 3.5 0 0 0 .4-7 5.5 5.5 0 0 0-10.6-1.4A4.3 4.3 0 0 0 7 18z"/>',
+  zone: '<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.5"/>',
+  link: '<path d="M4 12h15M14 7l5 5-5 5"/>',
+  ui: '<rect x="3.5" y="7" width="17" height="10" rx="5"/><path d="M8 12h8"/>',
+  frame: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8.5 20h7M12 16v4"/>',
+  screen: '<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M9 7h6M9 10.5h6M9 14h3.5"/>',
+  pattern: '<circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M8 7l3 9M16 7l-3 9M8.2 6h7.6"/>',
+  note: '<path d="M5 4h14v11l-5 5H5z"/><path d="M14 20v-5h5"/>',
+  guide: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.2"/>',
+};
+const LABEL = { all: "All", tpl: "Designs", agentic: "Agent patterns", agent: "Agents", ai: "AI models", rag: "RAG", llmops: "LLMOps", client: "Clients", edge: "Network", svc: "Services", data: "Data", cache: "Cache", msg: "Messaging", ops: "Ops", ext: "External", zone: "Zones", link: "Arrows", ui: "UI", frame: "Frames", screen: "Screens", pattern: "Patterns", note: "Notes", guide: "Guide" };
+const ORDER = ["all", "tpl", "agentic", "agent", "ai", "rag", "llmops", "client", "screen", "ui", "frame", "pattern", "edge", "svc", "data", "cache", "msg", "ops", "ext", "note", "zone", "link"];
+const TRIES = ["kafka", "rag", "tpl/ chat", "ai client", "sd:agent/"];
+
+const items = ITEMS.filter(i => !/ SECTION - /.test(i.name)).map(i => {
+  const m = i.name.match(/^sd:([a-z]+)\/\s(.*)$/); const rest = m ? m[2] : i.name; const k = rest.indexOf(" - ");
+  return { ...i, cat: m ? m[1] : i.section, title: k > -1 ? rest.slice(0, k) : rest, hay: i.name.toLowerCase() };
+});
+const count = c => items.filter(i => i.cat === c).length;
+const $ = s => document.querySelector(s), rows = $("#rows"), q = $("#q"), rail = $("#rail");
+let cat = "all";
+try { const h = location.hash.slice(1); if (LABEL[h]) cat = h; } catch (e) {}
+
+rail.innerHTML = ORDER.filter(c => c === "all" || count(c)).map(c => `<button class="cat" type="button" data-c="${c}" aria-pressed="${c === cat}">${I(ICON[c])}<span>${LABEL[c]}</span></button>`).join("");
+rail.addEventListener("click", e => { const b = e.target.closest(".cat"); if (!b) return; cat = b.dataset.c; q.value = ""; try { history.replaceState(null, "", cat === "all" ? location.pathname : "#" + cat); } catch (err) {} draw(true); });
+$("#tries").innerHTML = TRIES.map(t => `<button class="try" type="button">${t}</button>`).join("");
+$("#tries").addEventListener("click", e => { const b = e.target.closest(".try"); if (!b) return; q.value = b.textContent; cat = "all"; draw(true); });
+
+const cardHTML = i => `<button class="card" type="button"><div class="ph"><img loading="lazy" decoding="async" width="480" height="320" alt="" src="${i.img}"></div><div class="ct"></div><div class="cm">sd:${i.cat}/</div></button>`;
+function fill(el, list) { el.innerHTML = list.map(cardHTML).join(""); [...el.children].forEach((c, k) => { c.querySelector(".ct").textContent = list[k].title; c._item = list[k]; }); }
+function draw(scroll) {
+  [...rail.children].forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === cat)));
+  const term = q.value.trim().toLowerCase();
+  rows.textContent = "";
+  if (term || cat !== "all") {
+    const list = items.filter(i => (cat === "all" || i.cat === cat) && (!term || i.hay.includes(term)));
+    const sec = document.createElement("section"); sec.className = "row";
+    sec.innerHTML = `<h2>${term ? "Results" : LABEL[cat]} <span class="n">${list.length}</span></h2>`;
+    if (!list.length) { sec.innerHTML += `<div class="empty"><b>Nothing yet</b>Try a shorter word.</div>`; }
+    else { const g = document.createElement("div"); g.className = "grid"; fill(g, list); sec.append(g); }
+    rows.append(sec);
+  } else {
+    for (const c of ORDER.slice(1)) {
+      const list = items.filter(i => i.cat === c); if (!list.length) continue;
+      const sec = document.createElement("section"); sec.className = "row";
+      const AR = (d, l) => `<button class="arr" type="button" data-d="${d}" aria-label="${l}"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${d < 0 ? 'M9 2 4 7l5 5' : 'M5 2l5 5-5 5'}"/></svg></button>`;
+      sec.innerHTML = `<h2>${LABEL[c]} <span class="n">${list.length}</span>${list.length > 4 ? `<button class="more" type="button" data-c="${c}">Show all</button><span class="nav-arrows">${AR(-1, 'Previous')}${AR(1, 'Next')}</span>` : ""}</h2>`;
+      const t = document.createElement("div"); t.className = "track"; fill(t, list.slice(0, 12)); sec.append(t); rows.append(sec);
+      const upd = () => { const a = sec.querySelectorAll('.arr'); if (a.length) { a[0].disabled = t.scrollLeft < 4; a[1].disabled = t.scrollLeft + t.clientWidth > t.scrollWidth - 4; } };
+      t.addEventListener('scroll', upd, { passive: true }); requestAnimationFrame(upd); sec._track = t;
+    }
+  }
+  if (scroll) $("#main").scrollIntoView({ block: "start" });
+}
+rows.addEventListener("click", e => {
+  const a = e.target.closest(".arr"); if (a) { const t = a.closest(".row")._track; t.scrollBy({ left: Number(a.dataset.d) * t.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); return; }
+  const m = e.target.closest(".more"); if (m) { cat = m.dataset.c; try { history.replaceState(null, "", "#" + cat); } catch (err) {} draw(true); return; }
+  const c = e.target.closest(".card"); if (c && c._item) open(c._item);
+});
+let typing; q.addEventListener("input", () => { clearTimeout(typing); typing = setTimeout(() => { if (q.value.trim()) cat = "all"; draw(false); }, 120); });
+$("#sf").addEventListener("submit", e => { e.preventDefault(); cat = "all"; draw(true); });
+document.addEventListener("keydown", e => { if (e.key === "/" && document.activeElement !== q && !$("#sheet").open) { e.preventDefault(); q.focus(); } });
+
+const sheet = $("#sheet"), toast = $("#toast");
+function open(i) { $("#si").src = i.full || i.img; $("#st").textContent = i.title; $("#sn").textContent = i.name.split(" - ")[0]; sheet.showModal(); }
+$("#sx").onclick = () => sheet.close();
+sheet.addEventListener("click", e => { if (e.target === sheet) sheet.close(); });
+function say(t) { toast.textContent = t; toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), 1600); }
+$("#sc").onclick = async () => {
+  const t = $("#sn").textContent;
+  try { await navigator.clipboard.writeText(t); say("Copied"); }
+  catch (err) { const r = document.createRange(); r.selectNodeContents($("#sn")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); say("Selected. Press ⌘ C"); }
+};
+draw(false);
+</script>
