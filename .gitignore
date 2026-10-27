@@ -1,0 +1,4 @@
+node_modules/
+generator/out/
+generator/www/bundle.js
+.DS_Store
