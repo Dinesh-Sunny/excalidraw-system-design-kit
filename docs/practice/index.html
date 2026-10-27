@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Practice system design interviews - System Design Kit</title>
+<meta name="description" content="Practise system design interviews step by step: requirements, estimates, API, data model, then build the design one block at a time, deep dives and wrap-up. Free.">
+<meta property="og:title" content="Practise system design, step by step">
+<meta property="og:description" content="Build each answer the way the interview runs: one block at a time, with what the interviewer is checking.">
+<meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">
+<script>try{var t=localStorage.getItem("sdk-theme");document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){}</script>
+<link rel="preload" href="../fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/Geist-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+<style>
+
+@font-face { font-family: "Geist"; src: url(../fonts/Geist-Regular.woff2) format("woff2"); font-weight: 400; font-display: swap }
+@font-face { font-family: "Geist"; src: url(../fonts/Geist-Medium.woff2) format("woff2"); font-weight: 500; font-display: swap }
+@font-face { font-family: "Geist"; src: url(../fonts/Geist-SemiBold.woff2) format("woff2"); font-weight: 600; font-display: swap }
+@font-face { font-family: "Geist Mono"; src: url(../fonts/GeistMono-Regular.woff2) format("woff2"); font-weight: 400; font-display: swap }
+@font-face { font-family: "Geist Mono"; src: url(../fonts/GeistMono-Medium.woff2) format("woff2"); font-weight: 500; font-display: swap }
+@font-face { font-family: "Instrument Serif"; src: url(../fonts/instrument-serif-latin-400-normal.woff2) format("woff2"); font-style: normal; font-display: swap }
+@font-face { font-family: "Instrument Serif"; src: url(../fonts/instrument-serif-latin-400-italic.woff2) format("woff2"); font-style: italic; font-display: swap }
+@font-face { font-family: "Excalifont"; src: url(../fonts/Excalifont-Regular.woff2) format("woff2"); font-display: swap }
+/* Layout: SixthSense / Hark system. Sky atmosphere hero with one serif line and an Airbnb-style search pill,
+   sticky category rail with line icons, image-first card rows per section, sheet preview, dusk closing band. */
+:root {
+  --ground: #f9f9fa; --surface: #ffffff; --surface-sunk: #efefec; --ink: #141414; --ink-muted: #5c6273;
+  --hairline: #e3e4e8; --sky-100: #f3f5fa; --sky-300: #c9d4e6; --slate: #636e86; --on-ink: #ffffff; --pill: #141414;
+  --atmo-sky-deep: #3f6c9f; --atmo-sky-mid: #8fb0d3; --atmo-haze: #dfe8f1; --atmo-dusk-1: #e9a77c; --atmo-dusk-2: #f6e1cf;
+  --atmo-lav-1: #8e86c4; --atmo-lav-2: #e4e0f3; --glass: rgba(255,255,255,0.72); --thumb: #ffffff;
+  --shadow-float: 0 1px 2px rgba(29,29,31,.10), 0 3px 9px rgba(29,29,31,.07), 0 8px 24px rgba(29,29,31,.12);
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --r-md: 14px; --r-lg: 24px; --r-xl: 26px;
+  --dot: #d3d6de; --sketch: #6965db; --sketch-soft: #e0dfff; --font-hand: "Excalifont", "Comic Sans MS", cursive;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #0f1012; --surface: #17181b; --surface-sunk: #1e1f24; --ink: #f3f4f6; --ink-muted: #9aa2b4; --hairline: #2a2c33;
+  --sky-100: #151a25; --sky-300: #2a3550; --slate: #8994aa; --on-ink: #141414; --pill: #f3f4f6;
+  --atmo-sky-deep: #1b2c44; --atmo-sky-mid: #2a4060; --atmo-haze: #151a25; --atmo-dusk-1: #7a4a33; --atmo-dusk-2: #2e231d;
+  --atmo-lav-1: #3c3762; --atmo-lav-2: #1f1d30; --glass: rgba(23,24,27,0.72); --thumb: #f4f4f2;
+  --shadow-float: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); --dot: #2c2f37; --sketch: #a8a5ff; --sketch-soft: #2e2c4d; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --ground: #0f1012; --surface: #17181b; --surface-sunk: #1e1f24; --ink: #f3f4f6; --ink-muted: #9aa2b4; --hairline: #2a2c33;
+  --sky-100: #151a25; --sky-300: #2a3550; --slate: #8994aa; --on-ink: #141414; --pill: #f3f4f6;
+  --atmo-sky-deep: #1b2c44; --atmo-sky-mid: #2a4060; --atmo-haze: #151a25; --atmo-dusk-1: #7a4a33; --atmo-dusk-2: #2e231d;
+  --atmo-lav-1: #3c3762; --atmo-lav-2: #1f1d30; --glass: rgba(23,24,27,0.72); --thumb: #f4f4f2;
+  --shadow-float: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); --dot: #2c2f37; --sketch: #a8a5ff; --sketch-soft: #2e2c4d; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 400 15px/22px var(--font-sans); -webkit-font-smoothing: antialiased }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--glass) }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.wrap { max-width: 1240px; margin: 0 auto }
+button, input { font: inherit; color: inherit }
+a { color: inherit }
+:focus-visible { outline: 2px solid var(--slate); outline-offset: 2px }
+
+/* nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
+.nav .wrap { display: flex; align-items: center; gap: 12px; height: 64px }
+.mark { font: 400 26px/1 var(--font-serif); text-decoration: none; white-space: nowrap }
+.mark i { font-style: italic }
+.nav .sp { flex: 1 }
+.pill { height: 40px; padding: 0 18px; border-radius: 9999px; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 8px; font: 500 14px/1 var(--font-sans); text-decoration: none; cursor: pointer; white-space: nowrap; transition: transform .15s ease-out, background .15s }
+.pill:active { transform: scale(.98) }
+.pill.primary { background: var(--pill); color: var(--on-ink) }
+.pill.ghost { background: transparent; border-color: var(--hairline) }
+.pill.ghost:hover { background: var(--surface) }
+.pill svg { width: 16px; height: 16px }
+.ibtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--hairline); background: transparent; display: grid; place-items: center; cursor: pointer; flex: none; transition: background .15s }
+.ibtn:hover { background: var(--surface) }
+.ibtn svg { width: 17px; height: 17px }
+.i-sun { display: none } :root[data-theme="dark"] .i-sun { display: block } :root[data-theme="dark"] .i-moon { display: none }
+.star .cnt { font: 500 12px/1 var(--font-mono); padding-left: 10px; margin-left: 2px; border-left: 1px solid var(--hairline); height: 16px; display: inline-flex; align-items: center }
+.star .cnt[hidden] { display: none }
+.mark .short { display: none }
+
+/* hero: Excalidraw canvas (dot grid, island toolbar, hand-drawn note) inside the Hark atmosphere */
+.hero { position: relative; overflow: hidden; background:
+  radial-gradient(70% 55% at 50% -5%, var(--atmo-haze), transparent 70%),
+  radial-gradient(45% 40% at 88% 18%, var(--atmo-lav-2), transparent 70%),
+  radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px,
+  var(--ground) }
+.hero .wrap { position: relative; z-index: 1; padding-block: 28px 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
+.hero .wrap > * { max-width: 100% }
+.island { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 10px; background: var(--surface); box-shadow: 0 0 0 1px var(--hairline), 0 2px 6px rgba(0,0,0,.06); margin-bottom: 18px }
+.island span { width: 32px; height: 32px; border-radius: 7px; display: grid; place-items: center; color: var(--ink) }
+.island span svg { width: 17px; height: 17px }
+.island .on { background: var(--sketch-soft); color: var(--sketch) }
+.island .div { width: 1px; height: 20px; background: var(--hairline); margin: 0 4px; border-radius: 0 }
+.island .lib { width: auto; padding: 0 10px 0 8px; gap: 6px; display: inline-flex; font: 500 12px/1 var(--font-sans) }
+.hero h1 { margin: 0; font: 400 clamp(44px, 8vw, 84px)/1 var(--font-serif); letter-spacing: -.01em; color: var(--ink); text-wrap: balance }
+.hero h1 i { font-style: italic }
+.hero p { margin: 0; color: var(--ink-muted); font: 400 17px/24px var(--font-sans) }
+.sbox { position: relative; width: min(680px, 100%); margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) }
+.search { width: 100%; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 9999px; padding: 8px 8px 8px 22px; box-shadow: var(--shadow-float) }
+.search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 400 17px/24px var(--font-sans) }
+.search input::placeholder { color: var(--ink-muted) }
+.search input::-webkit-search-cancel-button { display: none }
+.search kbd { font: 400 12px/1 var(--font-mono); color: var(--ink-muted); border: 1px solid var(--hairline); border-radius: 6px; padding: 4px 6px }
+.go { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--pill); color: var(--on-ink); display: grid; place-items: center; cursor: pointer; flex: none }
+.go svg { width: 18px; height: 18px }
+.hand { position: absolute; left: calc(100% + 6px); top: -46px; width: 190px; text-align: left; font: 400 20px/1.15 var(--font-hand); color: var(--sketch); transform: rotate(-3deg); pointer-events: none }
+.hand svg { display: block; width: 74px; height: 50px; margin: 4px 0 0 -14px; color: var(--sketch) }
+@media (max-width: 1120px) { .hand { position: static; width: auto; transform: rotate(-2deg); text-align: center; margin: 0 auto 8px; font-size: 18px } .hand svg { display: none } .hand { order: -1 } }
+.tries { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px }
+.try { height: 32px; padding: 0 14px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); font: 400 13px/1 var(--font-mono); cursor: pointer; transition: border-color .15s }
+.try:hover { border-color: var(--slate) }
+.try.dice { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-sans) } .try.dice svg { width: 15px; height: 15px }
+.stats { display: flex; gap: 8px 22px; justify-content: center; flex-wrap: wrap; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
+.stats b { font: 500 13px/1 var(--font-mono); color: var(--ink) }
+.win { width: min(1000px, 100%); margin-top: 22px; border-radius: 16px 16px 0 0; border: 1px solid var(--hairline); border-bottom: 0; background: var(--surface); box-shadow: var(--shadow-float); overflow: hidden }
+.win-bar { height: 36px; display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; padding: 0 12px; border-bottom: 1px solid var(--hairline) }
+.win-bar i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--hairline); margin-right: 6px }
+.win-bar code { justify-self: center; font: 400 12px/1 var(--font-mono); color: var(--ink-muted); background: var(--surface-sunk); padding: 6px 14px; border-radius: 9999px }
+body.filtering .win { display: none }
+body.filtering .hero .wrap { padding-bottom: 28px }
+.win video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #fff; object-fit: cover }
+
+/* rail */
+.rail { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
+.rail .wrap { display: flex; gap: 28px; overflow-x: auto; scrollbar-width: none; padding-top: 12px }
+.rail .wrap::-webkit-scrollbar { display: none }
+.rail .wrap.fr { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent) }
+.rail .wrap.fl { -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px); mask-image: linear-gradient(90deg, transparent, #000 48px) }
+.rail .wrap.fl.fr { -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent) }
+#main { scroll-margin-top: 140px }
+.cat { flex: none; display: grid; justify-items: center; gap: 8px; padding: 0 2px 12px; border: 0; border-bottom: 2px solid transparent; background: none; cursor: pointer; color: var(--ink-muted); font: 500 12px/16px var(--font-sans); transition: color .15s, border-color .15s }
+.cat svg { width: 24px; height: 24px }
+.cat:hover { color: var(--ink); border-bottom-color: var(--hairline) }
+.cat[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink) }
+
+/* rows + grid */
+main .wrap { padding-block: 32px 24px; display: grid; gap: 44px }
+main .wrap > *, .row { min-width: 0 }
+.nav-arrows { display: flex; gap: 8px; margin-left: 12px }
+.arr { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; display: grid; place-items: center; transition: transform .15s ease-out, box-shadow .15s }
+.arr:hover { box-shadow: var(--shadow-float) }
+.arr:disabled { opacity: .35; cursor: default; box-shadow: none }
+.arr svg { width: 14px; height: 14px }
+@media (max-width: 640px) { .nav-arrows { display: none } }
+.row h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 0 0 14px; font: 400 30px/1.1 var(--font-serif) }
+.row h2 .n { font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
+.row h2 .more { margin-left: auto; font: 500 13px/1 var(--font-sans); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; color: var(--ink) }
+.track { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: thin }
+.track > * { scroll-snap-align: start }
+@media (min-width: 900px) { .track { grid-auto-columns: calc((100% - 60px) / 4) } }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 28px 20px }
+.card { position: relative; min-width: 0 }
+.card .open { display: grid; gap: 10px; width: 100%; border: 0; padding: 0; background: none; text-align: left; cursor: zoom-in; min-width: 0 }
+.qa { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; opacity: 0; transform: translateY(-2px); transition: opacity .15s, transform .15s }
+.card:hover .qa, .card:focus-within .qa { opacity: 1; transform: none }
+@media (hover: none) { .qa { opacity: 1; transform: none } }
+.qa button { height: 30px; min-width: 30px; padding: 0 9px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink) }
+.qa button:hover { background: var(--surface); box-shadow: var(--shadow-float) }
+.qa svg { width: 14px; height: 14px }
+.qa .saved { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+@media (max-width: 640px) { .qa .lb { display: none } }
+/* packs */
+.packs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px }
+.track.ptrack { grid-auto-columns: minmax(250px, 1fr) }
+@media (min-width: 900px) { .track.ptrack { grid-auto-columns: calc((100% - 40px) / 3) } }
+.pack { display: grid; gap: 10px; border: 0; padding: 0; background: none; text-align: left; cursor: pointer; min-width: 0 }
+.pack .col { aspect-ratio: 3 / 2; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--hairline); overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1px; transition: box-shadow .15s, transform .15s }
+.pack .col img { width: 100%; height: 100%; min-height: 0; object-fit: contain; background: var(--thumb); padding: 6px }
+.pack:hover .col { box-shadow: var(--shadow-float); transform: translateY(-2px) }
+.pack .pt { font: 500 15px/20px var(--font-sans) }
+.pack .pd { font: 400 13px/18px var(--font-sans); color: var(--ink-muted); margin-top: -6px }
+.pack .pn { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); margin-top: -6px }
+.phead { display: grid; gap: 12px; margin-bottom: 22px }
+.phead p { margin: 0; color: var(--ink-muted); max-width: 640px }
+.acts { display: flex; flex-wrap: wrap; gap: 8px }
+.acts .pill { height: 38px; padding: 0 16px; font-size: 13px }
+.back { justify-self: start; background: none; border: 0; padding: 0; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); text-decoration: underline; text-underline-offset: 3px }
+/* keep exploring */
+.explore { border-top: 1px solid var(--hairline); padding-top: 32px; display: grid; gap: 22px; min-width: 0 }
+.explore h2 { margin: 0; font: 400 30px/1.1 var(--font-serif) }
+.ask { margin: 0; font: 400 14px/20px var(--font-sans); color: var(--ink-muted) } .ask a { color: var(--ink); text-underline-offset: 3px }
+.nexts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px }
+.nx { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; text-align: left; transition: box-shadow .15s, transform .15s; min-width: 0 }
+.nx:hover { box-shadow: var(--shadow-float); transform: translateY(-1px) }
+.nx svg { width: 24px; height: 24px; flex: none; color: var(--ink-muted) }
+.nx span { display: grid; gap: 2px; font: 500 15px/20px var(--font-sans); flex: 1; min-width: 0 }
+.nx small { font: 400 12px/16px var(--font-mono); color: var(--ink-muted) }
+.chips { display: flex; flex-wrap: wrap; gap: 8px }
+.chip { height: 32px; padding: 0 12px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink); text-decoration: none }
+.chip svg { width: 15px; height: 15px }
+.chip small { font: 400 11px/1 var(--font-mono); color: var(--ink-muted) }
+.chip:hover { border-color: var(--slate) }
+.sub { font: 500 11px/16px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em }
+.ad { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--r-md); border: 1px dashed var(--hairline); text-decoration: none; color: var(--ink); background: var(--surface); transition: border-color .15s, box-shadow .15s; min-width: 0 }
+.ad:hover { border-color: var(--slate); box-shadow: var(--shadow-float) }
+.ad img { height: 32px; max-width: 96px; object-fit: contain; flex: none }
+.ad span { display: grid; gap: 2px; min-width: 0; font: 500 14px/18px var(--font-sans) }
+.ad small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+.ad .tag { margin-left: auto; font: 400 11px/1 var(--font-mono); color: var(--ink-muted); flex: none }
+.ad.real { border-style: solid }
+@media (max-width: 560px) { .ad .tag { display: none } }
+/* board tray + top */
+.tray { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 160%); z-index: 40; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--hairline); box-shadow: var(--shadow-float); transition: transform .3s cubic-bezier(.2,.9,.3,1.2); max-width: calc(100vw - 24px) }
+.tray.on { transform: translate(-50%, 0) }
+.tray.on.min { transform: translate(-50%, 160%) }
+.tray-mini { position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40; height: 40px; padding: 0 14px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); box-shadow: var(--shadow-float); display: none; align-items: center; gap: 8px; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink) }
+.tray-mini svg { width: 16px; height: 16px; fill: currentColor }
+.tray-mini.on { display: inline-flex; animation: rise .3s ease-out }
+.toast.act { pointer-events: auto; display: inline-flex; align-items: center; gap: 12px; padding-right: 8px }
+.toast button { height: 28px; padding: 0 12px; border-radius: 9999px; border: 0; background: var(--on-ink); color: var(--pill); font: 600 13px/1 var(--font-sans); cursor: pointer }
+.tray.bump { animation: bump .35s ease-out }
+@keyframes bump { 40% { transform: translate(-50%, -6px) } }
+.tray b { font: 500 14px/1 var(--font-sans); white-space: nowrap }
+.tray .pill { height: 36px; padding: 0 14px; font-size: 13px; gap: 0 }
+.tray .lb { white-space: pre }
+.tray .x { width: 32px; height: 32px }
+@media (max-width: 560px) { .tray .lb { display: none } .tray { gap: 6px; padding-left: 12px } .tray .pill { padding: 0 11px } }
+.totop { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 39; opacity: 0; pointer-events: none; transition: opacity .2s, bottom .25s; background: var(--surface); box-shadow: var(--shadow-float) }
+.totop.on { opacity: 1; pointer-events: auto }
+body.has-board .totop { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) }
+@media (max-width: 760px) { body.has-board .totop { display: none } }
+body.has-board footer .wrap { padding-bottom: 96px }
+.ph { aspect-ratio: 3 / 2; border-radius: var(--r-md); background: var(--thumb); border: 1px solid var(--hairline); overflow: hidden; display: grid; place-items: center; transition: box-shadow .15s ease-out, transform .15s ease-out }
+.ph img { width: 100%; height: 100%; object-fit: contain; display: block }
+.card:hover .ph { box-shadow: var(--shadow-float) }
+.card:active .ph { transform: scale(.99) }
+.ct { font: 500 15px/20px var(--font-sans); overflow-wrap: anywhere }
+.cm { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); margin-top: -6px }
+.empty { text-align: center; padding: 48px 0; color: var(--ink-muted) }
+.empty b { display: block; font: 400 30px/1.1 var(--font-serif); color: var(--ink); margin-bottom: 6px }
+
+/* growth: what's new, trust, works with, proof */
+.meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 0; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); animation: rise .7s .24s cubic-bezier(.2,.8,.2,1) both }
+.meta span + span:not([hidden])::before { content: "·"; margin: 0 10px; opacity: .6 }
+.meta span[hidden] { display: none } .meta b { color: var(--ink); font-weight: 500 }
+.open .wrap { padding-block: 8px 40px; display: grid; gap: 16px }
+.open-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 16px; padding: 18px 20px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface) }
+.open-row .av { border-radius: 50%; border: 1px solid var(--hairline); flex: none }
+.open-row p { margin: 0; flex: 1 1 280px; font: 400 15px/22px var(--font-sans); color: var(--ink-muted) } .open-row p a { color: var(--ink) }
+.open-acts { display: flex; flex-wrap: wrap; gap: 8px } .open-acts .pill { height: 36px; padding: 0 14px; font-size: 13px }
+.menu { position: relative } .menu summary { list-style: none; cursor: pointer } .menu summary::-webkit-details-marker { display: none }
+.mlist { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 30; min-width: 210px; display: grid; padding: 6px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); box-shadow: var(--shadow-float); animation: rise .18s ease-out }
+.mlist a, .mlist button { display: block; padding: 9px 12px; border: 0; border-radius: 8px; background: none; text-align: left; text-decoration: none; cursor: pointer; font: 500 13px/18px var(--font-sans); color: var(--ink) }
+.mlist a:hover, .mlist button:hover { background: var(--surface-sunk) }
+.mlist.down { bottom: auto; top: calc(100% + 8px); left: 0; right: auto }
+.love { padding: 6px 4px 0 } .love[hidden] { display: none }
+.love blockquote { margin: 0 auto; max-width: 760px; text-align: center; display: grid; gap: 10px } .love blockquote p { margin: 0; font: 400 26px/1.25 var(--font-serif) }
+.love cite { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); font-style: normal } .love cite a { color: inherit }
+
+/* how */
+.how .wrap { padding-block: 8px 48px }
+.how h2 { margin: 0 0 16px; font: 400 30px/1.1 var(--font-serif) }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px }
+.step { border-radius: var(--r-xl); padding: 22px; min-height: 168px; display: grid; align-content: space-between; gap: 18px }
+.step.s1 { background: linear-gradient(180deg, var(--atmo-sky-mid), var(--atmo-haze)) }
+.step.s2 { background: linear-gradient(180deg, var(--atmo-lav-1), var(--atmo-lav-2)) }
+.step.s3 { background: linear-gradient(180deg, var(--atmo-dusk-1), var(--atmo-dusk-2)) }
+.step .k { justify-self: start; height: 28px; padding: 0 12px; border-radius: 9999px; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); display: inline-flex; align-items: center; font: 500 12px/1 var(--font-mono) }
+.step b { font: 400 28px/1.1 var(--font-serif); font-weight: 400; color: #141414 }
+.step span { display: block; font: 400 13px/18px var(--font-sans); color: rgba(20,20,20,.72); margin-top: 6px }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .step b { color: var(--ink) } :root:not([data-theme="light"]) .step span { color: var(--ink-muted) } }
+:root[data-theme="dark"] .step b { color: var(--ink) } :root[data-theme="dark"] .step span { color: var(--ink-muted) }
+
+/* close band */
+.band { margin-top: 8px; background: linear-gradient(180deg, var(--atmo-dusk-2), var(--atmo-dusk-1)) }
+.band .wrap { padding-block: 64px; display: grid; justify-items: center; gap: 18px; text-align: center }
+.band h2 { margin: 0; font: 400 clamp(32px, 5vw, 52px)/1.05 var(--font-serif); text-wrap: balance; color: #141414 }
+.band h2 i { font-style: italic }
+.band .row2 { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center }
+.band .pill.ghost { border-color: rgba(20,20,20,.25); color: #141414 }
+.band .pill.primary { background: #141414; color: #fff }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .band h2 { color: var(--ink) } :root:not([data-theme="light"]) .band .pill.ghost { color: var(--ink); border-color: var(--hairline) } :root:not([data-theme="light"]) .band .pill.primary { background: var(--pill); color: var(--on-ink) } }
+:root[data-theme="dark"] .band h2 { color: var(--ink) } :root[data-theme="dark"] .band .pill.ghost { color: var(--ink); border-color: var(--hairline) } :root[data-theme="dark"] .band .pill.primary { background: var(--pill); color: var(--on-ink) }
+footer .wrap { padding-block: 22px 32px; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; font: 400 12px/16px var(--font-mono); color: var(--ink-muted) }
+
+/* sheet */
+dialog { border: 0; padding: 0; border-radius: var(--r-lg); background: var(--surface); color: var(--ink); width: min(760px, calc(100vw - 32px)); box-shadow: 0 0 0 1px var(--hairline), 0 24px 64px rgba(0,0,0,.28); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain }
+dialog::backdrop { background: rgba(15,16,18,.48); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px) }
+dialog[open] { animation: pop .26s cubic-bezier(.2,.9,.3,1.1) }
+dialog[open]::backdrop { animation: fade .2s ease-out }
+@keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.97) } }
+@keyframes fade { from { opacity: 0 } }
+.sheet { width: min(1080px, calc(100vw - 32px)) }
+.sh-grid { display: grid; grid-template-columns: minmax(0, 1fr) }
+@media (min-width: 900px) { .sh-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) } .sheet .sh-img { aspect-ratio: auto; min-height: 100%; border-bottom: 0; border-right: 1px solid var(--hairline) } .sheet .sh-body { max-height: calc(100dvh - 32px); overflow: auto } }
+.sheet .sh-img { background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; padding: 28px }
+.sheet .sh-img img { max-height: 70dvh; transition: opacity .15s }
+.sheet .sh-img img.ld { opacity: .2 }
+.sheet .sh-img { overflow: hidden; touch-action: none; cursor: zoom-in }
+.sheet .sh-img.zoomed { cursor: grab } .sheet .sh-img.panning { cursor: grabbing }
+.sheet .sh-img img { transform-origin: 0 0; user-select: none; -webkit-user-drag: none }
+@media (hover: none) { .zc [data-z="-1"], .zc [data-z="1"], .zc .zs { display: none } .zc { right: 8px; bottom: 8px } }
+.sheet .sh-img.anim img { transition: transform .25s cubic-bezier(.2,.8,.2,1) }
+.zc { position: absolute; right: 12px; bottom: 12px; display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 10px; background: #fff; border: 1px solid #e3e4e8; box-shadow: 0 2px 8px rgba(0,0,0,.08); color: #141414; z-index: 2 }
+.zc button { height: 30px; min-width: 30px; padding: 0 6px; border: 0; border-radius: 7px; background: none; cursor: pointer; display: grid; place-items: center; color: inherit; font: 500 12px/1 var(--font-mono) }
+.zc button:hover { background: #f1f3f5 } .zc svg { width: 15px; height: 15px }
+.zc .zp { min-width: 48px } .zc .zs { width: 1px; height: 18px; background: #e3e4e8; margin: 0 3px }
+.sh-img:fullscreen { background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; padding: 0 }
+.sh-img:fullscreen img { max-height: 100vh !important; width: 100%; height: 100% }
+.zhint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); font: 400 12px/1 var(--font-sans); color: #5c6273; background: rgba(255,255,255,.9); border: 1px solid #e3e4e8; padding: 6px 10px; border-radius: 9999px; pointer-events: none; opacity: 0; transition: opacity .3s }
+.sh-img:hover .zhint.show { opacity: 1 }
+@media (hover: none) { .zhint { display: none } }
+.sh-pos { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.85); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px }
+.sh-pos:empty { display: none }
+.sh-tt { flex: 1; display: grid; gap: 4px; min-width: 0 }
+.sh-top .ibtn { width: 36px; height: 36px }
+.sh-top .ibtn svg { width: 16px; height: 16px }
+.more-in { border-radius: var(--r-md); background: var(--surface-sunk); padding: 10px 14px }
+.more-in summary { cursor: pointer; font: 500 13px/20px var(--font-sans); color: var(--ink-muted) }
+.more-in[open] summary { margin-bottom: 10px }
+.more-in .name { background: var(--surface) }
+.more-in .hint { margin-top: 8px }
+.keys { font-size: 12px }
+#st:focus { outline: none }
+@media (max-width: 420px) { .cop b { font-size: 13px; white-space: nowrap } }
+@media (hover: none) { .keys { display: none } }
+.sh-img { position: relative; background: var(--thumb); border-bottom: 1px solid var(--hairline); aspect-ratio: 3 / 2; display: grid; place-items: center }
+.sh-prev, .sh-next { position: absolute; top: 50%; margin-top: -18px; width: 36px; height: 36px; color: #141414; background: #fff; border-color: #e3e4e8 }
+.sh-prev { left: 12px } .sh-next { right: 12px }
+.sh-img .arr[hidden] { display: none }
+.cops { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.cop-more summary { list-style: none; height: 100% } .cop-more summary::-webkit-details-marker { display: none } .cop-more .mlist { top: calc(100% + 6px); bottom: auto }
+@media (max-width: 420px) { .cop small { display: none } }
+.cop.main { grid-column: 1 / -1 }
+.cop { position: relative; overflow: hidden; display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; text-align: left; transition: box-shadow .15s, transform .15s; color: var(--ink) }
+.cop:hover { box-shadow: var(--shadow-float) }
+.cop:active { transform: scale(.98) }
+.cop b { font: 500 14px/18px var(--font-sans) }
+.cop small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+.cop.main { background: var(--pill); color: var(--on-ink); border-color: var(--pill); padding: 14px 16px }
+.cop.main b { font-size: 15px }
+.cop.main small { color: inherit; opacity: .7 }
+.cop.done b::after { content: "  Copied"; font-weight: 400; opacity: .7 }
+.prac-l { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: var(--r-md); background: var(--sketch-soft); color: var(--sketch); text-decoration: none; font: 500 14px/20px var(--font-sans) }
+.prac-l:hover { filter: brightness(.97) }
+.dls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.dls .chip { height: 30px; font: 500 12px/1 var(--font-mono) }
+.rel { display: grid; gap: 10px; min-width: 0 }
+.rel:empty { display: none }
+.rel .track { grid-auto-columns: minmax(130px, 1fr); gap: 12px }
+@media (min-width: 640px) { .rel .track { grid-auto-columns: calc((100% - 24px) / 3) } }
+.rel .ct { font-size: 13px; line-height: 17px }
+.inpk { font: 400 13px/18px var(--font-sans); color: var(--ink-muted) } .inpk button { border: 0; padding: 0; background: none; cursor: pointer; font: 500 13px/18px var(--font-sans); color: var(--ink); text-decoration: underline; text-underline-offset: 3px }
+.rel .cm, .rel .qa { display: none }
+#ssave[aria-pressed="true"] { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+.fb { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 400 13px/18px var(--font-sans); color: var(--ink-muted) }
+.fb .chip { height: 30px; font-size: 12px }
+.fb .chip.on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+.fb .chip svg { width: 14px; height: 14px }
+/* motion: content rises in as it scrolls into view; hover lifts; off for reduced motion */
+html.mo .rv { opacity: 0; transform: translateY(18px); transition: opacity .55s ease-out, transform .55s cubic-bezier(.2,.8,.2,1); transition-delay: var(--d, 0ms) }
+html.mo .rv.in { opacity: 1; transform: none }
+.card .ph { transition: box-shadow .2s ease-out, transform .2s ease-out }
+.card:hover .ph { transform: translateY(-3px) }
+.hero h1, .hero p, .sbox, .tries, .stats { animation: rise .7s cubic-bezier(.2,.8,.2,1) both }
+.hero p { animation-delay: .06s } .sbox { animation-delay: .12s } .tries { animation-delay: .18s } .stats { animation-delay: .24s }
+@keyframes rise { from { opacity: 0; transform: translateY(14px) } }
+.cat svg { transition: transform .2s ease-out } .cat:hover svg { transform: translateY(-2px) }
+.cat[aria-pressed="true"] svg { animation: tap .35s ease-out }
+@keyframes tap { 40% { transform: scale(1.18) } }
+.pill.primary { transition: transform .15s ease-out, box-shadow .2s, background .15s } .pill.primary:hover { box-shadow: 0 6px 18px rgba(0,0,0,.18); transform: translateY(-1px) }
+.sheet .sh-img img { animation: swap .3s ease-out }
+@keyframes swap { from { opacity: 0; transform: scale(.985) } }
+#ssave[aria-pressed="true"] svg { fill: currentColor }
+.sh-img img { width: 100%; height: 100%; object-fit: contain }
+.sh-body { padding: 18px 20px 20px; display: grid; gap: 14px }
+.sh-top { display: flex; align-items: start; gap: 12px }
+.sh-top h3 { margin: 0; font: 400 30px/1.1 var(--font-serif); flex: 1 }
+.x { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; display: grid; place-items: center; flex: none }
+.x svg { width: 14px; height: 14px }
+.name { display: flex; gap: 8px; align-items: center; background: var(--surface-sunk); border-radius: 9999px; padding: 6px 6px 6px 16px; min-width: 0 }
+.name code { flex: 1; min-width: 0; font: 400 13px/18px var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.hint { font: 400 13px/18px var(--font-sans); color: var(--ink-muted) }
+.hint kbd { font: 400 12px/1 var(--font-mono); border: 1px solid var(--hairline); border-radius: 6px; padding: 2px 5px; color: var(--ink) }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); opacity: 0; background: var(--pill); color: var(--on-ink); padding: 10px 18px; border-radius: 9999px; font: 500 14px/1 var(--font-sans); transition: .2s ease-out; pointer-events: none; z-index: 50 }
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0) }
+
+.kit { width: min(560px, calc(100vw - 32px)) }
+.kit-body { padding: 22px; display: grid; gap: 18px }
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 9999px; background: var(--surface-sunk); overflow-x: auto; scrollbar-width: none }
+.seg button { flex: 1; height: 34px; padding: 0 14px; border: 0; border-radius: 9999px; background: transparent; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); white-space: nowrap }
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12) }
+.ksteps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; counter-reset: k }
+.ksteps li { counter-increment: k; display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
+.ksteps li::before { content: counter(k); width: 28px; height: 28px; border-radius: 50%; background: var(--surface-sunk); color: var(--ink); display: grid; place-items: center; font: 500 12px/1 var(--font-mono) }
+.ksteps b { display: block; color: var(--ink); font-weight: 500 }
+.ksteps kbd, .ksteps code { font: 400 12px/1 var(--font-mono); border: 1px solid var(--hairline); border-radius: 6px; padding: 2px 5px; color: var(--ink); background: var(--surface) }
+.kit-cta { display: flex; flex-wrap: wrap; gap: 10px }
+.kit-cta .pill { flex: 1 1 180px; justify-content: center }
+.thanks { display: grid; gap: 10px; padding: 16px; border-radius: var(--r-md); background: var(--surface-sunk); font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
+.thanks[hidden] { display: none }
+.feat { display: flex; align-items: center; gap: 10px; font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
+.feat[hidden] { display: none }
+.feat img { height: 30px; border-radius: 6px }
+.feat a { display: inline-flex; align-items: center; gap: 8px; color: var(--ink) }
+.feat a { font: 500 14px/1 var(--font-sans); text-decoration: none }
+.thanks b { color: var(--ink); font-weight: 500 }
+.thanks .pill { height: 36px }
+.thanks .pill.ghost { background: var(--surface) }
+.thanks .work { font: 500 13px/18px var(--font-sans); color: var(--ink); text-underline-offset: 3px }
+.spon svg { color: #e8590c }
+.backers .wrap { padding-block: 8px 48px; display: grid; gap: 16px }
+.backers .wrap { justify-items: center; text-align: center }
+.backers .logos { width: 100%; display: flex; flex-wrap: wrap; justify-content: center }
+.backers .logo { width: 200px }
+.backers .logo.t-featured, .backers .logo.t-gold { width: 412px; max-width: 100% }
+.backers .bk-cta { justify-content: center }
+.backers h2 { margin: 0; font: 400 30px/1.1 var(--font-serif) }
+.logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px }
+.logo { height: 88px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); display: grid; place-items: center; padding: 14px; text-decoration: none; font: 500 15px/1.2 var(--font-sans) }
+.logo img { max-width: 100%; max-height: 44px; object-fit: contain }
+.logo { gap: 6px; align-content: center; color: var(--ink) }
+.logo .nm { font: 500 12px/1.2 var(--font-sans); color: var(--ink-muted); text-align: center }
+.logo.t-featured, .logo.t-gold { grid-column: span 2; height: 120px }
+.logo.t-featured img, .logo.t-gold img { max-height: 64px }
+@media (max-width: 560px) { .logo.t-featured, .logo.t-gold { grid-column: 1 / -1 } }
+.logo.slot { border-style: dashed; color: var(--ink-muted); font: 400 18px/1 var(--font-hand); background: transparent; transition: border-color .15s, color .15s }
+.logo.slot:hover { border-color: var(--slate); color: var(--ink) }
+.bk-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
+.kit-foot { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+
+@media (max-width: 640px) {
+  .nav .gh-label, .star .lbl, .spon .lbl, .prac .lbl { display: none }
+  .prac { padding: 0 11px }
+  .spon, .star { padding: 0 11px }
+  .mark { font-size: 22px }
+  .nav .pill { height: 36px; padding: 0 12px; font-size: 13px }
+  .nav .wrap { gap: 8px; height: 58px }
+  .rail { top: calc(58px + env(safe-area-inset-top, 0px)) }
+  .search { padding-left: 16px }
+  .search kbd { display: none }
+  .hero .wrap { padding-block: 20px 0 }
+  .island .xs { display: none }
+  .win-bar { grid-template-columns: 44px 1fr 44px; padding: 0 10px } .win-bar i { width: 8px; height: 8px; margin-right: 4px }
+  .rail .wrap { gap: 20px }
+  main .wrap { gap: 36px }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px }
+  .track { grid-auto-columns: 62% ; gap: 12px }
+  .ct { font-size: 14px; line-height: 18px }
+}
+@media (max-width: 420px) { .mark .long { display: none } .mark .short { display: inline } .nav .wrap { gap: 6px } .nav .pill.primary { padding: 0 11px } .star, .spon { padding: 0 9px } .ibtn { width: 34px; height: 34px } .star .cnt { display: none } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important } }
+
+/* practice */
+.px { background: radial-gradient(70% 60% at 50% 0%, var(--atmo-haze), transparent 70%), radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground); min-height: calc(100vh - 64px) }
+.px .wrap { padding-block: 40px 64px; display: grid; gap: 22px }
+.ph1 { margin: 0; font: 400 clamp(38px, 6vw, 60px)/1.02 var(--font-serif); text-wrap: balance; text-align: center } .ph1 i { font-style: italic }
+.plead { margin: -6px auto 0; max-width: 620px; text-align: center; color: var(--ink-muted); font: 400 17px/25px var(--font-sans) }
+.how7 { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
+.how7 span { padding: 7px 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface) }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center }
+.seg2 { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk) }
+.seg2 button { height: 32px; padding: 0 14px; border: 0; border-radius: 9999px; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
+.seg2 button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12) }
+.sel { height: 38px; padding: 0 34px 0 14px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center / 12px; appearance: none; font: 500 13px/1 var(--font-sans); color: var(--ink); cursor: pointer }
+.qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px 18px }
+.q { display: grid; gap: 10px; border: 0; padding: 0; background: none; text-align: left; cursor: pointer; color: inherit; min-width: 0 }
+.q .th { position: relative; aspect-ratio: 3 / 2; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--thumb); overflow: hidden; transition: box-shadow .2s, transform .2s }
+.q .th img { width: 100%; height: 100%; object-fit: contain; padding: 8px }
+.q:hover .th { box-shadow: var(--shadow-float); transform: translateY(-3px) }
+.q .badge { position: absolute; left: 10px; top: 10px; font: 500 11px/1 var(--font-mono); padding: 5px 8px; border-radius: 9999px; background: var(--pill); color: var(--on-ink) }
+.q .tt { font: 500 16px/21px var(--font-sans) }
+.q .mm { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); margin-top: -4px }
+.lv { font: 500 11px/1 var(--font-mono); padding: 4px 8px; border-radius: 9999px; border: 1px solid var(--hairline) }
+.lv.Easy { color: #2f9e44; border-color: #b2f2bb } .lv.Medium { color: #e67700; border-color: #ffd8a8 } .lv.Hard { color: #e03131; border-color: #ffc9c9 }
+.src { text-align: center; font: 400 12px/18px var(--font-sans); color: var(--ink-muted) } .src a { color: inherit }
+/* session */
+.bar { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
+.bar .wrap { display: flex; align-items: center; gap: 14px; min-height: 60px; flex-wrap: wrap; padding-block: 8px }
+.bar .back { border: 0; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); display: inline-flex; align-items: center; gap: 6px; padding: 0 }
+.bar .back svg { width: 14px; height: 14px }
+.bar h2 { margin: 0; font: 400 24px/1.1 var(--font-serif); flex: 1; min-width: 160px }
+.prog { display: flex; gap: 4px; flex: 1 1 260px; max-width: 420px }
+.prog button { flex: 1; height: 6px; border: 0; border-radius: 9999px; background: var(--hairline); cursor: pointer; padding: 0; position: relative; transition: background .3s }
+.prog button.done { background: var(--ink-muted) } .prog button.on { background: var(--sketch) }
+.timer { height: 34px; padding: 0 12px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font: 500 13px/1 var(--font-mono); color: var(--ink) }
+.timer svg { width: 14px; height: 14px } .timer.over { color: #e03131; border-color: #ffc9c9 }
+.stage { display: grid; gap: 18px }
+.sh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px }
+.sh .k { font: 500 12px/1 var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em }
+.sh h3 { margin: 0; font: 400 clamp(30px, 4.5vw, 44px)/1.05 var(--font-serif) }
+.sh .bud { font: 400 12px/1 var(--font-mono); color: var(--ink-muted); margin-left: auto }
+.two { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px }
+@media (min-width: 900px) { .two { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) } }
+.card { border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface); padding: 22px; display: grid; gap: 16px; align-content: start; min-width: 0 }
+.ask { margin: 0; font: 400 24px/1.25 var(--font-serif) }
+.lens { display: grid; gap: 10px }
+.lens div { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
+.lens svg { width: 20px; height: 20px; color: var(--sketch); margin-top: 1px }
+.lens b { display: block; color: var(--ink); font: 500 12px/16px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px }
+.lens i { color: var(--ink) }
+.notes { width: 100%; min-height: 96px; resize: vertical; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--ground); padding: 12px 14px; font: 400 14px/21px var(--font-sans); color: var(--ink) }
+.notes:focus { outline: 2px solid var(--sketch-soft); border-color: var(--sketch) }
+.ans { position: relative; min-height: 220px }
+.ans .cover { position: absolute; inset: 0; display: grid; place-items: center; gap: 12px; align-content: center; text-align: center; border-radius: var(--r-lg); background: var(--surface); z-index: 1; transition: opacity .3s }
+.ans .cover p { margin: 0; color: var(--ink-muted); font: 400 14px/20px var(--font-sans); max-width: 280px }
+.ans.open .cover { opacity: 0; pointer-events: none }
+.ans .cover kbd, .kbd { font: 400 11px/1 var(--font-mono); border: 1px solid var(--hairline); border-radius: 5px; padding: 3px 5px; color: var(--ink-muted) }
+.alist { display: grid; gap: 8px; filter: blur(6px); opacity: .35; transition: filter .4s, opacity .4s }
+.ans.open .alist { filter: none; opacity: 1 }
+.alist h4 { margin: 6px 0 0; font: 500 12px/16px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .05em }
+.alist h4:first-child { margin-top: 0 }
+.ai { display: grid; grid-template-columns: 18px 1fr; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-sunk); font: 400 14px/20px var(--font-sans) }
+.ai::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sketch); margin: 6px 0 0 4px }
+.ai code { font: 400 13px/20px var(--font-mono); white-space: pre-wrap; word-break: break-word }
+.ans.open .ai { animation: rise .35s cubic-bezier(.2,.8,.2,1) both } .ans.open .ai:nth-child(2) { animation-delay: .04s } .ans.open .ai:nth-child(3) { animation-delay: .08s } .ans.open .ai:nth-child(4) { animation-delay: .12s } .ans.open .ai:nth-child(5) { animation-delay: .16s } .ans.open .ai:nth-child(6) { animation-delay: .2s }
+.nav2 { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+.nav2 .sp { flex: 1 }
+.nav2 .pill { height: 42px }
+/* canvas */
+.hl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start }
+@media (min-width: 980px) { .hl { grid-template-columns: minmax(0, 2.1fr) minmax(300px, 1fr) } .hl .side { position: sticky; top: 150px } .hl .canvas { aspect-ratio: auto; height: min(68vh, 640px) } }
+.side { display: grid; gap: 14px; align-content: start }
+.order { margin: 0; padding: 0 0 0 4px; list-style: none; display: grid; gap: 2px; counter-reset: o; max-height: 220px; overflow: auto }
+.order li { counter-increment: o; display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 8px; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); opacity: .45 }
+.order li::before { content: counter(o); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 500 10px/1 var(--font-mono); background: var(--surface-sunk) }
+.order li.done { opacity: 1 } .order li.on { opacity: 1; color: var(--ink); background: var(--sketch-soft) } .order li.on::before { background: var(--sketch); color: #fff }
+.bar .back { text-decoration: none }
+.canvas { position: relative; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; overflow: hidden; aspect-ratio: 16 / 9; display: grid; place-items: center; padding: 16px }
+.canvas svg { width: 100%; height: 100%; max-height: 62vh }
+.canvas svg { animation: fadein .35s ease-out }
+@keyframes fadein { from { opacity: .4 } }
+.cnt { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.9); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px }
+.cap { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: start; padding: 16px 18px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface) }
+.cap .n { grid-row: span 2; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--sketch-soft); color: var(--sketch); font: 500 13px/1 var(--font-mono) }
+.cap b { font: 500 16px/22px var(--font-sans) } .cap span { font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
+.cap { animation: rise .3s ease-out }
+/* deep dives */
+.dives { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px }
+.dv { text-align: left; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface); padding: 18px; cursor: pointer; display: grid; gap: 10px; color: inherit; transition: box-shadow .2s, border-color .2s }
+.dv:hover { box-shadow: var(--shadow-float) }
+.dv .qq { font: 400 20px/1.25 var(--font-serif) }
+.dv .aa { font: 400 14px/21px var(--font-sans); color: var(--ink-muted); display: none }
+.dv .tap { font: 500 12px/1 var(--font-mono); color: var(--sketch) }
+.dv.open { border-color: var(--sketch-soft) } .dv.open .aa { display: block; animation: rise .3s ease-out } .dv.open .tap { display: none }
+/* wrap */
+.score { display: grid; gap: 10px }
+.chk { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; font: 400 14px/20px var(--font-sans) }
+.chk input { width: 18px; height: 18px; accent-color: var(--sketch) }
+.big { font: 400 56px/1 var(--font-serif) } .big small { font: 400 16px/1 var(--font-sans); color: var(--ink-muted) }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); opacity: 0; background: var(--pill); color: var(--on-ink); padding: 10px 18px; border-radius: 9999px; font: 500 14px/1 var(--font-sans); transition: .2s ease-out; pointer-events: none; z-index: 50 }
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0) }
+@media (max-width: 640px) { .order { display: none } #hlnav { position: sticky; bottom: 0; z-index: 5; padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--ground); box-shadow: 0 -12px 16px var(--ground) } #hlnav [data-act="all"] { display: none } .bar h2 { font-size: 20px; flex-basis: 100% ; order: 3 } .prog { order: 4; max-width: none; flex-basis: 100% } .canvas { aspect-ratio: 4 / 3 } .card { padding: 18px } .ask { font-size: 21px } .nav2 .pill { flex: 1; justify-content: center } }
+[hidden] { display: none !important }
+</style>
+</head><body>
+<header class="nav gut"><div class="wrap">
+  <a class="mark" href="../" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>
+  <span class="sp"></span>
+  <button class="ibtn" id="theme" type="button" aria-label="Switch theme"><svg class="i-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 12.5A6.5 6.5 0 0 1 7.5 4a6.5 6.5 0 1 0 8.5 8.5z"/></svg><svg class="i-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.6M10 15.9v1.6M2.5 10h1.6M15.9 10h1.6M4.7 4.7l1.1 1.1M14.2 14.2l1.1 1.1M4.7 15.3l1.1-1.1M14.2 5.8l1.1-1.1"/></svg></button>
+  <a class="pill ghost" href="../">All blocks</a>
+</div></header>
+
+<div id="vPick">
+<main class="px gut"><div class="wrap">
+  <h1 class="ph1">Practise the interview, <i>step by step</i>.</h1>
+  <p class="plead">Pick a question. Build the answer the way the interview runs, one block at a time, and see what the interviewer is checking at every step.</p>
+  <div class="how7" aria-label="The seven steps"><span>1 Requirements</span><span>2 Estimates</span><span>3 API</span><span>4 Data</span><span>5 Design</span><span>6 Deep dives</span><span>7 Wrap-up</span></div>
+  <div class="filters">
+    <div class="seg2" id="fTrack"><button type="button" data-v="all" aria-pressed="true">All</button><button type="button" data-v="Classic" aria-pressed="false">Classic</button><button type="button" data-v="AI" aria-pressed="false">AI</button></div>
+    <select class="sel" id="fLevel" aria-label="Level"><option value="">Any level</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
+    <select class="sel" id="fCo" aria-label="Company"><option value="">Any company</option></select>
+  </div>
+  <div class="qgrid" id="qgrid"></div>
+  <p class="src">Companies are from public candidate reports and change over time. Missing a question? <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request it</a>.</p>
+</div></main>
+</div>
+
+<div id="vRun" hidden>
+<div class="bar gut"><div class="wrap">
+  <button class="back" type="button" id="bBack"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg>All questions</button>
+  <h2 id="rTitle"></h2>
+  <div class="prog" id="rProg" aria-label="Steps"></div>
+  <button class="timer" type="button" id="rTimer" aria-label="Start or pause the 45-minute timer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.5V9l1.8 1.2M6.5 2h3"/></svg><span id="rClock">45:00</span></button>
+</div></div>
+<main class="px gut"><div class="wrap"><div class="stage" id="stage"></div></div></main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<footer class="gut"><div class="wrap"><span>MIT · free · no sign-up</span><span class="help">Happy to help: <a data-mail="Practice" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span><a href="../">Back to the kit</a></span></div></footer>
+
+<script>
+const SP = {"github":"Dinesh-Sunny","kofi":"dineshsunny","people":[{"id":"coffee","name":"Coffee","price":"$5","per":"once","gets":"A big thank-you","gh_tier":674466},{"id":"backer","name":"Backer","price":"$5","per":"month","gets":"Your name in BACKERS.md","gh_tier":674468,"card":"https://buy.stripe.com/3cI7sK1F0g9yf5EfJrgjC05"},{"id":"supporter","name":"Supporter","price":"$15","per":"month","gets":"Your name in the README and early access to new packs","gh_tier":674469,"card":"https://buy.stripe.com/aFabJ097saPecXw0OxgjC04"}],"companies":[{"id":"featured","name":"Featured","price":"$600","per":"month","only":"1 slot","gets":["Logo next to the search on the homepage","Top of the README","Thanks in every release note and on LinkedIn"],"gh_tier":674473,"card":"https://buy.stripe.com/14A28qgzU3mMf5E68RgjC00"},{"id":"gold","name":"Gold","price":"$300","per":"month","gets":["Large logo on the homepage","Large logo in the README"],"gh_tier":674472,"card":"https://buy.stripe.com/4gMdR8erM6yYf5E0OxgjC01"},{"id":"silver","name":"Silver","price":"$150","per":"month","gets":["Logo in the homepage sponsor row","Logo in the README"],"gh_tier":674471,"card":"https://buy.stripe.com/4gMdR8erM2iI8HggNvgjC02"},{"id":"bronze","name":"Bronze","price":"$50","per":"month","gets":["Small logo in the README and BACKERS.md"],"gh_tier":674470,"card":"https://buy.stripe.com/bJe7sK83o1eE2iS9l3gjC03"}],"sponsors":[],"goatcounter":"sdkit","portal":"https://billing.stripe.com/p/login/14A28qgzU3mMf5E68RgjC00","terms":"sponsor/terms/","contact":{"user":"dineshiitb.ae18","domain":"gmail.com","discussions":"https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions","issues":"https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose"}};
+const D = [{"slug":"url-shortener","title":"URL Shortener","level":"Easy","track":"Classic","companies":["Google","Meta","Amazon","Microsoft"],"nodes":[{"id":"u","title":"Users"},{"id":"lb","title":"Load Balancer"},{"id":"api","title":"Shortener API"},{"id":"id","title":"ID Generator (Snowflake)"},{"id":"c","title":"Redis (hot codes)"},{"id":"db","title":"Key-Value DB (code -> URL)"},{"id":"k","title":"Kafka (click events)"},{"id":"w","title":"Analytics Warehouse"}],"c":{"reqF":["Shorten a long URL to a 7-character code","Redirect a code to the original URL","Optional custom alias and expiry","Click counts per link"],"reqN":["Redirect p99 under 50 ms","Very read heavy: 100 reads per write","Highly available: a dead link is a broken promise","Codes must never collide"],"est":["Writes: 100M/day ≈ 1,200/s, peaks ~5k/s","Reads: 100x ≈ 120k/s, peaks ~500k/s","Storage: 100M x 500 B x 365 x 5 yr ≈ 90 TB","Cache: top 20% of daily reads ≈ a few hundred GB"],"api":["POST /urls {longUrl, alias?, expiresAt?} → 201 {code}","GET /{code} → 301/302 Location: longUrl","GET /urls/{code}/stats → {clicks, byDay}"],"data":["urls: code PK, long_url, user_id, created_at, expires_at","Key-value store partitioned by code","clicks: append-only events to Kafka, rolled up in the warehouse"],"blocks":{"u":"Start from the people clicking links: almost all traffic is redirects.","lb":"Spreads redirect traffic across stateless API servers.","api":"Stateless service: creates codes and serves redirects.","id":"Hands out unique 64-bit ids; base62 of the id is the code, so no collisions.","c":"Hot codes live in Redis: most redirects never touch the DB.","db":"Key-value store, partitioned by code: one lookup per miss.","k":"Click events go to a queue so redirects stay fast.","w":"Analytics runs offline on the warehouse, not on the hot path."},"dives":[["How do you generate codes without collisions?","A Snowflake-style id generator, then base62. 7 chars = 3.5 trillion codes. No check-and-retry needed."],["301 or 302?","301 is cached by browsers (fewer hits, no click tracking). 302 every time (lets you count clicks)."],["How do you keep redirects under 50 ms?","Cache hot codes (80/20 rule), CDN or edge for the top links, KV store sharded by code."],["Custom aliases?","Check-and-set insert on the alias; reject if taken."]],"wrap":["Bottleneck: the KV store on cache misses. Fix: bigger cache, read replicas.","Abuse: rate limit creation per user, scan for malicious URLs.","Next: expiry cleanup job, analytics dashboards."]},"kitId":"sdk-tpl-url-shortener-tinyurl-bitly","kit":"tpl-url-shortener-tinyurl-bitly","thumb":"t/sdk-tpl-url-shortener-tinyurl-bitly.webp"},{"slug":"rate-limiter","title":"Rate Limiter","level":"Medium","track":"Classic","companies":["Amazon","Atlassian","Uber","Patreon"],"nodes":[{"id":"u","title":"Clients"},{"id":"gw","title":"API Gateway + Rate Limiter"},{"id":"s","title":"Services"},{"id":"r","title":"Redis (counters, Lua)"},{"id":"cfg","title":"Rules Config"},{"id":"x","title":"Rejected 429 + Retry-After"}],"c":{"reqF":["Limit requests per user, IP or API key","Different rules per endpoint","Return 429 with Retry-After when over the limit","Rules change without a deploy"],"reqN":["Adds under 1-2 ms per request","Works across many gateway nodes","Fails open if the limiter is down","Accurate enough, not perfect"],"est":["1M requests/s at the edge","10M active keys x ~100 B ≈ 1 GB of counters","One Redis round trip per request: shard Redis by key"],"api":["Internal: allow(key, rule) → {allowed, remaining, resetAt}","Headers: X-RateLimit-Limit, -Remaining, Retry-After","Admin: PUT /rules/{id} {limit, window}"],"data":["counters in Redis: key = rule:user:window → count, TTL","rules: id, match (path, method), limit, window, scope"],"blocks":{"u":"Clients of every kind hit one front door.","gw":"The limiter lives in the gateway so every service is protected.","s":"Allowed requests pass straight to the services.","r":"Shared counters in Redis, updated atomically with a Lua script.","cfg":"Rules come from config, so limits change without a deploy.","x":"Over the limit: 429 plus Retry-After, so clients back off."},"dives":[["Which algorithm?","Token bucket: allows short bursts, simple, most common. Sliding window counter if you need smoother limits."],["How do you stay correct across many gateways?","Central Redis with an atomic Lua script (INCR + check + EXPIRE in one step)."],["What if Redis is down?","Fail open with a local in-memory fallback limit, and alert."],["Hot keys?","Shard counters by key; keep a local token cache for very hot clients."]],"wrap":["Bottleneck: Redis round trip. Fix: local batching, shard by key.","Next: per-plan limits, dashboards of who is throttled."]},"kitId":"sdk-tpl-rate-limiter-throttling-api-limits","kit":"tpl-rate-limiter-throttling-api-limits","thumb":"t/sdk-tpl-rate-limiter-throttling-api-limits.webp"},{"slug":"chat-system","title":"Chat System","level":"Medium","track":"Classic","companies":["Meta","Uber","TikTok","Amazon"],"nodes":[{"id":"a","title":"User A"},{"id":"b","title":"User B"},{"id":"w1","title":"Chat Server (WebSocket)"},{"id":"w2","title":"Chat Server (WebSocket)"},{"id":"k","title":"Message Queue (Kafka)"},{"id":"p","title":"Presence (Redis)"},{"id":"db","title":"Message Store (Cassandra)"},{"id":"push","title":"Push Service (offline)"},{"id":"s3","title":"Media (S3 + CDN)"}],"c":{"reqF":["1:1 and group chat","Online presence and last seen","Sent, delivered and read receipts","Messages reach offline users later","Photos and files"],"reqN":["Delivery under 200 ms when both are online","Messages never lost, kept in order per chat","Billions of messages a day","Works on flaky mobile networks"],"est":["500M DAU x 40 msgs ≈ 20B msgs/day ≈ 230k/s","Storage: 20B x 100 B ≈ 2 TB/day","Open connections: ~100M at peak, ~50k per server ≈ 2k servers"],"api":["WebSocket: send {chatId, clientMsgId, body}","Server push: message, ack (sent/delivered/read), presence","GET /chats/{id}/messages?before=cursor"],"data":["messages: chat_id (partition), msg_id (sort), sender, body, ts","chats + members tables","presence in Redis with TTL heartbeats"],"blocks":{"a":"User A on a phone with a long-lived connection.","b":"User B, maybe on another server or offline.","w1":"WebSocket servers keep open connections for 2-way realtime.","w2":"Each user is pinned to one chat server.","k":"The queue routes messages between servers and absorbs bursts.","p":"Presence lives in Redis with heartbeats and TTLs.","db":"Cassandra: partition by chat, sort by message id, fast writes.","push":"Offline users get a push, then sync when they reconnect.","s3":"Media goes to object storage and a CDN, not through chat servers."},"dives":[["How do you keep order?","Per-chat sequence ids assigned on write; clients sort by them."],["How do you avoid duplicates?","Client message id = idempotency key; server dedupes."],["Group chat with 500 members?","Fan out through the queue; big groups use pull on open."],["How do you know who is online?","Heartbeats every ~30 s into Redis with a TTL."]],"wrap":["Bottleneck: connection servers. Fix: scale horizontally, a registry of user → server.","Next: end-to-end encryption, message search."]},"kitId":"sdk-tpl-chat-system-whatsapp-messenger-realtime","kit":"tpl-chat-system-whatsapp-messenger-realtime","thumb":"t/sdk-tpl-chat-system-whatsapp-messenger-realtime.webp"},{"slug":"news-feed","title":"News Feed","level":"Medium","track":"Classic","companies":["Meta"],"nodes":[{"id":"u","title":"Users"},{"id":"gw","title":"API Gateway"},{"id":"post","title":"Post Service"},{"id":"feed","title":"Feed Service"},{"id":"pdb","title":"Posts DB"},{"id":"k","title":"Kafka (new posts)"},{"id":"fo","title":"Fan-out Workers"},{"id":"g","title":"Social Graph (followers)"},{"id":"fc","title":"Feed Cache (Redis lists)"},{"id":"cdn","title":"CDN (media)"}],"c":{"reqF":["Post text, photos and links","See a feed of people you follow, newest or ranked","Like and comment","Infinite scroll"],"reqN":["Feed loads in under 200 ms","300M DAU, heavy reads","A new post can take a few seconds to appear","Celebrities with 100M followers"],"est":["Reads: 300M x 10 feed loads ≈ 35k/s","Writes: 300M x 0.5 posts ≈ 1.7k/s","Fan-out: avg 200 followers ≈ 350k feed inserts/s"],"api":["POST /posts {text, mediaIds}","GET /feed?cursor=…&limit=20","POST /posts/{id}/like"],"data":["posts: post_id, author_id, body, media, created_at","follows: follower_id, followee_id","feed cache: user_id → list of post ids"],"blocks":{"u":"Readers open the feed far more than they post.","gw":"Auth and routing for posts and feed reads.","post":"Writes posts and announces them.","feed":"Reads a user's precomputed feed.","pdb":"Source of truth for posts.","k":"New-post events decouple writing from fan-out.","fo":"Workers push the post id into each follower's feed.","g":"Who follows whom, read by the fan-out workers.","fc":"Each feed is a Redis list of post ids, ready to read.","cdn":"Images and video come from the CDN."},"dives":[["Fan-out on write or read?","Write for most users (fast reads). Read-time pull for celebrities. Merge both: hybrid."],["Why store ids, not posts, in the feed?","Small lists; hydrate post details from cache at read time."],["Pagination?","Cursor based (last post id), never offset."],["Ranking?","A ranking service scores candidates; start with recency."]],"wrap":["Bottleneck: fan-out for big accounts. Fix: hybrid fan-out.","Next: ranking model, ads insertion, notifications."]},"kitId":"sdk-tpl-news-feed-twitter-timeline-social","kit":"tpl-news-feed-twitter-timeline-social","thumb":"t/sdk-tpl-news-feed-twitter-timeline-social.webp"},{"slug":"video-streaming","title":"Video Streaming","level":"Medium","track":"Classic","companies":["Meta","Amazon","Snowflake"],"nodes":[{"id":"cr","title":"Creator"},{"id":"up","title":"Upload Service"},{"id":"raw","title":"Raw Video (S3)"},{"id":"q","title":"Transcode Queue"},{"id":"tr","title":"Transcoders (workers)"},{"id":"seg","title":"Segments (S3, HLS/DASH)"},{"id":"cdn","title":"CDN"},{"id":"v","title":"Viewer"},{"id":"api","title":"Video API"},{"id":"meta","title":"Metadata DB"}],"c":{"reqF":["Upload videos","Watch with smooth playback on any device","Adapt quality to network speed","Video page: title, views, recommendations"],"reqN":["Start playback in under 2 s","Huge egress: CDN serves almost everything","Uploads resumable","Durable: never lose a video"],"est":["Uploads: 500 hours per minute","Each video stored in ~6 renditions ≈ 5x raw size","Egress: millions of concurrent streams x ~5 Mbps ≈ Tbps, so CDN"],"api":["POST /videos → pre-signed upload URL","GET /videos/{id} → metadata + manifest URL","GET manifest.m3u8 → segment list (from CDN)"],"data":["videos: id, owner, title, status, renditions","segments in object storage: /video/rendition/segment.ts"],"blocks":{"cr":"Creators upload large files.","up":"Hands out pre-signed URLs so uploads go straight to storage.","raw":"Raw uploads land in object storage.","q":"Each upload becomes a transcode job.","tr":"Workers split, encode many bitrates and merge.","seg":"HLS/DASH segments for every quality.","cdn":"The CDN serves the bytes, close to viewers.","v":"Viewers stream segments and switch quality on the fly.","api":"Video API serves the watch page and manifest.","meta":"Metadata DB: titles, status, view counts."},"dives":[["Why pre-signed uploads?","Big files skip your servers; resumable multipart upload to S3."],["Adaptive bitrate?","Client picks the next segment's quality from measured bandwidth."],["How do you transcode fast?","Split into chunks, encode in parallel as a DAG, merge."],["Cost of egress?","CDN with high hit ratio, pre-warm popular videos at the edge."]],"wrap":["Bottleneck: transcode backlog. Fix: autoscale workers, prioritise popular creators.","Next: recommendations, live streaming."]},"kitId":"sdk-tpl-video-streaming-youtube-netflix-vod","kit":"tpl-video-streaming-youtube-netflix-vod","thumb":"t/sdk-tpl-video-streaming-youtube-netflix-vod.webp"},{"slug":"notification-system","title":"Notification System","level":"Medium","track":"Classic","companies":["Google","Pinterest","Oracle","StubHub"],"nodes":[{"id":"s","title":"Services (triggers)"},{"id":"n","title":"Notification Service"},{"id":"pref","title":"Prefs + Device Tokens"},{"id":"tpl","title":"Templates"},{"id":"q1","title":"iOS Queue"},{"id":"q2","title":"Android Queue"},{"id":"q3","title":"SMS Queue"},{"id":"q4","title":"Email Queue"},{"id":"w","title":"Workers (retry + DLQ)"},{"id":"p1","title":"APNs"},{"id":"p2","title":"FCM"},{"id":"p3","title":"SMS Provider"},{"id":"p4","title":"Email Provider"}],"c":{"reqF":["Send push, SMS and email","Respect user preferences and opt-outs","Templates per message type","Track sent, delivered and opened"],"reqN":["10M+ notifications a day, bursts","At-least-once with no visible duplicates","One slow channel never blocks the others","Retries with backoff"],"est":["10M/day ≈ 120/s average, bursts 10k/s","Device tokens: 1B x 100 B ≈ 100 GB"],"api":["POST /notify {userId, type, data, idempotencyKey}","PUT /users/{id}/preferences"],"data":["preferences: user, channel, opt_in, quiet_hours","device_tokens: user, platform, token","log: id, status, timestamps"],"blocks":{"s":"Any service can trigger a notification.","n":"One service validates, applies preferences and renders templates.","pref":"Preferences and device tokens decide where it can go.","tpl":"Templates keep copy out of code.","q1":"A queue per channel isolates failures.","q2":"Android has its own queue.","q3":"SMS is slow and costly, so it is isolated.","q4":"Email can be batched.","w":"Workers send, retry with backoff, then DLQ.","p1":"Apple push service.","p2":"Firebase for Android.","p3":"SMS provider.","p4":"Email provider."},"dives":[["How do you avoid duplicates?","Idempotency key per notification; workers check before sending."],["What if a provider is down?","Retry with backoff, then dead-letter queue; failover to a second provider."],["Quiet hours?","Delay into a scheduled queue by user time zone."],["Rate limits?","Per-user caps so nobody gets spammed."]],"wrap":["Bottleneck: provider limits. Fix: per-channel throttling, multiple providers.","Next: digesting, A/B tests on copy."]},"kitId":"sdk-tpl-notification-system-push-email-sms","kit":"tpl-notification-system-push-email-sms","thumb":"t/sdk-tpl-notification-system-push-email-sms.webp"},{"slug":"web-crawler","title":"Web Crawler","level":"Medium","track":"Classic","companies":["Amazon","Google","Meta","Atlassian"],"nodes":[{"id":"seed","title":"Seed URLs"},{"id":"f","title":"URL Frontier (priority queues)"},{"id":"fe","title":"Fetchers"},{"id":"dns","title":"DNS Resolver (cached)"},{"id":"web","title":"Websites"},{"id":"cs","title":"Content Store (S3)"},{"id":"pa","title":"Parser + Link Extractor"},{"id":"dd","title":"Dedup (Bloom filter)"},{"id":"seen","title":"URL Seen Store"}],"c":{"reqF":["Crawl the web from seed URLs","Store page content","Extract and follow links","Re-crawl pages to keep them fresh"],"reqN":["1B pages a month ≈ 400 pages/s","Polite: never hammer one site","Skip duplicates","Robust to traps and bad HTML"],"est":["400 pages/s x 500 KB ≈ 200 MB/s download","Storage: 1B x 500 KB ≈ 500 TB/month (compress)","URL frontier: billions of URLs on disk"],"api":["Internal: frontier.next() → url","fetch(url) → html","store(url, content, hash)"],"data":["url seen set (Bloom filter + store)","content: url hash → compressed HTML in S3","frontier: priority queues per host"],"blocks":{"seed":"Start from a list of seed URLs.","f":"The frontier decides what to fetch next, by priority and politeness.","fe":"Fetchers download pages in parallel.","dns":"A cached DNS resolver avoids a slow lookup per page.","web":"The websites themselves.","cs":"Raw pages go to object storage.","pa":"Parse HTML and extract links.","dd":"A Bloom filter drops URLs already seen.","seen":"The durable set of seen URLs."},"dives":[["How are you polite?","One queue per host, a delay between requests, obey robots.txt."],["Duplicates?","URL dedupe with a Bloom filter; content dedupe with simhash."],["Crawler traps?","Max depth, URL length limits, per-site page caps."],["Freshness?","Re-crawl by page change rate and importance."]],"wrap":["Bottleneck: DNS and network. Fix: DNS cache, more fetchers per region.","Next: JavaScript rendering, ranking signals."]},"kitId":"sdk-tpl-web-crawler-search-engine-spider","kit":"tpl-web-crawler-search-engine-spider","thumb":"t/sdk-tpl-web-crawler-search-engine-spider.webp"},{"slug":"file-storage-sync","title":"File Storage & Sync","level":"Medium","track":"Classic","companies":["Dropbox","Meta","Google","Amazon"],"nodes":[{"id":"c","title":"Desktop Client (watcher+chunker)"},{"id":"bs","title":"Block Service"},{"id":"s3","title":"Block Storage (S3)"},{"id":"ms","title":"Metadata Service"},{"id":"mdb","title":"Metadata DB (files, versions)"},{"id":"nt","title":"Notification (long poll / WS)"},{"id":"o","title":"Other Devices"}],"c":{"reqF":["Upload and download files","Sync changes across all devices","Keep file versions","Share files"],"reqN":["Upload only what changed","Strong consistency for file metadata","Durable storage","Works offline, syncs later"],"est":["50M users x 10 GB ≈ 500 PB raw, dedupe saves a lot","Changes: ~1k commits/s"],"api":["POST /blocks (upload chunk by hash)","POST /files/commit {path, chunkHashes, baseVersion}","GET /changes?cursor=…"],"data":["files: id, path, owner, version, chunk_list","chunks: hash → storage location (deduped)"],"blocks":{"c":"The desktop client watches folders and splits files into chunks.","bs":"Block service accepts only the chunks that changed.","s3":"Chunks stored once, by hash.","ms":"Metadata service commits file versions.","mdb":"SQL for metadata: versions need strong consistency.","nt":"Other devices are told something changed.","o":"Other devices pull only the new chunks."},"dives":[["Why chunk files?","Upload only changed 4 MB chunks; dedupe identical chunks by hash."],["Conflicts?","Version check on commit; on conflict keep both copies."],["Why SQL for metadata?","Transactions for versions and paths."],["How do devices find out?","Long poll or WebSocket notifications, then fetch changes."]],"wrap":["Bottleneck: metadata DB. Fix: shard by user or namespace.","Next: sharing permissions, LAN sync."]},"kitId":"sdk-tpl-file-storage-sync-dropbox-google-drive","kit":"tpl-file-storage-sync-dropbox-google-drive","thumb":"t/sdk-tpl-file-storage-sync-dropbox-google-drive.webp"},{"slug":"ride-sharing","title":"Ride Sharing","level":"Hard","track":"Classic","companies":["Uber","Lyft","Meta","Google"],"nodes":[{"id":"r","title":"Rider App"},{"id":"d","title":"Driver App"},{"id":"gw","title":"Gateway + WebSocket"},{"id":"t","title":"Trip Service"},{"id":"l","title":"Location Service"},{"id":"m","title":"Matching (dispatch)"},{"id":"geo","title":"Geo Index (Redis GEO / H3)"},{"id":"tdb","title":"Trips DB"},{"id":"maps","title":"Maps / ETA"},{"id":"pay","title":"Payment Service"}],"c":{"reqF":["Rider requests a ride","Match the nearest available driver","Live driver location and ETA","Pay at the end of the trip"],"reqN":["Matching in a few seconds","1M drivers sending location every 4 s","A driver is never offered two trips at once","Highly available in every city"],"est":["Location writes: 1M / 4 s = 250k/s","Ride requests: ~1k/s at peak","Location data is small and short-lived: keep it in memory"],"api":["POST /rides {pickup, dropoff} → rideId","WS: driver location updates, ride status pushes","POST /rides/{id}/accept (driver)"],"data":["trips: id, rider, driver, status, route, fare","driver locations: in-memory geo index (H3 / geohash)"],"blocks":{"r":"Riders request trips and watch the car arrive.","d":"Drivers stream their location every few seconds.","gw":"WebSocket gateway for live, 2-way updates.","t":"Trip service owns the ride lifecycle.","l":"Location service ingests 250k updates per second.","m":"Matching finds and locks the best nearby driver.","geo":"In-memory geo index for nearby search.","tdb":"Trips DB: durable record of every ride.","maps":"Maps and ETA service for routes and arrival times.","pay":"Payment runs when the trip ends."},"dives":[["Why not store locations in a database?","250k writes/s of data that expires in seconds: keep it in memory (Redis GEO / H3 cells)."],["How do you find nearby drivers?","Look up the rider's cell and its neighbours, then rank by ETA."],["How do you avoid double booking a driver?","Lock the driver (atomic set with TTL) while the offer is open."],["What if a region's servers fail?","Partition by city; failover per region."]],"wrap":["Bottleneck: location ingest. Fix: shard by geo cell.","Next: surge pricing, pooled rides."]},"kitId":"sdk-tpl-ride-sharing-uber-lyft-dispatch-geo","kit":"tpl-ride-sharing-uber-lyft-dispatch-geo","thumb":"t/sdk-tpl-ride-sharing-uber-lyft-dispatch-geo.webp"},{"slug":"payment-system","title":"Payment System","level":"Hard","track":"Classic","companies":["Stripe","PayPal","Paytm","Databricks"],"nodes":[{"id":"u","title":"Customer"},{"id":"co","title":"Checkout Service"},{"id":"ps","title":"Payment Service (idempotent)"},{"id":"psp","title":"Payment Gateway (Stripe)"},{"id":"pdb","title":"Payments DB (state machine)"},{"id":"risk","title":"Fraud / Risk"},{"id":"wh","title":"Webhook Handler"},{"id":"led","title":"Ledger DB (double-entry)"},{"id":"rec","title":"Reconciliation (daily)"}],"c":{"reqF":["Customer pays at checkout","Charge through a payment provider","Record every money movement","Handle refunds"],"reqN":["Never charge twice","Never lose a payment: strong consistency","Auditable to the cent","Reconciled with the provider every day"],"est":["1M payments/day ≈ 12/s average, 100x peaks on sale days","Small data, high stakes: correctness over speed"],"api":["POST /payments {orderId, amount, currency} Idempotency-Key: …","Webhook: POST /psp/events (signed)","POST /payments/{id}/refund"],"data":["payments: id, order_id, amount, status (state machine), idempotency_key UNIQUE","ledger_entries: account, debit, credit, payment_id (append-only)"],"blocks":{"u":"The customer presses Pay.","co":"Checkout creates the order and calls payments.","ps":"Payment service, idempotent by key.","psp":"The provider (Stripe) moves the money.","pdb":"Payments DB holds the state machine.","risk":"Fraud check before charging.","wh":"Webhooks confirm results from the provider.","led":"Double-entry ledger: every debit has a credit.","rec":"Daily reconciliation against the provider's settlement file."},"dives":[["How do you never charge twice?","Idempotency key with a UNIQUE constraint; retries return the first result."],["What states can a payment be in?","CREATED → PENDING → SUCCEEDED / FAILED, only forward."],["Why a ledger?","Append-only double-entry: balances always add up and are auditable."],["What if the webhook never arrives?","Poll the provider for pending payments; reconcile daily."]],"wrap":["Bottleneck: provider latency. Fix: async confirmation via webhooks.","Next: multi-currency, payouts, chargebacks."]},"kitId":"sdk-tpl-payment-system-stripe-checkout-ledger","kit":"tpl-payment-system-stripe-checkout-ledger","thumb":"t/sdk-tpl-payment-system-stripe-checkout-ledger.webp"},{"slug":"search-autocomplete","title":"Search Autocomplete","level":"Hard","track":"Classic","companies":["Meta","Google","Expedia","Bloomberg"],"nodes":[{"id":"u","title":"User"},{"id":"ac","title":"Autocomplete Service"},{"id":"tc","title":"Trie Cache (top-k per prefix)"},{"id":"ts","title":"Trie Store (snapshots)"},{"id":"log","title":"Query Logs (Kafka)"},{"id":"ag","title":"Aggregators (Spark, hourly)"},{"id":"tb","title":"Trie Builder"}],"c":{"reqF":["Show top 5 suggestions as the user types","Rank by popularity","Update with trending queries","Filter unsafe terms"],"reqN":["Under 100 ms per keystroke","10B queries a day","Suggestions can be an hour stale"],"est":["10B queries x ~5 keystrokes ≈ 600k lookups/s","Unique prefixes: hundreds of millions; top-k cached per prefix fits in memory per shard"],"api":["GET /suggest?q=sys → [5 suggestions]"],"data":["trie: prefix → top-k completions (in memory, snapshot to store)","query logs → hourly counts"],"blocks":{"u":"Users type a few letters.","ac":"Autocomplete service answers each keystroke.","tc":"In-memory trie with top-k cached at each node.","ts":"Trie snapshots in storage, loaded at start.","log":"Every query is logged to a stream.","ag":"Hourly aggregation of query counts.","tb":"Builds a fresh trie offline and swaps it in."},"dives":[["Why cache top-k per node?","Lookup becomes O(prefix length), no tree walk at query time."],["How do you update?","Rebuild offline from logs and swap atomically."],["Scale?","Shard by prefix range; replicate hot shards."],["Client tricks?","Debounce typing, cache in the browser."]],"wrap":["Bottleneck: hot prefixes like 'a'. Fix: replicate, cache at the edge.","Next: personalisation, multiple languages."]},"kitId":"sdk-tpl-search-autocomplete-typeahead-suggestions-trie","kit":"tpl-search-autocomplete-typeahead-suggestions-trie","thumb":"t/sdk-tpl-search-autocomplete-typeahead-suggestions-trie.webp"},{"slug":"ticket-booking","title":"Ticket Booking","level":"Hard","track":"Classic","companies":[],"nodes":[{"id":"u","title":"Users"},{"id":"wr","title":"Virtual Waiting Room"},{"id":"gw","title":"API Gateway"},{"id":"ev","title":"Event Service"},{"id":"bk","title":"Booking Service"},{"id":"edb","title":"Events DB + Search"},{"id":"lk","title":"Seat Locks (Redis TTL)"},{"id":"bdb","title":"Bookings DB (SQL, ACID)"},{"id":"pay","title":"Payment Gateway"}],"c":{"reqF":["Browse events and seat maps","Hold seats while paying","Book and pay","Release unpaid holds"],"reqN":["Never double-book a seat","Survive flash-sale spikes (100x)","Fair queueing for hot events"],"est":["Hot event: 1M users for 50k seats in minutes","Normal: low traffic, mostly reads"],"api":["GET /events/{id}/seats","POST /holds {eventId, seatIds} → holdId (10 min)","POST /bookings {holdId, payment}"],"data":["seats: event_id, seat_id, status, UNIQUE (event, seat)","holds in Redis with TTL","bookings: id, user, seats, status"],"blocks":{"u":"Fans arriving all at once.","wr":"A virtual waiting room lets people in at a safe rate.","gw":"Gateway for the admitted users.","ev":"Event service: details and seat maps.","bk":"Booking service runs hold, pay, confirm.","edb":"Events DB plus search.","lk":"Seat holds in Redis with a 10-minute TTL.","bdb":"Bookings in SQL with a unique constraint as the last guard.","pay":"Payment gateway charges the card."},"dives":[["How do you prevent double booking?","Hold with SET NX EX in Redis, plus a UNIQUE (event, seat) in the DB."],["What happens if payment fails?","The hold expires or is released; the seat returns."],["Flash sale?","Waiting room, cached event pages, admit in batches."],["Fairness?","Queue position by arrival, block bots."]],"wrap":["Bottleneck: seat-hold contention. Fix: shard holds by section.","Next: resale, dynamic pricing."]},"kitId":"sdk-tpl-ticket-booking-ticketmaster-seats-concerts","kit":"tpl-ticket-booking-ticketmaster-seats-concerts","thumb":"t/sdk-tpl-ticket-booking-ticketmaster-seats-concerts.webp"},{"slug":"proximity-service","title":"Proximity Service","level":"Hard","track":"Classic","companies":["Amazon","Meta","Google","Uber"],"nodes":[{"id":"u","title":"Users"},{"id":"lb","title":"Load Balancer"},{"id":"ls","title":"Location Search Service"},{"id":"bs","title":"Business Service"},{"id":"geo","title":"Geo Index (geohash)"},{"id":"c","title":"Business Cache"},{"id":"db","title":"Business DB (+ replicas)"}],"c":{"reqF":["Find places within a radius","See place details and reviews","Owners add and edit places"],"reqN":["Search under 100 ms","Read heavy","New places can take a day to appear"],"est":["100M DAU x 5 searches ≈ 6k/s, peaks 30k/s","200M places x 1 KB ≈ 200 GB"],"api":["GET /nearby?lat=&lng=&radius=","GET /places/{id}","POST /places (owner)"],"data":["places: id, name, lat, lng, geohash, category","geo index: geohash cell → place ids"],"blocks":{"u":"People searching nearby.","lb":"Spreads search traffic.","ls":"Location search turns a point into cells and finds places.","bs":"Business service handles owner edits.","geo":"Geohash index: cell → place ids.","c":"Cache of place details for fast results.","db":"Business DB with read replicas."},"dives":[["How do you search a radius?","Find the geohash cell for the point plus its 8 neighbours, then filter by distance."],["Geohash or quadtree?","Geohash is simple; a quadtree adapts to dense cities."],["Freshness?","Rebuild the index nightly; edits are rare."],["Scale reads?","Replicas and cache; the index fits in memory."]],"wrap":["Bottleneck: dense cells downtown. Fix: longer geohash or quadtree.","Next: ranking by rating and distance."]},"kitId":"sdk-tpl-proximity-service-yelp-nearby-places","kit":"tpl-proximity-service-yelp-nearby-places","thumb":"t/sdk-tpl-proximity-service-yelp-nearby-places.webp"},{"slug":"llm-chat-app","title":"LLM Chat App","level":"Medium","track":"AI","companies":[],"nodes":[{"id":"u","title":"User"},{"id":"gw","title":"API Gateway (auth, limits)"},{"id":"cs","title":"Chat Service (SSE stream)"},{"id":"cv","title":"Conversation Store"},{"id":"g","title":"Guardrails"},{"id":"r","title":"Model Router"},{"id":"sc","title":"Semantic Cache"},{"id":"llm","title":"LLM API (hosted)"},{"id":"sh","title":"Self-hosted Model (vLLM)"},{"id":"ob","title":"Evals & Tracing"}],"c":{"reqF":["Chat with an AI model, answers stream in","Keep conversation history","Pick the right model for the job","Block unsafe input and output"],"reqN":["First token in under 1 s","Control cost per user","Survive a provider outage","Measure quality over time"],"est":["1M DAU x 20 messages ≈ 230 req/s","~1k tokens per turn ≈ 20B tokens/day: cost is the key number"],"api":["POST /chat {conversationId, message} → SSE token stream","GET /conversations/{id}"],"data":["conversations, messages (role, content, tokens, model)","usage per user per day"],"blocks":{"u":"The user sends a message.","gw":"Auth and token-based rate limits.","cs":"Chat service streams tokens back over SSE.","cv":"Conversation store keeps history.","g":"Guardrails check input and output.","r":"The router picks a model by cost and latency.","sc":"Semantic cache answers repeated questions cheaply.","llm":"Hosted model API for the hard questions.","sh":"Self-hosted model for cheap, high volume.","ob":"Tracing and evals: latency, cost, quality."},"dives":[["How do you stream?","Server-Sent Events from the chat service, token by token."],["Long conversations?","Trim or summarise old turns to fit the context window."],["Cost control?","Route easy prompts to small models, cache, limit tokens per user."],["Provider outage?","Fallback to another provider through the router."]],"wrap":["Bottleneck: model latency and cost. Fix: routing, caching, smaller models.","Next: tools, memory, RAG."]},"kitId":"sdk-tpl-llm-chat-app-chatgpt-assistant-genai","kit":"tpl-llm-chat-app-chatgpt-assistant-genai","thumb":"t/sdk-tpl-llm-chat-app-chatgpt-assistant-genai.webp"},{"slug":"rag-pipeline","title":"RAG Pipeline","level":"Medium","track":"AI","companies":[],"nodes":[{"id":"doc","title":"Documents (PDF, web, DB)"},{"id":"ch","title":"Loader + Chunker"},{"id":"em","title":"Embedding Model"},{"id":"vdb","title":"Vector DB (+ BM25)"},{"id":"u","title":"User"},{"id":"rag","title":"RAG Service"},{"id":"ret","title":"Retriever (hybrid)"},{"id":"rr","title":"Reranker"},{"id":"llm","title":"LLM"}],"c":{"reqF":["Answer questions from company documents","Cite sources","Respect who can see what","Stay up to date as documents change"],"reqN":["Answer in a few seconds","Grounded: say 'not found' instead of guessing","Measurable quality"],"est":["1M documents ≈ 20M chunks x 1.5 KB vectors ≈ 30 GB index","Queries: tens per second"],"api":["POST /ask {question} → {answer, citations}","Ingest: on document change (CDC)"],"data":["chunks: id, doc_id, text, embedding, acl, updated_at","BM25 keyword index alongside vectors"],"blocks":{"doc":"Sources: PDFs, web pages, databases.","ch":"Load and split into chunks with overlap.","em":"Turn chunks into vectors.","vdb":"Vector DB plus keyword index.","u":"The user asks a question.","rag":"RAG service runs the pipeline per question.","ret":"Hybrid retrieval: vectors plus keywords.","rr":"A reranker keeps the best 5 of 50.","llm":"The LLM answers from the context, with citations."},"dives":[["Chunk size?","300-800 tokens with overlap; keep source, date and ACL as metadata."],["Why hybrid search plus rerank?","Vectors catch meaning, keywords catch exact terms; the reranker orders them."],["How do you stop made-up answers?","Answer only from context, cite, say 'not found'."],["How do you measure it?","Recall@k for retrieval, faithfulness for answers."]],"wrap":["Bottleneck: retrieval quality. Fix: better chunking, rerank, evals.","Next: agentic RAG, multi-hop questions."]},"kitId":"sdk-tpl-rag-pipeline-retrieval-augmented-generation","kit":"tpl-rag-pipeline-retrieval-augmented-generation","thumb":"t/sdk-tpl-rag-pipeline-retrieval-augmented-generation.webp"},{"slug":"customer-support-agent","title":"Customer Support Agent","level":"Medium","track":"AI","companies":[],"nodes":[{"id":"c","title":"Customer (chat, email)"},{"id":"gw","title":"Channel Gateway"},{"id":"ag","title":"Support Agent"},{"id":"g","title":"Guardrails + PII"},{"id":"kb","title":"Help Centre (RAG)"},{"id":"crm","title":"Orders / CRM (MCP tools)"},{"id":"h","title":"Human Agent (handoff)"},{"id":"tk","title":"Ticketing"}],"c":{"reqF":["Answer customers from the help centre","Take actions: order status, refunds","Hand off to a human","Log every conversation"],"reqN":["Safe: limits on actions like refunds","Protect personal data","Fast replies","Track resolution rate"],"est":["10k conversations/day","Target: resolve 50-70% without a human"],"api":["Channels: chat widget, email → gateway","Tools: getOrder, refund(cap), createTicket"],"data":["conversations, actions taken, outcome, CSAT"],"blocks":{"c":"Customers write in by chat or email.","gw":"One gateway for every channel.","ag":"The support agent decides: answer, act or escalate.","g":"Guardrails and PII redaction.","kb":"Answers grounded in the help centre.","crm":"Tools on orders and CRM, with limits.","h":"A human takes over with full context.","tk":"Every conversation becomes a ticket."},"dives":[["How do you keep answers right?","Ground in the help centre with RAG; cite articles."],["How do you limit damage?","Tool limits like a refund cap, approval above it."],["When to escalate?","Low confidence, angry customer, or asked for a human."],["How do you measure it?","Resolution rate, CSAT, escalation rate."]],"wrap":["Bottleneck: hard cases. Fix: better handoff, learn from human replies.","Next: voice channel, proactive messages."]},"kitId":"sdk-tpl-customer-support-agent-ai-helpdesk-escalation","kit":"tpl-customer-support-agent-ai-helpdesk-escalation","thumb":"t/sdk-tpl-customer-support-agent-ai-helpdesk-escalation.webp"},{"slug":"enterprise-ai-gateway","title":"Enterprise AI Gateway","level":"Medium","track":"AI","companies":[],"nodes":[{"id":"apps","title":"Internal Apps & Agents"},{"id":"gw","title":"AI Gateway (auth, quotas)"},{"id":"sc","title":"Semantic Cache"},{"id":"g","title":"Guardrails + PII Redaction"},{"id":"p1","title":"Claude API"},{"id":"p2","title":"Other Provider"},{"id":"p3","title":"Self-hosted (vLLM)"},{"id":"obs","title":"Tracing + Cost Metering"}],"c":{"reqF":["One endpoint for every team's model calls","Quotas per team","Route to the best provider","Redact personal data"],"reqN":["Adds little latency","Survives a provider outage","Cost visible per team"],"est":["Thousands of requests per second across teams","Billions of tokens a month: chargeback matters"],"api":["POST /v1/messages (provider-compatible) with team key","GET /usage?team="],"data":["teams, keys, quotas","usage events: tokens, cost, model, latency"],"blocks":{"apps":"Internal apps and agents call one gateway.","gw":"Auth, quotas and routing.","sc":"Semantic cache for repeated prompts.","g":"Guardrails and PII redaction before providers.","p1":"Claude API.","p2":"Another provider as fallback.","p3":"Self-hosted models for cheap volume.","obs":"Tracing and cost metering per team."},"dives":[["Why one gateway?","One place for keys, quotas, safety and cost."],["Routing?","By cost, latency and capability, with fallback."],["Data protection?","Redact PII before it leaves; log what was sent."],["Chargeback?","Meter tokens and cost per team key."]],"wrap":["Bottleneck: the gateway itself. Fix: stateless, horizontally scaled.","Next: evals, prompt registry."]},"kitId":"sdk-tpl-enterprise-ai-gateway-llm-platform-governance","kit":"tpl-enterprise-ai-gateway-llm-platform-governance","thumb":"t/sdk-tpl-enterprise-ai-gateway-llm-platform-governance.webp"},{"slug":"ai-agent-platform","title":"AI Agent Platform","level":"Hard","track":"AI","companies":[],"nodes":[{"id":"u","title":"User"},{"id":"ag","title":"Agent Orchestrator"},{"id":"llm","title":"LLM (planner)"},{"id":"t","title":"Tools / MCP Servers"},{"id":"mem","title":"Memory (vector + KV)"},{"id":"h","title":"Human approval"},{"id":"sb","title":"Code Sandbox"},{"id":"x","title":"External APIs"},{"id":"ob","title":"Tracing & Evals"}],"c":{"reqF":["Agents complete multi-step tasks","Use tools (APIs, code) through MCP","Remember across sessions","Ask a human before risky actions"],"reqN":["Safe: permissions and sandboxing","Resumable after failures","Observable: every step traced","Bounded cost and steps"],"est":["A task = 10-50 model calls + tool calls","Long tasks: minutes, so run asynchronously"],"api":["POST /tasks {goal} → taskId","GET /tasks/{id} (status, steps)","POST /tasks/{id}/approve"],"data":["tasks + steps (state, tool calls, results)","memory: vector + key-value"],"blocks":{"u":"A user gives a goal.","ag":"The orchestrator runs plan, act, observe.","llm":"The model plans the next step.","t":"Tools via MCP servers.","mem":"Memory to recall and save facts.","h":"Human approval for risky actions.","sb":"Code runs in a sandbox.","x":"External APIs the tools call.","ob":"Every step traced and evaluated."},"dives":[["How does the loop stop?","Step and token limits, a done check, timeouts."],["How do tools stay safe?","Least-privilege permissions, approval for risky ones, sandbox."],["Failures mid-task?","Persist state per step, make tools idempotent, resume."],["How do you know it works?","Task-success evals and traces."]],"wrap":["Bottleneck: long tasks and cost. Fix: smaller models for sub-steps, caching.","Next: multi-agent, scheduled agents."]},"kitId":"sdk-tpl-ai-agent-platform-agentic-tools-mcp","kit":"tpl-ai-agent-platform-agentic-tools-mcp","thumb":"t/sdk-tpl-ai-agent-platform-agentic-tools-mcp.webp"},{"slug":"coding-agent","title":"Coding Agent","level":"Hard","track":"AI","companies":[],"nodes":[{"id":"dev","title":"Developer (CLI / IDE)"},{"id":"ag","title":"Coding Agent (loop)"},{"id":"perm","title":"Permission Prompts"},{"id":"mem","title":"Project Memory (CLAUDE.md)"},{"id":"llm","title":"LLM"},{"id":"fs","title":"File Tools (read, edit, grep)"},{"id":"sh","title":"Shell Sandbox (tests, build)"},{"id":"mcp","title":"MCP Servers (issues, docs)"},{"id":"git","title":"Git / Pull Request"}],"c":{"reqF":["Take a coding task from the terminal or IDE","Read, edit and search code","Run tests and builds","Open a pull request"],"reqN":["Ask before risky commands","Never break the repo: verify before commit","Fast feedback loop"],"est":["A task = 20-100 tool calls","Context is the scarce resource: load only what matters"],"api":["CLI: agent \"fix the failing test\"","Tool calls: read, edit, grep, shell, git, MCP"],"data":["project memory file loaded every session","session transcript and checkpoints"],"blocks":{"dev":"The developer gives a task.","ag":"The agent loop: gather context, act, verify.","perm":"Permission prompts for risky commands.","mem":"Project memory with conventions.","llm":"The model decides the next action.","fs":"File tools: read, edit, grep.","sh":"Shell sandbox runs tests and builds.","mcp":"MCP servers bring issues and docs.","git":"Commit and open a pull request."},"dives":[["How does it find the right code?","Search first (grep, file tree), then read only what matters."],["How do you keep it safe?","Permission modes, sandboxed shell, never push without asking."],["How do you know the change works?","Run tests and build before commit."],["Big tasks?","Sub-agents search in parallel, each with its own context."]],"wrap":["Bottleneck: context window. Fix: search tools, summaries, sub-agents.","Next: CI integration, code review bots."]},"kitId":"sdk-tpl-coding-agent-claude-code-cursor-ai-developer","kit":"tpl-coding-agent-claude-code-cursor-ai-developer","thumb":"t/sdk-tpl-coding-agent-claude-code-cursor-ai-developer.webp"},{"slug":"deep-research-agent","title":"Deep Research Agent","level":"Hard","track":"AI","companies":[],"nodes":[{"id":"u","title":"User"},{"id":"lead","title":"Lead Agent (planner)"},{"id":"w1","title":"Search Agent"},{"id":"w2","title":"Search Agent"},{"id":"w3","title":"Search Agent"},{"id":"web","title":"Web Search API"},{"id":"docs","title":"Internal Docs (RAG)"},{"id":"rep","title":"Report Writer (citations)"}],"c":{"reqF":["Answer a big research question","Search the web and internal docs","Write a report with citations"],"reqN":["Done in minutes, not hours","Every claim cited","Budget on steps, tokens and time"],"est":["One question ≈ 3-6 sub-questions x 10 searches each","Tokens per report: hundreds of thousands"],"api":["POST /research {question} → reportId","GET /research/{id} (progress, report)"],"data":["plan, sub-questions, findings with source URLs","final report"],"blocks":{"u":"The user asks a big question.","lead":"The lead agent plans sub-questions.","w1":"Search agents run in parallel.","w2":"Each has its own context window.","w3":"More agents = broader coverage.","web":"Web search API.","docs":"Internal docs through RAG.","rep":"The writer turns findings into a cited report."},"dives":[["Why multiple agents?","Parallel search, separate contexts, faster and broader."],["How do findings come back?","Compressed summaries with sources, not raw pages."],["How do you control cost?","Budgets on steps, tokens and time per agent."],["Quality?","Every claim must cite; check citations before the final report."]],"wrap":["Bottleneck: tokens. Fix: smaller models for search, compression.","Next: follow-up questions, saved research."]},"kitId":"sdk-tpl-deep-research-agent-multi-agent-web-research-report","kit":"tpl-deep-research-agent-multi-agent-web-research-report","thumb":"t/sdk-tpl-deep-research-agent-multi-agent-web-research-report.webp"},{"slug":"realtime-voice-agent","title":"Realtime Voice Agent","level":"Hard","track":"AI","companies":[],"nodes":[{"id":"c","title":"Caller (phone / web)"},{"id":"rtc","title":"WebRTC / SIP Gateway"},{"id":"stt","title":"Speech-to-Text (streaming)"},{"id":"ag","title":"Voice Agent (LLM)"},{"id":"tts","title":"Text-to-Speech (streaming)"},{"id":"vad","title":"Turn Detection (VAD)"},{"id":"t","title":"Tools (booking, CRM)"}],"c":{"reqF":["Talk to callers on the phone or web","Understand and answer in natural speech","Handle interruptions","Do tasks like booking"],"reqN":["Voice-to-voice under ~800 ms","Natural turn-taking","Every stage streams"],"est":["Latency budget: STT ~200 ms + LLM ~300 ms + TTS ~200 ms + network","Concurrent calls x audio streams"],"api":["SIP / WebRTC audio in and out","Tool calls: book, look up customer"],"data":["call records, transcripts, audio for evals"],"blocks":{"c":"The caller speaks.","rtc":"WebRTC or SIP gateway carries audio.","stt":"Streaming speech-to-text.","ag":"The voice agent (LLM) decides what to say.","tts":"Streaming text-to-speech talks back.","vad":"Turn detection notices barge-in.","t":"Tools for booking and CRM."},"dives":[["How do you hit 800 ms?","Stream every stage: STT partials, LLM tokens, TTS audio."],["Interruptions?","Voice activity detection stops TTS when the caller talks."],["Slow tools?","Short filler phrases while the tool runs."],["Speech-to-speech models?","Fewer hops and lower latency, less control."]],"wrap":["Bottleneck: latency. Fix: colocate models, stream, smaller models.","Next: multilingual, call analytics."]},"kitId":"sdk-tpl-realtime-voice-agent-phone-call-speech-ai","kit":"tpl-realtime-voice-agent-phone-call-speech-ai","thumb":"t/sdk-tpl-realtime-voice-agent-phone-call-speech-ai.webp"}];
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+$("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
+const MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+const toast = $("#toast"); function say(t) { toast.textContent = t; toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), 2400); }
+const GC = SP.goatcounter; if (GC) { const s = document.createElement("script"); s.async = true; s.src = "https://gc.zgo.at/count.js"; s.dataset.goatcounter = `https://${GC}.goatcounter.com/count`; document.head.append(s); }
+const ev = p => { try { if (window.goatcounter && goatcounter.count) goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} };
+const store = { get() { try { return JSON.parse(localStorage.getItem("sdk-practice") || "{}"); } catch (e) { return {}; } }, set(v) { try { localStorage.setItem("sdk-practice", JSON.stringify(v)); } catch (e) {} } };
+const I = d => `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const EYE = I('<path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z"/><circle cx="10" cy="10" r="2.5"/>');
+const TALK = I('<path d="M4 4.5h12v8H9l-4 3v-3H4z"/>');
+const BULB = I('<path d="M7.5 14.5h5M8 17h4M10 3a5 5 0 0 0-3 9c.6.5 1 1.2 1 2h4c0-.8.4-1.5 1-2a5 5 0 0 0-3-9z"/>');
+
+/* the seven steps, seen through the interviewer's eyes */
+const STEPS = [
+  { k: "req", t: "Requirements", min: 5, ask: "What are we building, for whom, and how big?", look: "You clarify scope before drawing anything, split functional from non-functional, and pin down one scale number.", say: "Before I design, let me confirm what it must do and how big it needs to be." },
+  { k: "est", t: "Estimates", min: 5, ask: "Back of the envelope: traffic, storage, peaks.", look: "Round numbers, done fast, and then used to make a decision: do we need a cache, shards, a queue?", say: "Roughly this many per second, so one database won't do. That's why I'll add..." },
+  { k: "api", t: "API", min: 4, ask: "Which calls does the client make?", look: "A few clean endpoints with inputs and outputs, and idempotency wherever a retry could repeat a write.", say: "Three calls cover the core flow..." },
+  { k: "data", t: "Data model", min: 4, ask: "What do you store, and how is it keyed?", look: "A store chosen for its access pattern, with the partition key named out loud.", say: "The main read is..., so I'll key it by..." },
+  { k: "hld", t: "High-level design", min: 12, ask: "Draw it one block at a time, following a single request.", look: "Start simple, walk one request end to end, and give each box a one-line reason.", say: "Let me follow one request through the system." },
+  { k: "deep", t: "Deep dives", min: 10, ask: "The interviewer pushes on the hard parts.", look: "You name the trade-off and an alternative, not just one answer.", say: "There are two options here. I'd pick this one because..." },
+  { k: "wrap", t: "Wrap-up", min: 5, ask: "What breaks first, and what would you do next?", look: "You find your own bottleneck, propose a fix and finish on time.", say: "The first thing to break is..., and I'd fix it by..." },
+];
+
+/* ---------- picker ---------- */
+const prog = store.get();
+const cos = [...new Set(D.flatMap(d => d.companies))].sort();
+$("#fCo").insertAdjacentHTML("beforeend", cos.map(c => `<option>${esc(c)}</option>`).join(""));
+let fTrack = "all";
+function drawPick() {
+  const lv = $("#fLevel").value, co = $("#fCo").value, p = store.get();
+  const list = D.filter(d => (fTrack === "all" || d.track === fTrack) && (!lv || d.level === lv) && (!co || d.companies.includes(co)));
+  $("#qgrid").innerHTML = list.map(d => { const st = p[d.slug]; const badge = st && st.done ? "Done" : st ? `Step ${Math.min(st.step + 1, 7)} of 7` : ""; return `<button class="q" type="button" data-q="${d.slug}"><div class="th"><img loading="lazy" alt="" src="../${d.thumb}">${badge ? `<span class="badge">${badge}</span>` : ""}</div><div class="tt">${esc(d.title)}</div><div class="mm"><span class="lv ${d.level}">${d.level}</span><span>${d.track === "AI" ? "AI design" : "Classic"}</span>${d.companies.length ? `<span>${esc(d.companies.slice(0, 3).join(", "))}${d.companies.length > 3 ? ` +${d.companies.length - 3}` : ""}</span>` : ""}</div></button>`; }).join("") || `<p class="src">Nothing matches yet. Try another filter.</p>`;
+}
+$("#fTrack").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; fTrack = b.dataset.v; [...$("#fTrack").children].forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawPick(); });
+$("#fLevel").onchange = drawPick; $("#fCo").onchange = drawPick;
+$("#qgrid").addEventListener("click", e => { const b = e.target.closest("[data-q]"); if (b) go(b.dataset.q); });
+
+/* ---------- session ---------- */
+let Q = null, step = 0, blk = 1, revealed = false;
+const BY = Object.fromEntries(D.map(d => [d.slug, d]));
+function go(slug, s) { location.hash = "q=" + slug + (s ? "&s=" + s : ""); }
+function route() {
+  const h = new URLSearchParams(location.hash.slice(1)); const q = BY[h.get("q")];
+  if (!q) { Q = null; $("#vRun").hidden = true; $("#vPick").hidden = false; stopClock(); drawPick(); document.title = "Practice system design interviews - System Design Kit"; return; }
+  const st = store.get()[q.slug] || {};
+  if (Q !== q) { Q = q; step = h.get("s") ? Math.max(0, Math.min(6, +h.get("s") - 1)) : (st.done ? 0 : st.step || 0); blk = st.blk || 1; resetClock(); ev("practice-start/" + q.slug); }
+  else if (h.get("s")) step = Math.max(0, Math.min(6, +h.get("s") - 1));
+  $("#vPick").hidden = true; $("#vRun").hidden = false; $("#rTitle").textContent = q.title; document.title = q.title + " - Practice - System Design Kit";
+  render(); scrollTo({ top: 0 });
+}
+addEventListener("hashchange", route);
+$("#bBack").onclick = () => { history.pushState(null, "", location.pathname); route(); };
+function save(extra = {}) { const p = store.get(); p[Q.slug] = { ...(p[Q.slug] || {}), step, blk, at: Date.now(), ...extra }; store.set(p); }
+function setStep(s) { step = Math.max(0, Math.min(6, s)); revealed = false; save(); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); scrollTo({ top: 0, behavior: "smooth" }); }
+
+const items = (arr, code) => arr.map(x => `<div class="ai">${code ? `<code>${esc(x)}</code>` : `<span>${esc(x)}</span>`}</div>`).join("");
+function lens(S) { return `<div class="lens"><div>${EYE}<span><b>Interviewer checks</b>${esc(S.look)}</span></div><div>${TALK}<span><b>Say it</b><i>"${esc(S.say)}"</i></span></div></div>`; }
+function stepHead(S) { return `<div class="sh"><span class="k">Step ${step + 1} of 7</span><h3>${S.t}</h3><span class="bud">about ${S.min} min</span></div>`; }
+function navRow(primary) { return `<div class="nav2">${step ? `<button class="pill ghost" type="button" data-act="prev">Back</button>` : ""}<span class="sp"></span>${primary}</div>`; }
+function answerFor(k) {
+  const C = Q.c;
+  if (k === "req") return `<h4>Functional</h4>${items(C.reqF)}<h4>Non-functional</h4>${items(C.reqN)}`;
+  if (k === "est") return items(C.est);
+  if (k === "api") return items(C.api, true);
+  if (k === "data") return items(C.data, true);
+  if (k === "wrap") return items(C.wrap);
+  return "";
+}
+function render() {
+  const S = STEPS[step], C = Q.c, notes = (store.get()[Q.slug] || {}).notes || {};
+  $("#rProg").innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i < step ? "done" : i === step ? "on" : ""}" title="${i + 1}. ${x.t}" aria-label="Step ${i + 1}: ${x.t}"></button>`).join("");
+  let h = stepHead(S);
+  if (S.k === "hld") {
+    const n = Q.nodes.length, node = Q.nodes[blk - 1];
+    h += `<div class="hl"><div class="canvas" id="cv"><span class="cnt">${blk} / ${n} blocks</span></div>
+      <div class="side"><div class="cap" id="cap"><span class="n">${blk}</span><b>${esc(node.title)}</b><span>${esc(C.blocks[node.id] || "")}</span></div>
+      <ol class="order" id="ord">${orderHTML()}</ol>
+      ${lens(S)}
+      <div class="nav2" id="hlnav">${hlButtons()}</div></div></div>`;
+    $("#stage").innerHTML = h; loadSvg(); return;
+  }
+  if (S.k === "deep") {
+    h += `<p class="ask">${esc(S.ask)}</p>${lens(S)}<div class="dives">${C.dives.map(([q, a], i) => `<button class="dv" type="button" data-dv="${i}"><span class="qq">${esc(q)}</span><span class="tap">Think, then tap to see a strong answer</span><span class="aa">${esc(a)}</span></button>`).join("")}</div>${navRow(`<button class="pill primary" type="button" data-act="next">Wrap-up →</button>`)}`;
+    $("#stage").innerHTML = h; return;
+  }
+  h += `<div class="two"><div class="card"><p class="ask">${esc(S.ask)}</p>${lens(S)}<textarea class="notes" id="nt" placeholder="Your answer first. Type or say it out loud.">${esc(notes[S.k] || "")}</textarea></div>
+    <div class="card ans ${revealed ? "open" : ""}" id="ans"><div class="cover"><p>Try it yourself first. Then compare with a strong answer.</p><button class="pill primary" type="button" data-act="reveal">Show the answer <span class="kbd">Enter</span></button></div><div class="alist">${answerFor(S.k)}</div></div></div>`;
+  if (S.k === "wrap") h += finishHTML();
+  else h += navRow(`<button class="pill primary" type="button" data-act="next">${STEPS[step + 1].t} →</button>`);
+  $("#stage").innerHTML = h;
+  const nt = $("#nt"); if (nt) nt.addEventListener("input", () => { const p = store.get(), r = p[Q.slug] || {}; r.notes = { ...(r.notes || {}), [S.k]: nt.value }; p[Q.slug] = r; store.set(p); });
+}
+function finishHTML() {
+  const idx = D.indexOf(Q), nxt = D.filter(d => d !== Q && d.track === Q.track && !(store.get()[d.slug] || {}).done)[0] || D[(idx + 1) % D.length];
+  return `<div class="two"><div class="card score"><span class="k sh"><span class="k">How did you do?</span></span>${["the requirements", "the estimates", "the API", "the data model", "the high-level design", "the deep dives"].map((x, i) => `<label class="chk"><input type="checkbox" data-sc="${i}"> I covered ${x} without peeking</label>`).join("")}<div class="big" id="scv">0 <small>/ 6</small></div></div>
+    <div class="card"><p class="ask">Now draw it for real.</p><span class="fine" style="color:var(--ink-muted)">Paste the finished design into Excalidraw and redo it from memory tomorrow. That's how it sticks.</span>
+      <div class="nav2"><button class="pill primary" type="button" data-act="copy">Copy to Excalidraw</button><a class="pill ghost" href="../#i=${Q.kit}">Open in the kit</a></div>
+      <div class="nav2"><button class="pill ghost" type="button" data-act="restart">Start again</button><span class="sp"></span><button class="pill primary" type="button" data-next="${nxt.slug}">Next: ${esc(nxt.title)} →</button></div></div></div>`;
+}
+const SVGC = new Map();
+function loadSvg() {
+  const k = Q.slug + "/" + blk, cv = $("#cv");
+  const put = t => { if (!$("#cv") || Q.slug + "/" + blk !== k) return; cv.insertAdjacentHTML("beforeend", t); const old = cv.querySelectorAll("svg"); if (old.length > 1) old[0].remove(); };
+  if (SVGC.has(k)) return put(SVGC.get(k));
+  fetch(`../p/${k}.svg`).then(r => r.text()).then(t => { SVGC.set(k, t); put(t); }).catch(() => {});
+  if (blk < Q.nodes.length) fetch(`../p/${Q.slug}/${blk + 1}.svg`).then(r => r.text()).then(t => SVGC.set(Q.slug + "/" + (blk + 1), t)).catch(() => {});
+}
+function orderHTML() { return Q.nodes.map((x, i) => `<li class="${i < blk - 1 ? "done" : i === blk - 1 ? "on" : ""}">${esc(x.title)}</li>`).join(""); }
+function hlButtons() { const n = Q.nodes.length; return `<button class="pill ghost" type="button" data-act="${blk > 1 ? "less" : "prev"}">Back</button><span class="sp"></span>` + (blk < n ? `<button class="pill ghost" type="button" data-act="all">Show all</button><button class="pill primary" type="button" data-act="add">Add next block <span class="kbd">→</span></button>` : `<button class="pill ghost" type="button" data-act="copy">Copy to Excalidraw</button><button class="pill primary" type="button" data-act="next">Deep dives →</button>`); }
+function addBlock(d) {
+  const n = Q.nodes.length; blk = Math.max(1, Math.min(n, blk + d)); save();
+  const node = Q.nodes[blk - 1]; $(".cnt").textContent = `${blk} / ${n} blocks`;
+  const cap = $("#cap"); cap.outerHTML = `<div class="cap" id="cap"><span class="n">${blk}</span><b>${esc(node.title)}</b><span>${esc(Q.c.blocks[node.id] || "")}</span></div>`;
+  $("#ord").innerHTML = orderHTML(); $("#hlnav").innerHTML = hlButtons();
+  loadSvg();
+}
+/* copy the finished design (Excalidraw clipboard format) */
+async function copyDesign() {
+  try {
+    const p = fetch(`../e/${Q.kitId}.json`).then(r => r.json()).then(els => new Blob([JSON.stringify({ type: "excalidraw/clipboard", elements: els, files: {} })], { type: "text/plain" }));
+    if (window.ClipboardItem && navigator.clipboard.write) await navigator.clipboard.write([new ClipboardItem({ "text/plain": p })]);
+    else await navigator.clipboard.writeText(await (await p).text());
+    say(`Copied. Paste in Excalidraw with ${MAC ? "⌘" : "Ctrl"} V`); ev("practice-copy/" + Q.slug);
+  } catch (e) { say("Copy didn't go through. Try Open in the kit"); }
+}
+$("#stage").addEventListener("click", e => {
+  const a = e.target.closest("[data-act]");
+  if (a) { const x = a.dataset.act;
+    if (x === "reveal") { revealed = true; $("#ans").classList.add("open"); ev("practice-reveal/" + STEPS[step].k); }
+    if (x === "next") { if (step === 4) blk = Q.nodes.length; setStep(step + 1); }
+    if (x === "prev") setStep(step - 1);
+    if (x === "add") addBlock(1);
+    if (x === "less") addBlock(-1);
+    if (x === "all") { blk = Q.nodes.length; save(); render(); }
+    if (x === "copy") copyDesign();
+    if (x === "restart") { const p = store.get(); delete p[Q.slug]; store.set(p); blk = 1; resetClock(); setStep(0); }
+    return; }
+  const dv = e.target.closest("[data-dv]"); if (dv) { dv.classList.toggle("open"); return; }
+  const nx = e.target.closest("[data-next]"); if (nx) { save({ done: true }); ev("practice-done/" + Q.slug); go(nx.dataset.next); return; }
+});
+$("#stage").addEventListener("change", e => { if (e.target.matches("[data-sc]")) { const n = document.querySelectorAll("[data-sc]:checked").length; $("#scv").innerHTML = `${n} <small>/ 6</small>`; save({ done: true, score: n }); } });
+$("#rProg").addEventListener("click", e => { const b = e.target.closest("[data-step]"); if (b) setStep(+b.dataset.step); });
+document.addEventListener("keydown", e => {
+  if (!Q || e.target.closest("textarea, input, select") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const S = STEPS[step];
+  if (S.k === "hld" && (e.key === "ArrowRight" || e.key === " ")) { e.preventDefault(); if (blk < Q.nodes.length) addBlock(1); else setStep(step + 1); }
+  else if (S.k === "hld" && e.key === "ArrowLeft") { e.preventDefault(); if (blk > 1) addBlock(-1); else setStep(step - 1); }
+  else if (e.key === "Enter") { e.preventDefault(); if (S.k !== "hld" && S.k !== "deep" && !revealed) { revealed = true; const a = $("#ans"); if (a) a.classList.add("open"); } else if (step < 6) setStep(step + 1); }
+});
+/* timer: 45 minutes, per-step budget shown on each step */
+let left = 45 * 60, tick = null;
+function fmt(s) { const a = Math.abs(s); return (s < 0 ? "-" : "") + String(Math.floor(a / 60)).padStart(2, "0") + ":" + String(a % 60).padStart(2, "0"); }
+function paint() { $("#rClock").textContent = fmt(left); $("#rTimer").classList.toggle("over", left < 0); }
+function stopClock() { clearInterval(tick); tick = null; }
+function resetClock() { stopClock(); left = 45 * 60; paint(); }
+$("#rTimer").onclick = () => { if (tick) { stopClock(); say("Timer paused"); } else { tick = setInterval(() => { left--; paint(); }, 1000); say("45-minute interview timer started"); ev("practice-timer"); } };
+route();
+/* contact links */
+(() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
+</script>
+</body></html>

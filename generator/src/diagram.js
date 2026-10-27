@@ -6,7 +6,7 @@ export function diagram(spec) {
   const gid = nid("tpl");
   const COLW = spec.colw || 240, ROWH = spec.rowh || 180;
   const els = [];
-  const minR = Math.min(...spec.nodes.map((n) => n[5]));
+  const minR = spec.minR ?? Math.min(...spec.nodes.map((n) => n[5]));
   const Y0 = (spec.title ? 120 : 0) - minR * ROWH;
   const S20 = (v) => Math.round(v / 20) * 20;
   const P = (c, r) => [S20(c * COLW), S20(Y0 + r * ROWH)];

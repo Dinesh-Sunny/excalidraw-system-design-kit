@@ -61,3 +61,20 @@ for slug,title,robots,body,js in (('thanks','Thank you - System Design Kit','noi
 if not os.path.exists('out/pages/love.json'): json.dump([],open('out/pages/love.json','w'))
 if not os.path.exists('out/pages/stats.json'): json.dump({'sponsors':{}},open('out/pages/stats.json','w'))
 print('thanks + stats pages')
+
+# ---- practice mode (step-by-step interview) ----
+if os.path.exists('out/practice.json'):
+    PM=json.load(open('out/practice.json')); PC=json.load(open('practice.data.json'))
+    byname={it['name']:it['id'] for it in lib}
+    order={'Easy':0,'Medium':1,'Hard':2}
+    P=[]
+    for m in PM:
+        kid=byname.get('sd:tpl/ '+m['name'])
+        c=PC[m['slug']]
+        P.append({'slug':m['slug'],'title':m['title'],'level':c['level'],'track':c['track'],'companies':c['companies'],'nodes':[{'id':n['id'],'title':n['title']} for n in m['nodes']],
+                  'c':{k:c[k] for k in ('reqF','reqN','est','api','data','blocks','dives','wrap')},'kitId':kid,'kit':kid.replace('sdk-',''),'thumb':f"t/{kid}.webp"})
+    P.sort(key=lambda d:(d['track']!='Classic',order[d['level']]))
+    t=open('practice.tpl.html').read()
+    for k,v in (('__HEADINIT__',headinit),('__BASECSS__',base),('__THEMEBTN__',themebtn),('__SPONSOR__',SPJ),('__PDATA__',json.dumps(P,separators=(',',':'),ensure_ascii=False))): t=t.replace(k,v)
+    os.makedirs('out/pages/practice',exist_ok=True); open('out/pages/practice/index.html','w').write(t)
+    print('practice page',len(t)//1024,'KB',len(P),'questions')

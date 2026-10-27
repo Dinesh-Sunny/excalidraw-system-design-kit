@@ -23,6 +23,7 @@
 <!-- featured:start --><!-- featured:end -->
 
 [**Browse all items**](https://dinesh-sunny.github.io/excalidraw-system-design-kit/) ·
+[**Practise step by step**](https://dinesh-sunny.github.io/excalidraw-system-design-kit/practice/) ·
 [**Download**](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest) ·
 [Quick start](#-quick-start-60-seconds) ·
 [Interview playbook](docs/interview-playbook.md) ·

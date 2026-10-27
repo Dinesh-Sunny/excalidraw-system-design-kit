@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Practice system design interviews - System Design Kit</title>
+<meta name="description" content="Practise system design interviews step by step: requirements, estimates, API, data model, then build the design one block at a time, deep dives and wrap-up. Free.">
+<meta property="og:title" content="Practise system design, step by step">
+<meta property="og:description" content="Build each answer the way the interview runs: one block at a time, with what the interviewer is checking.">
+<meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">
+__HEADINIT__
+<style>
+__BASECSS__
+/* practice */
+.px { background: radial-gradient(70% 60% at 50% 0%, var(--atmo-haze), transparent 70%), radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground); min-height: calc(100vh - 64px) }
+.px .wrap { padding-block: 40px 64px; display: grid; gap: 22px }
+.ph1 { margin: 0; font: 400 clamp(38px, 6vw, 60px)/1.02 var(--font-serif); text-wrap: balance; text-align: center } .ph1 i { font-style: italic }
+.plead { margin: -6px auto 0; max-width: 620px; text-align: center; color: var(--ink-muted); font: 400 17px/25px var(--font-sans) }
+.how7 { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
+.how7 span { padding: 7px 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface) }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center }
+.seg2 { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk) }
+.seg2 button { height: 32px; padding: 0 14px; border: 0; border-radius: 9999px; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
+.seg2 button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12) }
+.sel { height: 38px; padding: 0 34px 0 14px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center / 12px; appearance: none; font: 500 13px/1 var(--font-sans); color: var(--ink); cursor: pointer }
+.qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px 18px }
+.q { display: grid; gap: 10px; border: 0; padding: 0; background: none; text-align: left; cursor: pointer; color: inherit; min-width: 0 }
+.q .th { position: relative; aspect-ratio: 3 / 2; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--thumb); overflow: hidden; transition: box-shadow .2s, transform .2s }
+.q .th img { width: 100%; height: 100%; object-fit: contain; padding: 8px }
+.q:hover .th { box-shadow: var(--shadow-float); transform: translateY(-3px) }
+.q .badge { position: absolute; left: 10px; top: 10px; font: 500 11px/1 var(--font-mono); padding: 5px 8px; border-radius: 9999px; background: var(--pill); color: var(--on-ink) }
+.q .tt { font: 500 16px/21px var(--font-sans) }
+.q .mm { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); margin-top: -4px }
+.lv { font: 500 11px/1 var(--font-mono); padding: 4px 8px; border-radius: 9999px; border: 1px solid var(--hairline) }
+.lv.Easy { color: #2f9e44; border-color: #b2f2bb } .lv.Medium { color: #e67700; border-color: #ffd8a8 } .lv.Hard { color: #e03131; border-color: #ffc9c9 }
+.src { text-align: center; font: 400 12px/18px var(--font-sans); color: var(--ink-muted) } .src a { color: inherit }
+/* session */
+.bar { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
+.bar .wrap { display: flex; align-items: center; gap: 14px; min-height: 60px; flex-wrap: wrap; padding-block: 8px }
+.bar .back { border: 0; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); display: inline-flex; align-items: center; gap: 6px; padding: 0 }
+.bar .back svg { width: 14px; height: 14px }
+.bar h2 { margin: 0; font: 400 24px/1.1 var(--font-serif); flex: 1; min-width: 160px }
+.prog { display: flex; gap: 4px; flex: 1 1 260px; max-width: 420px }
+.prog button { flex: 1; height: 6px; border: 0; border-radius: 9999px; background: var(--hairline); cursor: pointer; padding: 0; position: relative; transition: background .3s }
+.prog button.done { background: var(--ink-muted) } .prog button.on { background: var(--sketch) }
+.timer { height: 34px; padding: 0 12px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font: 500 13px/1 var(--font-mono); color: var(--ink) }
+.timer svg { width: 14px; height: 14px } .timer.over { color: #e03131; border-color: #ffc9c9 }
+.stage { display: grid; gap: 18px }
+.sh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px }
+.sh .k { font: 500 12px/1 var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em }
+.sh h3 { margin: 0; font: 400 clamp(30px, 4.5vw, 44px)/1.05 var(--font-serif) }
+.sh .bud { font: 400 12px/1 var(--font-mono); color: var(--ink-muted); margin-left: auto }
+.two { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px }
+@media (min-width: 900px) { .two { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) } }
+.card { border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface); padding: 22px; display: grid; gap: 16px; align-content: start; min-width: 0 }
+.ask { margin: 0; font: 400 24px/1.25 var(--font-serif) }
+.lens { display: grid; gap: 10px }
+.lens div { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
+.lens svg { width: 20px; height: 20px; color: var(--sketch); margin-top: 1px }
+.lens b { display: block; color: var(--ink); font: 500 12px/16px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px }
+.lens i { color: var(--ink) }
+.notes { width: 100%; min-height: 96px; resize: vertical; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--ground); padding: 12px 14px; font: 400 14px/21px var(--font-sans); color: var(--ink) }
+.notes:focus { outline: 2px solid var(--sketch-soft); border-color: var(--sketch) }
+.ans { position: relative; min-height: 220px }
+.ans .cover { position: absolute; inset: 0; display: grid; place-items: center; gap: 12px; align-content: center; text-align: center; border-radius: var(--r-lg); background: var(--surface); z-index: 1; transition: opacity .3s }
+.ans .cover p { margin: 0; color: var(--ink-muted); font: 400 14px/20px var(--font-sans); max-width: 280px }
+.ans.open .cover { opacity: 0; pointer-events: none }
+.ans .cover kbd, .kbd { font: 400 11px/1 var(--font-mono); border: 1px solid var(--hairline); border-radius: 5px; padding: 3px 5px; color: var(--ink-muted) }
+.alist { display: grid; gap: 8px; filter: blur(6px); opacity: .35; transition: filter .4s, opacity .4s }
+.ans.open .alist { filter: none; opacity: 1 }
+.alist h4 { margin: 6px 0 0; font: 500 12px/16px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .05em }
+.alist h4:first-child { margin-top: 0 }
+.ai { display: grid; grid-template-columns: 18px 1fr; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-sunk); font: 400 14px/20px var(--font-sans) }
+.ai::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sketch); margin: 6px 0 0 4px }
+.ai code { font: 400 13px/20px var(--font-mono); white-space: pre-wrap; word-break: break-word }
+.ans.open .ai { animation: rise .35s cubic-bezier(.2,.8,.2,1) both } .ans.open .ai:nth-child(2) { animation-delay: .04s } .ans.open .ai:nth-child(3) { animation-delay: .08s } .ans.open .ai:nth-child(4) { animation-delay: .12s } .ans.open .ai:nth-child(5) { animation-delay: .16s } .ans.open .ai:nth-child(6) { animation-delay: .2s }
+.nav2 { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+.nav2 .sp { flex: 1 }
+.nav2 .pill { height: 42px }
+/* canvas */
+.hl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start }
+@media (min-width: 980px) { .hl { grid-template-columns: minmax(0, 2.1fr) minmax(300px, 1fr) } .hl .side { position: sticky; top: 150px } .hl .canvas { aspect-ratio: auto; height: min(68vh, 640px) } }
+.side { display: grid; gap: 14px; align-content: start }
+.order { margin: 0; padding: 0 0 0 4px; list-style: none; display: grid; gap: 2px; counter-reset: o; max-height: 220px; overflow: auto }
+.order li { counter-increment: o; display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 8px; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); opacity: .45 }
+.order li::before { content: counter(o); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 500 10px/1 var(--font-mono); background: var(--surface-sunk) }
+.order li.done { opacity: 1 } .order li.on { opacity: 1; color: var(--ink); background: var(--sketch-soft) } .order li.on::before { background: var(--sketch); color: #fff }
+.bar .back { text-decoration: none }
+.canvas { position: relative; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; overflow: hidden; aspect-ratio: 16 / 9; display: grid; place-items: center; padding: 16px }
+.canvas svg { width: 100%; height: 100%; max-height: 62vh }
+.canvas svg { animation: fadein .35s ease-out }
+@keyframes fadein { from { opacity: .4 } }
+.cnt { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.9); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px }
+.cap { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: start; padding: 16px 18px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface) }
+.cap .n { grid-row: span 2; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--sketch-soft); color: var(--sketch); font: 500 13px/1 var(--font-mono) }
+.cap b { font: 500 16px/22px var(--font-sans) } .cap span { font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
+.cap { animation: rise .3s ease-out }
+/* deep dives */
+.dives { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px }
+.dv { text-align: left; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface); padding: 18px; cursor: pointer; display: grid; gap: 10px; color: inherit; transition: box-shadow .2s, border-color .2s }
+.dv:hover { box-shadow: var(--shadow-float) }
+.dv .qq { font: 400 20px/1.25 var(--font-serif) }
+.dv .aa { font: 400 14px/21px var(--font-sans); color: var(--ink-muted); display: none }
+.dv .tap { font: 500 12px/1 var(--font-mono); color: var(--sketch) }
+.dv.open { border-color: var(--sketch-soft) } .dv.open .aa { display: block; animation: rise .3s ease-out } .dv.open .tap { display: none }
+/* wrap */
+.score { display: grid; gap: 10px }
+.chk { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; font: 400 14px/20px var(--font-sans) }
+.chk input { width: 18px; height: 18px; accent-color: var(--sketch) }
+.big { font: 400 56px/1 var(--font-serif) } .big small { font: 400 16px/1 var(--font-sans); color: var(--ink-muted) }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); opacity: 0; background: var(--pill); color: var(--on-ink); padding: 10px 18px; border-radius: 9999px; font: 500 14px/1 var(--font-sans); transition: .2s ease-out; pointer-events: none; z-index: 50 }
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0) }
+@media (max-width: 640px) { .order { display: none } #hlnav { position: sticky; bottom: 0; z-index: 5; padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--ground); box-shadow: 0 -12px 16px var(--ground) } #hlnav [data-act="all"] { display: none } .bar h2 { font-size: 20px; flex-basis: 100% ; order: 3 } .prog { order: 4; max-width: none; flex-basis: 100% } .canvas { aspect-ratio: 4 / 3 } .card { padding: 18px } .ask { font-size: 21px } .nav2 .pill { flex: 1; justify-content: center } }
+[hidden] { display: none !important }
+</style>
+</head><body>
+<header class="nav gut"><div class="wrap">
+  <a class="mark" href="../" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>
+  <span class="sp"></span>
+  __THEMEBTN__
+  <a class="pill ghost" href="../">All blocks</a>
+</div></header>
+
+<div id="vPick">
+<main class="px gut"><div class="wrap">
+  <h1 class="ph1">Practise the interview, <i>step by step</i>.</h1>
+  <p class="plead">Pick a question. Build the answer the way the interview runs, one block at a time, and see what the interviewer is checking at every step.</p>
+  <div class="how7" aria-label="The seven steps"><span>1 Requirements</span><span>2 Estimates</span><span>3 API</span><span>4 Data</span><span>5 Design</span><span>6 Deep dives</span><span>7 Wrap-up</span></div>
+  <div class="filters">
+    <div class="seg2" id="fTrack"><button type="button" data-v="all" aria-pressed="true">All</button><button type="button" data-v="Classic" aria-pressed="false">Classic</button><button type="button" data-v="AI" aria-pressed="false">AI</button></div>
+    <select class="sel" id="fLevel" aria-label="Level"><option value="">Any level</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
+    <select class="sel" id="fCo" aria-label="Company"><option value="">Any company</option></select>
+  </div>
+  <div class="qgrid" id="qgrid"></div>
+  <p class="src">Companies are from public candidate reports and change over time. Missing a question? <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request it</a>.</p>
+</div></main>
+</div>
+
+<div id="vRun" hidden>
+<div class="bar gut"><div class="wrap">
+  <button class="back" type="button" id="bBack"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg>All questions</button>
+  <h2 id="rTitle"></h2>
+  <div class="prog" id="rProg" aria-label="Steps"></div>
+  <button class="timer" type="button" id="rTimer" aria-label="Start or pause the 45-minute timer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.5V9l1.8 1.2M6.5 2h3"/></svg><span id="rClock">45:00</span></button>
+</div></div>
+<main class="px gut"><div class="wrap"><div class="stage" id="stage"></div></div></main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<footer class="gut"><div class="wrap"><span>MIT · free · no sign-up</span><span class="help">Happy to help: <a data-mail="Practice" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span><a href="../">Back to the kit</a></span></div></footer>
+
+<script>
+const SP = __SPONSOR__;
+const D = __PDATA__;
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+$("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
+const MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+const toast = $("#toast"); function say(t) { toast.textContent = t; toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), 2400); }
+const GC = SP.goatcounter; if (GC) { const s = document.createElement("script"); s.async = true; s.src = "https://gc.zgo.at/count.js"; s.dataset.goatcounter = `https://${GC}.goatcounter.com/count`; document.head.append(s); }
+const ev = p => { try { if (window.goatcounter && goatcounter.count) goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} };
+const store = { get() { try { return JSON.parse(localStorage.getItem("sdk-practice") || "{}"); } catch (e) { return {}; } }, set(v) { try { localStorage.setItem("sdk-practice", JSON.stringify(v)); } catch (e) {} } };
+const I = d => `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const EYE = I('<path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z"/><circle cx="10" cy="10" r="2.5"/>');
+const TALK = I('<path d="M4 4.5h12v8H9l-4 3v-3H4z"/>');
+const BULB = I('<path d="M7.5 14.5h5M8 17h4M10 3a5 5 0 0 0-3 9c.6.5 1 1.2 1 2h4c0-.8.4-1.5 1-2a5 5 0 0 0-3-9z"/>');
+
+/* the seven steps, seen through the interviewer's eyes */
+const STEPS = [
+  { k: "req", t: "Requirements", min: 5, ask: "What are we building, for whom, and how big?", look: "You clarify scope before drawing anything, split functional from non-functional, and pin down one scale number.", say: "Before I design, let me confirm what it must do and how big it needs to be." },
+  { k: "est", t: "Estimates", min: 5, ask: "Back of the envelope: traffic, storage, peaks.", look: "Round numbers, done fast, and then used to make a decision: do we need a cache, shards, a queue?", say: "Roughly this many per second, so one database won't do. That's why I'll add..." },
+  { k: "api", t: "API", min: 4, ask: "Which calls does the client make?", look: "A few clean endpoints with inputs and outputs, and idempotency wherever a retry could repeat a write.", say: "Three calls cover the core flow..." },
+  { k: "data", t: "Data model", min: 4, ask: "What do you store, and how is it keyed?", look: "A store chosen for its access pattern, with the partition key named out loud.", say: "The main read is..., so I'll key it by..." },
+  { k: "hld", t: "High-level design", min: 12, ask: "Draw it one block at a time, following a single request.", look: "Start simple, walk one request end to end, and give each box a one-line reason.", say: "Let me follow one request through the system." },
+  { k: "deep", t: "Deep dives", min: 10, ask: "The interviewer pushes on the hard parts.", look: "You name the trade-off and an alternative, not just one answer.", say: "There are two options here. I'd pick this one because..." },
+  { k: "wrap", t: "Wrap-up", min: 5, ask: "What breaks first, and what would you do next?", look: "You find your own bottleneck, propose a fix and finish on time.", say: "The first thing to break is..., and I'd fix it by..." },
+];
+
+/* ---------- picker ---------- */
+const prog = store.get();
+const cos = [...new Set(D.flatMap(d => d.companies))].sort();
+$("#fCo").insertAdjacentHTML("beforeend", cos.map(c => `<option>${esc(c)}</option>`).join(""));
+let fTrack = "all";
+function drawPick() {
+  const lv = $("#fLevel").value, co = $("#fCo").value, p = store.get();
+  const list = D.filter(d => (fTrack === "all" || d.track === fTrack) && (!lv || d.level === lv) && (!co || d.companies.includes(co)));
+  $("#qgrid").innerHTML = list.map(d => { const st = p[d.slug]; const badge = st && st.done ? "Done" : st ? `Step ${Math.min(st.step + 1, 7)} of 7` : ""; return `<button class="q" type="button" data-q="${d.slug}"><div class="th"><img loading="lazy" alt="" src="../${d.thumb}">${badge ? `<span class="badge">${badge}</span>` : ""}</div><div class="tt">${esc(d.title)}</div><div class="mm"><span class="lv ${d.level}">${d.level}</span><span>${d.track === "AI" ? "AI design" : "Classic"}</span>${d.companies.length ? `<span>${esc(d.companies.slice(0, 3).join(", "))}${d.companies.length > 3 ? ` +${d.companies.length - 3}` : ""}</span>` : ""}</div></button>`; }).join("") || `<p class="src">Nothing matches yet. Try another filter.</p>`;
+}
+$("#fTrack").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; fTrack = b.dataset.v; [...$("#fTrack").children].forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawPick(); });
+$("#fLevel").onchange = drawPick; $("#fCo").onchange = drawPick;
+$("#qgrid").addEventListener("click", e => { const b = e.target.closest("[data-q]"); if (b) go(b.dataset.q); });
+
+/* ---------- session ---------- */
+let Q = null, step = 0, blk = 1, revealed = false;
+const BY = Object.fromEntries(D.map(d => [d.slug, d]));
+function go(slug, s) { location.hash = "q=" + slug + (s ? "&s=" + s : ""); }
+function route() {
+  const h = new URLSearchParams(location.hash.slice(1)); const q = BY[h.get("q")];
+  if (!q) { Q = null; $("#vRun").hidden = true; $("#vPick").hidden = false; stopClock(); drawPick(); document.title = "Practice system design interviews - System Design Kit"; return; }
+  const st = store.get()[q.slug] || {};
+  if (Q !== q) { Q = q; step = h.get("s") ? Math.max(0, Math.min(6, +h.get("s") - 1)) : (st.done ? 0 : st.step || 0); blk = st.blk || 1; resetClock(); ev("practice-start/" + q.slug); }
+  else if (h.get("s")) step = Math.max(0, Math.min(6, +h.get("s") - 1));
+  $("#vPick").hidden = true; $("#vRun").hidden = false; $("#rTitle").textContent = q.title; document.title = q.title + " - Practice - System Design Kit";
+  render(); scrollTo({ top: 0 });
+}
+addEventListener("hashchange", route);
+$("#bBack").onclick = () => { history.pushState(null, "", location.pathname); route(); };
+function save(extra = {}) { const p = store.get(); p[Q.slug] = { ...(p[Q.slug] || {}), step, blk, at: Date.now(), ...extra }; store.set(p); }
+function setStep(s) { step = Math.max(0, Math.min(6, s)); revealed = false; save(); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); scrollTo({ top: 0, behavior: "smooth" }); }
+
+const items = (arr, code) => arr.map(x => `<div class="ai">${code ? `<code>${esc(x)}</code>` : `<span>${esc(x)}</span>`}</div>`).join("");
+function lens(S) { return `<div class="lens"><div>${EYE}<span><b>Interviewer checks</b>${esc(S.look)}</span></div><div>${TALK}<span><b>Say it</b><i>"${esc(S.say)}"</i></span></div></div>`; }
+function stepHead(S) { return `<div class="sh"><span class="k">Step ${step + 1} of 7</span><h3>${S.t}</h3><span class="bud">about ${S.min} min</span></div>`; }
+function navRow(primary) { return `<div class="nav2">${step ? `<button class="pill ghost" type="button" data-act="prev">Back</button>` : ""}<span class="sp"></span>${primary}</div>`; }
+function answerFor(k) {
+  const C = Q.c;
+  if (k === "req") return `<h4>Functional</h4>${items(C.reqF)}<h4>Non-functional</h4>${items(C.reqN)}`;
+  if (k === "est") return items(C.est);
+  if (k === "api") return items(C.api, true);
+  if (k === "data") return items(C.data, true);
+  if (k === "wrap") return items(C.wrap);
+  return "";
+}
+function render() {
+  const S = STEPS[step], C = Q.c, notes = (store.get()[Q.slug] || {}).notes || {};
+  $("#rProg").innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i < step ? "done" : i === step ? "on" : ""}" title="${i + 1}. ${x.t}" aria-label="Step ${i + 1}: ${x.t}"></button>`).join("");
+  let h = stepHead(S);
+  if (S.k === "hld") {
+    const n = Q.nodes.length, node = Q.nodes[blk - 1];
+    h += `<div class="hl"><div class="canvas" id="cv"><span class="cnt">${blk} / ${n} blocks</span></div>
+      <div class="side"><div class="cap" id="cap"><span class="n">${blk}</span><b>${esc(node.title)}</b><span>${esc(C.blocks[node.id] || "")}</span></div>
+      <ol class="order" id="ord">${orderHTML()}</ol>
+      ${lens(S)}
+      <div class="nav2" id="hlnav">${hlButtons()}</div></div></div>`;
+    $("#stage").innerHTML = h; loadSvg(); return;
+  }
+  if (S.k === "deep") {
+    h += `<p class="ask">${esc(S.ask)}</p>${lens(S)}<div class="dives">${C.dives.map(([q, a], i) => `<button class="dv" type="button" data-dv="${i}"><span class="qq">${esc(q)}</span><span class="tap">Think, then tap to see a strong answer</span><span class="aa">${esc(a)}</span></button>`).join("")}</div>${navRow(`<button class="pill primary" type="button" data-act="next">Wrap-up →</button>`)}`;
+    $("#stage").innerHTML = h; return;
+  }
+  h += `<div class="two"><div class="card"><p class="ask">${esc(S.ask)}</p>${lens(S)}<textarea class="notes" id="nt" placeholder="Your answer first. Type or say it out loud.">${esc(notes[S.k] || "")}</textarea></div>
+    <div class="card ans ${revealed ? "open" : ""}" id="ans"><div class="cover"><p>Try it yourself first. Then compare with a strong answer.</p><button class="pill primary" type="button" data-act="reveal">Show the answer <span class="kbd">Enter</span></button></div><div class="alist">${answerFor(S.k)}</div></div></div>`;
+  if (S.k === "wrap") h += finishHTML();
+  else h += navRow(`<button class="pill primary" type="button" data-act="next">${STEPS[step + 1].t} →</button>`);
+  $("#stage").innerHTML = h;
+  const nt = $("#nt"); if (nt) nt.addEventListener("input", () => { const p = store.get(), r = p[Q.slug] || {}; r.notes = { ...(r.notes || {}), [S.k]: nt.value }; p[Q.slug] = r; store.set(p); });
+}
+function finishHTML() {
+  const idx = D.indexOf(Q), nxt = D.filter(d => d !== Q && d.track === Q.track && !(store.get()[d.slug] || {}).done)[0] || D[(idx + 1) % D.length];
+  return `<div class="two"><div class="card score"><span class="k sh"><span class="k">How did you do?</span></span>${["the requirements", "the estimates", "the API", "the data model", "the high-level design", "the deep dives"].map((x, i) => `<label class="chk"><input type="checkbox" data-sc="${i}"> I covered ${x} without peeking</label>`).join("")}<div class="big" id="scv">0 <small>/ 6</small></div></div>
+    <div class="card"><p class="ask">Now draw it for real.</p><span class="fine" style="color:var(--ink-muted)">Paste the finished design into Excalidraw and redo it from memory tomorrow. That's how it sticks.</span>
+      <div class="nav2"><button class="pill primary" type="button" data-act="copy">Copy to Excalidraw</button><a class="pill ghost" href="../#i=${Q.kit}">Open in the kit</a></div>
+      <div class="nav2"><button class="pill ghost" type="button" data-act="restart">Start again</button><span class="sp"></span><button class="pill primary" type="button" data-next="${nxt.slug}">Next: ${esc(nxt.title)} →</button></div></div></div>`;
+}
+const SVGC = new Map();
+function loadSvg() {
+  const k = Q.slug + "/" + blk, cv = $("#cv");
+  const put = t => { if (!$("#cv") || Q.slug + "/" + blk !== k) return; cv.insertAdjacentHTML("beforeend", t); const old = cv.querySelectorAll("svg"); if (old.length > 1) old[0].remove(); };
+  if (SVGC.has(k)) return put(SVGC.get(k));
+  fetch(`../p/${k}.svg`).then(r => r.text()).then(t => { SVGC.set(k, t); put(t); }).catch(() => {});
+  if (blk < Q.nodes.length) fetch(`../p/${Q.slug}/${blk + 1}.svg`).then(r => r.text()).then(t => SVGC.set(Q.slug + "/" + (blk + 1), t)).catch(() => {});
+}
+function orderHTML() { return Q.nodes.map((x, i) => `<li class="${i < blk - 1 ? "done" : i === blk - 1 ? "on" : ""}">${esc(x.title)}</li>`).join(""); }
+function hlButtons() { const n = Q.nodes.length; return `<button class="pill ghost" type="button" data-act="${blk > 1 ? "less" : "prev"}">Back</button><span class="sp"></span>` + (blk < n ? `<button class="pill ghost" type="button" data-act="all">Show all</button><button class="pill primary" type="button" data-act="add">Add next block <span class="kbd">→</span></button>` : `<button class="pill ghost" type="button" data-act="copy">Copy to Excalidraw</button><button class="pill primary" type="button" data-act="next">Deep dives →</button>`); }
+function addBlock(d) {
+  const n = Q.nodes.length; blk = Math.max(1, Math.min(n, blk + d)); save();
+  const node = Q.nodes[blk - 1]; $(".cnt").textContent = `${blk} / ${n} blocks`;
+  const cap = $("#cap"); cap.outerHTML = `<div class="cap" id="cap"><span class="n">${blk}</span><b>${esc(node.title)}</b><span>${esc(Q.c.blocks[node.id] || "")}</span></div>`;
+  $("#ord").innerHTML = orderHTML(); $("#hlnav").innerHTML = hlButtons();
+  loadSvg();
+}
+/* copy the finished design (Excalidraw clipboard format) */
+async function copyDesign() {
+  try {
+    const p = fetch(`../e/${Q.kitId}.json`).then(r => r.json()).then(els => new Blob([JSON.stringify({ type: "excalidraw/clipboard", elements: els, files: {} })], { type: "text/plain" }));
+    if (window.ClipboardItem && navigator.clipboard.write) await navigator.clipboard.write([new ClipboardItem({ "text/plain": p })]);
+    else await navigator.clipboard.writeText(await (await p).text());
+    say(`Copied. Paste in Excalidraw with ${MAC ? "⌘" : "Ctrl"} V`); ev("practice-copy/" + Q.slug);
+  } catch (e) { say("Copy didn't go through. Try Open in the kit"); }
+}
+$("#stage").addEventListener("click", e => {
+  const a = e.target.closest("[data-act]");
+  if (a) { const x = a.dataset.act;
+    if (x === "reveal") { revealed = true; $("#ans").classList.add("open"); ev("practice-reveal/" + STEPS[step].k); }
+    if (x === "next") { if (step === 4) blk = Q.nodes.length; setStep(step + 1); }
+    if (x === "prev") setStep(step - 1);
+    if (x === "add") addBlock(1);
+    if (x === "less") addBlock(-1);
+    if (x === "all") { blk = Q.nodes.length; save(); render(); }
+    if (x === "copy") copyDesign();
+    if (x === "restart") { const p = store.get(); delete p[Q.slug]; store.set(p); blk = 1; resetClock(); setStep(0); }
+    return; }
+  const dv = e.target.closest("[data-dv]"); if (dv) { dv.classList.toggle("open"); return; }
+  const nx = e.target.closest("[data-next]"); if (nx) { save({ done: true }); ev("practice-done/" + Q.slug); go(nx.dataset.next); return; }
+});
+$("#stage").addEventListener("change", e => { if (e.target.matches("[data-sc]")) { const n = document.querySelectorAll("[data-sc]:checked").length; $("#scv").innerHTML = `${n} <small>/ 6</small>`; save({ done: true, score: n }); } });
+$("#rProg").addEventListener("click", e => { const b = e.target.closest("[data-step]"); if (b) setStep(+b.dataset.step); });
+document.addEventListener("keydown", e => {
+  if (!Q || e.target.closest("textarea, input, select") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const S = STEPS[step];
+  if (S.k === "hld" && (e.key === "ArrowRight" || e.key === " ")) { e.preventDefault(); if (blk < Q.nodes.length) addBlock(1); else setStep(step + 1); }
+  else if (S.k === "hld" && e.key === "ArrowLeft") { e.preventDefault(); if (blk > 1) addBlock(-1); else setStep(step - 1); }
+  else if (e.key === "Enter") { e.preventDefault(); if (S.k !== "hld" && S.k !== "deep" && !revealed) { revealed = true; const a = $("#ans"); if (a) a.classList.add("open"); } else if (step < 6) setStep(step + 1); }
+});
+/* timer: 45 minutes, per-step budget shown on each step */
+let left = 45 * 60, tick = null;
+function fmt(s) { const a = Math.abs(s); return (s < 0 ? "-" : "") + String(Math.floor(a / 60)).padStart(2, "0") + ":" + String(a % 60).padStart(2, "0"); }
+function paint() { $("#rClock").textContent = fmt(left); $("#rTimer").classList.toggle("over", left < 0); }
+function stopClock() { clearInterval(tick); tick = null; }
+function resetClock() { stopClock(); left = 45 * 60; paint(); }
+$("#rTimer").onclick = () => { if (tick) { stopClock(); say("Timer paused"); } else { tick = setInterval(() => { left--; paint(); }, 1000); say("45-minute interview timer started"); ev("practice-timer"); } };
+route();
+/* contact links */
+(() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
+</script>
+</body></html>
