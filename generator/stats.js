@@ -2,7 +2,7 @@ const q = new URLSearchParams(location.search).get("s");
 const PLACE = { featured: "Homepage under the search · README top · sponsor row", gold: "Homepage sponsor row (large) · README", silver: "Homepage sponsor row · README", bronze: "README · Backers", supporter: "README", backer: "Backers list", coffee: "Thank-you" };
 const n = v => (v || 0).toLocaleString();
 Promise.all([fetch("../../sponsors.json", { cache: "no-cache" }).then(r => r.json()).catch(() => ({ sponsors: [] })), fetch("../../stats.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).catch(() => ({}))]).then(([sj, st]) => {
-  const list = sj.sponsors || [], S = st.sponsors || {};
+  const list = (sj.sponsors || []).filter(x => x.org !== false), S = st.sponsors || {};
   $("#sf").textContent = st.updated ? `Last updated ${new Date(st.updated).toLocaleString()}. Views count once per visit when the logo is on screen; clicks count every visit to your link.` : "Stats start counting as soon as the first sponsor is live.";
   const me = q && list.find(x => (x.login || x.name).toLowerCase() === q.toLowerCase());
   if (me) {

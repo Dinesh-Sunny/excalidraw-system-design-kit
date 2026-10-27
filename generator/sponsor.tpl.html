@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sponsor the System Design Kit</title>
-<meta name="description" content="Put your logo where engineers practise system design. Pick a spot, see exactly where it shows, sponsor on GitHub in two minutes. Live within a day, cancel any time.">
+<meta name="description" content="Put your logo where engineers practise system design. Pick a spot, see exactly where it shows, pay by card in two minutes. No account needed. Live within a day, cancel any time.">
 <meta property="og:title" content="Sponsor the System Design Kit">
 <meta property="og:description" content="Your logo where engineers practise system design. Live within a day.">
 <meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">
@@ -129,7 +129,7 @@ __BASECSS__
 
 <section class="sp-hero gut"><div class="wrap">
   <h1 id="hh">Be seen by engineers <i>mid-prep</i>.</h1>
-  <p id="hp">Put your logo on the kit engineers use to practise system design. Two minutes on GitHub, live within a day.</p>
+  <p id="hp">Put your logo on the kit engineers use to practise system design. Pay by card in two minutes, live within a day.</p>
   <div class="seg2" role="tablist" aria-label="Who is sponsoring">
     <button role="tab" type="button" id="tabCo" aria-selected="true" aria-controls="companies">For companies</button>
     <button role="tab" type="button" id="tabYou" aria-selected="false" aria-controls="you">For you</button>
@@ -235,7 +235,7 @@ function tab(which) {
   $("#tabCo").setAttribute("aria-selected", String(co)); $("#tabYou").setAttribute("aria-selected", String(!co));
   $("#companies").hidden = !co; $("#you").hidden = co; syncSticky();
   $("#hh").innerHTML = co ? "Be seen by engineers <i>mid-prep</i>." : "Keep the kit <i>free</i>.";
-  $("#hp").textContent = co ? "Put your logo on the kit engineers use to practise system design. Two minutes on GitHub, live within a day." : "A coffee or a few dollars a month keeps new blocks coming, free for everyone.";
+  $("#hp").textContent = co ? "Put your logo on the kit engineers use to practise system design. Pay by card in two minutes, live within a day." : "A coffee or a few dollars a month keeps new blocks coming, free for everyone.";
 }
 $("#tabCo").onclick = () => { tab("co"); try { history.replaceState(null, "", location.search + "#companies"); } catch (e) {} };
 $("#tabYou").onclick = () => { tab("you"); try { history.replaceState(null, "", location.search + "#you"); } catch (e) {} };

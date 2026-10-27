@@ -28,6 +28,7 @@ lines+=['','</div>','<!-- sponsors:end -->']
 block='\n'.join(lines)
 def link(t,label):
     if t['per']=='once' and S.get('kofi'): return f"[{label}](https://ko-fi.com/{S['kofi']})"
+    if t.get('card'): return f"[{label}]({t['card']})"
     if S.get('github') and t.get('gh_tier'): return f"[{label}](https://github.com/sponsors/{S['github']}/sponsorships?tier_id={t['gh_tier']})"
     return label
 sec=f'''## 💖 Sponsors
@@ -39,10 +40,10 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 | For you | For your company |
 |---|---|
 | {' · '.join(link(p, f"{p['name']} {p['price']}{'' if p['per']=='once' else '/mo'}") for p in S['people'])} | {' · '.join(link(c, f"{c['name']} {c['price']}/mo") for c in S['companies'])} |
-| {'[Sponsor on GitHub](https://github.com/sponsors/'+S['github']+')' if S.get('github') else ''}{' · ' if S.get('github') and S.get('kofi') else ''}{'[Buy me a coffee](https://ko-fi.com/'+S['kofi']+')' if S.get('kofi') else ''}{'' if (S.get('github') or S.get('kofi')) else 'Opening soon - a ⭐ helps today'} | [See tiers and perks]({PAGE}#companies) |
+| {'Pay by card above, or [sponsor on GitHub](https://github.com/sponsors/'+S['github']+')' if S.get('github') else ''}{' · ' if S.get('github') and S.get('kofi') else ''}{'[Buy me a coffee](https://ko-fi.com/'+S['kofi']+')' if S.get('kofi') else ''}{'' if (S.get('github') or S.get('kofi')) else 'Opening soon - a ⭐ helps today'} | [See tiers and perks]({PAGE}#companies) |
 
 > [!TIP]
-> Sponsor by card or on GitHub and your logo shows up here and on the [site]({PAGE}) within a day, automatically. Sponsors get [live stats]({PAGE}stats/) and a monthly report.
+> Pay by card (no GitHub account needed) or on GitHub, and your logo shows up here and on the [site]({PAGE}) within a day, automatically. Sponsors get [live stats]({PAGE}stats/) and a monthly report.
 '''
 p=os.path.join(R,'README.md'); s=open(p).read()
 if '## 💖 Sponsors' in s: s=re.sub(r'## 💖 Sponsors\n.*?(?=\n## )',sec.rstrip('\n')+'\n',s,flags=re.S)

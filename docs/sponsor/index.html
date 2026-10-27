@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sponsor the System Design Kit</title>
-<meta name="description" content="Put your logo where engineers practise system design. Pick a spot, see exactly where it shows, sponsor on GitHub in two minutes. Live within a day, cancel any time.">
+<meta name="description" content="Put your logo where engineers practise system design. Pick a spot, see exactly where it shows, pay by card in two minutes. No account needed. Live within a day, cancel any time.">
 <meta property="og:title" content="Sponsor the System Design Kit">
 <meta property="og:description" content="Your logo where engineers practise system design. Live within a day.">
 <meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">
@@ -373,7 +373,7 @@ dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
 
 <section class="sp-hero gut"><div class="wrap">
   <h1 id="hh">Be seen by engineers <i>mid-prep</i>.</h1>
-  <p id="hp">Put your logo on the kit engineers use to practise system design. Two minutes on GitHub, live within a day.</p>
+  <p id="hp">Put your logo on the kit engineers use to practise system design. Pay by card in two minutes, live within a day.</p>
   <div class="seg2" role="tablist" aria-label="Who is sponsoring">
     <button role="tab" type="button" id="tabCo" aria-selected="true" aria-controls="companies">For companies</button>
     <button role="tab" type="button" id="tabYou" aria-selected="false" aria-controls="you">For you</button>
@@ -457,7 +457,7 @@ dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
 <div class="sticky" id="sticky"><div class="s1" id="stTxt"></div><a class="pill primary" id="stGo" href="#" target="_blank" rel="noopener">Sponsor</a></div>
 
 <script>
-const SP = {"github":"Dinesh-Sunny","kofi":"dineshsunny","people":[{"id":"coffee","name":"Coffee","price":"$5","per":"once","gets":"A big thank-you","gh_tier":674466},{"id":"backer","name":"Backer","price":"$5","per":"month","gets":"Your name in BACKERS.md","gh_tier":674468},{"id":"supporter","name":"Supporter","price":"$15","per":"month","gets":"Your name in the README and early access to new packs","gh_tier":674469}],"companies":[{"id":"featured","name":"Featured","price":"$600","per":"month","only":"1 slot","gets":["Logo next to the search on the homepage","Top of the README","Thanks in every release note and on LinkedIn"],"gh_tier":674473},{"id":"gold","name":"Gold","price":"$300","per":"month","gets":["Large logo on the homepage","Large logo in the README"],"gh_tier":674472},{"id":"silver","name":"Silver","price":"$150","per":"month","gets":["Logo in the homepage sponsor row","Logo in the README"],"gh_tier":674471},{"id":"bronze","name":"Bronze","price":"$50","per":"month","gets":["Small logo in the README and BACKERS.md"],"gh_tier":674470}],"sponsors":[],"goatcounter":null};
+const SP = {"github":"Dinesh-Sunny","kofi":"dineshsunny","people":[{"id":"coffee","name":"Coffee","price":"$5","per":"once","gets":"A big thank-you","gh_tier":674466},{"id":"backer","name":"Backer","price":"$5","per":"month","gets":"Your name in BACKERS.md","gh_tier":674468,"card":"https://buy.stripe.com/3cI7sK1F0g9yf5EfJrgjC05"},{"id":"supporter","name":"Supporter","price":"$15","per":"month","gets":"Your name in the README and early access to new packs","gh_tier":674469,"card":"https://buy.stripe.com/aFabJ097saPecXw0OxgjC04"}],"companies":[{"id":"featured","name":"Featured","price":"$600","per":"month","only":"1 slot","gets":["Logo next to the search on the homepage","Top of the README","Thanks in every release note and on LinkedIn"],"gh_tier":674473,"card":"https://buy.stripe.com/14A28qgzU3mMf5E68RgjC00"},{"id":"gold","name":"Gold","price":"$300","per":"month","gets":["Large logo on the homepage","Large logo in the README"],"gh_tier":674472,"card":"https://buy.stripe.com/4gMdR8erM6yYf5E0OxgjC01"},{"id":"silver","name":"Silver","price":"$150","per":"month","gets":["Logo in the homepage sponsor row","Logo in the README"],"gh_tier":674471,"card":"https://buy.stripe.com/4gMdR8erM2iI8HggNvgjC02"},{"id":"bronze","name":"Bronze","price":"$50","per":"month","gets":["Small logo in the README and BACKERS.md"],"gh_tier":674470,"card":"https://buy.stripe.com/bJe7sK83o1eE2iS9l3gjC03"}],"sponsors":[],"goatcounter":null};
 const $ = s => document.querySelector(s);
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const gh = SP.github ? "https://github.com/sponsors/" + SP.github : null;
@@ -479,7 +479,7 @@ function tab(which) {
   $("#tabCo").setAttribute("aria-selected", String(co)); $("#tabYou").setAttribute("aria-selected", String(!co));
   $("#companies").hidden = !co; $("#you").hidden = co; syncSticky();
   $("#hh").innerHTML = co ? "Be seen by engineers <i>mid-prep</i>." : "Keep the kit <i>free</i>.";
-  $("#hp").textContent = co ? "Put your logo on the kit engineers use to practise system design. Two minutes on GitHub, live within a day." : "A coffee or a few dollars a month keeps new blocks coming, free for everyone.";
+  $("#hp").textContent = co ? "Put your logo on the kit engineers use to practise system design. Pay by card in two minutes, live within a day." : "A coffee or a few dollars a month keeps new blocks coming, free for everyone.";
 }
 $("#tabCo").onclick = () => { tab("co"); try { history.replaceState(null, "", location.search + "#companies"); } catch (e) {} };
 $("#tabYou").onclick = () => { tab("you"); try { history.replaceState(null, "", location.search + "#you"); } catch (e) {} };

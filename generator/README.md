@@ -35,6 +35,7 @@ Fonts for measuring are loaded from `node_modules/@excalidraw/excalidraw/dist/pr
 
 Everything about sponsoring comes from `sponsor.json`:
 
+- `card` (per tier): Stripe Payment Link. When set, card is the main button everywhere and GitHub is the alternative.
 - `github` / `kofi`: set once GitHub Sponsors or Ko-fi is live. Until then the personal tiers show "opening soon" and companies get an email button.
 - `sponsors[]`: `{ "name", "url", "logo", "tier" }` with tier `featured`, `gold`, `silver`, `bronze`, `supporter`, `backer` or `coffee`.
 

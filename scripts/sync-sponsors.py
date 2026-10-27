@@ -63,11 +63,14 @@ if SK:
             site = f.get('website', '')
             if site and not site.startswith('http'): site = 'https://' + site
             host = urllib.parse.urlparse(site).netloc if site else ''
-            name = f.get('company') or org or host or 'Sponsor'
+            co = amt >= 50  # company tiers carry a logo; people tiers carry a name
+            who = (cs.get('customer_details') or {}).get('name') or ''
+            name = (f.get('company') or org or host or 'Sponsor') if co else (f.get('name') or org or who.split(' ')[0] or 'Backer')
             logo = f'https://github.com/{org}.png?size=128' if org else (f'https://www.google.com/s2/favicons?domain={host}&sz=128' if host else '')
             t, _ = tier_of({'tier': {'monthlyPriceInDollars': amt}})
-            if (cs.get('customer_details') or {}).get('email'): EMAILS[org or host] = cs['customer_details']['email']
-            sponsors.append({'name': name, 'login': org or host, 'url': site or (f'https://github.com/{org}' if org else ''), 'logo': logo, 'tier': t, 'amount': amt, 'org': True})
+            k = org or host or name
+            if (cs.get('customer_details') or {}).get('email'): EMAILS[k] = cs['customer_details']['email']
+            sponsors.append({'name': name, 'login': k, 'url': site or (f'https://github.com/{org}' if org else ''), 'logo': logo, 'tier': t, 'amount': amt, 'org': co})
         if not page.get('has_more'): break
         after = page['data'][-1]['id']
 
@@ -122,7 +125,8 @@ for sp in sponsors:
     k = sp['login'] or sp['name']
     if k in prev_logins: continue
     stats_link = f'{SITE}sponsor/stats/?s={k}'
-    send(EMAILS.get(k), "You're live on the System Design Kit", f"""Hi {sp['name']},
+    if sp['org']:
+        send(EMAILS.get(k), "You're live on the System Design Kit", f"""Hi {sp['name']},
 
 Thank you for sponsoring the System Design Kit. Your logo is now live:
 
@@ -133,14 +137,26 @@ Your stats (views and clicks, updated every few hours):
 {stats_link}
 
 Visits from your logo arrive tagged utm_source=system-design-kit, so they show in your own analytics too.
-To change the logo, update your GitHub organisation avatar or reply to this email.
+You'll get a short results email on the 1st of each month. Invoices and receipts come from Stripe.
+To change the logo or link, reply to this email.
 
 Thanks for keeping it free,
 Dinesh""")
-    send(GU, f"New sponsor: {sp['name']} ({sp['tier']})", f"{sp['name']} is now a {sp['tier']} sponsor.\nLink: {sp['url']}\nStats: {stats_link}")
+    else:
+        extra = '\nAs a supporter you also get new packs early - they arrive by email before release.\n' if sp['tier'] == 'supporter' else ''
+        send(EMAILS.get(k), "Thank you for backing the System Design Kit", f"""Hi {sp['name']},
+
+Thank you for backing the System Design Kit. Your name is now in the credits:
+https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/BACKERS.md
+{extra}
+To change how your name shows, reply to this email. Receipts come from Stripe.
+
+Thanks for keeping it free,
+Dinesh""")
+    send(GU, f"New sponsor: {sp['name']} ({sp['tier']})", f"{sp['name']} is now a {sp['tier']} sponsor.\nLink: {sp['url']}\nStats: {stats_link}" + ("\nTo do: thank them in the next release note and on LinkedIn (Featured perk)." if sp['tier'] == 'featured' else ""))
 month = today.strftime('%Y-%m')
 if today.day == 1 and prev_stats.get('report_month') != month and GP:
-    for sp in sponsors:
+    for sp in [x for x in sponsors if x['org']]:
         k = sp['login'] or sp['name']; m = prev_stats.get('sponsors', {}).get(k, {})
         ctr = f"{(m.get('clicks30', 0) / m['views30'] * 100):.1f}%" if m.get('views30') else '-'
         send(EMAILS.get(k), f"Your System Design Kit results - {today.strftime('%B %Y')}", f"""Hi {sp['name']},
