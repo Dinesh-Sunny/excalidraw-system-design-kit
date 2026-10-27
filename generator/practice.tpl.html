@@ -175,6 +175,26 @@ body.run > header.nav, body.run > footer { display: none }
 .opt2.shake { animation: shake .35s }
 @keyframes shake { 20%, 60% { transform: translateX(-5px) } 40%, 80% { transform: translateX(5px) } }
 .big2 { margin: 0; font: 400 40px/1 var(--font-serif) } .big2 small { font: 400 15px/1 var(--font-sans); color: var(--ink-muted) }
+
+/* boards for every step */
+.board { position: relative; min-height: 0; overflow: auto; padding: 32px; background: radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground); display: grid; gap: 14px; align-content: start }
+.bh { font: 400 22px/1.2 var(--font-hand); color: var(--sketch) }
+.bcols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start } .bcols > div { display: grid; gap: 12px; align-content: start } .bcols.one { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) }
+.note { padding: 14px 16px; border-radius: 6px; font: 400 19px/1.3 var(--font-hand); color: #1e1e1e; box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 14px rgba(0,0,0,.06); transform: rotate(-.6deg) }
+.note:nth-child(even) { transform: rotate(.7deg) }
+.note.f { background: #fff3bf } .note.n { background: #d0ebff } .note.w { background: #ffe3e3 }
+.fresh { animation: land .55s cubic-bezier(.2,1.3,.4,1) both; outline: 3px solid var(--sketch-soft) }
+@keyframes land { from { opacity: 0; transform: translateY(-18px) scale(.94) } }
+.bghost { padding: 16px; border: 2px dashed var(--hairline); border-radius: 10px; font: 400 16px/1.3 var(--font-hand); color: var(--ink-muted); text-align: center }
+.ests { display: grid; gap: 10px } .estc { padding: 12px 16px; border-radius: 10px; background: var(--surface); border: 1px solid var(--hairline); font: 400 19px/1.3 var(--font-hand) }
+.code { display: grid; gap: 0; border-radius: 12px; background: #1e1e1e; padding: 16px 18px; color: #e9ecef } .code .cl { font: 400 14px/26px var(--font-mono); border-bottom: 1px dashed #343a40; padding: 4px 0; outline-offset: 4px } .code .cl:last-child { border-bottom: 0 } .code .bghost { color: #868e96; border-color: #343a40 }
+.tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px }
+.tbl { border-radius: 10px; border: 2px solid #2f9e44; background: var(--surface); overflow: hidden } .tbl b { display: block; padding: 8px 12px; background: #b2f2bb; color: #1e1e1e; font: 400 19px/1.2 var(--font-hand) } .tbl span { display: block; padding: 10px 12px; font: 400 13px/20px var(--font-mono) }
+.qa { display: grid; gap: 6px; padding: 14px 16px; border-radius: 10px; background: var(--surface); border-left: 3px solid var(--sketch) } .qa b { font: 400 20px/1.25 var(--font-serif) } .qa span { font: 400 15px/22px var(--font-sans); color: var(--ink-muted) }
+.qz .calc { margin-bottom: 4px }
+.opt2 > span:last-child { min-width: 0 } .opt2.mono > span:last-child { font: 400 13px/18px var(--font-mono) }
+.opts2.long .opt2 { font: 400 14px/20px var(--font-sans); align-items: flex-start; padding: 12px 14px } .opts2.long .opt2 .k { margin-top: 1px }
+@media (max-width: 999px) { .qz { grid-template-rows: minmax(160px, 1fr) auto } .board { padding: 18px } .bcols { grid-template-columns: 1fr } .move { max-height: 58vh } }
 </style>
 </head><body>
 <header class="nav gut"><div class="wrap">
@@ -261,7 +281,7 @@ function sub(key, val) { const r = rec(); put({ [key]: { ...(r[key] || {}), ...v
 function route() {
   const h = new URLSearchParams(location.hash.slice(1)), q = BY[h.get("q")];
   if (!q) { Q = null; document.body.classList.remove("run"); $("#vRun").hidden = true; $("#vPick").hidden = false; stopClock(); drawPick(); document.title = "Practice system design interviews - System Design Kit"; return; }
-  if (Q !== q) { const st = store.get()[q.slug] || {}; $("#stage").innerHTML = ""; tries = new Set(); last = null; cam = null; Q = q; step = st.done ? 0 : st.step || 0; blk = st.blk || 1; dv = 0; resetClock(); ev("practice-start/" + q.slug); }
+  if (Q !== q) { const st = store.get()[q.slug] || {}; $("#stage").innerHTML = ""; tries = new Set(); last = null; cam = null; qtries = new Set(); qlast = null; Q = q; step = st.done ? 0 : st.step || 0; blk = st.blk || 1; dv = 0; resetClock(); ev("practice-start/" + q.slug); }
   if (h.get("s")) step = Math.max(0, Math.min(6, +h.get("s") - 1));
   open_ = false; finished = h.get("s") === "done"; pick = null;
   document.body.classList.add("run"); $("#vPick").hidden = true; $("#vRun").hidden = false;
@@ -270,7 +290,7 @@ function route() {
 }
 addEventListener("hashchange", route);
 $("#bBack").onclick = () => { history.pushState(null, "", location.pathname); route(); };
-function setStep(s) { step = Math.max(0, Math.min(6, s)); open_ = false; finished = false; dv = 0; pick = null; tries = new Set(); last = null; cam = null; const st0 = $("#stage"); if (st0) st0.innerHTML = ""; put({ step, blk }); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); }
+function setStep(s) { step = Math.max(0, Math.min(6, s)); open_ = false; finished = false; dv = 0; pick = null; tries = new Set(); last = null; cam = null; qtries = new Set(); qlast = null; const st0 = $("#stage"); if (st0) st0.innerHTML = ""; put({ step, blk }); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); }
 function modelList(k) { const C = Q.c; return k === "req" ? [...C.reqF, ...C.reqN] : k === "est" ? C.est : k === "api" ? C.api : k === "data" ? C.data : C.wrap; }
 const RATE = [["miss", "Missed it"], ["part", "Partly"], ["nail", "Nailed it"]];
 function rateHTML(key) { const v = (rec().rate || {})[key]; return `<div class="rate"><span>How did you do?</span>${RATE.map(([k, t]) => `<button type="button" data-rate="${key}:${k}" class="${v === k ? "on " + k : ""}">${t}</button>`).join("")}</div>`; }
@@ -394,6 +414,88 @@ function loadSvg() {
 }
 addEventListener("resize", () => { const svg = $("#cv svg"); if (svg && Q && STEPS[step].k === "hld") { cam = camFor(blk); svg.setAttribute("viewBox", cam.join(" ")); } });
 
+/* ---- every other step works like the design step: one tap, the answer lands on the board, a thinking prompt when it's wrong ---- */
+let qtries = new Set(), qlast = null;
+const others = () => { const o = D.filter(d => d !== Q); return [...o.filter(d => d.track === Q.track), ...o.filter(d => d.track !== Q.track)]; };
+const seeded = (a, seed) => a.map((x, i) => [x, (Math.sin(seed * 9.13 + i * 3.7) + 1) / 2]).sort((p, q) => p[1] - q[1]).map(x => x[0]);
+const hash = s => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 100003, 7);
+function decoys(pool, n, mine, seed) { // items from other designs that don't overlap this design's answers
+  const all = (Q.c.reqF.concat(Q.c.reqN, Q.c.api, Q.c.data, Q.c.wrap)).join(" \n ");
+  const ok = pool.filter(x => !covered(x.t, all) && !mine.some(m => covered(m, x.t)));
+  return seeded(ok, seed).slice(0, n);
+}
+function scaleNum(str, f) { // scale the first number in a phrase, keeping its unit: "1,200/s" x10 -> "12k/s"
+  const C = ["", "k", "M", "B", "T"], Bt = ["KB", "MB", "GB", "TB", "PB"];
+  return str.replace(/(\d[\d,]*\.?\d*)\s*(KB|MB|GB|TB|PB|k|K|M|B|T)?(?![a-z])/, (m, num, u) => {
+    let v = parseFloat(num.replace(/,/g, "")) * f, lad = u && Bt.includes(u) ? Bt : C, i = u ? lad.indexOf(u === "K" ? "k" : u) : 0;
+    while (v >= 1000 && i < lad.length - 1) { v /= 1000; i++; } while (v < 1 && i > 0) { v *= 1000; i--; }
+    const n = v >= 100 ? Math.round(v).toLocaleString("en") : String(+v.toFixed(1));
+    return lad === Bt ? n + " " + lad[i] : n + lad[i];
+  });
+}
+function rounds(k) {
+  const C = Q.c, T = Q.title, src = d => d.title, R = [];
+  const poolOf = f => others().flatMap(d => f(d).map(t => ({ t, src: src(d) })));
+  if (k === "req") {
+    C.reqF.forEach((t, i) => R.push({ q: `What must ${T} do?`, a: t, g: "f", wrong: s => `That one comes from ${s}. Picture someone using ${T}: what do they actually do?`, d: decoys(poolOf(d => d.c.reqF), 3, C.reqF, hash(T) + i) }));
+    C.reqN.forEach((t, i) => R.push({ q: `How well must ${T} work?`, a: t, g: "n", wrong: s => `That's a goal for ${s}. Think about what would hurt ${T} most: speed, scale or losing data?`, d: decoys(poolOf(d => d.c.reqN), 3, C.reqN, hash(T) + 40 + i) }));
+  }
+  if (k === "est") C.est.forEach((t, i) => {
+    const m = t.match(/^(.*?≈)\s*(.+?)(\s*(?:, |≈).*)?$/);
+    if (!m) { R.push({ info: t }); return; }
+    const opts = [0.1, 10, 100].map(f => ({ t: m[1] + " " + scaleNum(m[2], f), f })).filter(o => o.t !== m[1] + " " + m[2]);
+    if (!opts.length) { R.push({ info: t }); return; }
+    R.push({ q: m[1] + " ?", a: m[1] + " " + m[2], full: t, d: opts.filter(o => o.t !== m[1] + " " + m[2]).map(o => ({ t: o.t, src: o.f > 1 ? "big" : "small" })), wrong: s => s === "big" ? "Too big. A day has about 100,000 seconds, so divide daily numbers by 10^5." : "Too small. Check the zeros: million is 10^6, billion is 10^9." });
+  });
+  if (k === "api") C.api.forEach((t, i) => R.push({ q: `Which call does a ${T} client make?`, a: t, code: 1, wrong: s => `That's an endpoint from ${s}. Which action does someone using ${T} take?`, d: decoys(poolOf(d => d.c.api), 3, C.api, hash(T) + 80 + i) }));
+  if (k === "data") C.data.forEach((t, i) => R.push({ q: `What does ${T} store, and how?`, a: t, code: 1, wrong: s => `That's stored by ${s}. What does ${T} read most often, and by which key?`, d: decoys(poolOf(d => d.c.data), 3, C.data, hash(T) + 120 + i) }));
+  if (k === "deep") C.dives.forEach(([q, a], i) => R.push({ q, a, long: 1, wrong: s => `That answers a question about ${s}. Read the question again: what is it really asking?`, d: seeded(others().flatMap(d => d.c.dives.map(x => ({ t: x[1], src: d.title }))), hash(T) + 160 + i).filter(x => Math.abs(x.t.length - a.length) < 70).slice(0, 2) }));
+  if (k === "wrap") C.wrap.forEach((t, i) => R.push({ q: i === 0 ? `What breaks first in ${T}?` : `What comes next for ${T}?`, a: t, wrong: s => `That's a ${s} problem. Where does ${T} take the most load?`, d: decoys(poolOf(d => d.c.wrap), 3, C.wrap, hash(T) + 200 + i) }));
+  return R.filter(r => r.info || (r.d && r.d.length)).map((r, i) => r.info ? r : { ...r, opts: seeded([{ t: r.a, ok: 1 }, ...r.d], hash(T + k) + i) });
+}
+function qi(k) { return ((rec().qi || {})[k]) || 0; }
+function boardHTML(k, R, n) {
+  const done = R.slice(0, n), fresh = i => i === n - 1 && qlast && qlast.ok ? " fresh" : "";
+  if (k === "req") { const col = g => done.map((r, i) => r.g === g ? `<div class="note ${g}${fresh(i)}">${esc(r.a)}</div>` : "").join(""); return `<div class="bcols"><div><div class="bh">What it does</div>${col("f") || `<div class="bghost">Functional requirements land here</div>`}</div><div><div class="bh">How well</div>${col("n") || `<div class="bghost">Non-functional requirements land here</div>`}</div></div>`; }
+  if (k === "est") return calcHTML() + `<div class="bh">Your estimates</div><div class="ests">${done.map((r, i) => `<div class="estc${fresh(i)}">${esc(r.info || r.full || r.a)}</div>`).join("") || `<div class="bghost">Each estimate lands here</div>`}</div>`;
+  if (k === "api") return `<div class="bh">API</div><div class="code">${done.map((r, i) => `<div class="cl${fresh(i)}">${esc(r.a)}</div>`).join("") || `<div class="bghost">Endpoints land here</div>`}</div>`;
+  if (k === "data") return `<div class="bh">Data model</div><div class="tables">${done.map((r, i) => { const [h, ...rest] = r.a.split(":"); return `<div class="tbl${fresh(i)}"><b>${esc(rest.length ? h : r.a)}</b>${rest.length ? `<span>${esc(rest.join(":"))}</span>` : ""}</div>`; }).join("") || `<div class="bghost">Tables land here</div>`}</div>`;
+  if (k === "deep") return `<div class="bh">Answers you can give</div>${done.map((r, i) => `<div class="qa${fresh(i)}"><b>${esc(r.q)}</b><span>${esc(r.a)}</span></div>`).join("") || `<div class="bghost">Each strong answer lands here</div>`}`;
+  return `<div class="bh">Bottlenecks and next steps</div><div class="bcols one">${done.map((r, i) => `<div class="note w${fresh(i)}">${esc(r.a)}</div>`).join("") || `<div class="bghost">They land here</div>`}</div>`;
+}
+function renderQuiz(k) {
+  const R = rounds(k); let n = qi(k);
+  while (n < R.length && R[n].info) n++; // info lines just land
+  const st = $("#stage"), picks = ((rec().qp || {})[k]) || {};
+  st.innerHTML = `<div class="dz qz"><div class="board" id="bd">${boardHTML(k, R, n)}</div><aside class="move" id="mv"></aside></div>`;
+  hookTools();
+  const dots = R.map((r, i) => `<i class="${i < n ? (picks[i] === false ? "hp" : "ok") : i === n ? "now" : ""}"></i>`).join("");
+  const fb = qlast ? `<div class="fb2 ${qlast.ok ? "ok" : "no"}" role="status"><b>${qlast.ok ? "✓ Right" : "Not yet"}</b><span>${esc(qlast.text)}</span></div>` : `<div class="fb2"><span>${esc(STEPS[step].look)}</span></div>`;
+  const S = STEPS[step], label = S.t;
+  if (n >= R.length) {
+    const qs = R.filter(r => !r.info).length, first = R.map((r, i) => r.info ? null : picks[i]).filter(v => v !== null && v !== undefined && v !== false).length;
+    $("#mv").innerHTML = `<div class="mh"><span class="gl">${label} complete</span><div class="dots">${dots}</div></div>${fb}<p class="big2">${first} of ${qs} <small>right first time</small></p>${rateHTML(k === "deep" ? "deep0" : k)}`;
+    buttons(step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your&nbsp;</span>scorecard<span class="kbd">↵</span>`, "", step > 0);
+    return;
+  }
+  const r = R[n], hard = qtries.size >= 2;
+  $("#mv").innerHTML = `<div class="mh"><span class="gl">${label} · ${n + 1} of ${R.length}</span><div class="dots">${dots}</div></div>${fb}<p class="mq">${esc(r.q)}</p>
+    <div class="opts2${r.long ? " long" : ""}">${r.opts.map((o, i) => { const no = qtries.has(o.t), glow = hard && o.ok; return `<button type="button" class="opt2${no ? " no" : ""}${glow ? " glow" : ""}${r.code ? " mono" : ""}" data-qp="${i}"${no ? " disabled" : ""}><span class="k">${i + 1}</span><span>${esc(o.t)}</span></button>`; }).join("")}</div>`;
+  buttons(`Show me<span class="lg">&nbsp;the answer</span><span class="kbd">→</span>`, "", true);
+  const bd = $("#bd"), fr = bd.querySelector(".fresh"); if (fr) fr.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+function quizPick(i) {
+  const k = STEPS[step].k, R = rounds(k); let n = qi(k); while (n < R.length && R[n].info) n++;
+  const r = R[n], o = r.opts[i];
+  if (o.ok) { const p = rec().qp || {}; p[k] = { ...(p[k] || {}), [n]: qtries.size === 0 }; put({ qp: p }); qlast = { ok: true, text: r.full || (r.long ? "Saved to your answers." : "Added to the board.") }; qtries = new Set(); sub("qi", { [k]: n + 1 }); ev("practice-q/" + k + (qtries.size ? "/retry" : "/ok")); }
+  else { qtries.add(o.t); qlast = { ok: false, text: r.wrong(o.src) }; ev("practice-q/" + k + "/no"); }
+  renderQuiz(k);
+  if (!o.ok) { const b = document.querySelector(`[data-qp="${i}"]`); if (b) b.classList.add("shake"); }
+}
+function quizReveal() { const k = STEPS[step].k, R = rounds(k); let n = qi(k); while (n < R.length && R[n].info) n++; if (n >= R.length) return false; const p = rec().qp || {}; p[k] = { ...(p[k] || {}), [n]: false }; put({ qp: p }); qlast = { ok: true, text: R[n].full || R[n].a }; qtries = new Set(); sub("qi", { [k]: n + 1 }); renderQuiz(k); return true; }
+function quizBack() { const k = STEPS[step].k; const n = qi(k); if (n <= 0) return false; const R = rounds(k); let m = n - 1; while (m > 0 && R[m].info) m--; sub("qi", { [k]: m }); qlast = null; qtries = new Set(); renderQuiz(k); return true; }
+function quizDone() { const k = STEPS[step].k, R = rounds(k); let n = qi(k); while (n < R.length && R[n].info) n++; return n >= R.length; }
+
 /* ---- render ---- */
 function buttons(main, extra = "", prevVisible = true) { $("#bMain").innerHTML = main; $("#bExtra").innerHTML = extra; $("#bPrev").style.visibility = prevVisible ? "visible" : "hidden"; }
 function tabs() { const r = rec().rate || {}; $("#rTabs").innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}">${x.t}${(r[x.k] || (x.k === "deep" && r.deep0)) ? `<i class="dot ${r[x.k] || r.deep0}"></i>` : ""}</button>`).join("") + `<span class="sm">${finished ? "Scorecard" : (step + 1) + "/7 · " + STEPS[step].t}</span>`; }
@@ -401,7 +503,7 @@ function render() {
   tabs(); const S = STEPS[step], C = Q.c, st = $("#stage"); st.scrollTop = 0; $("#bMain").dataset.next = "";
   if (finished) return renderScore();
   if (S.k === "hld") return renderDesign();
-  if (S.k === "deep") return renderDeep();
+  return renderQuiz(S.k);
   let tool = "", cmp = "";
   if (S.k === "req") { tool = chipsTool("req", [["f", "Functional: what it does", "Type a requirement, press Enter"], ["n", "Non-functional: how well", "e.g. p99 under 100 ms, press Enter"]]); cmp = compareHTML("req", [["Functional", C.reqF], ["Non-functional", C.reqN]]); }
   if (S.k === "est") { tool = calcHTML() + `<textarea class="notes" id="nt" rows="2" placeholder="Your numbers and what they mean for the design">${esc((rec().notes || {}).est || "")}</textarea>`; cmp = `<ul class="cmp">${C.est.map(x => `<li><span class="mk">·</span>${esc(x)}</li>`).join("")}</ul>`; }
@@ -412,13 +514,13 @@ function render() {
   st.innerHTML = `<div class="col"><h3 class="qn">${esc(S.ask)}</h3><p class="look">${esc(S.look)}</p>${tool}${hint}${open_ ? `<div class="ans" id="ans"><div class="gl">${S.k === "est" ? "A strong answer" : "Compared with a strong answer"}</div>${cmp}${S.k !== "est" ? `<p class="legend"><span class="mk ok">✓</span> you covered it <span class="mk miss">+</span> worth adding</p>` : ""}${rateHTML(S.k)}</div>` : ""}</div>`;
   hookNotes(S.k); hookTools();
   const nh = (rec().hints || {})[S.k] || 0, ml = modelList(S.k).length;
-  buttons(!open_ ? `Compare<span class="lg"> with a strong answer</span><span class="kbd">↵</span>` : step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your </span>scorecard<span class="kbd">↵</span>`, !open_ && S.k !== "est" && nh < ml ? `<button class="link" type="button" data-x="hint">Hint<span class="lg"> (${ml - nh} left)</span></button>` : "", step > 0);
+  buttons(!open_ ? `Compare<span class="lg">&nbsp;with a strong answer</span><span class="kbd">↵</span>` : step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your&nbsp;</span>scorecard<span class="kbd">↵</span>`, !open_ && S.k !== "est" && nh < ml ? `<button class="link" type="button" data-x="hint">Hint<span class="lg">&nbsp;(${ml - nh} left)</span></button>` : "", step > 0);
 }
 function renderDeep() {
   const C = Q.c, [q, a] = C.dives[dv], key = "deep" + dv, st = $("#stage");
   st.innerHTML = `<div class="col"><span class="dvn">The interviewer asks · ${dv + 1} of ${C.dives.length}</span><h3 class="qn">${esc(q)}</h3><textarea class="notes" id="nt" rows="3" placeholder="Say it out loud, then jot the key words">${esc((rec().notes || {})[key] || "")}</textarea>${open_ ? `<div class="ans"><div class="gl">A strong answer</div><p class="dva">${esc(a)}</p>${rateHTML(key)}</div>` : ""}</div>`;
   hookNotes(key);
-  buttons(!open_ ? `Show<span class="lg"> a strong</span> answer<span class="kbd">↵</span>` : dv < C.dives.length - 1 ? `Next question<span class="kbd">↵</span>` : `Next: Wrap-up<span class="kbd">↵</span>`);
+  buttons(!open_ ? `Show<span class="lg">&nbsp;a strong</span> answer<span class="kbd">↵</span>` : dv < C.dives.length - 1 ? `Next question<span class="kbd">↵</span>` : `Next: Wrap-up<span class="kbd">↵</span>`);
 }
 function stepScore() { const r = rec().rate || {}, v = { nail: 2, part: 1, miss: 0 }; const keys = ["req", "est", "api", "data", "hld", "deep", "wrap"]; return keys.map(k => { if (k === "deep") { const ds = Q.c.dives.map((_, i) => r["deep" + i]).filter(Boolean); return ds.length ? ds.reduce((a, x) => a + v[x], 0) / ds.length : null; } return r[k] ? v[r[k]] : null; }); }
 function renderScore() {
@@ -451,20 +553,20 @@ function primary() {
   if ($("#bMain").dataset.next) { location.hash = "q=" + $("#bMain").dataset.next; return; }
   if (finished) return;
   if (S.k === "hld") { if (blk < Q.nodes.length) revealNext(); else setStep(5); return; }
-  if (S.k === "deep") { if (!open_) { open_ = true; render(); } else if (dv < C.dives.length - 1) { dv++; open_ = false; render(); } else setStep(6); return; }
-  if (!open_) { open_ = true; render(); const a = $("#ans"); if (a) a.scrollIntoView({ behavior: "smooth", block: "start" }); ev("practice-compare/" + S.k); return; }
+  if (!quizDone()) { quizReveal(); return; }
   if (step < 6) setStep(step + 1); else { finished = true; history.replaceState(null, "", "#q=" + Q.slug + "&s=done"); ev("practice-done/" + Q.slug); render(); }
 }
 function back() {
   const S = STEPS[step];
   if (finished) { finished = false; open_ = true; render(); return; }
   if (S.k === "hld" && blk > 1) { blk--; tries = new Set(); last = null; put({ blk }); renderDesign(); return; }
-  if (S.k === "deep" && dv > 0) { dv--; open_ = true; render(); return; }
+  if (S.k !== "hld" && quizBack()) return;
   if (step === 5) { setStep(4); blk = Q.nodes.length; render(); return; }
   setStep(step - 1);
 }
 $("#bMain").onclick = primary; $("#bPrev").onclick = back;
 $("#vRun").addEventListener("click", e => {
+  const qp = e.target.closest("[data-qp]"); if (qp) { quizPick(+qp.dataset.qp); return; }
   const pk = e.target.closest("[data-pick]"); if (pk) { pickBlock(pk.dataset.pick); return; }
   const hn = e.target.closest("[data-node]"); if (hn) { const x = Q.nodes.find(y => y.id === hn.dataset.node); last = { ok: true, title: x.title, text: Q.c.blocks[x.id] || "" }; renderMove(); return; }
   const rt = e.target.closest("[data-rate]"); if (rt) { const [k, v] = rt.dataset.rate.split(":"); sub("rate", { [k]: v }); rt.parentNode.querySelectorAll("button").forEach(b => b.className = b === rt ? "on " + v : ""); tabs(); return; }
@@ -494,7 +596,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); primary(); return; }
   if (typing || e.metaKey || e.ctrlKey) return;
   if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); primary(); } else if (e.key === "ArrowLeft") { e.preventDefault(); back(); }
-  else if (STEPS[step].k === "hld" && /^[1-4]$/.test(e.key)) { const o = document.querySelectorAll(".opt2")[+e.key - 1]; if (o && !o.disabled) o.click(); }
+  else if (/^[1-4]$/.test(e.key)) { const o = document.querySelectorAll(".opt2")[+e.key - 1]; if (o && !o.disabled) o.click(); }
 });
 /* 45-minute timer */
 let left = 45 * 60, tick = null;
