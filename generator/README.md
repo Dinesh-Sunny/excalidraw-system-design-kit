@@ -30,3 +30,12 @@ Fonts for measuring are loaded from `node_modules/@excalidraw/excalidraw/dist/pr
 - A card: add `["Title", "icon", "search tags"]` to a section in `components.js`. New icon? Add it to `ICONS` in `core.js` (40 x 40 box).
 - A diagram: add `{ name, spec: { title?, nodes, edges, notes? } }` to `templates.js` or `agentic.js`. Nodes: `[id, title, icon, theme, col, row, width?]`. Edges: `[from, to, label?, { dash, dot, both, via }]`.
 - Keep the naming rule (docs/naming.md) and run the sheets to check the result by eye.
+
+## Sponsors
+
+Everything about sponsoring comes from `sponsor.json`:
+
+- `github` / `kofi`: set once GitHub Sponsors or Ko-fi is live. Until then the personal tiers show "opening soon" and companies get an email button.
+- `sponsors[]`: `{ "name", "url", "logo", "tier" }` with tier `featured`, `gold`, `silver`, `bronze`, `supporter`, `backer` or `coffee`.
+
+Then run `python3 build-showcase.py` (site + sponsor page) and `python3 readme-sponsors.py ..` (README block, BACKERS.md, .github/FUNDING.yml).

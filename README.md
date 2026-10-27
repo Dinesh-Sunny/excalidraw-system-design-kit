@@ -18,7 +18,9 @@
 [![Agentic patterns](https://img.shields.io/badge/agentic%20patterns-12-9c36b5)](#-whats-inside)
 [![Excalidraw](https://img.shields.io/badge/made%20for-Excalidraw-6965db)](https://excalidraw.com)
 [![License: MIT](https://img.shields.io/badge/license-MIT-1971c2)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-%E2%99%A5-e8590c)](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/)
 [![Stars](https://img.shields.io/github/stars/Dinesh-Sunny/excalidraw-system-design-kit?style=flat&color=ffd43b)](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/stargazers)
+<!-- featured:start --><!-- featured:end -->
 
 [**Browse all items**](https://dinesh-sunny.github.io/excalidraw-system-design-kit/) ·
 [**Download**](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest) ·
@@ -353,6 +355,27 @@ Click on an empty part of the canvas first so the board has focus, then press <k
 The cards use generic icons drawn from shapes, so they work for any stack and carry no trademark issues. Put the product name in the label (for example "Order Cache (ElastiCache)").
 
 </details>
+
+## 💖 Sponsors
+
+The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new designs and updates.
+
+<!-- sponsors:start -->
+<div align="center">
+
+<a href="https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/#companies"><img src="https://img.shields.io/badge/your%20logo-here-f8f9fa?style=for-the-badge&labelColor=e9ecef" alt="Your logo here"></a>
+<br/>
+
+</div>
+<!-- sponsors:end -->
+
+| For you | For your company |
+|---|---|
+| Coffee $5 · Backer $5/mo · Supporter $15/mo | Featured $600/mo · Gold $300/mo · Silver $150/mo · Bronze $50/mo |
+| Opening soon - a ⭐ helps today | [See tiers and perks](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/#companies) |
+
+> [!TIP]
+> First 3 company sponsors: 50% off for the first 6 months. [Become a sponsor](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/).
 
 ## 🤝 Contributing
 

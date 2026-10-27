@@ -2,6 +2,9 @@
 
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
+## [Unreleased]
+- Sponsors: a sponsor page (tiers for people and companies, founding offer, FAQ), a Sponsor button on the site and in the repo, a thank-you step after download, a "Backed by" row, README sponsors section and BACKERS.md. All driven by `generator/sponsor.json`.
+
 ## [1.4.0] - 2026-10-27
 - Icons: every block now has its own icon (about 55 new ones), so no two blocks look alike. Databases show PG / My, caches show Redis vs Memcached, and AI, RAG, agent and LLMOps blocks each get a clear symbol.
 - Section tiles widen to fit long titles.
