@@ -134,12 +134,13 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const HEART = '__HEART__';
 const gh = SP.github ? "https://github.com/sponsors/" + SP.github : null;
 const kofi = SP.kofi ? "https://ko-fi.com/" + SP.kofi : null;
+const tierURL = t => gh ? (t.gh_tier ? `${gh}/sponsorships?tier_id=${t.gh_tier}` : gh) : null;
 const btn = (href, label, cls = "ghost", ext = true) => `<a class="pill ${cls}" href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${label}</a>`;
 
 /* people */
 if (gh || kofi) {
   $("#peopleTiers").innerHTML = SP.people.map((t, i) => {
-    const href = t.per === "once" ? (kofi || gh) : (gh || kofi);
+    const href = t.per === "once" ? (kofi || tierURL(t)) : (tierURL(t) || kofi);
     return `<div class="tier${i === 2 ? " hot" : ""}">${i === 2 ? '<span class="badge">most loved</span>' : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>${t.per === "once" ? "once" : "/ month"}</small></div><ul><li>${esc(t.gets)}</li></ul>${btn(href, t.per === "once" ? "Buy a coffee" : "Sponsor", i === 2 ? "primary" : "ghost")}</div>`;
   }).join("");
 } else { $("#peopleTiers").hidden = true; $("#peopleSoon").hidden = false; }
@@ -147,7 +148,7 @@ if (gh || kofi) {
 /* companies */
 function renderCompanies(list) {
 const taken = list.some(x => x.tier === "featured");
-$("#companyTiers").innerHTML = SP.companies.map(t => `<div class="tier${t.id === "gold" ? " hot" : ""}">${t.id === "gold" ? '<span class="badge">best value</span>' : t.only ? `<span class="badge">${taken ? "taken" : esc(t.only)}</span>` : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>/ month</small></div><ul>${t.gets.map(g => `<li>${esc(g)}</li>`).join("")}</ul>${t.only && taken ? '<span class="soon">Taken right now - Gold is open</span>' : btn(gh, "Sponsor on GitHub", t.id === "gold" ? "primary" : "ghost")}</div>`).join("");
+$("#companyTiers").innerHTML = SP.companies.map(t => `<div class="tier${t.id === "gold" ? " hot" : ""}">${t.id === "gold" ? '<span class="badge">best value</span>' : t.only ? `<span class="badge">${taken ? "taken" : esc(t.only)}</span>` : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>/ month</small></div><ul>${t.gets.map(g => `<li>${esc(g)}</li>`).join("")}</ul>${t.only && taken ? '<span class="soon">Taken right now - Gold is open</span>' : btn(tierURL(t), "Sponsor on GitHub", t.id === "gold" ? "primary" : "ghost")}</div>`).join("");
 }
 
 /* hero + band CTAs */

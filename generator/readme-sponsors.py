@@ -25,6 +25,10 @@ names=[x['name'] for x in by('supporter')]
 if names: lines+=['<br/>','Supporters: '+', '.join(names)]
 lines+=['','</div>','<!-- sponsors:end -->']
 block='\n'.join(lines)
+def link(t,label):
+    if t['per']=='once' and S.get('kofi'): return f"[{label}](https://ko-fi.com/{S['kofi']})"
+    if S.get('github') and t.get('gh_tier'): return f"[{label}](https://github.com/sponsors/{S['github']}/sponsorships?tier_id={t['gh_tier']})"
+    return label
 sec=f'''## 💖 Sponsors
 
 The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new designs and updates.
@@ -33,7 +37,7 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 
 | For you | For your company |
 |---|---|
-| {' · '.join(f"{p['name']} {p['price']}{'' if p['per']=='once' else '/mo'}" for p in S['people'])} | {' · '.join(f"{c['name']} {c['price']}/mo" for c in S['companies'])} |
+| {' · '.join(link(p, f"{p['name']} {p['price']}{'' if p['per']=='once' else '/mo'}") for p in S['people'])} | {' · '.join(link(c, f"{c['name']} {c['price']}/mo") for c in S['companies'])} |
 | {'[Sponsor on GitHub](https://github.com/sponsors/'+S['github']+')' if S.get('github') else ''}{' · ' if S.get('github') and S.get('kofi') else ''}{'[Buy me a coffee](https://ko-fi.com/'+S['kofi']+')' if S.get('kofi') else ''}{'' if (S.get('github') or S.get('kofi')) else 'Opening soon - a ⭐ helps today'} | [See tiers and perks]({PAGE}#companies) |
 
 > [!TIP]

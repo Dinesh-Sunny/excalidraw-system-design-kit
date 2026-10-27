@@ -8,21 +8,24 @@
       "name": "Coffee",
       "price": "$5",
       "per": "once",
-      "gets": "A big thank-you"
+      "gets": "A big thank-you",
+      "gh_tier": 674466
     },
     {
       "id": "backer",
       "name": "Backer",
       "price": "$5",
       "per": "month",
-      "gets": "Your name in BACKERS.md"
+      "gets": "Your name in BACKERS.md",
+      "gh_tier": 674468
     },
     {
       "id": "supporter",
       "name": "Supporter",
       "price": "$15",
       "per": "month",
-      "gets": "Your name in the README and early access to new packs"
+      "gets": "Your name in the README and early access to new packs",
+      "gh_tier": 674469
     }
   ],
   "companies": [
@@ -36,7 +39,8 @@
         "Logo next to the search on the homepage",
         "Top of the README",
         "Thanks in every release note and on LinkedIn"
-      ]
+      ],
+      "gh_tier": 674473
     },
     {
       "id": "gold",
@@ -46,7 +50,8 @@
       "gets": [
         "Large logo on the homepage",
         "Large logo in the README"
-      ]
+      ],
+      "gh_tier": 674472
     },
     {
       "id": "silver",
@@ -56,7 +61,8 @@
       "gets": [
         "Logo in the homepage sponsor row",
         "Logo in the README"
-      ]
+      ],
+      "gh_tier": 674471
     },
     {
       "id": "bronze",
@@ -65,7 +71,8 @@
       "per": "month",
       "gets": [
         "Small logo in the README and BACKERS.md"
-      ]
+      ],
+      "gh_tier": 674470
     }
   ],
   "sponsors": []

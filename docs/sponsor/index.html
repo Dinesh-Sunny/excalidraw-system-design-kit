@@ -372,18 +372,19 @@ dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
 <footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span><a href="../">Back to the kit</a></span></div></footer>
 
 <script>
-const SP = {"github":"Dinesh-Sunny","kofi":"dineshsunny","people":[{"id":"coffee","name":"Coffee","price":"$5","per":"once","gets":"A big thank-you"},{"id":"backer","name":"Backer","price":"$5","per":"month","gets":"Your name in BACKERS.md"},{"id":"supporter","name":"Supporter","price":"$15","per":"month","gets":"Your name in the README and early access to new packs"}],"companies":[{"id":"featured","name":"Featured","price":"$600","per":"month","only":"1 slot","gets":["Logo next to the search on the homepage","Top of the README","Thanks in every release note and on LinkedIn"]},{"id":"gold","name":"Gold","price":"$300","per":"month","gets":["Large logo on the homepage","Large logo in the README"]},{"id":"silver","name":"Silver","price":"$150","per":"month","gets":["Logo in the homepage sponsor row","Logo in the README"]},{"id":"bronze","name":"Bronze","price":"$50","per":"month","gets":["Small logo in the README and BACKERS.md"]}],"sponsors":[]};
+const SP = {"github":"Dinesh-Sunny","kofi":"dineshsunny","people":[{"id":"coffee","name":"Coffee","price":"$5","per":"once","gets":"A big thank-you","gh_tier":674466},{"id":"backer","name":"Backer","price":"$5","per":"month","gets":"Your name in BACKERS.md","gh_tier":674468},{"id":"supporter","name":"Supporter","price":"$15","per":"month","gets":"Your name in the README and early access to new packs","gh_tier":674469}],"companies":[{"id":"featured","name":"Featured","price":"$600","per":"month","only":"1 slot","gets":["Logo next to the search on the homepage","Top of the README","Thanks in every release note and on LinkedIn"],"gh_tier":674473},{"id":"gold","name":"Gold","price":"$300","per":"month","gets":["Large logo on the homepage","Large logo in the README"],"gh_tier":674472},{"id":"silver","name":"Silver","price":"$150","per":"month","gets":["Logo in the homepage sponsor row","Logo in the README"],"gh_tier":674471},{"id":"bronze","name":"Bronze","price":"$50","per":"month","gets":["Small logo in the README and BACKERS.md"],"gh_tier":674470}],"sponsors":[]};
 const $ = s => document.querySelector(s);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const HEART = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg>';
 const gh = SP.github ? "https://github.com/sponsors/" + SP.github : null;
 const kofi = SP.kofi ? "https://ko-fi.com/" + SP.kofi : null;
+const tierURL = t => gh ? (t.gh_tier ? `${gh}/sponsorships?tier_id=${t.gh_tier}` : gh) : null;
 const btn = (href, label, cls = "ghost", ext = true) => `<a class="pill ${cls}" href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${label}</a>`;
 
 /* people */
 if (gh || kofi) {
   $("#peopleTiers").innerHTML = SP.people.map((t, i) => {
-    const href = t.per === "once" ? (kofi || gh) : (gh || kofi);
+    const href = t.per === "once" ? (kofi || tierURL(t)) : (tierURL(t) || kofi);
     return `<div class="tier${i === 2 ? " hot" : ""}">${i === 2 ? '<span class="badge">most loved</span>' : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>${t.per === "once" ? "once" : "/ month"}</small></div><ul><li>${esc(t.gets)}</li></ul>${btn(href, t.per === "once" ? "Buy a coffee" : "Sponsor", i === 2 ? "primary" : "ghost")}</div>`;
   }).join("");
 } else { $("#peopleTiers").hidden = true; $("#peopleSoon").hidden = false; }
@@ -391,7 +392,7 @@ if (gh || kofi) {
 /* companies */
 function renderCompanies(list) {
 const taken = list.some(x => x.tier === "featured");
-$("#companyTiers").innerHTML = SP.companies.map(t => `<div class="tier${t.id === "gold" ? " hot" : ""}">${t.id === "gold" ? '<span class="badge">best value</span>' : t.only ? `<span class="badge">${taken ? "taken" : esc(t.only)}</span>` : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>/ month</small></div><ul>${t.gets.map(g => `<li>${esc(g)}</li>`).join("")}</ul>${t.only && taken ? '<span class="soon">Taken right now - Gold is open</span>' : btn(gh, "Sponsor on GitHub", t.id === "gold" ? "primary" : "ghost")}</div>`).join("");
+$("#companyTiers").innerHTML = SP.companies.map(t => `<div class="tier${t.id === "gold" ? " hot" : ""}">${t.id === "gold" ? '<span class="badge">best value</span>' : t.only ? `<span class="badge">${taken ? "taken" : esc(t.only)}</span>` : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>/ month</small></div><ul>${t.gets.map(g => `<li>${esc(g)}</li>`).join("")}</ul>${t.only && taken ? '<span class="soon">Taken right now - Gold is open</span>' : btn(tierURL(t), "Sponsor on GitHub", t.id === "gold" ? "primary" : "ghost")}</div>`).join("");
 }
 
 /* hero + band CTAs */
