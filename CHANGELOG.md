@@ -3,6 +3,7 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Site design pass: calmer hero (one quiet trust line, fewer chips), one "Made in the open" row with Star, Share and Follow menus, stories only when real ones exist, a single sponsor slot when there are none, a tidier block preview (Copy to Excalidraw, Copy image, Copy SVG, More menu, one-line "Helpful?"), a lighter "Keep exploring", and the badge snippet moved to the README. Links with #i=, #pack= and section hashes now work without a reload.
 - Site: a "New" pill under the toolbar, live trust line (stars and downloads once they pass a threshold, last updated), "Paste into" strip, and a "Made in the open" section: stories from people using the kit (`docs/love.json`, real quotes only), share buttons, a "Made with System Design Kit" badge, release notifications (Watch, RSS) and who makes it.
 - Site: one gentle "Share" nudge after your second copy; share on the download thank-you; structured data for search engines.
 - Sponsor page: secure checkout and public stats called out, plus a live audience line.

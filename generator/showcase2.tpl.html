@@ -168,6 +168,7 @@ main .wrap > *, .row { min-width: 0 }
 /* keep exploring */
 .explore { border-top: 1px solid var(--hairline); padding-top: 32px; display: grid; gap: 22px; min-width: 0 }
 .explore h2 { margin: 0; font: 400 30px/1.1 var(--font-serif) }
+.ask { margin: 0; font: 400 14px/20px var(--font-sans); color: var(--ink-muted) } .ask a { color: var(--ink); text-underline-offset: 3px }
 .nexts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px }
 .nx { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; text-align: left; transition: box-shadow .15s, transform .15s; min-width: 0 }
 .nx:hover { box-shadow: var(--shadow-float); transform: translateY(-1px) }
@@ -219,26 +220,22 @@ body.has-board footer .wrap { padding-bottom: 96px }
 .empty b { display: block; font: 400 30px/1.1 var(--font-serif); color: var(--ink); margin-bottom: 6px }
 
 /* growth: what's new, trust, works with, proof */
-.newp { display: inline-flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px 0 4px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); text-decoration: none; font: 500 13px/1 var(--font-sans); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.05); transition: box-shadow .2s, transform .2s; animation: rise .7s cubic-bezier(.2,.8,.2,1) both; max-width: 100% }
-.newp:hover { box-shadow: var(--shadow-float); transform: translateY(-1px) }
-.newp .nb { height: 26px; padding: 0 10px; border-radius: 9999px; background: var(--sketch-soft); color: var(--sketch); display: inline-flex; align-items: center; font: 500 11px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .04em; flex: none }
-.newp svg { width: 12px; height: 12px; flex: none; color: var(--ink-muted) }
-.newp { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
-.stats span[hidden] { display: none }
-.works { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 14px; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); animation: rise .7s .3s cubic-bezier(.2,.8,.2,1) both }
-.works span:not(.sub) { opacity: .85 }
-.proof .wrap { padding-block: 8px 48px; display: grid; gap: 18px }
-.proof h2 { margin: 0; font: 400 30px/1.1 var(--font-serif) } .proof h2 i { font-style: italic }
-.pgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px }
-.pc { display: grid; gap: 12px; align-content: start; padding: 20px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface); min-width: 0 }
-.pc b { font: 500 16px/22px var(--font-sans) }
-.pc .small, .privacy { font: 400 13px/19px var(--font-sans); color: var(--ink-muted) }
-.privacy { margin: 0; text-align: center }
-.badge { display: flex; flex-wrap: wrap; align-items: center; gap: 10px }
-.mk-row { display: flex; align-items: center; gap: 12px } .mk-row img { border-radius: 50%; border: 1px solid var(--hairline) } .mk-row div { display: grid; gap: 2px }
-.love blockquote { margin: 0; display: grid; gap: 8px } .love blockquote p { margin: 0; font: 400 20px/1.3 var(--font-serif) }
+.meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 0; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); animation: rise .7s .24s cubic-bezier(.2,.8,.2,1) both }
+.meta span + span:not([hidden])::before { content: "·"; margin: 0 10px; opacity: .6 }
+.meta span[hidden] { display: none } .meta b { color: var(--ink); font-weight: 500 }
+.open .wrap { padding-block: 8px 40px; display: grid; gap: 16px }
+.open-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 16px; padding: 18px 20px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface) }
+.open-row .av { border-radius: 50%; border: 1px solid var(--hairline); flex: none }
+.open-row p { margin: 0; flex: 1 1 280px; font: 400 15px/22px var(--font-sans); color: var(--ink-muted) } .open-row p a { color: var(--ink) }
+.open-acts { display: flex; flex-wrap: wrap; gap: 8px } .open-acts .pill { height: 36px; padding: 0 14px; font-size: 13px }
+.menu { position: relative } .menu summary { list-style: none; cursor: pointer } .menu summary::-webkit-details-marker { display: none }
+.mlist { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 30; min-width: 210px; display: grid; padding: 6px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); box-shadow: var(--shadow-float); animation: rise .18s ease-out }
+.mlist a, .mlist button { display: block; padding: 9px 12px; border: 0; border-radius: 8px; background: none; text-align: left; text-decoration: none; cursor: pointer; font: 500 13px/18px var(--font-sans); color: var(--ink) }
+.mlist a:hover, .mlist button:hover { background: var(--surface-sunk) }
+.mlist.down { bottom: auto; top: calc(100% + 8px); left: 0; right: auto }
+.love { padding: 6px 4px 0 } .love[hidden] { display: none }
+.love blockquote { margin: 0 auto; max-width: 760px; text-align: center; display: grid; gap: 10px } .love blockquote p { margin: 0; font: 400 26px/1.25 var(--font-serif) }
 .love cite { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); font-style: normal } .love cite a { color: inherit }
-.love .empty-love { display: grid; gap: 10px } .love .empty-love p { margin: 0; font: 400 20px/1.3 var(--font-serif) }
 
 /* how */
 .how .wrap { padding-block: 8px 48px }
@@ -290,11 +287,15 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
 .more-in .name { background: var(--surface) }
 .more-in .hint { margin-top: 8px }
 .keys { font-size: 12px }
+#st:focus { outline: none }
+@media (max-width: 420px) { .cop b { font-size: 13px; white-space: nowrap } }
 @media (hover: none) { .keys { display: none } }
 .sh-img { position: relative; background: var(--thumb); border-bottom: 1px solid var(--hairline); aspect-ratio: 3 / 2; display: grid; place-items: center }
 .sh-prev, .sh-next { position: absolute; top: 50%; margin-top: -18px; width: 36px; height: 36px; color: #141414; background: #fff; border-color: #e3e4e8 }
 .sh-prev { left: 12px } .sh-next { right: 12px }
-.cops { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.cops { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.cop-more summary { list-style: none; height: 100% } .cop-more summary::-webkit-details-marker { display: none } .cop-more .mlist { top: calc(100% + 6px); bottom: auto }
+@media (max-width: 420px) { .cop small { display: none } }
 .cop.main { grid-column: 1 / -1 }
 .cop { position: relative; overflow: hidden; display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; text-align: left; transition: box-shadow .15s, transform .15s; color: var(--ink) }
 .cop:hover { box-shadow: var(--shadow-float) }
@@ -312,14 +313,13 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
 .rel .track { grid-auto-columns: minmax(130px, 1fr); gap: 12px }
 @media (min-width: 640px) { .rel .track { grid-auto-columns: calc((100% - 24px) / 3) } }
 .rel .ct { font-size: 13px; line-height: 17px }
+.inpk { font: 400 13px/18px var(--font-sans); color: var(--ink-muted) } .inpk button { border: 0; padding: 0; background: none; cursor: pointer; font: 500 13px/18px var(--font-sans); color: var(--ink); text-decoration: underline; text-underline-offset: 3px }
 .rel .cm, .rel .qa { display: none }
 #ssave[aria-pressed="true"] { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
-.fb { display: grid; gap: 10px; padding: 14px; border-radius: var(--r-md); background: var(--surface-sunk) }
-.fb .chip { height: 30px; font-size: 12px; background: var(--surface) }
+.fb { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 400 13px/18px var(--font-sans); color: var(--ink-muted) }
+.fb .chip { height: 30px; font-size: 12px }
 .fb .chip.on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
 .fb .chip svg { width: 14px; height: 14px }
-.fbn { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
-.fbn a { color: var(--ink) }
 /* motion: content rises in as it scrolls into view; hover lifts; off for reduced motion */
 html.mo .rv { opacity: 0; transform: translateY(18px); transition: opacity .55s ease-out, transform .55s cubic-bezier(.2,.8,.2,1); transition-delay: var(--d, 0ms) }
 html.mo .rv.in { opacity: 1; transform: none }
@@ -425,7 +425,6 @@ html.mo .rv.in { opacity: 1; transform: none }
 
 <section class="hero gut" id="top"><div class="wrap">
   <div class="island" aria-hidden="true"><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.5V4.8a1.3 1.3 0 0 1 2.6 0V9M9.6 8.5V3.8a1.3 1.3 0 0 1 2.6 0V9M12.2 9V5a1.3 1.3 0 0 1 2.6 0v6c0 3.5-2.3 6-5.3 6-2.2 0-3.4-1.2-4.6-3.2L3.6 10.9a1.3 1.3 0 0 1 2.1-1.4L7 11"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5l10 6-4.6 1.2L8.4 15z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="13" height="11" rx="2"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l7 7-7 7-7-7z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4M10 4h6v6"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16c1-3 2.5-4 4-3s2 2.5 4 .5 2-5 4-8"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h10M10 5v11"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="13" height="12" rx="2"/><circle cx="7.5" cy="8" r="1.3"/><path d="m4 15 4.5-4.5 3 3 2-2 3 3"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16h8M4.5 12.5l6-7.5 5 4-6 7.5H6.5z"/></svg></span><span class="div"></span><span class="lib on"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h4.5v11H4zM8.5 4.5H13v11H8.5zM13.5 5l3.6-1 2.6 10.5-3.6 1z"/></svg>Library</span></div>
-  <a class="newp" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener"><span class="nb">New</span>__NEWS__<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 2l5 5-5 5"/></svg></a>
   <h1>Draw systems by <i>typing</i>.</h1>
   <p>__N__ Excalidraw blocks for system design and AI agents.</p>
   <div class="sbox">
@@ -437,8 +436,7 @@ html.mo .rv.in { opacity: 1; transform: none }
     </form>
   </div>
   <div class="tries" id="tries"></div>
-  <div class="stats" id="trust"><span><b>__N__</b> blocks</span><span><b>21</b> full designs</span><span><b>12</b> agent patterns</span><span id="t-stars" hidden></span><span id="t-dl" hidden></span><span id="t-upd" hidden></span><span>Free · MIT · no sign-up</span></div>
-  <div class="works" aria-label="Paste into"><span class="sub">Paste into</span><span>Excalidraw</span><span>Excalidraw+</span><span>Obsidian</span><span>Figma</span><span>Google Docs</span><span>Notion</span><span>Slides</span><span>Slack</span></div>
+  <div class="meta" id="trust"><span>Free and open source</span><span id="t-stars" hidden></span><span id="t-dl" hidden></span><span id="t-upd" hidden></span></div>
   <div class="feat" id="feat" hidden></div>
   <div class="win"><div class="win-bar"><span><i></i><i></i><i></i></span><code>excalidraw.com</code><span></span></div>
     <video id="demo" src="demo.mp4" poster="demo.webp" muted loop playsinline preload="metadata" aria-label="Demo: typing kafka in Excalidraw drops the Kafka block on the canvas"></video></div>
@@ -457,25 +455,17 @@ html.mo .rv.in { opacity: 1; transform: none }
   </div>
 </div></section>
 
-<section class="proof gut" id="community"><div class="wrap">
-  <h2>Made in the <i>open</i></h2>
-  <div class="pgrid">
-    <div class="pc love"><span class="sub">From people using it</span><div id="love"></div></div>
-    <div class="pc"><span class="sub">Spread the word</span><b>Know someone prepping for interviews?</b>
-      <div class="chips" id="shareRow"><a class="chip" data-sh="x" href="#" target="_blank" rel="noopener">Post on X</a><a class="chip" data-sh="li" href="#" target="_blank" rel="noopener">LinkedIn</a><a class="chip" data-sh="rd" href="#" target="_blank" rel="noopener">Reddit</a><button class="chip" type="button" data-sh="copy">Copy link</button></div>
-      <span class="small">Using it in your notes or repo? Add the badge:</span>
-      <div class="badge"><img alt="Made with System Design Kit" src="https://img.shields.io/badge/made%20with-System%20Design%20Kit-6965db" height="20" loading="lazy"><button class="chip" type="button" id="badgeCopy">Copy markdown</button></div>
-    </div>
-    <div class="pc"><span class="sub">Stay in the loop</span><b>New blocks and designs ship most weeks.</b>
-      <div class="chips"><a class="chip" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/subscription" target="_blank" rel="noopener">Watch on GitHub</a><a class="chip" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases.atom" target="_blank" rel="noopener">RSS for releases</a><a class="chip" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">What changed</a></div>
-      <span class="small" id="lastUpd">Built and maintained in the open on GitHub.</span>
-    </div>
-    <div class="pc maker"><span class="sub">Made by</span><div class="mk-row"><img alt="" src="https://github.com/Dinesh-Sunny.png?size=96" width="48" height="48" loading="lazy" onerror="this.remove()"><div><b>Dinesh Sunny</b><span class="small">Full-stack engineer, IIT Bombay</span></div></div>
-      <span class="small">Every block, design and change is public. Requests are reviewed every week.</span>
-      <div class="chips"><a class="chip" href="https://github.com/Dinesh-Sunny" target="_blank" rel="noopener">GitHub</a><a class="chip" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a block</a></div>
+<section class="open gut" id="community"><div class="wrap">
+  <div class="love" id="love" hidden></div>
+  <div class="open-row">
+    <img class="av" alt="" src="https://github.com/Dinesh-Sunny.png?size=96" width="44" height="44" loading="lazy" onerror="this.remove()">
+    <p>Made in the open by <a href="https://github.com/Dinesh-Sunny" target="_blank" rel="noopener">Dinesh Sunny</a>. New blocks most weeks<span id="lastUpd"></span>.</p>
+    <div class="open-acts">
+      <a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener">Star on GitHub</a>
+      <details class="menu"><summary class="pill ghost">Share</summary><div class="mlist"><a data-sh="x" href="#" target="_blank" rel="noopener">Post on X</a><a data-sh="li" href="#" target="_blank" rel="noopener">Share on LinkedIn</a><a data-sh="rd" href="#" target="_blank" rel="noopener">Post on Reddit</a><button type="button" data-sh="copy">Copy link</button></div></details>
+      <details class="menu"><summary class="pill ghost">Follow</summary><div class="mlist"><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/subscription" target="_blank" rel="noopener">Watch releases on GitHub</a><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases.atom" target="_blank" rel="noopener">RSS feed</a><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">What's new</a></div></details>
     </div>
   </div>
-  <p class="privacy">No sign-up, no cookies, no ads in the library file. Your board stays in your browser.</p>
 </div></section>
 
 <section class="backers gut" id="sponsors"><div class="wrap">
@@ -492,28 +482,22 @@ html.mo .rv.in { opacity: 1; transform: none }
   </div>
 </div></section>
 
-<footer class="gut"><div class="wrap"><span>v__VERSION__ · MIT · by Dinesh Sunny</span><span class="help">Happy to help: <a data-mail="Help" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span><a href="__SPURL__">Sponsor</a> · sd:&lt;section&gt;/ Item - tags</span></div></footer>
+<footer class="gut"><div class="wrap"><span><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v__VERSION__</a> · MIT · no sign-up, no cookies</span><span class="help">Happy to help: <a data-mail="Help" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span><a href="__SPURL__">Sponsor</a> · sd:&lt;section&gt;/ Item - tags</span></div></footer>
 
 <dialog id="sheet" class="sheet" aria-labelledby="st">
   <div class="sh-grid">
   <div class="sh-img"><img id="si" alt=""><span class="sh-pos" id="spos"></span><button class="arr sh-prev" id="sprev" type="button" aria-label="Previous block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg></button><button class="arr sh-next" id="snext" type="button" aria-label="Next block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2l5 5-5 5"/></svg></button></div>
   <div class="sh-body">
-    <div class="sh-top"><div class="sh-tt"><span class="sub" id="scat"></span><h3 id="st"></h3></div><button class="ibtn" id="ssave" type="button" aria-label="Save to your board" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/></svg></button><button class="ibtn" id="sshare" type="button" aria-label="Share this block"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5M5 9.5H4v7.5h12V9.5h-1"/></svg></button><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
+    <div class="sh-top"><div class="sh-tt"><span class="sub" id="scat"></span><h3 id="st" tabindex="-1" autofocus></h3></div><button class="ibtn" id="ssave" type="button" aria-label="Save to your board" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/></svg></button><button class="ibtn" id="sshare" type="button" aria-label="Share this block"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5M5 9.5H4v7.5h12V9.5h-1"/></svg></button><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
     <div class="cops">
-      <button class="cop main" type="button" data-copy="exc" autofocus><b>Copy to Excalidraw</b><small>Then <span class="mk">⌘</span> V on any Excalidraw canvas</small></button>
-      <button class="cop" type="button" data-copy="png"><b>Copy image</b><small>Docs, Slides, Notion, Slack</small></button>
-      <button class="cop" type="button" data-copy="svg"><b>Copy SVG</b><small>Figma, Canva, code</small></button>
+      <button class="cop main" type="button" data-copy="exc"><b>Copy to Excalidraw</b><small>Then <span class="mk">⌘</span> V on any Excalidraw canvas, Excalidraw+ or Obsidian</small></button>
+      <button class="cop" type="button" data-copy="png"><b>Copy image</b><small>Docs, Slides, Notion</small></button>
+      <button class="cop" type="button" data-copy="svg"><b>Copy SVG</b><small>Figma, Canva</small></button>
+      <details class="menu cop-more"><summary class="cop"><b>More</b><small>Download, name</small></summary><div class="mlist"><button type="button" data-dl="png">Download PNG</button><button type="button" data-dl="svg">Download SVG</button><button type="button" data-dl="excalidraw">Download .excalidraw</button><button type="button" id="sc">Copy library name</button></div></details>
     </div>
-    <div class="dls"><span class="sub">Download</span><button class="chip" type="button" data-dl="png">PNG</button><button class="chip" type="button" data-dl="svg">SVG</button><button class="chip" type="button" data-dl="excalidraw">.excalidraw</button></div>
-    <details class="more-in"><summary>Use it from the library instead</summary>
-      <div class="name"><code id="sn"></code><button class="pill ghost" id="sc" type="button" style="height:34px">Copy name</button></div>
-      <div class="hint">In Excalidraw press <kbd class="mk">⌘</kbd> <kbd>/</kbd>, paste the name, <kbd>Enter</kbd>.</div>
-    </details>
+    <code id="sn" hidden></code>
     <div class="rel" id="srel"></div>
-    <div class="fb" id="sfb"><span class="sub">How is this block?</span>
-      <div class="chips"><button class="chip" type="button" data-fb="love"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg>Useful</button><button class="chip" type="button" data-fb="Something looks off">Something looks off</button><button class="chip" type="button" data-fb="Missing a part">Missing a part</button><button class="chip" type="button" data-fb="Better name or search words">Better name</button><button class="chip" type="button" data-fb="Idea to improve it">Idea to improve</button></div>
-      <small class="fbn">Opens a short form on GitHub with this block filled in. No GitHub? <a data-mail="Block feedback" href="#contact">Email us</a>.</small>
-    </div>
+    <div class="fb" id="sfb"><span>Helpful?</span><button class="chip" type="button" data-fb="love" aria-label="Yes, this block is useful"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg>Yes</button><button class="chip" type="button" data-fb="Suggest a change">Suggest a change</button></div>
     <div id="sad"></div>
     <div class="hint keys"><kbd>←</kbd> <kbd>→</kbd> browse · <kbd>C</kbd> copy · <kbd>S</kbd> save · <kbd>Esc</kbd> close</div>
   </div>
@@ -542,7 +526,6 @@ html.mo .rv.in { opacity: 1; transform: none }
         <a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="m10 2.8 2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L2.8 8l5-.6z"/></svg>Star on GitHub</a>
         <a class="pill ghost" id="tipbtn" href="__SPURL__" target="_blank" rel="noopener"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg><span id="tiplbl">Sponsor</span></a>
       </div>
-      <a class="pill ghost" data-sh="x" href="#" target="_blank" rel="noopener" style="justify-self:start">Tell a friend on X</a>
       <a class="work" href="__SPURL__#companies">Using it at work? Your team can sponsor →</a>
     </div>
     <div class="kit-foot">Free and MIT. <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/how-to-use.md" target="_blank" rel="noopener">Full guide</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener">Star it on GitHub</a></div>
@@ -581,7 +564,7 @@ const ICON = {
 };
 const LABEL = { all: "All", tpl: "Designs", agentic: "Agent patterns", agent: "Agents", ai: "AI models", rag: "RAG", llmops: "LLMOps", client: "Clients", edge: "Network", svc: "Services", data: "Data", cache: "Cache", msg: "Messaging", ops: "Ops", ext: "External", zone: "Zones", link: "Arrows", ui: "UI", frame: "Frames", screen: "Screens", pattern: "Patterns", note: "Notes", guide: "Guide" };
 const ORDER = ["all", "tpl", "agentic", "agent", "ai", "rag", "llmops", "client", "screen", "ui", "frame", "pattern", "edge", "svc", "data", "cache", "msg", "ops", "ext", "note", "zone", "link", "guide"];
-const TRIES = ["kafka", "rag", "tpl/ chat", "ai client", "sd:agent/"];
+const TRIES = ["kafka", "rag", "tpl/ chat", "ai client"];
 
 const items = ITEMS.filter(i => !/ SECTION - /.test(i.name)).map(i => {
   const m = i.name.match(/^sd:([a-z]+)\/\s(.*)$/); const rest = m ? m[2] : i.name; const k = rest.indexOf(" - ");
@@ -663,10 +646,9 @@ function exploreHTML(list) {
   return `<section class="explore"><h2>Keep exploring</h2>
     <div class="nexts">${pv ? card(pv, -1) : ""}${card(nx, 1)}<button class="nx" type="button" data-rand="1">${S(IC.dice)}<span>Surprise me<small>A random full design</small></span></button></div>
     <span class="sub">Starter packs</span><div class="packs">${relPacks(list).map(packHTML).join("")}</div>
-    <span class="sub">Every section</span><div class="chips">${cats.map(c => `<button class="chip" type="button" data-go="${c}">${I(ICON[c])}${LABEL[c]} <small>${count(c)}</small></button>`).join("")}</div>
-    <span class="sub">Help shape the kit</span><div class="chips"><a class="chip" href="${REPO}/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a block or design</a><a class="chip" href="${REPO}/discussions/new?category=show-and-tell" target="_blank" rel="noopener">Show what you built</a><a class="chip" href="${REPO}/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></div>
+    <p class="ask">Missing something? <a href="${REPO}/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a block or design</a></p>
     ${adHTML("explore", cat)}
-    <div><button class="back" type="button" data-top="1">Back to top</button></div></section>`;
+</section>`;
 }
 function draw(scroll) {
   [...rail.children].forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === cat)));
@@ -818,9 +800,9 @@ function open(i, list) {
   /* related: same section, sharing the most tag words */
   const tw = new Set(words(i.name.split(" - ")[1] || "")), same = items.filter(x => x !== i && x.cat === i.cat).map(x => [x, words(x.name.split(" - ")[1] || "").filter(w => tw.has(w)).length]).sort((a, b) => b[1] - a[1]).map(x => x[0]).slice(0, 6);
   const inPacks = PACKS.filter(p => p.items.includes(i));
-  const rel = $("#srel"); rel.innerHTML = `<span class="sub">More like this</span><div class="track"></div>${inPacks.length ? `<div class="chips">${inPacks.map(p => `<button class="chip" type="button" data-pack="${p.id}">In pack: ${p.title} <small>${p.items.length}</small></button>`).join("")}</div>` : ""}`;
+  const rel = $("#srel"); rel.innerHTML = `<span class="sub">More like this</span><div class="track"></div>${inPacks.length ? `<div class="inpk">In ${inPacks.slice(0, 2).map(p => `<button type="button" data-pack="${p.id}">${p.title}</button>`).join(" and ")}${inPacks.length > 2 ? ` and ${inPacks.length - 2} more` : ""}</div>` : ""}`;
   fill(rel.querySelector(".track"), same);
-  $("#sad").innerHTML = adHTML("sheet", i.cat); watchSponsors($("#sad"));
+  $("#sad").innerHTML = adHTML("sheet", i.cat, true); watchSponsors($("#sad"));
   if (!sheet.open) { openedAt = location.hash; sheet.showModal(); }
   sheet.querySelector(".sh-body").scrollTop = 0;
   try { history.replaceState(null, "", "#i=" + slug(i)); } catch (e) {}
@@ -858,9 +840,8 @@ const REPO = "https://github.com/Dinesh-Sunny/excalidraw-system-design-kit";
 function feedback(kind, i, btn) {
   if (kind === "love") { btn.classList.add("on"); say("Thank you! Glad it helps"); gcEvent("fb-love/" + slug(i)); return; }
   const u = new URL(REPO + "/issues/new"); const name = i.name.split(" - ")[0];
-  u.searchParams.set("template", "1-block-feedback.yml"); u.searchParams.set("title", `[Block] ${i.title}: ${kind}`);
-  u.searchParams.set("block", name); u.searchParams.set("kind", kind); u.searchParams.set("link", location.origin + location.pathname + "#i=" + slug(i));
-  u.searchParams.set("details", `${kind}.\n\n`);
+  u.searchParams.set("template", "1-block-feedback.yml"); u.searchParams.set("title", `[Block] ${i.title}`);
+  u.searchParams.set("block", name); u.searchParams.set("link", location.origin + location.pathname + "#i=" + slug(i));
   gcEvent("fb/" + kind.split(" ")[0].toLowerCase() + "/" + slug(i)); open_(u.toString());
 }
 const open_ = url => { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; document.body.append(a); a.click(); a.remove(); };
@@ -912,16 +893,17 @@ const watchSponsors = root => {
   });
 };
 let SPLIST = [];
-function adHTML(place, c) {
+function adHTML(place, c, realOnly) {
   const pick = SPLIST.find(x => (x.cats || []).includes(c)) || SPLIST.find(x => x.tier === "featured") || SPLIST.find(x => x.tier === "gold");
   if (pick) return `<a class="ad real" data-sp="${esc(pick.login || pick.name)}" data-place="${place}" href="${esc(UTM(pick.url, place))}" target="_blank" rel="noopener sponsored">${pick.logo ? `<img src="${esc(pick.logo)}" alt="" onerror="this.remove()">` : ""}<span>${esc(pick.name)}<small>${esc(pick.blurb || "Keeps this kit free for everyone")}</small></span><span class="tag">Sponsor</span></a>`;
+  if (realOnly) return "";
   return `<a class="ad" href="__SPURL__#companies" data-place="slot-${place}"><span>Your logo here<small>Reach engineers drawing ${esc((LABEL[c] || "system design").toLowerCase())} with this kit</small></span><span class="tag">Sponsor slot</span></a>`;
 }
 function renderSponsors(list) {
   SPLIST = list || [];
   const shown = list.filter(x => ["featured", "gold", "silver"].includes(x.tier));
   $("#logos").innerHTML = shown.map(x => `<a class="logo t-${esc(x.tier)}" data-sp="${esc(x.login || x.name)}" data-place="row" href="${esc(UTM(x.url, x.tier))}" target="_blank" rel="noopener sponsored">${x.logo ? `<img src="${esc(x.logo)}" alt="" onerror="this.remove()"><span class="nm">${esc(x.name)}</span>` : esc(x.name)}</a>`).join("") +
-    Array.from({ length: Math.max(1, 3 - shown.length) }, () => `<a class="logo slot" href="__SPURL__#companies">your logo here</a>`).join("");
+    Array.from({ length: shown.length >= 3 ? 0 : 1 }, () => `<a class="logo slot" href="__SPURL__#companies">your logo here</a>`).join("");
   const ft = list.find(x => x.tier === "featured"), f = $("#feat");
   if (ft) { f.innerHTML = `sponsored by <a data-sp="${esc(ft.login || ft.name)}" data-place="hero" href="${esc(UTM(ft.url, "featured"))}" target="_blank" rel="noopener sponsored">${ft.logo ? `<img src="${esc(ft.logo)}" alt="" onerror="this.remove()">` : ""}<span>${esc(ft.name)}</span></a>`; f.hidden = false; } else f.hidden = true;
   watchSponsors(document);
@@ -934,6 +916,7 @@ if (location.hash === "#get" && kit.showModal) { tab("web"); kit.showModal(); }
 if (cat.startsWith("pack:") && !PK[cat.slice(5)]) cat = "all";
 draw(false); renderTray();
 if (startItem && BYSLUG.has(startItem)) open(BYSLUG.get(startItem));
+addEventListener("hashchange", () => { const h = decodeURIComponent(location.hash.slice(1)); if (h.startsWith("i=") && BYSLUG.has(h.slice(2))) { if (!cur || slug(cur) !== h.slice(2)) open(BYSLUG.get(h.slice(2))); } else if (h.startsWith("pack=") && PK[h.slice(5)]) { if (sheet.open) sheet.close(); go("pack:" + h.slice(5)); } else if (LABEL[h] || h === "board") { if (sheet.open) sheet.close(); go(h); } });
 /* contact links: address assembled at runtime to keep scrapers off it */
 (() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
 /* growth: live trust numbers (shown only once they are big enough to help), freshness, love wall, share loop */
@@ -943,20 +926,21 @@ const fmtN = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "k" : Str
 const ago = d => { const s = (Date.now() - new Date(d)) / 1000; return s < 86400 ? "today" : s < 172800 ? "yesterday" : s < 86400 * 30 ? Math.floor(s / 86400) + " days ago" : Math.floor(s / 86400 / 30) + " months ago"; };
 function cached(key, url, mapper) { try { const c = JSON.parse(sessionStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 3600e3) return Promise.resolve(c.v); } catch (e) {} return fetch(url).then(r => r.ok ? r.json() : Promise.reject()).then(j => { const v = mapper(j); try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch (e) {} return v; }); }
 cached("sdk-repo", "https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit", j => ({ stars: j.stargazers_count, pushed: j.pushed_at })).then(v => {
-  if (v.stars >= 25) { const e = $("#t-stars"); e.innerHTML = `<b>${fmtN(v.stars)}</b> GitHub stars`; e.hidden = false; }
-  if (v.pushed) { const e = $("#t-upd"); e.innerHTML = `Updated <b>${ago(v.pushed)}</b>`; e.hidden = false; $("#lastUpd").textContent = `Last update ${ago(v.pushed)}. Built and maintained in the open on GitHub.`; }
+  if (v.stars >= 25) { const e = $("#t-stars"); e.innerHTML = `${fmtN(v.stars)} stars`; e.hidden = false; }
+  if (v.pushed) { const e = $("#t-upd"); e.innerHTML = `Updated ${ago(v.pushed)}`; e.hidden = false; $("#lastUpd").textContent = `, last update ${ago(v.pushed)}`; }
 }).catch(() => {});
-cached("sdk-dl", "https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit/releases?per_page=100", j => j.reduce((a, r) => a + r.assets.reduce((b, x) => b + x.download_count, 0), 0)).then(n => { if (n >= 100) { const e = $("#t-dl"); e.innerHTML = `<b>${fmtN(n)}</b> downloads`; e.hidden = false; } }).catch(() => {});
+cached("sdk-dl", "https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit/releases?per_page=100", j => j.reduce((a, r) => a + r.assets.reduce((b, x) => b + x.download_count, 0), 0)).then(n => { if (n >= 100) { const e = $("#t-dl"); e.innerHTML = `${fmtN(n)} downloads`; e.hidden = false; } }).catch(() => {});
 function renderLove(list) {
   const el = $("#love"), ok = (list || []).filter(x => x.quote && x.name);
-  if (!ok.length) { el.innerHTML = `<div class="empty-love"><p>Used it to prepare or in a real interview?</p><span class="small">Your story helps the next person decide. Two lines is plenty.</span><div class="chips"><a class="chip" href="${REPO}/discussions/new?category=show-and-tell" target="_blank" rel="noopener">Share how it helped</a></div></div>`; return; }
-  let k = 0; const show = () => { const x = ok[k % ok.length]; el.innerHTML = `<blockquote><p>"${esc(x.quote)}"</p><cite>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>` : esc(x.name)}${x.role ? " · " + esc(x.role) : ""}</cite></blockquote>`; k++; };
+  if (!ok.length) { el.hidden = true; return; }
+  el.hidden = false; let k = 0; const show = () => { const x = ok[k % ok.length]; el.innerHTML = `<blockquote><p>"${esc(x.quote)}"</p><cite>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>` : esc(x.name)}${x.role ? " · " + esc(x.role) : ""}</cite></blockquote>`; k++; };
   show(); if (ok.length > 1 && !matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(show, 7000);
 }
 fetch("love.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : []).then(renderLove).catch(() => renderLove([]));
 const shareURL = (k, url = KIT_URL, text = SHARE_TXT) => ({ x: `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, li: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, rd: `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}` })[k];
+document.addEventListener("click", e => { document.querySelectorAll("details.menu[open]").forEach(d => { if (!d.contains(e.target) || e.target.closest(".mlist a, .mlist button")) d.open = false; }); });
 document.querySelectorAll("[data-sh]").forEach(a => { if (a.tagName === "A") a.href = shareURL(a.dataset.sh); a.addEventListener("click", () => { gcEvent("share/" + a.dataset.sh); if (a.dataset.sh === "copy") writeClip(Promise.resolve(KIT_URL)).then(ok => say(ok ? "Link copied. Thanks for sharing!" : KIT_URL)); }); });
-$("#badgeCopy").onclick = () => writeClip(Promise.resolve(`[![Made with System Design Kit](https://img.shields.io/badge/made%20with-System%20Design%20Kit-6965db)](${KIT_URL})`)).then(ok => { say(ok ? "Badge markdown copied" : "Copy didn't go through"); gcEvent("badge-copy"); });
+if ($("#badgeCopy")) $("#badgeCopy").onclick = () => writeClip(Promise.resolve(`[![Made with System Design Kit](https://img.shields.io/badge/made%20with-System%20Design%20Kit-6965db)](${KIT_URL})`)).then(ok => { say(ok ? "Badge markdown copied" : "Copy didn't go through"); gcEvent("badge-copy"); });
 /* gentle share nudge: once, after the second successful copy */
 let copies = 0; const _say = say;
 window.addEventListener("sdk-copied", () => { copies++; let asked = false; try { asked = localStorage.getItem("sdk-ask-share") === "1"; } catch (e) {} if (copies === 2 && !asked) { try { localStorage.setItem("sdk-ask-share", "1"); } catch (e) {} setTimeout(() => say("Nice! Know someone prepping for interviews?", "Share", () => { gcEvent("share/nudge"); share("System Design Kit", KIT_URL); }), 2600); } });

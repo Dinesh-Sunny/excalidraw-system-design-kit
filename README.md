@@ -395,6 +395,10 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 - 🗨️ **Questions:** [ask in Discussions](../../discussions/new?category=q-a) · **Ideas:** [share one](../../discussions/new?category=ideas)
 - 💬 **Request an item or design:** [open a request](../../issues/new?template=2-request.yml)
 - ✨ **Something to polish:** [tell us](../../issues/new?template=3-polish.yml)
+- 🏷️ **Using the kit in your notes or repo?** Add the badge: [![Made with System Design Kit](https://img.shields.io/badge/made%20with-System%20Design%20Kit-6965db)](https://dinesh-sunny.github.io/excalidraw-system-design-kit/)
+  ```md
+  [![Made with System Design Kit](https://img.shields.io/badge/made%20with-System%20Design%20Kit-6965db)](https://dinesh-sunny.github.io/excalidraw-system-design-kit/)
+  ```
 - 🧩 **Add items yourself:** edit `generator/src`, rebuild, open a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md); the naming rule in [docs/naming.md](docs/naming.md) keeps things findable.
 
 If the kit saves you time in an interview, a ⭐ helps other people find it.
