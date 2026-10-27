@@ -379,9 +379,10 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 
 ## 🤝 Contributing
 
+- 🗨️ **Questions and ideas:** ask in [Discussions](../../discussions)
 - 💬 **Request an item or design:** [open a request](../../issues/new?template=item-request.md)
 - 🐛 **Something looks wrong:** [report a problem](../../issues/new?template=bug.md)
-- 🧩 **Add items yourself:** edit `generator/src`, rebuild, open a pull request. The naming rule in [docs/naming.md](docs/naming.md) keeps things findable.
+- 🧩 **Add items yourself:** edit `generator/src`, rebuild, open a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md); the naming rule in [docs/naming.md](docs/naming.md) keeps things findable.
 
 If the kit saves you time in an interview, a ⭐ helps other people find it.
 

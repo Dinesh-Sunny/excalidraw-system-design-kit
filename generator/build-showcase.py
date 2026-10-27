@@ -40,6 +40,6 @@ a=src.index('<svg viewBox="0 0 16 16" fill="currentColor"'); ghsvg=src[a:src.ind
 a=src.index('<a class="pill ghost spon"'); a=src.index('<svg',a); heart=src[a:src.index('</svg>',a)+6]
 sp=open('sponsor.tpl.html').read()
 for k,v in (('__BASECSS__',base),('__HEADINIT__',headinit),('__THEMEBTN__',themebtn),('__GH__',ghsvg),('__HEART__',heart.replace("'","\\'")),('__SPONSOR__',SPJ),('__SPJSON__','../sponsors.json'),('__N__',str(N))): sp=sp.replace(k,v)
-json.dump({'sponsors':SPN['sponsors']},open('out/pages/sponsors.json','w'))
+json.dump({'sponsors':SPN['sponsors']},open('out/pages/sponsors.json','w'),indent=1,ensure_ascii=False)
 os.makedirs('out/pages/sponsor',exist_ok=True); open('out/pages/sponsor/index.html','w').write(sp)
 print('sponsor page',len(sp)//1024,'KB')

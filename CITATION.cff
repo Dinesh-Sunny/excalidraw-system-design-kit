@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use the System Design Kit in teaching, writing or research, please cite it like this."
+title: "System Design Kit for Excalidraw"
+abstract: "A searchable Excalidraw library of 292 blocks for system design interviews and agentic AI architecture: building blocks, agents, RAG, UI screens and 21 full designs."
+type: software
+authors:
+  - given-names: Dinesh
+    family-names: Sunny
+    alias: Dinesh-Sunny
+repository-code: "https://github.com/Dinesh-Sunny/excalidraw-system-design-kit"
+url: "https://dinesh-sunny.github.io/excalidraw-system-design-kit/"
+license: MIT
+version: 1.4.0
+date-released: 2026-10-27
+keywords:
+  - excalidraw
+  - system design
+  - system design interview
+  - architecture diagrams
+  - AI agents
+  - RAG
