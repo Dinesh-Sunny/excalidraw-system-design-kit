@@ -372,7 +372,7 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 | For you | For your company |
 |---|---|
 | Coffee $5 · Backer $5/mo · Supporter $15/mo | Featured $600/mo · Gold $300/mo · Silver $150/mo · Bronze $50/mo |
-| [Sponsor on GitHub](https://github.com/sponsors/Dinesh-Sunny) | [See tiers and perks](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/#companies) |
+| [Sponsor on GitHub](https://github.com/sponsors/Dinesh-Sunny) · [Buy me a coffee](https://ko-fi.com/dineshsunny) | [See tiers and perks](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/#companies) |
 
 > [!TIP]
 > First 3 company sponsors: 50% off for the first 6 months. [Become a sponsor](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/).
