@@ -1,19 +1,74 @@
 {
   "_help": "Switches for the sponsor flow. Set github to your GitHub username once GitHub Sponsors is approved, kofi to your Ko-fi page name once it exists. Add each sponsor to sponsors[] (tier = one of the tier ids). Then run build-showcase.py and readme-sponsors.py.",
-  "github": null,
+  "github": "Dinesh-Sunny",
   "kofi": null,
   "email": "dineshiitb.ae18@gmail.com",
   "founding": "First 3 company sponsors: 50% off for the first 6 months.",
   "people": [
-    { "id": "coffee", "name": "Coffee", "price": "$5", "per": "once", "gets": "A big thank-you" },
-    { "id": "backer", "name": "Backer", "price": "$5", "per": "month", "gets": "Your name in BACKERS.md" },
-    { "id": "supporter", "name": "Supporter", "price": "$15", "per": "month", "gets": "Your name in the README and early access to new packs" }
+    {
+      "id": "coffee",
+      "name": "Coffee",
+      "price": "$5",
+      "per": "once",
+      "gets": "A big thank-you"
+    },
+    {
+      "id": "backer",
+      "name": "Backer",
+      "price": "$5",
+      "per": "month",
+      "gets": "Your name in BACKERS.md"
+    },
+    {
+      "id": "supporter",
+      "name": "Supporter",
+      "price": "$15",
+      "per": "month",
+      "gets": "Your name in the README and early access to new packs"
+    }
   ],
   "companies": [
-    { "id": "featured", "name": "Featured", "price": "$600", "per": "month", "only": "1 slot", "gets": ["Logo next to the search on the homepage", "Top of the README", "Thanks in every release note and on LinkedIn"] },
-    { "id": "gold", "name": "Gold", "price": "$300", "per": "month", "gets": ["Large logo on the homepage", "Large logo in the README"] },
-    { "id": "silver", "name": "Silver", "price": "$150", "per": "month", "gets": ["Logo in the homepage sponsor row", "Logo in the README"] },
-    { "id": "bronze", "name": "Bronze", "price": "$50", "per": "month", "gets": ["Small logo in the README and BACKERS.md"] }
+    {
+      "id": "featured",
+      "name": "Featured",
+      "price": "$600",
+      "per": "month",
+      "only": "1 slot",
+      "gets": [
+        "Logo next to the search on the homepage",
+        "Top of the README",
+        "Thanks in every release note and on LinkedIn"
+      ]
+    },
+    {
+      "id": "gold",
+      "name": "Gold",
+      "price": "$300",
+      "per": "month",
+      "gets": [
+        "Large logo on the homepage",
+        "Large logo in the README"
+      ]
+    },
+    {
+      "id": "silver",
+      "name": "Silver",
+      "price": "$150",
+      "per": "month",
+      "gets": [
+        "Logo in the homepage sponsor row",
+        "Logo in the README"
+      ]
+    },
+    {
+      "id": "bronze",
+      "name": "Bronze",
+      "price": "$50",
+      "per": "month",
+      "gets": [
+        "Small logo in the README and BACKERS.md"
+      ]
+    }
   ],
   "sponsors": []
 }
