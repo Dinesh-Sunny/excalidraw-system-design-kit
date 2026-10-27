@@ -99,6 +99,7 @@ a { color: inherit }
 .tries { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px }
 .try { height: 32px; padding: 0 14px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); font: 400 13px/1 var(--font-mono); cursor: pointer; transition: border-color .15s }
 .try:hover { border-color: var(--slate) }
+.try.dice { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-sans) } .try.dice svg { width: 15px; height: 15px }
 .stats { display: flex; gap: 8px 22px; justify-content: center; flex-wrap: wrap; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
 .stats b { font: 500 13px/1 var(--font-mono); color: var(--ink) }
 .win { width: min(1000px, 100%); margin-top: 22px; border-radius: 16px 16px 0 0; border: 1px solid var(--hairline); border-bottom: 0; background: var(--surface); box-shadow: var(--shadow-float); overflow: hidden }
@@ -138,7 +139,70 @@ main .wrap > *, .row { min-width: 0 }
 .track > * { scroll-snap-align: start }
 @media (min-width: 900px) { .track { grid-auto-columns: calc((100% - 60px) / 4) } }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 28px 20px }
-.card { display: grid; gap: 10px; border: 0; padding: 0; background: none; text-align: left; cursor: zoom-in; min-width: 0 }
+.card { position: relative; min-width: 0 }
+.card .open { display: grid; gap: 10px; width: 100%; border: 0; padding: 0; background: none; text-align: left; cursor: zoom-in; min-width: 0 }
+.qa { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; opacity: 0; transform: translateY(-2px); transition: opacity .15s, transform .15s }
+.card:hover .qa, .card:focus-within .qa { opacity: 1; transform: none }
+@media (hover: none) { .qa { opacity: 1; transform: none } }
+.qa button { height: 30px; min-width: 30px; padding: 0 9px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink) }
+.qa button:hover { background: var(--surface); box-shadow: var(--shadow-float) }
+.qa svg { width: 14px; height: 14px }
+.qa .saved { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+@media (max-width: 640px) { .qa .lb { display: none } }
+/* packs */
+.packs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px }
+.track.ptrack { grid-auto-columns: minmax(250px, 1fr) }
+@media (min-width: 900px) { .track.ptrack { grid-auto-columns: calc((100% - 40px) / 3) } }
+.pack { display: grid; gap: 10px; border: 0; padding: 0; background: none; text-align: left; cursor: pointer; min-width: 0 }
+.pack .col { aspect-ratio: 3 / 2; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--hairline); overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1px; transition: box-shadow .15s, transform .15s }
+.pack .col img { width: 100%; height: 100%; min-height: 0; object-fit: contain; background: var(--thumb); padding: 6px }
+.pack:hover .col { box-shadow: var(--shadow-float); transform: translateY(-2px) }
+.pack .pt { font: 500 15px/20px var(--font-sans) }
+.pack .pd { font: 400 13px/18px var(--font-sans); color: var(--ink-muted); margin-top: -6px }
+.pack .pn { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); margin-top: -6px }
+.phead { display: grid; gap: 12px; margin-bottom: 22px }
+.phead p { margin: 0; color: var(--ink-muted); max-width: 640px }
+.acts { display: flex; flex-wrap: wrap; gap: 8px }
+.acts .pill { height: 38px; padding: 0 16px; font-size: 13px }
+.back { justify-self: start; background: none; border: 0; padding: 0; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); text-decoration: underline; text-underline-offset: 3px }
+/* keep exploring */
+.explore { border-top: 1px solid var(--hairline); padding-top: 32px; display: grid; gap: 22px; min-width: 0 }
+.explore h2 { margin: 0; font: 400 30px/1.1 var(--font-serif) }
+.nexts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px }
+.nx { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; text-align: left; transition: box-shadow .15s, transform .15s; min-width: 0 }
+.nx:hover { box-shadow: var(--shadow-float); transform: translateY(-1px) }
+.nx svg { width: 24px; height: 24px; flex: none; color: var(--ink-muted) }
+.nx span { display: grid; gap: 2px; font: 500 15px/20px var(--font-sans); flex: 1; min-width: 0 }
+.nx small { font: 400 12px/16px var(--font-mono); color: var(--ink-muted) }
+.chips { display: flex; flex-wrap: wrap; gap: 8px }
+.chip { height: 32px; padding: 0 12px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink); text-decoration: none }
+.chip svg { width: 15px; height: 15px }
+.chip small { font: 400 11px/1 var(--font-mono); color: var(--ink-muted) }
+.chip:hover { border-color: var(--slate) }
+.sub { font: 500 11px/16px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em }
+.ad { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--r-md); border: 1px dashed var(--hairline); text-decoration: none; color: var(--ink); background: var(--surface); transition: border-color .15s, box-shadow .15s; min-width: 0 }
+.ad:hover { border-color: var(--slate); box-shadow: var(--shadow-float) }
+.ad img { height: 32px; max-width: 96px; object-fit: contain; flex: none }
+.ad span { display: grid; gap: 2px; min-width: 0; font: 500 14px/18px var(--font-sans) }
+.ad small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+.ad .tag { margin-left: auto; font: 400 11px/1 var(--font-mono); color: var(--ink-muted); flex: none }
+.ad.real { border-style: solid }
+@media (max-width: 560px) { .ad .tag { display: none } }
+/* board tray + top */
+.tray { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 160%); z-index: 40; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--hairline); box-shadow: var(--shadow-float); transition: transform .3s cubic-bezier(.2,.9,.3,1.2); max-width: calc(100vw - 24px) }
+.tray.on { transform: translate(-50%, 0) }
+.tray.bump { animation: bump .35s ease-out }
+@keyframes bump { 40% { transform: translate(-50%, -6px) } }
+.tray b { font: 500 14px/1 var(--font-sans); white-space: nowrap }
+.tray .pill { height: 36px; padding: 0 14px; font-size: 13px; gap: 0 }
+.tray .lb { white-space: pre }
+.tray .x { width: 32px; height: 32px }
+@media (max-width: 560px) { .tray .lb { display: none } .tray { gap: 6px; padding-left: 12px } .tray .pill { padding: 0 11px } }
+.totop { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 39; opacity: 0; pointer-events: none; transition: opacity .2s, bottom .25s; background: var(--surface); box-shadow: var(--shadow-float) }
+.totop.on { opacity: 1; pointer-events: auto }
+body.has-board .totop { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) }
+@media (max-width: 760px) { body.has-board .totop { display: none } }
+body.has-board footer .wrap { padding-bottom: 96px }
 .ph { aspect-ratio: 3 / 2; border-radius: var(--r-md); background: var(--thumb); border: 1px solid var(--hairline); overflow: hidden; display: grid; place-items: center; transition: box-shadow .15s ease-out, transform .15s ease-out }
 .ph img { width: 100%; height: 100%; object-fit: contain; display: block }
 .card:hover .ph { box-shadow: var(--shadow-float) }
@@ -175,9 +239,54 @@ main .wrap > *, .row { min-width: 0 }
 footer .wrap { padding-block: 22px 32px; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; font: 400 12px/16px var(--font-mono); color: var(--ink-muted) }
 
 /* sheet */
-dialog { border: 0; padding: 0; border-radius: var(--r-lg); background: var(--surface); color: var(--ink); width: min(760px, calc(100vw - 32px)); box-shadow: var(--shadow-float) }
-dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
-.sh-img { background: var(--thumb); border-bottom: 1px solid var(--hairline); aspect-ratio: 3 / 2; display: grid; place-items: center }
+dialog { border: 0; padding: 0; border-radius: var(--r-lg); background: var(--surface); color: var(--ink); width: min(760px, calc(100vw - 32px)); box-shadow: 0 0 0 1px var(--hairline), 0 24px 64px rgba(0,0,0,.28); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain }
+dialog::backdrop { background: rgba(15,16,18,.48); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px) }
+dialog[open] { animation: pop .26s cubic-bezier(.2,.9,.3,1.1) }
+dialog[open]::backdrop { animation: fade .2s ease-out }
+@keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.97) } }
+@keyframes fade { from { opacity: 0 } }
+.sheet { width: min(1080px, calc(100vw - 32px)) }
+.sh-grid { display: grid; grid-template-columns: minmax(0, 1fr) }
+@media (min-width: 900px) { .sh-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) } .sheet .sh-img { aspect-ratio: auto; min-height: 100%; border-bottom: 0; border-right: 1px solid var(--hairline) } .sheet .sh-body { max-height: calc(100dvh - 32px); overflow: auto } }
+.sheet .sh-img { background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; padding: 28px }
+.sheet .sh-img img { max-height: 70dvh; transition: opacity .15s }
+.sheet .sh-img img.ld { opacity: .2 }
+.sh-pos { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.85); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px }
+.sh-pos:empty { display: none }
+.sh-tt { flex: 1; display: grid; gap: 4px; min-width: 0 }
+.sh-top .ibtn { width: 36px; height: 36px }
+.sh-top .ibtn svg { width: 16px; height: 16px }
+.more-in { border-radius: var(--r-md); background: var(--surface-sunk); padding: 10px 14px }
+.more-in summary { cursor: pointer; font: 500 13px/20px var(--font-sans); color: var(--ink-muted) }
+.more-in[open] summary { margin-bottom: 10px }
+.more-in .name { background: var(--surface) }
+.more-in .hint { margin-top: 8px }
+.keys { font-size: 12px }
+@media (hover: none) { .keys { display: none } }
+.sh-img { position: relative; background: var(--thumb); border-bottom: 1px solid var(--hairline); aspect-ratio: 3 / 2; display: grid; place-items: center }
+.sh-prev, .sh-next { position: absolute; top: 50%; margin-top: -18px; width: 36px; height: 36px; color: #141414; background: #fff; border-color: #e3e4e8 }
+.sh-prev { left: 12px } .sh-next { right: 12px }
+.cops { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.cop.main { grid-column: 1 / -1 }
+.cop { position: relative; overflow: hidden; display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; text-align: left; transition: box-shadow .15s, transform .15s; color: var(--ink) }
+.cop:hover { box-shadow: var(--shadow-float) }
+.cop:active { transform: scale(.98) }
+.cop b { font: 500 14px/18px var(--font-sans) }
+.cop small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+.cop.main { background: var(--pill); color: var(--on-ink); border-color: var(--pill); padding: 14px 16px }
+.cop.main b { font-size: 15px }
+.cop.main small { color: inherit; opacity: .7 }
+.cop.done b::after { content: "  Copied"; font-weight: 400; opacity: .7 }
+.dls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.dls .chip { height: 30px; font: 500 12px/1 var(--font-mono) }
+.rel { display: grid; gap: 10px; min-width: 0 }
+.rel:empty { display: none }
+.rel .track { grid-auto-columns: minmax(130px, 1fr); gap: 12px }
+@media (min-width: 640px) { .rel .track { grid-auto-columns: calc((100% - 24px) / 3) } }
+.rel .ct { font-size: 13px; line-height: 17px }
+.rel .cm, .rel .qa { display: none }
+#ssave[aria-pressed="true"] { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+#ssave[aria-pressed="true"] svg { fill: currentColor }
 .sh-img img { width: 100%; height: 100%; object-fit: contain }
 .sh-body { padding: 18px 20px 20px; display: grid; gap: 14px }
 .sh-top { display: flex; align-items: start; gap: 12px }
@@ -309,14 +418,29 @@ dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
 
 <footer class="gut"><div class="wrap"><span>v__VERSION__ · MIT · by Dinesh Sunny</span><span class="help">Happy to help: <a data-mail="Help" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose" target="_blank" rel="noopener">Share an idea</a></span><span><a href="__SPURL__">Sponsor</a> · sd:&lt;section&gt;/ Item - tags</span></div></footer>
 
-<dialog id="sheet" aria-labelledby="st">
-  <div class="sh-img"><img id="si" alt=""></div>
+<dialog id="sheet" class="sheet" aria-labelledby="st">
+  <div class="sh-grid">
+  <div class="sh-img"><img id="si" alt=""><span class="sh-pos" id="spos"></span><button class="arr sh-prev" id="sprev" type="button" aria-label="Previous block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg></button><button class="arr sh-next" id="snext" type="button" aria-label="Next block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2l5 5-5 5"/></svg></button></div>
   <div class="sh-body">
-    <div class="sh-top"><h3 id="st"></h3><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
-    <div class="name"><code id="sn"></code><button class="pill primary" id="sc" type="button" style="height:34px">Copy</button></div>
-    <div class="hint">In Excalidraw press <kbd>⌘</kbd> <kbd>/</kbd>, paste, <kbd>Enter</kbd>.</div>
+    <div class="sh-top"><div class="sh-tt"><span class="sub" id="scat"></span><h3 id="st"></h3></div><button class="ibtn" id="ssave" type="button" aria-label="Save to your board" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/></svg></button><button class="ibtn" id="sshare" type="button" aria-label="Share this block"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5M5 9.5H4v7.5h12V9.5h-1"/></svg></button><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
+    <div class="cops">
+      <button class="cop main" type="button" data-copy="exc" autofocus><b>Copy to Excalidraw</b><small>Then <span class="mk">⌘</span> V on any Excalidraw canvas</small></button>
+      <button class="cop" type="button" data-copy="png"><b>Copy image</b><small>Docs, Slides, Notion, Slack</small></button>
+      <button class="cop" type="button" data-copy="svg"><b>Copy SVG</b><small>Figma, Canva, code</small></button>
+    </div>
+    <div class="dls"><span class="sub">Download</span><button class="chip" type="button" data-dl="png">PNG</button><button class="chip" type="button" data-dl="svg">SVG</button><button class="chip" type="button" data-dl="excalidraw">.excalidraw</button></div>
+    <details class="more-in"><summary>Use it from the library instead</summary>
+      <div class="name"><code id="sn"></code><button class="pill ghost" id="sc" type="button" style="height:34px">Copy name</button></div>
+      <div class="hint">In Excalidraw press <kbd class="mk">⌘</kbd> <kbd>/</kbd>, paste the name, <kbd>Enter</kbd>.</div>
+    </details>
+    <div class="rel" id="srel"></div>
+    <div id="sad"></div>
+    <div class="hint keys"><kbd>←</kbd> <kbd>→</kbd> browse · <kbd>C</kbd> copy · <kbd>S</kbd> save · <kbd>Esc</kbd> close</div>
+  </div>
   </div>
 </dialog>
+<div class="tray" id="tray" role="region" aria-label="Your board"><b id="trayn"></b><button class="pill primary" type="button" data-board="copy"><span class="lb">Copy all to </span>Excalidraw</button><button class="pill ghost" type="button" data-board="dl"><span class="lb">Download </span>.excalidraw</button><button class="pill ghost" type="button" data-board="view">View</button><button class="x" type="button" data-board="clear" aria-label="Clear your board"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
+<button class="ibtn totop" id="totop" type="button" aria-label="Back to top"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16V4M5 9l5-5 5 5"/></svg></button>
 <dialog id="kit" class="kit" aria-labelledby="kt">
   <div class="kit-body">
     <div class="sh-top"><h3 id="kt">Get the kit</h3><button class="x" type="button" data-close aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
@@ -384,59 +508,268 @@ const items = ITEMS.filter(i => !/ SECTION - /.test(i.name)).map(i => {
 const count = c => items.filter(i => i.cat === c).length;
 const $ = s => document.querySelector(s), rows = $("#rows"), q = $("#q"), rail = $("#rail");
 let cat = "all";
-try { const h = location.hash.slice(1); if (LABEL[h]) cat = h; } catch (e) {}
+let startItem = null;
+try { const h = decodeURIComponent(location.hash.slice(1)); if (LABEL[h]) cat = h; else if (h === "board") cat = "board"; else if (h.startsWith("pack=")) cat = "pack:" + h.slice(5); else if (h.startsWith("i=")) startItem = h.slice(2); else if (h.startsWith("b=")) { try { const shared = h.slice(2).split(","); localStorage.setItem("sdk-board", JSON.stringify([...new Set([...JSON.parse(localStorage.getItem("sdk-board") || "[]"), ...shared])])); } catch (e) {} cat = "board"; } } catch (e) {}
 
 rail.innerHTML = ORDER.filter(c => c === "all" || count(c)).map(c => `<button class="cat" type="button" data-c="${c}" aria-pressed="${c === cat}">${I(ICON[c])}<span>${LABEL[c]}</span></button>`).join("");
-rail.addEventListener("click", e => { const b = e.target.closest(".cat"); if (!b) return; cat = b.dataset.c; q.value = ""; try { history.replaceState(null, "", cat === "all" ? location.pathname : "#" + cat); } catch (err) {} draw(true); });
-$("#tries").innerHTML = TRIES.map(t => `<button class="try" type="button">${t}</button>`).join("");
-$("#tries").addEventListener("click", e => { const b = e.target.closest(".try"); if (!b) return; q.value = b.textContent; cat = "all"; draw(true); });
+rail.addEventListener("click", e => { const b = e.target.closest(".cat"); if (!b) return; go(b.dataset.c); });
+$("#tries").innerHTML = TRIES.map(t => `<button class="try" type="button">${t}</button>`).join("") + `<button class="try dice" type="button" data-rand="1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="3"/><circle cx="7.3" cy="7.3" r=".9" fill="currentColor"/><circle cx="12.7" cy="12.7" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/></svg>surprise me</button>`;
+$("#tries").addEventListener("click", e => { if (e.target.closest("[data-rand]")) return surprise(); const b = e.target.closest(".try"); if (!b) return; q.value = b.textContent; cat = "all"; draw(true); });
 
-const cardHTML = i => `<button class="card" type="button"><div class="ph"><img loading="lazy" decoding="async" width="480" height="320" alt="" src="${i.img}"></div><div class="ct"></div><div class="cm">sd:${i.cat}/</div></button>`;
-function fill(el, list) { el.innerHTML = list.map(cardHTML).join(""); [...el.children].forEach((c, k) => { c.querySelector(".ct").textContent = list[k].title; c._item = list[k]; }); }
+const DATA = "__DATA__";
+const MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+document.querySelectorAll(".mk").forEach(k => k.textContent = MAC ? "⌘" : "Ctrl");
+const slug = i => i.id.replace(/^sdk-/, "");
+const BYSLUG = new Map(items.map(i => [slug(i), i]));
+const store = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "[]"); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return []; } };
+let board = store("sdk-board").filter(s => BYSLUG.has(s)), recent = store("sdk-recent").filter(s => BYSLUG.has(s));
+const inBoard = i => board.includes(slug(i));
+
+/* starter packs: ready-made sets you can paste as one board */
+const PACKS = [
+  { id: "interview", title: "Interview starter", desc: "Everything for the first 10 minutes: the flow, requirements, estimates, API, data model and the core boxes.", keys: ["note/Interview Flow", "note/Requirements", "note/Capacity Estimates", "note/API Design", "note/Data Model", "note/Trade-offs", "client/Clients Group", "edge/Load Balancer", "edge/API Gateway", "svc/Service", "data/PostgreSQL", "cache/Redis", "msg/Kafka", "note/Bottleneck"] },
+  { id: "web", title: "Classic web backend", desc: "DNS to database: the request path most designs start from.", keys: ["client/Users", "edge/DNS", "edge/CDN", "edge/Load Balancer", "edge/API Gateway", "svc/Service", "svc/Auth Service", "cache/Redis", "data/Primary DB", "data/Read Replica", "data/Object Storage (S3)", "ops/Monitoring"] },
+  { id: "events", title: "Event-driven systems", desc: "Queues, streams and the patterns that keep events reliable.", keys: ["svc/Service", "msg/Kafka", "msg/Pub/Sub Topic", "msg/Stream Processor (Flink)", "msg/Dead Letter Queue", "msg/CDC", "data/Data Warehouse", "pattern/Transactional Outbox", "pattern/Pub/Sub Fan-out", "pattern/Async Job Queue"] },
+  { id: "scale", title: "Scale and reliability", desc: "Caching, replicas, shards, regions and the guards that keep it up.", keys: ["pattern/Cache-Aside", "pattern/Read Replicas", "pattern/Sharding", "pattern/Multi-Region Active-Active", "edge/Rate Limiter", "svc/Circuit Breaker", "zone/Region", "zone/Availability Zone", "ops/Alerting"] },
+  { id: "llm-app", title: "LLM chat app", desc: "A production chat assistant: gateway, models, guardrails and cost.", keys: ["client/AI Chat App", "edge/API Gateway", "ai/AI Gateway / Model Router", "ai/LLM", "ai/Small / Local Model", "llmops/Guardrails", "llmops/Token & Cost Metering", "rag/Semantic Cache", "llmops/Tracing", "tpl/LLM Chat App"] },
+  { id: "rag", title: "RAG starter", desc: "From documents to grounded answers with citations.", keys: ["rag/Data Sources", "rag/Loader / Parser", "rag/Chunker", "ai/Embedding Model", "rag/Vector Index", "rag/Hybrid Retriever", "ai/Reranker", "rag/Context Builder", "ai/LLM", "rag/Citations", "tpl/RAG Pipeline"] },
+  { id: "agents", title: "AI agents and MCP", desc: "One agent with tools, memory, a sandbox and a human in the loop.", keys: ["agent/AI Agent", "agent/Planner", "agent/Tools", "agent/MCP Server", "agent/Short-term Memory", "agent/Long-term Memory", "agent/Human Approval", "agent/Code Sandbox", "agentic/Autonomous Agent", "agentic/MCP Architecture", "agentic/Human-in-the-Loop"] },
+  { id: "multi-agent", title: "Multi-agent teams", desc: "Supervisors, workers and agents talking across companies.", keys: ["agent/Supervisor Agent", "agent/Sub-agent / Worker", "agent/Workflow Engine", "agent/A2A Protocol", "agent/Agent Registry", "agentic/Multi-Agent Supervisor", "agentic/Orchestrator-Workers", "agentic/Parallelization", "agentic/A2A"] },
+  { id: "llmops", title: "Safety and LLMOps", desc: "Evals, tracing, guardrails and red teaming for AI in production.", keys: ["llmops/Guardrails", "llmops/PII Redaction", "llmops/Prompt Registry", "llmops/Offline Evals", "llmops/LLM-as-Judge", "llmops/Tracing", "llmops/Token & Cost Metering", "llmops/User Feedback", "llmops/Red Teaming", "llmops/Model Fallback", "llmops/Permissions / Policy"] },
+  { id: "mobile", title: "Mobile app wireframes", desc: "A phone frame, the common parts and finished screens.", keys: ["frame/Phone", "ui/Top App Bar", "ui/Bottom Tab Bar", "ui/Search Bar", "ui/Card", "ui/List Item", "ui/Chips", "ui/Button", "screen/Login", "screen/Social Feed", "screen/Profile", "screen/Chat Conversation"] },
+  { id: "dashboard", title: "Web dashboard", desc: "Browser frame, navigation, charts and tables for admin tools.", keys: ["frame/Browser Window", "ui/Sidebar Navigation", "ui/KPI Stat Tile", "ui/Chart Widget", "ui/Data Table", "ui/Tabs", "ui/Modal Dialog", "screen/Admin Dashboard"] },
+  { id: "cloud", title: "Cloud boundaries", desc: "Regions, zones, VPCs and subnets to group your boxes.", keys: ["zone/Region", "zone/Availability Zone", "zone/VPC", "zone/Public Subnet", "zone/Private Subnet", "zone/Kubernetes Cluster", "zone/Trust Boundary", "zone/Client Server Split", "ops/Secrets / KMS", "ops/Identity Provider"] },
+];
+PACKS.forEach(p => { p.items = p.keys.map(k => { const [c, ...t] = k.split("/"); const title = t.join("/"); return items.find(i => i.cat === c && i.title === title); }).filter(Boolean); });
+const PK = Object.fromEntries(PACKS.map(p => [p.id, p]));
+
+/* icons */
+const IC = {
+  copy: '<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M13 7V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13H7"/>',
+  save: '<path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/>',
+  dice: '<rect x="3.5" y="3.5" width="13" height="13" rx="3"/><circle cx="7.3" cy="7.3" r=".9" fill="currentColor"/><circle cx="12.7" cy="12.7" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/>',
+  next: '<path d="M4 10h12M11 5l5 5-5 5"/>', prev: '<path d="M16 10H4M9 5l-5 5 5 5"/>', up: '<path d="M10 16V4M5 9l5-5 5 5"/>',
+};
+const S = (d, sw = 1.5) => `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+
+const cardHTML = i => `<div class="card" data-s="${slug(i)}"><button class="open" type="button"><div class="ph"><img loading="lazy" decoding="async" width="480" height="320" alt="" src="${i.img}"></div><div class="ct"></div><div class="cm">sd:${i.cat}/</div></button><div class="qa"><button type="button" data-a="copy" title="Copy to Excalidraw">${S(IC.copy)}<span class="lb">Copy</span></button><button type="button" data-a="save" class="${inBoard(i) ? "saved" : ""}" title="Save to your board" aria-pressed="${inBoard(i)}">${S(IC.save)}</button></div></div>`;
+function fill(el, list) { el.innerHTML = list.map(cardHTML).join(""); [...el.children].forEach((c, k) => { c.querySelector(".ct").textContent = list[k].title; c._item = list[k]; c._list = list; }); }
+const packHTML = p => `<button class="pack" type="button" data-pack="${p.id}"><div class="col">${p.items.slice(0, 4).map(i => `<img loading="lazy" decoding="async" alt="" src="${i.img}">`).join("")}</div><div class="pt">${p.title}</div><div class="pd">${p.desc}</div><div class="pn">${p.items.length} blocks · paste as one board</div></button>`;
+const AR = (d, l) => `<button class="arr" type="button" data-d="${d}" aria-label="${l}"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${d < 0 ? 'M9 2 4 7l5 5' : 'M5 2l5 5-5 5'}"/></svg></button>`;
+function trackRow(title, list, opts = {}) {
+  const sec = document.createElement("section"); sec.className = "row";
+  sec.innerHTML = `<h2>${title} <span class="n">${opts.n ?? list.length}</span>${opts.more ? `<button class="more" type="button" data-c="${opts.more}">${opts.moreLabel || "Show all"}</button>` : ""}<span class="nav-arrows" ${opts.more ? "" : 'style="margin-left:auto"'}>${AR(-1, "Previous")}${AR(1, "Next")}</span></h2>`;
+  const t = document.createElement("div"); t.className = "track" + (opts.packs ? " ptrack" : "");
+  if (opts.packs) t.innerHTML = list.map(packHTML).join(""); else fill(t, list);
+  sec.append(t); sec._track = t;
+  const upd = () => { const a = sec.querySelectorAll(".nav-arrows .arr"); a[0].disabled = t.scrollLeft < 4; a[1].disabled = t.scrollLeft + t.clientWidth > t.scrollWidth - 4; sec.querySelector(".nav-arrows").style.visibility = t.scrollWidth > t.clientWidth + 4 ? "" : "hidden"; };
+  t.addEventListener("scroll", upd, { passive: true }); requestAnimationFrame(upd); addEventListener("resize", upd);
+  return sec;
+}
+const words = t => t.toLowerCase().split(/\s+/).filter(Boolean);
+function search(term, c) {
+  const w = words(term);
+  return items.filter(i => (c === "all" || i.cat === c) && w.every(x => i.hay.includes(x)))
+    .map(i => { const t = i.title.toLowerCase(); return [i, t === term ? 0 : t.startsWith(w[0] || "") ? 1 : t.includes(w[0] || "") ? 2 : 3]; })
+    .sort((a, b) => a[1] - b[1]).map(x => x[0]);
+}
+const relPacks = list => { const set = new Set(list.map(slug)); const r = PACKS.map(p => [p, p.items.filter(i => set.has(slug(i))).length]).filter(x => x[1]).sort((a, b) => b[1] - a[1]).map(x => x[0]); return (r.length ? r : PACKS).slice(0, 3); };
+function exploreHTML(list) {
+  const cats = ORDER.slice(1).filter(c => count(c)), k = cats.indexOf(cat);
+  const nx = k > -1 ? cats[(k + 1) % cats.length] : cats[0], pv = k > -1 ? cats[(k - 1 + cats.length) % cats.length] : null;
+  const card = (c, dir) => `<button class="nx" type="button" data-go="${c}">${dir < 0 ? S(IC.prev) : ""}<span>${LABEL[c]}<small>${dir < 0 ? "Previous" : "Next"} · ${count(c)} blocks</small></span>${dir > 0 ? S(IC.next) : ""}</button>`;
+  return `<section class="explore"><h2>Keep exploring</h2>
+    <div class="nexts">${pv ? card(pv, -1) : ""}${card(nx, 1)}<button class="nx" type="button" data-rand="1">${S(IC.dice)}<span>Surprise me<small>A random full design</small></span></button></div>
+    <span class="sub">Starter packs</span><div class="packs">${relPacks(list).map(packHTML).join("")}</div>
+    <span class="sub">Every section</span><div class="chips">${cats.map(c => `<button class="chip" type="button" data-go="${c}">${I(ICON[c])}${LABEL[c]} <small>${count(c)}</small></button>`).join("")}</div>
+    ${adHTML("explore", cat)}
+    <div><button class="back" type="button" data-top="1">Back to top</button></div></section>`;
+}
 function draw(scroll) {
   [...rail.children].forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === cat)));
   const term = q.value.trim().toLowerCase();
   rows.textContent = "";
   document.body.classList.toggle("filtering", !!(term || cat !== "all"));
-  if (term || cat !== "all") {
-    const list = items.filter(i => (cat === "all" || i.cat === cat) && (!term || i.hay.includes(term)));
+  const pk = cat.startsWith("pack:") ? PK[cat.slice(5)] : null;
+  if (pk || cat === "board") {
+    const list = pk ? pk.items : board.map(s => BYSLUG.get(s));
+    const sec = document.createElement("section"); sec.className = "row";
+    sec.innerHTML = `<div class="phead"><button class="back" type="button" data-go="all">All blocks</button><h2 style="margin:0">${pk ? pk.title : "Your board"} <span class="n">${list.length}</span></h2><p>${pk ? pk.desc + " Paste them all at once, laid out and ready to connect." : list.length ? "The blocks you saved. Paste them all into Excalidraw in one go, or download a ready board." : "Nothing saved yet. Tap the bookmark on any block to collect it here."}</p>
+      ${list.length ? `<div class="acts"><button class="pill primary" type="button" data-set="copy">${S(IC.copy)}Copy all to Excalidraw</button><button class="pill ghost" type="button" data-set="dl">Download .excalidraw</button>${pk ? `<button class="pill ghost" type="button" data-set="save">${S(IC.save)}Save all to my board</button>` : ""}<button class="pill ghost" type="button" data-set="share">Share</button></div>` : ""}</div>`;
+    sec._set = list; sec._name = pk ? pk.id : "my-board";
+    if (list.length) { const g = document.createElement("div"); g.className = "grid"; fill(g, list); sec.append(g); }
+    rows.append(sec); rows.insertAdjacentHTML("beforeend", exploreHTML(list));
+  } else if (term || cat !== "all") {
+    const list = search(term, cat);
     const sec = document.createElement("section"); sec.className = "row";
     sec.innerHTML = `<h2>${term ? "Results" : LABEL[cat]} <span class="n">${list.length}</span></h2>`;
-    if (!list.length) { sec.innerHTML += `<div class="empty"><b>Nothing yet</b>Try a shorter word.</div>`; }
+    if (!list.length) { sec.innerHTML += `<div class="empty"><b>Nothing yet</b>Try a shorter word, or one of these:<div class="chips" style="justify-content:center;margin-top:14px">${TRIES.map(t => `<button class="chip try" type="button">${t}</button>`).join("")}</div></div>`; }
     else { const g = document.createElement("div"); g.className = "grid"; fill(g, list); sec.append(g); }
-    rows.append(sec);
+    rows.append(sec); rows.insertAdjacentHTML("beforeend", exploreHTML(list));
   } else {
+    rows.append(trackRow("Starter packs", PACKS, { packs: true }));
+    if (recent.length) rows.append(trackRow("Recently viewed", recent.map(s => BYSLUG.get(s)).slice(0, 12)));
+    if (board.length) rows.append(trackRow("Your board", board.map(s => BYSLUG.get(s)), { more: "board", moreLabel: "Open board" }));
     for (const c of ORDER.slice(1)) {
       const list = items.filter(i => i.cat === c); if (!list.length) continue;
-      const sec = document.createElement("section"); sec.className = "row";
-      const AR = (d, l) => `<button class="arr" type="button" data-d="${d}" aria-label="${l}"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${d < 0 ? 'M9 2 4 7l5 5' : 'M5 2l5 5-5 5'}"/></svg></button>`;
-      sec.innerHTML = `<h2>${LABEL[c]} <span class="n">${list.length}</span>${list.length > 4 ? `<button class="more" type="button" data-c="${c}">Show all</button><span class="nav-arrows">${AR(-1, 'Previous')}${AR(1, 'Next')}</span>` : ""}</h2>`;
-      const t = document.createElement("div"); t.className = "track"; fill(t, list.slice(0, 12)); sec.append(t); rows.append(sec);
-      const upd = () => { const a = sec.querySelectorAll('.arr'); if (a.length) { a[0].disabled = t.scrollLeft < 4; a[1].disabled = t.scrollLeft + t.clientWidth > t.scrollWidth - 4; } };
-      t.addEventListener('scroll', upd, { passive: true }); requestAnimationFrame(upd); sec._track = t;
+      rows.append(trackRow(LABEL[c], list.slice(0, 12), { n: list.length, more: list.length > 4 ? c : null }));
     }
   }
+  watchSponsors(rows);
   if (scroll) $("#main").scrollIntoView({ block: "start" });
 }
+function go(c) { cat = c; q.value = ""; try { history.replaceState(null, "", c === "all" ? location.pathname : "#" + (c.startsWith("pack:") ? "pack=" + c.slice(5) : c)); } catch (err) {} draw(true); }
 rows.addEventListener("click", e => {
-  const a = e.target.closest(".arr"); if (a) { const t = a.closest(".row")._track; t.scrollBy({ left: Number(a.dataset.d) * t.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); return; }
-  const m = e.target.closest(".more"); if (m) { cat = m.dataset.c; try { history.replaceState(null, "", "#" + cat); } catch (err) {} draw(true); return; }
-  const c = e.target.closest(".card"); if (c && c._item) open(c._item);
+  const t = e.target;
+  const a = t.closest(".arr"); if (a && a.closest(".row")) { const tr = a.closest(".row")._track; if (tr) tr.scrollBy({ left: Number(a.dataset.d) * tr.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); return; }
+  const m = t.closest(".more"); if (m) return go(m.dataset.c);
+  const g = t.closest("[data-go]"); if (g) return go(g.dataset.go);
+  const p = t.closest("[data-pack]"); if (p) { gcEvent("pack-open/" + p.dataset.pack); return go("pack:" + p.dataset.pack); }
+  if (t.closest("[data-rand]")) return surprise();
+  if (t.closest("[data-top]")) return scrollTo({ top: 0, behavior: "smooth" });
+  const tr = t.closest(".try"); if (tr) { q.value = tr.textContent; cat = "all"; return draw(true); }
+  const st = t.closest("[data-set]"); if (st) { const sec = st.closest(".row"); return setAction(st.dataset.set, sec._set, sec._name, st); }
+  const card = t.closest(".card"); if (!card || !card._item) return;
+  const qa = t.closest(".qa button");
+  if (qa) { qa.dataset.a === "copy" ? copyExc([card._item], qa) : toggleSave(card._item); return; }
+  if (t.closest(".open")) open(card._item, card._list);
 });
+rows.addEventListener("pointerover", e => { const c = e.target.closest(".card"); if (c && c._item && !c._pf) { c._pf = 1; els(c._item).catch(() => {}); } }, { passive: true });
 let typing; q.addEventListener("input", () => { clearTimeout(typing); typing = setTimeout(() => { if (q.value.trim()) cat = "all"; draw(false); }, 120); });
 $("#sf").addEventListener("submit", e => { e.preventDefault(); cat = "all"; draw(true); });
 document.addEventListener("keydown", e => { if (e.key === "/" && document.activeElement !== q && !document.querySelector("dialog[open]")) { e.preventDefault(); q.focus(); } });
 
+/* ---- elements, layout, clipboard ---- */
+const EL = new Map();
+function els(i) { if (!EL.has(i.id)) EL.set(i.id, fetch(DATA + "e/" + i.id + ".json").then(r => { if (!r.ok) throw 0; return r.json(); }).catch(err => { EL.delete(i.id); throw err; })); return EL.get(i.id); }
+function bbox(list) { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const e of list) { const pts = e.points ? e.points.map(p => [e.x + p[0], e.y + p[1]]) : [[e.x, e.y], [e.x + e.width, e.y + e.height]]; for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } } return { x0, y0, w: x1 - x0, h: y1 - y0 }; }
+function arrange(groups, maxW = 2200, gap = 120) {
+  let x = 0, y = 0, rowH = 0; const out = [];
+  for (const g of groups) { const b = bbox(g); if (x > 0 && x + b.w > maxW) { x = 0; y += rowH + gap; rowH = 0; } const dx = x - b.x0, dy = y - b.y0; out.push(...g.map(e => ({ ...e, x: e.x + dx, y: e.y + dy }))); x += b.w + gap; rowH = Math.max(rowH, b.h); }
+  return out;
+}
+const clipJSON = elements => JSON.stringify({ type: "excalidraw/clipboard", elements, files: {} });
+const sceneJSON = elements => JSON.stringify({ type: "excalidraw", version: 2, source: "https://dinesh-sunny.github.io/excalidraw-system-design-kit/", elements, appState: { viewBackgroundColor: "#ffffff", gridSize: 20 }, files: {} });
+function legacyCopy(text) { const ta = document.createElement("textarea"); ta.value = text; ta.style.cssText = "position:fixed;opacity:0"; (document.querySelector("dialog[open]") || document.body).append(ta); ta.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (e) {} ta.remove(); return ok; }
+async function writeClip(promise, type = "text/plain") {
+  try { if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) { await navigator.clipboard.write([new ClipboardItem({ [type]: promise.then(v => v instanceof Blob ? v : new Blob([v], { type })) })]); return true; } } catch (e) {}
+  try { const v = await promise; if (type === "text/plain") { try { await navigator.clipboard.writeText(v); return true; } catch (e) { return legacyCopy(v); } } } catch (e) {}
+  return false;
+}
+const pasteHint = (MAC ? "⌘" : "Ctrl") + " V";
+function flash(btn) { if (!btn) return; btn.classList.add("done"); clearTimeout(btn._f); btn._f = setTimeout(() => btn.classList.remove("done"), 1800); }
+async function copyExc(list, btn) {
+  const ok = await writeClip(Promise.all(list.map(els)).then(gs => clipJSON(arrange(gs))));
+  say(ok ? `Copied${list.length > 1 ? " " + list.length + " blocks" : ""}. Paste in Excalidraw with ${pasteHint}` : "Copy didn't go through. Try the download");
+  if (ok) { flash(btn); gcEvent("copy-excalidraw/" + (list.length > 1 ? "set-" + list.length : slug(list[0]))); }
+}
+function svgText(i) { return fetch(DATA + "s/" + i.id + ".svg").then(r => r.text()); }
+function pngBlob(i, scale = 2) {
+  return svgText(i).then(t => new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(new Blob([t], { type: "image/svg+xml" }));
+    img.onload = () => { const c = document.createElement("canvas"); c.width = img.naturalWidth * scale; c.height = img.naturalHeight * scale; const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); c.toBlob(b => b ? res(b) : rej(), "image/png"); };
+    img.onerror = rej; img.src = url;
+  }));
+}
+function save(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+async function copyAs(kind, i, btn) {
+  let ok = false;
+  if (kind === "exc") return copyExc([i], btn);
+  if (kind === "png") ok = await writeClip(pngBlob(i), "image/png");
+  if (kind === "svg") ok = await writeClip(svgText(i));
+  say(ok ? (kind === "png" ? "Image copied. Paste it anywhere" : "SVG copied. Paste into Figma or your code") : "Copy didn't go through. Try the download");
+  if (ok) { flash(btn); gcEvent("copy-" + kind + "/" + slug(i)); }
+}
+async function download(kind, list, name) {
+  try {
+    if (kind === "png") save(await pngBlob(list[0]), name + ".png");
+    if (kind === "svg") save(new Blob([await svgText(list[0])], { type: "image/svg+xml" }), name + ".svg");
+    if (kind === "excalidraw") save(new Blob([sceneJSON(arrange(await Promise.all(list.map(els))))], { type: "application/json" }), name + ".excalidraw");
+    say("Downloaded " + name + "." + kind); gcEvent("download-" + kind + "/" + name);
+  } catch (e) { say("Download didn't go through. Try again"); }
+}
+async function share(title, url) {
+  try { if (navigator.share && matchMedia("(hover: none)").matches) { await navigator.share({ title, url }); return; } } catch (e) { return; }
+  const ok = await writeClip(Promise.resolve(url)); say(ok ? "Link copied" : url);
+}
+function setAction(a, list, name, btn) {
+  if (a === "copy") return copyExc(list, btn);
+  if (a === "dl") return download("excalidraw", list, "system-design-" + name);
+  if (a === "save") { list.forEach(i => { if (!inBoard(i)) board.push(slug(i)); }); store("sdk-board", board); renderTray(true); say(`Saved ${list.length} blocks to your board`); return; }
+  if (a === "share") return share("System Design Kit", location.origin + location.pathname + (name === "my-board" ? "#b=" + board.join(",") : "#pack=" + name));
+}
+
+/* ---- board ---- */
+const tray = $("#tray");
+function renderTray(bump) {
+  tray.classList.toggle("on", board.length > 0); document.body.classList.toggle("has-board", board.length > 0);
+  $("#trayn").textContent = `${board.length} on your board`;
+  if (bump) { tray.classList.remove("bump"); void tray.offsetWidth; tray.classList.add("bump"); }
+  document.querySelectorAll(".card").forEach(c => { if (!c._item) return; const b = c.querySelector('[data-a="save"]'); const on = inBoard(c._item); b.classList.toggle("saved", on); b.setAttribute("aria-pressed", on); });
+  if (cur) $("#ssave").setAttribute("aria-pressed", inBoard(cur));
+}
+function toggleSave(i) { const s = slug(i); board = inBoard(i) ? board.filter(x => x !== s) : [...board, s]; store("sdk-board", board); renderTray(inBoard(i)); say(inBoard(i) ? "Saved to your board" : "Removed from your board"); gcEvent((inBoard(i) ? "save/" : "unsave/") + s); }
+tray.addEventListener("click", e => {
+  const b = e.target.closest("[data-board]"); if (!b) return; const list = board.map(s => BYSLUG.get(s));
+  if (b.dataset.board === "copy") copyExc(list, b);
+  if (b.dataset.board === "dl") download("excalidraw", list, "system-design-my-board");
+  if (b.dataset.board === "view") { if (sheet.open) sheet.close(); go("board"); }
+  if (b.dataset.board === "clear") { const old = board; board = []; store("sdk-board", board); renderTray(); if (cat === "board") draw(false); say("Board cleared"); }
+});
+
+/* ---- sheet ---- */
 const sheet = $("#sheet"), toast = $("#toast");
-function open(i) { $("#si").src = i.full || i.img; $("#st").textContent = i.title; $("#sn").textContent = i.name.split(" - ")[0]; sheet.showModal(); }
+let cur = null, ctx = [], openedAt = "";
+function open(i, list) {
+  cur = i; ctx = list && list.length ? list : items.filter(x => x.cat === i.cat);
+  const img = $("#si"); img.classList.add("ld"); img.onload = () => img.classList.remove("ld"); img.src = i.full || i.img;
+  $("#st").textContent = i.title; $("#sn").textContent = i.name.split(" - ")[0]; $("#scat").textContent = (LABEL[i.cat] || i.cat) + " · sd:" + i.cat + "/";
+  const k = ctx.indexOf(i); $("#spos").textContent = ctx.length > 1 && k > -1 ? `${k + 1} / ${ctx.length}` : "";
+  $("#sprev").hidden = $("#snext").hidden = ctx.length < 2;
+  $("#ssave").setAttribute("aria-pressed", inBoard(i));
+  sheet.querySelectorAll(".cop").forEach(b => b.classList.remove("done"));
+  /* related: same section, sharing the most tag words */
+  const tw = new Set(words(i.name.split(" - ")[1] || "")), same = items.filter(x => x !== i && x.cat === i.cat).map(x => [x, words(x.name.split(" - ")[1] || "").filter(w => tw.has(w)).length]).sort((a, b) => b[1] - a[1]).map(x => x[0]).slice(0, 6);
+  const inPacks = PACKS.filter(p => p.items.includes(i));
+  const rel = $("#srel"); rel.innerHTML = `<span class="sub">More like this</span><div class="track"></div>${inPacks.length ? `<div class="chips">${inPacks.map(p => `<button class="chip" type="button" data-pack="${p.id}">In pack: ${p.title} <small>${p.items.length}</small></button>`).join("")}</div>` : ""}`;
+  fill(rel.querySelector(".track"), same);
+  $("#sad").innerHTML = adHTML("sheet", i.cat); watchSponsors($("#sad"));
+  if (!sheet.open) { openedAt = location.hash; sheet.showModal(); }
+  sheet.querySelector(".sh-body").scrollTop = 0;
+  try { history.replaceState(null, "", "#i=" + slug(i)); } catch (e) {}
+  recent = [slug(i), ...recent.filter(s => s !== slug(i))].slice(0, 12); store("sdk-recent", recent);
+  els(i).catch(() => {}); gcEvent("view/" + slug(i));
+}
+function step(d) { if (ctx.length < 2) return; const k = ctx.indexOf(cur); open(ctx[(k + d + ctx.length) % ctx.length], ctx); }
+$("#sprev").onclick = () => step(-1); $("#snext").onclick = () => step(1);
 $("#sx").onclick = () => sheet.close();
-sheet.addEventListener("click", e => { if (e.target === sheet) sheet.close(); });
-function say(t) { toast.textContent = t; toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), 1600); }
+sheet.addEventListener("close", () => { cur = null; try { history.replaceState(null, "", openedAt && !openedAt.startsWith("#i=") ? openedAt : location.pathname + (cat === "all" ? "" : "#" + cat)); } catch (e) {} if (cat === "all" && !q.value) draw(false); });
+sheet.addEventListener("click", e => {
+  if (e.target === sheet) return sheet.close();
+  const c = e.target.closest("[data-copy]"); if (c && cur) return copyAs(c.dataset.copy, cur, c);
+  const d = e.target.closest("[data-dl]"); if (d && cur) return download(d.dataset.dl, [cur], slug(cur));
+  const p = e.target.closest("[data-pack]"); if (p) { sheet.close(); return go("pack:" + p.dataset.pack); }
+  const card = e.target.closest(".card"); if (card && card._item) { const qa = e.target.closest(".qa button"); if (qa) return; open(card._item, ctx); }
+});
+sheet.addEventListener("keydown", e => {
+  if (e.target.closest("input, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "ArrowRight") { e.preventDefault(); step(1); } else if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
+  else if (e.key.toLowerCase() === "c" && cur) copyExc([cur], sheet.querySelector(".cop.main"));
+  else if (e.key.toLowerCase() === "s" && cur) toggleSave(cur);
+});
+let sx0 = null; sheet.querySelector(".sh-img").addEventListener("touchstart", e => { sx0 = e.touches[0].clientX; }, { passive: true });
+sheet.querySelector(".sh-img").addEventListener("touchend", e => { if (sx0 === null) return; const dx = e.changedTouches[0].clientX - sx0; if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1); sx0 = null; }, { passive: true });
+$("#ssave").onclick = () => cur && toggleSave(cur);
+$("#sshare").onclick = () => cur && share(cur.title + " - System Design Kit", location.origin + location.pathname + "#i=" + slug(cur));
+function say(t) { toast.textContent = t; toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), 2400); if (sheet.open && toast.parentNode !== sheet) sheet.append(toast); else if (!sheet.open && toast.parentNode !== document.body) document.body.append(toast); }
 $("#sc").onclick = async () => {
   const t = $("#sn").textContent;
-  try { await navigator.clipboard.writeText(t); say("Copied"); }
-  catch (err) { const r = document.createRange(); r.selectNodeContents($("#sn")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); say("Selected. Press ⌘ C"); }
+  const ok = await writeClip(Promise.resolve(t)); if (ok) say("Name copied. Paste it in the library search"); else { const r = document.createRange(); r.selectNodeContents($("#sn")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); say("Selected. Press " + (MAC ? "⌘" : "Ctrl") + " C"); }
 };
+function surprise() { const t = items.filter(i => i.cat === "tpl"); const i = t[Math.floor(Math.random() * t.length)]; gcEvent("surprise"); open(i, t); }
+/* back to top */
+const totop = $("#totop"); totop.onclick = () => scrollTo({ top: 0, behavior: "smooth" });
+addEventListener("scroll", () => totop.classList.toggle("on", scrollY > 1400), { passive: true });
 /* theme */
 $("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
 try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => { let s = null; try { s = localStorage.getItem("sdk-theme"); } catch (er) {} if (!s) document.documentElement.dataset.theme = e.matches ? "dark" : "light"; }); } catch (e) {}
@@ -480,7 +813,14 @@ const watchSponsors = root => {
     if ("IntersectionObserver" in window) new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting && !seen.has(a.dataset.sp + a.dataset.place)) { seen.add(a.dataset.sp + a.dataset.place); setTimeout(() => gcEvent("sponsor-view/" + a.dataset.sp), 800); o.disconnect(); } }), { threshold: .6 }).observe(a);
   });
 };
+let SPLIST = [];
+function adHTML(place, c) {
+  const pick = SPLIST.find(x => (x.cats || []).includes(c)) || SPLIST.find(x => x.tier === "featured") || SPLIST.find(x => x.tier === "gold");
+  if (pick) return `<a class="ad real" data-sp="${esc(pick.login || pick.name)}" data-place="${place}" href="${esc(UTM(pick.url, place))}" target="_blank" rel="noopener sponsored">${pick.logo ? `<img src="${esc(pick.logo)}" alt="" onerror="this.remove()">` : ""}<span>${esc(pick.name)}<small>${esc(pick.blurb || "Keeps this kit free for everyone")}</small></span><span class="tag">Sponsor</span></a>`;
+  return `<a class="ad" href="__SPURL__#companies" data-place="slot-${place}"><span>Your logo here<small>Reach engineers drawing ${esc((LABEL[c] || "system design").toLowerCase())} with this kit</small></span><span class="tag">Sponsor slot</span></a>`;
+}
 function renderSponsors(list) {
+  SPLIST = list || [];
   const shown = list.filter(x => ["featured", "gold", "silver"].includes(x.tier));
   $("#logos").innerHTML = shown.map(x => `<a class="logo t-${esc(x.tier)}" data-sp="${esc(x.login || x.name)}" data-place="row" href="${esc(UTM(x.url, x.tier))}" target="_blank" rel="noopener sponsored">${x.logo ? `<img src="${esc(x.logo)}" alt="" onerror="this.remove()"><span class="nm">${esc(x.name)}</span>` : esc(x.name)}</a>`).join("") +
     Array.from({ length: Math.max(1, 3 - shown.length) }, () => `<a class="logo slot" href="__SPURL__#companies">your logo here</a>`).join("");
@@ -493,7 +833,9 @@ renderSponsors(SP.sponsors);
 fetch("__SPJSON__", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && Array.isArray(j.sponsors)) renderSponsors(j.sponsors); }).catch(() => {});
 $("#kdl").addEventListener("click", () => { $("#thanks").hidden = false; });
 if (location.hash === "#get" && kit.showModal) { tab("web"); kit.showModal(); }
-draw(false);
+if (cat.startsWith("pack:") && !PK[cat.slice(5)]) cat = "all";
+draw(false); renderTray();
+if (startItem && BYSLUG.has(startItem)) open(BYSLUG.get(startItem));
 /* contact links: address assembled at runtime to keep scrapers off it */
 (() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
 </script>

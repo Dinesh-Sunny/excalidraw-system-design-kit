@@ -3,6 +3,12 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Site: copy any block straight to Excalidraw (paste with Cmd/Ctrl V, also in Excalidraw+ and Obsidian), copy as image (Docs, Slides, Notion, Slack) or SVG (Figma), download PNG, SVG or .excalidraw.
+- Site: 12 starter packs (Interview starter, Classic web backend, RAG starter, AI agents and MCP and more) that paste as one laid-out board.
+- Site: save blocks to your own board, then copy or download them all at once; share a board or a block by link.
+- Site: a new block preview with browse arrows, keyboard keys (arrows, C, S), swipe on phones, "More like this" and the packs it belongs to.
+- Site: lists end with "Keep exploring" (next section, packs, every section, surprise me) instead of stopping; recently viewed row; back to top.
+- Sponsors: a contextual sponsor spot in the block preview and at the end of each list (a sponsor can target sections with `cats`).
 - Sponsors: a sponsor page (tiers for people and companies, founding offer, FAQ), a Sponsor button on the site and in the repo, a thank-you step after download, a "Backed by" row, README sponsors section and BACKERS.md. All driven by `generator/sponsor.json`.
 
 ## [1.5.0] - 2026-10-27
