@@ -14,7 +14,8 @@ open(os.path.join(R,'.github/FUNDING.yml'),'w').write('\n'.join(f)+'\n')
 sp=S['sponsors']; by=lambda *t:[x for x in sp if x['tier'] in t]
 def logo(x,h):
     inner=f'<img src="{x["logo"]}" alt="{x["name"]}" height="{h}">' if x.get('logo') else f'<b>{x["name"]}</b>'
-    return f'<a href="{x["url"]}">{inner}</a>'
+    sep='&' if '?' in x['url'] else '?'
+    return f'<a href="{x["url"]}{sep}utm_source=system-design-kit&utm_medium=sponsor&utm_campaign={x["tier"]}">{inner}</a>'
 lines=['<!-- sponsors:start -->','<div align="center">','']
 for tiers,h,label in ((('featured',),64,'Featured'),(('gold',),52,'Gold'),(('silver',),40,'Silver')):
     xs=by(*tiers)
@@ -41,7 +42,7 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 | {'[Sponsor on GitHub](https://github.com/sponsors/'+S['github']+')' if S.get('github') else ''}{' · ' if S.get('github') and S.get('kofi') else ''}{'[Buy me a coffee](https://ko-fi.com/'+S['kofi']+')' if S.get('kofi') else ''}{'' if (S.get('github') or S.get('kofi')) else 'Opening soon - a ⭐ helps today'} | [See tiers and perks]({PAGE}#companies) |
 
 > [!TIP]
-> Sponsor on GitHub and your logo shows up here and on the [site]({PAGE}) within a day, automatically.
+> Sponsor by card or on GitHub and your logo shows up here and on the [site]({PAGE}) within a day, automatically. Sponsors get [live stats]({PAGE}stats/) and a monthly report.
 '''
 p=os.path.join(R,'README.md'); s=open(p).read()
 if '## 💖 Sponsors' in s: s=re.sub(r'## 💖 Sponsors\n.*?(?=\n## )',sec.rstrip('\n')+'\n',s,flags=re.S)

@@ -464,16 +464,31 @@ $(".seg").addEventListener("click", e => { const b = e.target.closest("button");
 document.addEventListener("click", e => { const a = e.target.closest("[data-kit]"); if (!a || !kit.showModal) return; e.preventDefault(); tab("web"); kit.showModal(); });
 kit.addEventListener("click", e => { if (e.target === kit || e.target.closest("[data-close]")) kit.close(); });
 /* sponsors */
-const SP = {"github":"Dinesh-Sunny","kofi":"dineshsunny","people":[{"id":"coffee","name":"Coffee","price":"$5","per":"once","gets":"A big thank-you","gh_tier":674466},{"id":"backer","name":"Backer","price":"$5","per":"month","gets":"Your name in BACKERS.md","gh_tier":674468},{"id":"supporter","name":"Supporter","price":"$15","per":"month","gets":"Your name in the README and early access to new packs","gh_tier":674469}],"companies":[{"id":"featured","name":"Featured","price":"$600","per":"month","only":"1 slot","gets":["Logo next to the search on the homepage","Top of the README","Thanks in every release note and on LinkedIn"],"gh_tier":674473},{"id":"gold","name":"Gold","price":"$300","per":"month","gets":["Large logo on the homepage","Large logo in the README"],"gh_tier":674472},{"id":"silver","name":"Silver","price":"$150","per":"month","gets":["Logo in the homepage sponsor row","Logo in the README"],"gh_tier":674471},{"id":"bronze","name":"Bronze","price":"$50","per":"month","gets":["Small logo in the README and BACKERS.md"],"gh_tier":674470}],"sponsors":[]};
+const SP = {"github":"Dinesh-Sunny","kofi":"dineshsunny","people":[{"id":"coffee","name":"Coffee","price":"$5","per":"once","gets":"A big thank-you","gh_tier":674466},{"id":"backer","name":"Backer","price":"$5","per":"month","gets":"Your name in BACKERS.md","gh_tier":674468},{"id":"supporter","name":"Supporter","price":"$15","per":"month","gets":"Your name in the README and early access to new packs","gh_tier":674469}],"companies":[{"id":"featured","name":"Featured","price":"$600","per":"month","only":"1 slot","gets":["Logo next to the search on the homepage","Top of the README","Thanks in every release note and on LinkedIn"],"gh_tier":674473},{"id":"gold","name":"Gold","price":"$300","per":"month","gets":["Large logo on the homepage","Large logo in the README"],"gh_tier":674472},{"id":"silver","name":"Silver","price":"$150","per":"month","gets":["Logo in the homepage sponsor row","Logo in the README"],"gh_tier":674471},{"id":"bronze","name":"Bronze","price":"$50","per":"month","gets":["Small logo in the README and BACKERS.md"],"gh_tier":674470}],"sponsors":[],"goatcounter":null};
 const tipURL = SP.kofi ? "https://ko-fi.com/" + SP.kofi : SP.github ? "https://github.com/sponsors/" + SP.github : null;
 if (tipURL) { $("#tipbtn").href = tipURL; $("#tiplbl").textContent = SP.kofi ? "Buy me a coffee" : "Sponsor"; }
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+/* sponsor analytics: views + clicks per sponsor (GoatCounter), UTM tags on every sponsor link */
+const UTM = (u, t) => { try { const x = new URL(u); x.searchParams.set("utm_source", "system-design-kit"); x.searchParams.set("utm_medium", "sponsor"); x.searchParams.set("utm_campaign", t || "sponsor"); return x.toString(); } catch (e) { return u; } };
+const GC = SP.goatcounter;
+if (GC) { const s = document.createElement("script"); s.async = true; s.src = "https://gc.zgo.at/count.js"; s.dataset.goatcounter = `https://${GC}.goatcounter.com/count`; document.head.append(s); }
+const gcEvent = path => { try { if (window.goatcounter && goatcounter.count) goatcounter.count({ path, title: path, event: true }); } catch (e) {} };
+const seen = new Set();
+const watchSponsors = root => {
+  root.querySelectorAll("a[data-sp]").forEach(a => {
+    if (a._w) return; a._w = true;
+    a.addEventListener("click", () => gcEvent("sponsor-click/" + a.dataset.sp));
+    if ("IntersectionObserver" in window) new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting && !seen.has(a.dataset.sp + a.dataset.place)) { seen.add(a.dataset.sp + a.dataset.place); setTimeout(() => gcEvent("sponsor-view/" + a.dataset.sp), 800); o.disconnect(); } }), { threshold: .6 }).observe(a);
+  });
+};
 function renderSponsors(list) {
   const shown = list.filter(x => ["featured", "gold", "silver"].includes(x.tier));
-  $("#logos").innerHTML = shown.map(x => `<a class="logo" href="${esc(x.url)}" target="_blank" rel="noopener sponsored">${x.logo ? `<img src="${esc(x.logo)}" alt="${esc(x.name)}">` : esc(x.name)}</a>`).join("") +
+  $("#logos").innerHTML = shown.map(x => `<a class="logo" data-sp="${esc(x.login || x.name)}" data-place="row" href="${esc(UTM(x.url, x.tier))}" target="_blank" rel="noopener sponsored">${x.logo ? `<img src="${esc(x.logo)}" alt="${esc(x.name)}">` : esc(x.name)}</a>`).join("") +
     Array.from({ length: Math.max(1, 3 - shown.length) }, () => `<a class="logo slot" href="sponsor/#companies">your logo here</a>`).join("");
   const ft = list.find(x => x.tier === "featured"), f = $("#feat");
-  if (ft) { f.innerHTML = `sponsored by <a href="${esc(ft.url)}" target="_blank" rel="noopener sponsored">${ft.logo ? `<img src="${esc(ft.logo)}" alt="${esc(ft.name)}">` : esc(ft.name)}</a>`; f.hidden = false; } else f.hidden = true;
+  if (ft) { f.innerHTML = `sponsored by <a data-sp="${esc(ft.login || ft.name)}" data-place="hero" href="${esc(UTM(ft.url, "featured"))}" target="_blank" rel="noopener sponsored">${ft.logo ? `<img src="${esc(ft.logo)}" alt="${esc(ft.name)}">` : esc(ft.name)}</a>`; f.hidden = false; } else f.hidden = true;
+  watchSponsors(document);
 }
 renderSponsors(SP.sponsors);
 /* live list: updated every day by the sponsors workflow, no rebuild needed */

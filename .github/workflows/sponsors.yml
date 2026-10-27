@@ -1,9 +1,9 @@
 name: Sponsors
 
-# Keeps the sponsor logos on the site, README and BACKERS.md in sync with GitHub Sponsors.
+# Every hour: keeps the sponsor logos on the site, README and BACKERS.md in sync with GitHub Sponsors.
 on:
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -21,6 +21,9 @@ jobs:
         env:
           SPONSORS_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+          GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python3 scripts/sync-sponsors.py
       - name: Commit if anything changed
         run: |

@@ -1,5 +1,5 @@
 {
-  "_help": "Switches for the sponsor flow. sponsors[] is filled automatically every day by .github/workflows/sponsors.yml (scripts/sync-sponsors.py) from GitHub Sponsors - don't edit it by hand.",
+  "_help": "Switches for the sponsor flow. sponsors[] is filled automatically by .github/workflows/sponsors.yml (scripts/sync-sponsors.py) from GitHub Sponsors + Stripe - don't edit it by hand. goatcounter = site code once the GoatCounter account exists. card = Stripe Payment Link per tier.",
   "github": "Dinesh-Sunny",
   "kofi": "dineshsunny",
   "people": [
@@ -75,5 +75,6 @@
       "gh_tier": 674470
     }
   ],
-  "sponsors": []
+  "sponsors": [],
+  "goatcounter": null
 }

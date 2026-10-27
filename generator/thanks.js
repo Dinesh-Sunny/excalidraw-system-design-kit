@@ -1,0 +1,1 @@
+try { const t = new URLSearchParams(location.search).get("tier"); const c = SP.companies.find(x => x.id === t) || SP.people.find(x => x.id === t); if (c) $("#tl").textContent = `You're now a ${c.name} sponsor (${c.price}${c.per === "once" ? "" : "/mo"}). Here's what happens next. You don't need to do anything.`; } catch (e) {}

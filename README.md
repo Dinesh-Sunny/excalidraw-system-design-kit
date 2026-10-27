@@ -375,7 +375,7 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 | [Sponsor on GitHub](https://github.com/sponsors/Dinesh-Sunny) · [Buy me a coffee](https://ko-fi.com/dineshsunny) | [See tiers and perks](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/#companies) |
 
 > [!TIP]
-> Sponsor on GitHub and your logo shows up here and on the [site](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/) within a day, automatically.
+> Sponsor by card or on GitHub and your logo shows up here and on the [site](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/) within a day, automatically. Sponsors get [live stats](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/stats/) and a monthly report.
 
 ## 🤝 Contributing
 
