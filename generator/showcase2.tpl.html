@@ -460,11 +460,16 @@ const SP = __SPONSOR__;
 const tipURL = SP.kofi ? "https://ko-fi.com/" + SP.kofi : SP.github ? "https://github.com/sponsors/" + SP.github : null;
 if (tipURL) { $("#tipbtn").href = tipURL; $("#tiplbl").textContent = SP.kofi ? "Buy me a coffee" : "Sponsor"; }
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const shown = SP.sponsors.filter(x => ["featured", "gold", "silver"].includes(x.tier));
-$("#logos").innerHTML = shown.map(x => `<a class="logo" href="${esc(x.url)}" target="_blank" rel="noopener sponsored">${x.logo ? `<img src="${esc(x.logo)}" alt="${esc(x.name)}">` : esc(x.name)}</a>`).join("") +
-  Array.from({ length: Math.max(1, 3 - shown.length) }, () => `<a class="logo slot" href="__SPURL__#companies">your logo here</a>`).join("");
-const ft = SP.sponsors.find(x => x.tier === "featured");
-if (ft) { const f = $("#feat"); f.innerHTML = `sponsored by <a href="${esc(ft.url)}" target="_blank" rel="noopener sponsored">${ft.logo ? `<img src="${esc(ft.logo)}" alt="${esc(ft.name)}">` : esc(ft.name)}</a>`; f.hidden = false; }
+function renderSponsors(list) {
+  const shown = list.filter(x => ["featured", "gold", "silver"].includes(x.tier));
+  $("#logos").innerHTML = shown.map(x => `<a class="logo" href="${esc(x.url)}" target="_blank" rel="noopener sponsored">${x.logo ? `<img src="${esc(x.logo)}" alt="${esc(x.name)}">` : esc(x.name)}</a>`).join("") +
+    Array.from({ length: Math.max(1, 3 - shown.length) }, () => `<a class="logo slot" href="__SPURL__#companies">your logo here</a>`).join("");
+  const ft = list.find(x => x.tier === "featured"), f = $("#feat");
+  if (ft) { f.innerHTML = `sponsored by <a href="${esc(ft.url)}" target="_blank" rel="noopener sponsored">${ft.logo ? `<img src="${esc(ft.logo)}" alt="${esc(ft.name)}">` : esc(ft.name)}</a>`; f.hidden = false; } else f.hidden = true;
+}
+renderSponsors(SP.sponsors);
+/* live list: updated every day by the sponsors workflow, no rebuild needed */
+fetch("__SPJSON__", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && Array.isArray(j.sponsors)) renderSponsors(j.sponsors); }).catch(() => {});
 $("#kdl").addEventListener("click", () => { $("#thanks").hidden = false; });
 if (location.hash === "#get" && kit.showModal) { tab("web"); kit.showModal(); }
 draw(false);

@@ -37,7 +37,7 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 | {'[Sponsor on GitHub](https://github.com/sponsors/'+S['github']+')' if S.get('github') else ''}{' · ' if S.get('github') and S.get('kofi') else ''}{'[Buy me a coffee](https://ko-fi.com/'+S['kofi']+')' if S.get('kofi') else ''}{'' if (S.get('github') or S.get('kofi')) else 'Opening soon - a ⭐ helps today'} | [See tiers and perks]({PAGE}#companies) |
 
 > [!TIP]
-> {S['founding']} [Become a sponsor]({PAGE}).
+> Sponsor on GitHub and your logo shows up here and on the [site]({PAGE}) within a day, automatically.
 '''
 p=os.path.join(R,'README.md'); s=open(p).read()
 if '## 💖 Sponsors' in s: s=re.sub(r'## 💖 Sponsors\n.*?(?=\n## )',sec.rstrip('\n')+'\n',s,flags=re.S)

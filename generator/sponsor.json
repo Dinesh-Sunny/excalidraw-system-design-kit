@@ -1,9 +1,7 @@
 {
-  "_help": "Switches for the sponsor flow. Set github to your GitHub username once GitHub Sponsors is approved, kofi to your Ko-fi page name once it exists. Add each sponsor to sponsors[] (tier = one of the tier ids). Then run build-showcase.py and readme-sponsors.py.",
+  "_help": "Switches for the sponsor flow. sponsors[] is filled automatically every day by .github/workflows/sponsors.yml (scripts/sync-sponsors.py) from GitHub Sponsors - don't edit it by hand.",
   "github": "Dinesh-Sunny",
   "kofi": "dineshsunny",
-  "email": "dineshiitb.ae18@gmail.com",
-  "founding": "First 3 company sponsors: 50% off for the first 6 months.",
   "people": [
     {
       "id": "coffee",

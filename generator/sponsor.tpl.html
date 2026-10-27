@@ -85,7 +85,6 @@ __BASECSS__
 <section class="sec gut" id="companies"><div class="wrap">
   <h2>For your company</h2>
   <p class="lead">Put your brand in front of engineers getting ready for system design interviews, every time they open the kit's site or README.</p>
-  <div class="offer" id="offer"><span class="scribble">founding offer</span><span id="offerText"></span></div>
   <div class="tiers" id="companyTiers"></div>
   <div class="why">
     <div><b>Hiring</b><span>Engineers practising system design are the people you want to hire.</span></div>
@@ -97,9 +96,9 @@ __BASECSS__
 <section class="sec gut"><div class="wrap">
   <h2>How it works</h2>
   <div class="how3">
-    <div><b>Pick a tier</b>Monthly, cancel any time. Logos go up within 2 working days.</div>
-    <div><b>Pay your way</b>GitHub Sponsors, or ask for an invoice by email.</div>
-    <div><b>Send your logo</b>SVG or PNG, light and dark if you have them, plus a link.</div>
+    <div><b>Pick a tier</b>On GitHub Sponsors. Monthly, cancel any time.</div>
+    <div><b>Pay your way</b>Card, or an invoice through GitHub for your organisation.</div>
+    <div><b>That's it</b>Your logo and link appear here and in the README within a day, automatically.</div>
   </div>
 </div></section>
 
@@ -113,7 +112,8 @@ __BASECSS__
   <h2>Questions</h2>
   <div class="faq">
     <details><summary>Will the kit stay free?</summary><p>Yes. The kit is MIT licensed and always will be. Sponsoring never locks anything away.</p></details>
-    <details><summary>Can my company get an invoice?</summary><p>Yes. Email for an invoice, or sponsor through GitHub Sponsors, which can invoice organisations too.</p></details>
+    <details><summary>Can my company get an invoice?</summary><p>Yes. Sponsor from your organisation's GitHub account and GitHub handles receipts and invoices for you.</p></details>
+    <details><summary>Which logo do you show?</summary><p>Your GitHub organisation's avatar, linked to your website (or your GitHub page). Change your avatar on GitHub and the site updates within a day.</p></details>
     <details><summary>Where does the money go?</summary><p>Time to design new blocks and full answers, keep icons and docs up to date, and run the site.</p></details>
     <details><summary>Who can sponsor?</summary><p>Developer tools, learning platforms, hiring teams and anyone building for engineers. We say no to gambling, crypto schemes and anything misleading.</p></details>
     <details><summary>Does a logo go inside the library file?</summary><p>No. The library file stays clean. Logos appear on this site and in the GitHub README.</p></details>
@@ -134,8 +134,7 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const HEART = '__HEART__';
 const gh = SP.github ? "https://github.com/sponsors/" + SP.github : null;
 const kofi = SP.kofi ? "https://ko-fi.com/" + SP.kofi : null;
-const mail = (tier) => `mailto:${SP.email}?subject=${encodeURIComponent("Sponsoring the System Design Kit" + (tier ? " - " + tier : ""))}&body=${encodeURIComponent("Hi Dinesh,\n\nWe'd like to sponsor the System Design Kit" + (tier ? " at the " + tier + " tier" : "") + ".\n\nCompany:\nWebsite:\nInvoice needed (yes/no):\n\nThanks")}`;
-const btn = (href, label, cls = "ghost", ext = true) => `<a class="pill ${cls}" href="${esc(href)}"${ext && !href.startsWith("mailto") ? ' target="_blank" rel="noopener"' : ""}>${label}</a>`;
+const btn = (href, label, cls = "ghost", ext = true) => `<a class="pill ${cls}" href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${label}</a>`;
 
 /* people */
 if (gh || kofi) {
@@ -146,20 +145,25 @@ if (gh || kofi) {
 } else { $("#peopleTiers").hidden = true; $("#peopleSoon").hidden = false; }
 
 /* companies */
-$("#offerText").innerHTML = esc(SP.founding);
-if (!SP.founding || SP.sponsors.length >= 3) $("#offer").hidden = true;
-const taken = SP.sponsors.some(x => x.tier === "featured");
-$("#companyTiers").innerHTML = SP.companies.map(t => `<div class="tier${t.id === "gold" ? " hot" : ""}">${t.id === "gold" ? '<span class="badge">best value</span>' : t.only ? `<span class="badge">${taken ? "taken" : esc(t.only)}</span>` : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>/ month</small></div><ul>${t.gets.map(g => `<li>${esc(g)}</li>`).join("")}</ul>${t.only && taken ? '<span class="soon">Join the waitlist by email</span>' : ""}${btn(gh || mail(t.name), gh ? "Sponsor on GitHub" : "Email to sponsor", t.id === "gold" ? "primary" : "ghost")}</div>`).join("");
+function renderCompanies(list) {
+const taken = list.some(x => x.tier === "featured");
+$("#companyTiers").innerHTML = SP.companies.map(t => `<div class="tier${t.id === "gold" ? " hot" : ""}">${t.id === "gold" ? '<span class="badge">best value</span>' : t.only ? `<span class="badge">${taken ? "taken" : esc(t.only)}</span>` : ""}<h3>${esc(t.name)}</h3><div class="price">${esc(t.price)}<small>/ month</small></div><ul>${t.gets.map(g => `<li>${esc(g)}</li>`).join("")}</ul>${t.only && taken ? '<span class="soon">Taken right now - Gold is open</span>' : btn(gh, "Sponsor on GitHub", t.id === "gold" ? "primary" : "ghost")}</div>`).join("");
+}
 
 /* hero + band CTAs */
 const ctas = (gh || kofi ? btn(kofi || gh, HEART + (kofi ? "Buy me a coffee" : "Sponsor"), "primary") : "") + btn("#companies", "For companies", gh || kofi ? "ghost" : "primary", false);
-$("#heroCta").innerHTML = ctas; $("#bandCta").innerHTML = ctas.replace(/#companies/, "#companies") + btn(mail(""), "Email Dinesh");
+$("#heroCta").innerHTML = ctas; $("#bandCta").innerHTML = ctas + (gh ? btn(gh, "All tiers on GitHub") : "");
 
 /* backers */
-const logos = SP.sponsors.filter(x => ["featured", "gold", "silver", "bronze"].includes(x.tier));
+function renderBackers(list) {
+const logos = list.filter(x => ["featured", "gold", "silver", "bronze"].includes(x.tier));
 $("#logos").innerHTML = logos.map(x => `<a class="logo" href="${esc(x.url)}" target="_blank" rel="noopener sponsored">${x.logo ? `<img src="${esc(x.logo)}" alt="${esc(x.name)}">` : esc(x.name)}</a>`).join("") + Array.from({ length: Math.max(1, 3 - logos.length) }, () => `<a class="logo slot" href="#companies">your logo here</a>`).join("");
-const names = SP.sponsors.filter(x => ["backer", "supporter", "coffee"].includes(x.tier)).map(x => esc(x.name));
+const names = list.filter(x => ["backer", "supporter"].includes(x.tier)).map(x => esc(x.name));
 $("#names").textContent = ""; if (names.length) $("#names").innerHTML = "Thank you " + names.join(", ") + ".";
+}
+const renderAll = list => { renderCompanies(list); renderBackers(list); };
+renderAll(SP.sponsors);
+fetch("__SPJSON__", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && Array.isArray(j.sponsors)) renderAll(j.sponsors); }).catch(() => {});
 
 /* theme + stars */
 $("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
