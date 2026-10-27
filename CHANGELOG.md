@@ -3,6 +3,11 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Site: "How is this block?" in every preview - one tap opens a short GitHub form with the block already filled in (or say it's useful with a heart). New issue forms: block feedback, request a block, something to polish.
+- Site: help links go straight to the right place (Q&A for questions, Ideas for ideas); end-of-list links to request a block, show what you built and share an idea.
+- Site: gentle motion (content rises in as you scroll, hover lifts, smoother pop-ups and FAQ), off when your system asks for reduced motion.
+- Site: the board bar's close button now just hides the bar (your board stays saved); clearing lives on the board page with Undo.
+- Sponsor page: "Backed by" is centred, and Questions sit beside a short intro with ways to reach us.
 - Site: copy any block straight to Excalidraw (paste with Cmd/Ctrl V, also in Excalidraw+ and Obsidian), copy as image (Docs, Slides, Notion, Slack) or SVG (Figma), download PNG, SVG or .excalidraw.
 - Site: 12 starter packs (Interview starter, Classic web backend, RAG starter, AI agents and MCP and more) that paste as one laid-out board.
 - Site: save blocks to your own board, then copy or download them all at once; share a board or a block by link.

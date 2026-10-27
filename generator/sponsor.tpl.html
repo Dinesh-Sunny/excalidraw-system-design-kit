@@ -104,7 +104,22 @@ __BASECSS__
 .chip .g { font: 400 13px/18px var(--font-sans); color: var(--ink-muted) }
 .chip .go2 { font: 500 13px/1 var(--font-sans); margin-top: 4px; align-self: end }
 .chip { grid-template-rows: auto auto 1fr auto }
-.faq { display: grid; gap: 4px; max-width: 760px }
+.faq { display: grid; gap: 4px; min-width: 0 }
+.qa-grid { grid-template-columns: minmax(0, 1fr) }
+@media (min-width: 900px) { .qa-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); gap: 48px !important; align-items: start } .qa-side { position: sticky; top: 96px } }
+.qa-side { display: grid; gap: 14px; align-content: start }
+.qa-side p { margin: 0; color: var(--ink-muted); font: 400 15px/22px var(--font-sans) }
+.qa-links { display: flex; flex-wrap: wrap; gap: 8px }
+.qa-links .pill { height: 36px; padding: 0 14px; font-size: 13px }
+.bk-box { justify-items: center; text-align: center }
+.bk-box .bk-sub { margin: -6px 0 6px; color: var(--ink-muted); max-width: 520px }
+.bk-box .logos { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px }
+.bk-box .logo { width: 200px }
+.bk-box .logo.t-featured, .bk-box .logo.t-gold { width: 412px; max-width: 100% }
+.faq details { transition: background .2s }
+.faq details[open] p { animation: rise .35s cubic-bezier(.2,.8,.2,1) }
+.faq summary::after { transition: transform .2s ease-out }
+.faq details[open] summary::after { transform: rotate(180deg) }
 .faq details { border-bottom: 1px solid var(--hairline); padding: 12px 0 }
 .faq summary { cursor: pointer; font: 500 15px/22px var(--font-sans); list-style: none; display: flex; justify-content: space-between; gap: 12px }
 .faq summary::-webkit-details-marker { display: none }
@@ -182,8 +197,9 @@ __BASECSS__
   </div>
 </div></section>
 
-<section class="sec gut" id="backers"><div class="wrap">
+<section class="sec gut" id="backers"><div class="wrap bk-box">
   <h2>Backed by</h2>
+  <p class="bk-sub">Be among the first teams engineers see every time they reach for a block.</p>
   <div class="logos" id="logos"></div>
   <p class="names" id="names"></p>
 </div></section>
@@ -197,8 +213,8 @@ __BASECSS__
 </div></section>
 </div>
 
-<section class="sec gut"><div class="wrap">
-  <h2>Questions</h2>
+<section class="sec gut"><div class="wrap qa-grid">
+  <div class="qa-side"><h2>Questions</h2><p>Short answers to what teams ask most. Anything else, we're happy to help.</p><div class="qa-links"><a class="pill ghost" data-mail="Sponsorship" href="#contact">Email us</a><a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask in Q&amp;A</a></div></div>
   <div class="faq">
     <details><summary>Who sees my logo?</summary><p>Engineers practising system design and AI architecture: people opening the kit's site to find a block, and developers reading the README on GitHub.</p></details>
     <details><summary>Which logo do you show?</summary><p>The GitHub organisation or website you give us when you pay, linked to your site with tracking tags so visits show in your analytics. It goes live within a day.</p></details>
@@ -217,7 +233,7 @@ __BASECSS__
   <div class="row2"><a class="pill primary" href="#companies" data-tab="co">For companies</a><a class="pill ghost" href="#you" data-tab="you">For you</a></div>
 </div></section>
 
-<footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span class="help">Happy to help: <a data-mail="Sponsorship" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose" target="_blank" rel="noopener">Share an idea</a></span><span><a href="../">Back to the kit</a></span></div></footer>
+<footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span class="help">Happy to help: <a data-mail="Sponsorship" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span><a href="../">Back to the kit</a></span></div></footer>
 
 <div class="sticky" id="sticky"><div class="s1" id="stTxt"></div><a class="pill primary" id="stGo" href="#" target="_blank" rel="noopener">Sponsor</a></div>
 
@@ -351,5 +367,14 @@ fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").
 
 /* contact links: address assembled at runtime to keep scrapers off it */
 (() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
+/* motion: reveal on scroll */
+(() => {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+  document.documentElement.classList.add("mo");
+  const SEL = ".sec h2, .how > div > *, .steps > *, .logo, .faq details, .qa-side > *, .band h2, .band .row2, .tier, .build .wrap > *";
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px" });
+  const scan = root => root.querySelectorAll(SEL).forEach(el => { if (el._rv) return; el._rv = 1; const k = [...el.parentNode.children].indexOf(el); el.style.setProperty("--d", Math.min(k, 6) * 45 + "ms"); el.classList.add("rv"); io.observe(el); });
+  scan(document); new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => n.nodeType === 1 && scan(n.parentNode || n)))).observe(document.body, { childList: true, subtree: true });
+})();
 </script>
 </body></html>

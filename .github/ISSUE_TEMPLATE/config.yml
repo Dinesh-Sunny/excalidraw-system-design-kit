@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Ask a question
-    url: https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions
-    about: How-to questions and ideas go in Discussions.
+    url: https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a
+    about: How-to questions get answered in Discussions.
   - name: Sponsorship, billing or a private question
     url: https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/terms/#contact
     about: Email us - happy to help with invoices, your logo or anything you'd like to keep private.

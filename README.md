@@ -318,7 +318,7 @@ Details and how to add items: [generator/README.md](generator/README.md).
 - [ ] More AI designs: eval pipeline, fine-tuning platform, agent marketplace
 - [ ] Dark-theme tuned colour set
 
-Have an idea? [Request an item](../../issues/new?template=item-request.md).
+Have an idea? [Request an item](../../issues/new?template=2-request.yml).
 
 ## ❓ FAQ
 
@@ -383,16 +383,18 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 | You want to... | Go here |
 |---|---|
 | Learn how to use the kit | [How to use](docs/how-to-use.md) · the "Get the kit" guide on the [site](https://dinesh-sunny.github.io/excalidraw-system-design-kit/) |
-| Ask a question or share an idea | [Discussions](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions) |
-| Suggest an improvement or a fix | [New issue](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose) |
+| Ask a question | [Q&A](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a) |
+| Share an idea | [Ideas](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas) |
+| Feedback on a block | [Block feedback](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=1-block-feedback.yml) |
+| Something to polish | [Tell us](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=3-polish.yml) |
 | Get help with a sponsorship or invoice | [Email](mailto:dineshiitb.ae18@gmail.com?subject=System%20Design%20Kit) · [billing page](https://billing.stripe.com/p/login/14A28qgzU3mMf5E68RgjC00) |
 | Report a security issue privately | [Security policy](SECURITY.md) |
 
 ## 🤝 Contributing
 
-- 🗨️ **Questions and ideas:** ask in [Discussions](../../discussions)
-- 💬 **Request an item or design:** [open a request](../../issues/new?template=item-request.md)
-- 🐛 **Something looks wrong:** [report a problem](../../issues/new?template=bug.md)
+- 🗨️ **Questions:** [ask in Discussions](../../discussions/new?category=q-a) · **Ideas:** [share one](../../discussions/new?category=ideas)
+- 💬 **Request an item or design:** [open a request](../../issues/new?template=2-request.yml)
+- ✨ **Something to polish:** [tell us](../../issues/new?template=3-polish.yml)
 - 🧩 **Add items yourself:** edit `generator/src`, rebuild, open a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md); the naming rule in [docs/naming.md](docs/naming.md) keeps things findable.
 
 If the kit saves you time in an interview, a ⭐ helps other people find it.

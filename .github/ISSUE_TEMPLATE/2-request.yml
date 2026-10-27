@@ -1,0 +1,25 @@
+name: Request a block or design
+description: Ask for a new block, pattern, screen, full design or starter pack.
+title: "[Request] "
+labels: ["request"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What should we add?
+      description: A block, pattern, screen, full interview design or a pack.
+    validations:
+      required: true
+  - type: input
+    id: section
+    attributes:
+      label: Which section?
+      description: For example `sd:agent/` or `sd:tpl/`. Leave blank if unsure.
+  - type: input
+    id: words
+    attributes:
+      label: Search words people would type
+  - type: textarea
+    id: sketch
+    attributes:
+      label: Link or sketch (optional)

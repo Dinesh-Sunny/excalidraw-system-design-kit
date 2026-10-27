@@ -4,9 +4,9 @@ Thanks for helping make the System Design Kit better. Every block, fix and idea 
 
 ## Quick ways to help
 
-- **Ask or share:** start a thread in [Discussions](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions).
-- **Request a block or design:** [open an item request](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=item-request.md).
-- **Report a problem:** [open a bug report](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=bug.md).
+- **Ask or share:** ask in [Q&A](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a) or share in [Ideas](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas).
+- **Request a block or design:** [open an item request](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml).
+- **Something to polish:** [tell us](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=3-polish.yml).
 - **Star the repo** so other engineers can find it.
 - **Sponsor it** [by card](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/) (no GitHub account needed) or on [GitHub Sponsors](https://github.com/sponsors/Dinesh-Sunny).
 

@@ -198,6 +198,12 @@ main .wrap > *, .row { min-width: 0 }
 /* board tray + top */
 .tray { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 160%); z-index: 40; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--hairline); box-shadow: var(--shadow-float); transition: transform .3s cubic-bezier(.2,.9,.3,1.2); max-width: calc(100vw - 24px) }
 .tray.on { transform: translate(-50%, 0) }
+.tray.on.min { transform: translate(-50%, 160%) }
+.tray-mini { position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40; height: 40px; padding: 0 14px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); box-shadow: var(--shadow-float); display: none; align-items: center; gap: 8px; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink) }
+.tray-mini svg { width: 16px; height: 16px; fill: currentColor }
+.tray-mini.on { display: inline-flex; animation: rise .3s ease-out }
+.toast.act { pointer-events: auto; display: inline-flex; align-items: center; gap: 12px; padding-right: 8px }
+.toast button { height: 28px; padding: 0 12px; border-radius: 9999px; border: 0; background: var(--on-ink); color: var(--pill); font: 600 13px/1 var(--font-sans); cursor: pointer }
 .tray.bump { animation: bump .35s ease-out }
 @keyframes bump { 40% { transform: translate(-50%, -6px) } }
 .tray b { font: 500 14px/1 var(--font-sans); white-space: nowrap }
@@ -293,6 +299,26 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
 .rel .ct { font-size: 13px; line-height: 17px }
 .rel .cm, .rel .qa { display: none }
 #ssave[aria-pressed="true"] { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+.fb { display: grid; gap: 10px; padding: 14px; border-radius: var(--r-md); background: var(--surface-sunk) }
+.fb .chip { height: 30px; font-size: 12px; background: var(--surface) }
+.fb .chip.on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+.fb .chip svg { width: 14px; height: 14px }
+.fbn { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+.fbn a { color: var(--ink) }
+/* motion: content rises in as it scrolls into view; hover lifts; off for reduced motion */
+html.mo .rv { opacity: 0; transform: translateY(18px); transition: opacity .55s ease-out, transform .55s cubic-bezier(.2,.8,.2,1); transition-delay: var(--d, 0ms) }
+html.mo .rv.in { opacity: 1; transform: none }
+.card .ph { transition: box-shadow .2s ease-out, transform .2s ease-out }
+.card:hover .ph { transform: translateY(-3px) }
+.hero h1, .hero p, .sbox, .tries, .stats { animation: rise .7s cubic-bezier(.2,.8,.2,1) both }
+.hero p { animation-delay: .06s } .sbox { animation-delay: .12s } .tries { animation-delay: .18s } .stats { animation-delay: .24s }
+@keyframes rise { from { opacity: 0; transform: translateY(14px) } }
+.cat svg { transition: transform .2s ease-out } .cat:hover svg { transform: translateY(-2px) }
+.cat[aria-pressed="true"] svg { animation: tap .35s ease-out }
+@keyframes tap { 40% { transform: scale(1.18) } }
+.pill.primary { transition: transform .15s ease-out, box-shadow .2s, background .15s } .pill.primary:hover { box-shadow: 0 6px 18px rgba(0,0,0,.18); transform: translateY(-1px) }
+.sheet .sh-img img { animation: swap .3s ease-out }
+@keyframes swap { from { opacity: 0; transform: scale(.985) } }
 #ssave[aria-pressed="true"] svg { fill: currentColor }
 .sh-img img { width: 100%; height: 100%; object-fit: contain }
 .sh-body { padding: 18px 20px 20px; display: grid; gap: 14px }
@@ -332,6 +358,11 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
 .thanks .work { font: 500 13px/18px var(--font-sans); color: var(--ink); text-underline-offset: 3px }
 .spon svg { color: #e8590c }
 .backers .wrap { padding-block: 8px 48px; display: grid; gap: 16px }
+.backers .wrap { justify-items: center; text-align: center }
+.backers .logos { width: 100%; display: flex; flex-wrap: wrap; justify-content: center }
+.backers .logo { width: 200px }
+.backers .logo.t-featured, .backers .logo.t-gold { width: 412px; max-width: 100% }
+.backers .bk-cta { justify-content: center }
 .backers h2 { margin: 0; font: 400 30px/1.1 var(--font-serif) }
 .logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px }
 .logo { height: 88px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); display: grid; place-items: center; padding: 14px; text-decoration: none; font: 500 15px/1.2 var(--font-sans) }
@@ -424,7 +455,7 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
   </div>
 </div></section>
 
-<footer class="gut"><div class="wrap"><span>v1.5.0 · MIT · by Dinesh Sunny</span><span class="help">Happy to help: <a data-mail="Help" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose" target="_blank" rel="noopener">Share an idea</a></span><span><a href="sponsor/">Sponsor</a> · sd:&lt;section&gt;/ Item - tags</span></div></footer>
+<footer class="gut"><div class="wrap"><span>v1.5.0 · MIT · by Dinesh Sunny</span><span class="help">Happy to help: <a data-mail="Help" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span><a href="sponsor/">Sponsor</a> · sd:&lt;section&gt;/ Item - tags</span></div></footer>
 
 <dialog id="sheet" class="sheet" aria-labelledby="st">
   <div class="sh-grid">
@@ -442,12 +473,17 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
       <div class="hint">In Excalidraw press <kbd class="mk">⌘</kbd> <kbd>/</kbd>, paste the name, <kbd>Enter</kbd>.</div>
     </details>
     <div class="rel" id="srel"></div>
+    <div class="fb" id="sfb"><span class="sub">How is this block?</span>
+      <div class="chips"><button class="chip" type="button" data-fb="love"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg>Useful</button><button class="chip" type="button" data-fb="Something looks off">Something looks off</button><button class="chip" type="button" data-fb="Missing a part">Missing a part</button><button class="chip" type="button" data-fb="Better name or search words">Better name</button><button class="chip" type="button" data-fb="Idea to improve it">Idea to improve</button></div>
+      <small class="fbn">Opens a short form on GitHub with this block filled in. No GitHub? <a data-mail="Block feedback" href="#contact">Email us</a>.</small>
+    </div>
     <div id="sad"></div>
     <div class="hint keys"><kbd>←</kbd> <kbd>→</kbd> browse · <kbd>C</kbd> copy · <kbd>S</kbd> save · <kbd>Esc</kbd> close</div>
   </div>
   </div>
 </dialog>
-<div class="tray" id="tray" role="region" aria-label="Your board"><b id="trayn"></b><button class="pill primary" type="button" data-board="copy"><span class="lb">Copy all to </span>Excalidraw</button><button class="pill ghost" type="button" data-board="dl"><span class="lb">Download </span>.excalidraw</button><button class="pill ghost" type="button" data-board="view">View</button><button class="x" type="button" data-board="clear" aria-label="Clear your board"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
+<div class="tray" id="tray" role="region" aria-label="Your board"><b id="trayn"></b><button class="pill primary" type="button" data-board="copy"><span class="lb">Copy all to </span>Excalidraw</button><button class="pill ghost" type="button" data-board="dl"><span class="lb">Download </span>.excalidraw</button><button class="pill ghost" type="button" data-board="view">View</button><button class="x" type="button" data-board="hide" aria-label="Hide this bar (your board stays saved)" title="Hide this bar - your board stays saved"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5 7 9.5l4-4"/></svg></button></div>
+<button class="tray-mini" id="traymini" type="button" aria-label="Show your board"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/></svg><span id="traymn"></span></button>
 <button class="ibtn totop" id="totop" type="button" aria-label="Back to top"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16V4M5 9l5-5 5 5"/></svg></button>
 <dialog id="kit" class="kit" aria-labelledby="kt">
   <div class="kit-body">
@@ -590,6 +626,7 @@ function exploreHTML(list) {
     <div class="nexts">${pv ? card(pv, -1) : ""}${card(nx, 1)}<button class="nx" type="button" data-rand="1">${S(IC.dice)}<span>Surprise me<small>A random full design</small></span></button></div>
     <span class="sub">Starter packs</span><div class="packs">${relPacks(list).map(packHTML).join("")}</div>
     <span class="sub">Every section</span><div class="chips">${cats.map(c => `<button class="chip" type="button" data-go="${c}">${I(ICON[c])}${LABEL[c]} <small>${count(c)}</small></button>`).join("")}</div>
+    <span class="sub">Help shape the kit</span><div class="chips"><a class="chip" href="${REPO}/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a block or design</a><a class="chip" href="${REPO}/discussions/new?category=show-and-tell" target="_blank" rel="noopener">Show what you built</a><a class="chip" href="${REPO}/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></div>
     ${adHTML("explore", cat)}
     <div><button class="back" type="button" data-top="1">Back to top</button></div></section>`;
 }
@@ -603,7 +640,7 @@ function draw(scroll) {
     const list = pk ? pk.items : board.map(s => BYSLUG.get(s));
     const sec = document.createElement("section"); sec.className = "row";
     sec.innerHTML = `<div class="phead"><button class="back" type="button" data-go="all">All blocks</button><h2 style="margin:0">${pk ? pk.title : "Your board"} <span class="n">${list.length}</span></h2><p>${pk ? pk.desc + " Paste them all at once, laid out and ready to connect." : list.length ? "The blocks you saved. Paste them all into Excalidraw in one go, or download a ready board." : "Nothing saved yet. Tap the bookmark on any block to collect it here."}</p>
-      ${list.length ? `<div class="acts"><button class="pill primary" type="button" data-set="copy">${S(IC.copy)}Copy all to Excalidraw</button><button class="pill ghost" type="button" data-set="dl">Download .excalidraw</button>${pk ? `<button class="pill ghost" type="button" data-set="save">${S(IC.save)}Save all to my board</button>` : ""}<button class="pill ghost" type="button" data-set="share">Share</button></div>` : ""}</div>`;
+      ${list.length ? `<div class="acts"><button class="pill primary" type="button" data-set="copy">${S(IC.copy)}Copy all to Excalidraw</button><button class="pill ghost" type="button" data-set="dl">Download .excalidraw</button>${pk ? `<button class="pill ghost" type="button" data-set="save">${S(IC.save)}Save all to my board</button>` : ""}<button class="pill ghost" type="button" data-set="share">Share</button>${pk ? "" : `<button class="pill ghost" type="button" data-set="clear">Clear board</button>`}</div>` : ""}</div>`;
     sec._set = list; sec._name = pk ? pk.id : "my-board";
     if (list.length) { const g = document.createElement("div"); g.className = "grid"; fill(g, list); sec.append(g); }
     rows.append(sec); rows.insertAdjacentHTML("beforeend", exploreHTML(list));
@@ -704,25 +741,29 @@ function setAction(a, list, name, btn) {
   if (a === "copy") return copyExc(list, btn);
   if (a === "dl") return download("excalidraw", list, "system-design-" + name);
   if (a === "save") { list.forEach(i => { if (!inBoard(i)) board.push(slug(i)); }); store("sdk-board", board); renderTray(true); say(`Saved ${list.length} blocks to your board`); return; }
+  if (a === "clear") return clearBoard();
   if (a === "share") return share("System Design Kit", location.origin + location.pathname + (name === "my-board" ? "#b=" + board.join(",") : "#pack=" + name));
 }
 
 /* ---- board ---- */
-const tray = $("#tray");
+const tray = $("#tray"); let trayHidden = false;
+$("#traymini").onclick = () => { trayHidden = false; renderTray(true); };
 function renderTray(bump) {
-  tray.classList.toggle("on", board.length > 0); document.body.classList.toggle("has-board", board.length > 0);
+  tray.classList.toggle("on", board.length > 0); tray.classList.toggle("min", trayHidden); document.body.classList.toggle("has-board", board.length > 0 && !trayHidden);
+  $("#traymini").classList.toggle("on", board.length > 0 && trayHidden); $("#traymn").textContent = `Your board · ${board.length}`;
   $("#trayn").textContent = `${board.length} on your board`;
   if (bump) { tray.classList.remove("bump"); void tray.offsetWidth; tray.classList.add("bump"); }
   document.querySelectorAll(".card").forEach(c => { if (!c._item) return; const b = c.querySelector('[data-a="save"]'); const on = inBoard(c._item); b.classList.toggle("saved", on); b.setAttribute("aria-pressed", on); });
   if (cur) $("#ssave").setAttribute("aria-pressed", inBoard(cur));
 }
-function toggleSave(i) { const s = slug(i); board = inBoard(i) ? board.filter(x => x !== s) : [...board, s]; store("sdk-board", board); renderTray(inBoard(i)); say(inBoard(i) ? "Saved to your board" : "Removed from your board"); gcEvent((inBoard(i) ? "save/" : "unsave/") + s); }
+function clearBoard() { const old = board; board = []; store("sdk-board", board); renderTray(); if (cat === "board") draw(false); say("Board cleared", "Undo", () => { board = old; store("sdk-board", board); renderTray(true); if (cat === "board") draw(false); }); }
+function toggleSave(i) { const s = slug(i); if (!inBoard(i)) trayHidden = false; board = inBoard(i) ? board.filter(x => x !== s) : [...board, s]; store("sdk-board", board); renderTray(inBoard(i)); say(inBoard(i) ? "Saved to your board" : "Removed from your board"); gcEvent((inBoard(i) ? "save/" : "unsave/") + s); }
 tray.addEventListener("click", e => {
   const b = e.target.closest("[data-board]"); if (!b) return; const list = board.map(s => BYSLUG.get(s));
   if (b.dataset.board === "copy") copyExc(list, b);
   if (b.dataset.board === "dl") download("excalidraw", list, "system-design-my-board");
   if (b.dataset.board === "view") { if (sheet.open) sheet.close(); go("board"); }
-  if (b.dataset.board === "clear") { const old = board; board = []; store("sdk-board", board); renderTray(); if (cat === "board") draw(false); say("Board cleared"); }
+  if (b.dataset.board === "hide") { trayHidden = true; renderTray(); say("Bar hidden. Your board is still saved"); }
 });
 
 /* ---- sheet ---- */
@@ -735,7 +776,7 @@ function open(i, list) {
   const k = ctx.indexOf(i); $("#spos").textContent = ctx.length > 1 && k > -1 ? `${k + 1} / ${ctx.length}` : "";
   $("#sprev").hidden = $("#snext").hidden = ctx.length < 2;
   $("#ssave").setAttribute("aria-pressed", inBoard(i));
-  sheet.querySelectorAll(".cop").forEach(b => b.classList.remove("done"));
+  sheet.querySelectorAll(".cop").forEach(b => b.classList.remove("done")); sheet.querySelectorAll(".fb .chip").forEach(b => b.classList.remove("on"));
   /* related: same section, sharing the most tag words */
   const tw = new Set(words(i.name.split(" - ")[1] || "")), same = items.filter(x => x !== i && x.cat === i.cat).map(x => [x, words(x.name.split(" - ")[1] || "").filter(w => tw.has(w)).length]).sort((a, b) => b[1] - a[1]).map(x => x[0]).slice(0, 6);
   const inPacks = PACKS.filter(p => p.items.includes(i));
@@ -756,6 +797,7 @@ sheet.addEventListener("click", e => {
   if (e.target === sheet) return sheet.close();
   const c = e.target.closest("[data-copy]"); if (c && cur) return copyAs(c.dataset.copy, cur, c);
   const d = e.target.closest("[data-dl]"); if (d && cur) return download(d.dataset.dl, [cur], slug(cur));
+  const f = e.target.closest("[data-fb]"); if (f && cur) return feedback(f.dataset.fb, cur, f);
   const p = e.target.closest("[data-pack]"); if (p) { sheet.close(); return go("pack:" + p.dataset.pack); }
   const card = e.target.closest(".card"); if (card && card._item) { const qa = e.target.closest(".qa button"); if (qa) return; open(card._item, ctx); }
 });
@@ -769,11 +811,21 @@ let sx0 = null; sheet.querySelector(".sh-img").addEventListener("touchstart", e 
 sheet.querySelector(".sh-img").addEventListener("touchend", e => { if (sx0 === null) return; const dx = e.changedTouches[0].clientX - sx0; if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1); sx0 = null; }, { passive: true });
 $("#ssave").onclick = () => cur && toggleSave(cur);
 $("#sshare").onclick = () => cur && share(cur.title + " - System Design Kit", location.origin + location.pathname + "#i=" + slug(cur));
-function say(t) { toast.textContent = t; toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), 2400); if (sheet.open && toast.parentNode !== sheet) sheet.append(toast); else if (!sheet.open && toast.parentNode !== document.body) document.body.append(toast); }
+function say(t, act, fn) { toast.textContent = t; toast.classList.toggle("act", !!act); if (act) { const b = document.createElement("button"); b.type = "button"; b.textContent = act; b.onclick = () => { fn(); toast.classList.remove("on"); }; toast.append(b); } toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), act ? 6000 : 2400); if (sheet.open && toast.parentNode !== sheet) sheet.append(toast); else if (!sheet.open && toast.parentNode !== document.body) document.body.append(toast); }
 $("#sc").onclick = async () => {
   const t = $("#sn").textContent;
   const ok = await writeClip(Promise.resolve(t)); if (ok) say("Name copied. Paste it in the library search"); else { const r = document.createRange(); r.selectNodeContents($("#sn")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); say("Selected. Press " + (MAC ? "⌘" : "Ctrl") + " C"); }
 };
+const REPO = "https://github.com/Dinesh-Sunny/excalidraw-system-design-kit";
+function feedback(kind, i, btn) {
+  if (kind === "love") { btn.classList.add("on"); say("Thank you! Glad it helps"); gcEvent("fb-love/" + slug(i)); return; }
+  const u = new URL(REPO + "/issues/new"); const name = i.name.split(" - ")[0];
+  u.searchParams.set("template", "1-block-feedback.yml"); u.searchParams.set("title", `[Block] ${i.title}: ${kind}`);
+  u.searchParams.set("block", name); u.searchParams.set("kind", kind); u.searchParams.set("link", location.origin + location.pathname + "#i=" + slug(i));
+  u.searchParams.set("details", `${kind}.\n\n`);
+  gcEvent("fb/" + kind.split(" ")[0].toLowerCase() + "/" + slug(i)); open_(u.toString());
+}
+const open_ = url => { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; document.body.append(a); a.click(); a.remove(); };
 function surprise() { const t = items.filter(i => i.cat === "tpl"); const i = t[Math.floor(Math.random() * t.length)]; gcEvent("surprise"); open(i, t); }
 /* back to top */
 const totop = $("#totop"); totop.onclick = () => scrollTo({ top: 0, behavior: "smooth" });
@@ -846,6 +898,15 @@ draw(false); renderTray();
 if (startItem && BYSLUG.has(startItem)) open(BYSLUG.get(startItem));
 /* contact links: address assembled at runtime to keep scrapers off it */
 (() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
+/* motion: reveal on scroll, staggered per parent */
+(() => {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+  document.documentElement.classList.add("mo");
+  const SEL = ".row > h2, .card, .pack, .nx, .explore > .chips, .ad, .step, .logo, .how h2, .backers h2, .band h2, .band .row2, .phead";
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px" });
+  const scan = root => root.querySelectorAll(SEL).forEach(el => { if (el._rv || el.closest("dialog")) return; el._rv = 1; const k = [...el.parentNode.children].indexOf(el); el.style.setProperty("--d", Math.min(k, 6) * 45 + "ms"); el.classList.add("rv"); io.observe(el); });
+  scan(document); new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => n.nodeType === 1 && scan(n.parentNode || n)))).observe(document.body, { childList: true, subtree: true });
+})();
 </script>
 
 </body></html>

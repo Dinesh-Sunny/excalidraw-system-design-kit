@@ -1,0 +1,47 @@
+name: Feedback on a block
+description: Tell us how a block or design could be better. Opened from the block preview on the site, most fields are filled in for you.
+title: "[Block] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping make the kit better. A sentence or a screenshot is plenty.
+  - type: input
+    id: block
+    attributes:
+      label: Block
+      description: The library name, for example `sd:cache/ Redis`
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feedback?
+      options:
+        - Something looks off
+        - Missing a part
+        - Better name or search words
+        - Idea to improve it
+        - It works great
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Tell us more
+      description: What would make it better? Paste a screenshot if it helps.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where do you draw?
+      options:
+        - excalidraw.com
+        - Excalidraw+
+        - Obsidian
+        - Figma or another app (pasted as image or SVG)
+        - Other
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: Filled in from the site
