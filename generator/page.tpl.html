@@ -41,12 +41,15 @@ __BASECSS__
   <a class="pill primary" href="../">Sponsor</a>
 </div></header>
 <main class="pg gut"><div class="wrap" id="app">__BODY__</div></main>
-<footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span><a href="../../">Back to the kit</a></span></div></footer>
+<footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span class="help">Need help? <a data-mail="Sponsorship" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose" target="_blank" rel="noopener">Report a bug</a></span><span><a href="../../">Back to the kit</a></span></div></footer>
 <script>
 const SP = __SPONSOR__;
 const $ = s => document.querySelector(s);
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 $("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
 __SCRIPT__
+/* contact links: address assembled at runtime to keep scrapers off it */
+(() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
+
 </script>
 </body></html>

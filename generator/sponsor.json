@@ -84,5 +84,11 @@
   "sponsors": [],
   "goatcounter": "sdkit",
   "portal": "https://billing.stripe.com/p/login/14A28qgzU3mMf5E68RgjC00",
-  "terms": "sponsor/terms/"
+  "terms": "sponsor/terms/",
+  "contact": {
+    "user": "dineshiitb.ae18",
+    "domain": "gmail.com",
+    "discussions": "https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions",
+    "issues": "https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose"
+  }
 }

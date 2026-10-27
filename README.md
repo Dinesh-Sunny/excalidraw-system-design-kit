@@ -377,6 +377,16 @@ The kit is free and MIT, and it stays that way. Sponsors pay for new blocks, new
 > [!TIP]
 > Pay by card (no GitHub account needed) or on GitHub, and your logo shows up here and on the [site](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/) within a day, automatically. Sponsors get [live stats](https://dinesh-sunny.github.io/excalidraw-system-design-kit/sponsor/stats/) and a monthly report.
 
+## 🆘 Help and contact
+
+| You want to... | Go here |
+|---|---|
+| Learn how to use the kit | [How to use](docs/how-to-use.md) · the "Get the kit" guide on the [site](https://dinesh-sunny.github.io/excalidraw-system-design-kit/) |
+| Ask a question or share an idea | [Discussions](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions) |
+| Report something broken | [New issue](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose) |
+| Sort out a sponsorship, invoice or refund | [Email](mailto:dineshiitb.ae18@gmail.com?subject=System%20Design%20Kit) · [billing page](https://billing.stripe.com/p/login/14A28qgzU3mMf5E68RgjC00) |
+| Report a security issue privately | [Security policy](SECURITY.md) |
+
 ## 🤝 Contributing
 
 - 🗨️ **Questions and ideas:** ask in [Discussions](../../discussions)

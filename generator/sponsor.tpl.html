@@ -207,6 +207,7 @@ __BASECSS__
     <details><summary>Can we pay yearly?</summary><p>Yes. Switch to yearly at checkout and get two months free.</p></details>
     <details><summary>Can I change tier or cancel?</summary><p>Any time, from your <a href="https://billing.stripe.com/p/login/14A28qgzU3mMf5E68RgjC00">billing page</a>. Your spot stays until the end of the period you paid for. The full <a href="terms/">terms</a> fit on one screen.</p></details>
     <details><summary>Will I see results?</summary><p>Yes. You get a live <a href="stats/">stats page</a> with logo views and clicks, plus a summary email on the 1st of each month.</p></details>
+    <details><summary>Something not right with my sponsorship?</summary><p><a data-mail="Sponsorship" href="#">Email us</a> and we'll sort it. Billing, card and invoice changes are instant on your <a href="https://billing.stripe.com/p/login/14A28qgzU3mMf5E68RgjC00">billing page</a>.</p></details>
     <details><summary>Will the kit stay free?</summary><p>Yes, MIT forever. No logos ever go inside the library file itself.</p></details>
   </div>
 </div></section>
@@ -216,7 +217,7 @@ __BASECSS__
   <div class="row2"><a class="pill primary" href="#companies" data-tab="co">For companies</a><a class="pill ghost" href="#you" data-tab="you">For you</a></div>
 </div></section>
 
-<footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span><a href="../">Back to the kit</a></span></div></footer>
+<footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span class="help">Need help? <a data-mail="Sponsorship" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose" target="_blank" rel="noopener">Report a bug</a></span><span><a href="../">Back to the kit</a></span></div></footer>
 
 <div class="sticky" id="sticky"><div class="s1" id="stTxt"></div><a class="pill primary" id="stGo" href="#" target="_blank" rel="noopener">Sponsor</a></div>
 
@@ -347,5 +348,8 @@ fetch("__SPJSON__", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).the
 /* theme + stars */
 $("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
 fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r => r.ok ? r.json() : null).then(j => { if (j && j.stargazers_count) { const s = $("#stars"); s.textContent = j.stargazers_count; s.hidden = false; } }).catch(() => {});
+
+/* contact links: address assembled at runtime to keep scrapers off it */
+(() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
 </script>
 </body></html>
