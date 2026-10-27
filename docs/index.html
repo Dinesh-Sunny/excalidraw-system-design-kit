@@ -284,6 +284,20 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
 .sheet .sh-img { background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; padding: 28px }
 .sheet .sh-img img { max-height: 70dvh; transition: opacity .15s }
 .sheet .sh-img img.ld { opacity: .2 }
+.sheet .sh-img { overflow: hidden; touch-action: none; cursor: zoom-in }
+.sheet .sh-img.zoomed { cursor: grab } .sheet .sh-img.panning { cursor: grabbing }
+.sheet .sh-img img { transform-origin: 0 0; user-select: none; -webkit-user-drag: none }
+@media (hover: none) { .zc [data-z="-1"], .zc [data-z="1"], .zc .zs { display: none } .zc { right: 8px; bottom: 8px } }
+.sheet .sh-img.anim img { transition: transform .25s cubic-bezier(.2,.8,.2,1) }
+.zc { position: absolute; right: 12px; bottom: 12px; display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 10px; background: #fff; border: 1px solid #e3e4e8; box-shadow: 0 2px 8px rgba(0,0,0,.08); color: #141414; z-index: 2 }
+.zc button { height: 30px; min-width: 30px; padding: 0 6px; border: 0; border-radius: 7px; background: none; cursor: pointer; display: grid; place-items: center; color: inherit; font: 500 12px/1 var(--font-mono) }
+.zc button:hover { background: #f1f3f5 } .zc svg { width: 15px; height: 15px }
+.zc .zp { min-width: 48px } .zc .zs { width: 1px; height: 18px; background: #e3e4e8; margin: 0 3px }
+.sh-img:fullscreen { background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; padding: 0 }
+.sh-img:fullscreen img { max-height: 100vh !important; width: 100%; height: 100% }
+.zhint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); font: 400 12px/1 var(--font-sans); color: #5c6273; background: rgba(255,255,255,.9); border: 1px solid #e3e4e8; padding: 6px 10px; border-radius: 9999px; pointer-events: none; opacity: 0; transition: opacity .3s }
+.sh-img:hover .zhint.show { opacity: 1 }
+@media (hover: none) { .zhint { display: none } }
 .sh-pos { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.85); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px }
 .sh-pos:empty { display: none }
 .sh-tt { flex: 1; display: grid; gap: 4px; min-width: 0 }
@@ -301,6 +315,7 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
 .sh-img { position: relative; background: var(--thumb); border-bottom: 1px solid var(--hairline); aspect-ratio: 3 / 2; display: grid; place-items: center }
 .sh-prev, .sh-next { position: absolute; top: 50%; margin-top: -18px; width: 36px; height: 36px; color: #141414; background: #fff; border-color: #e3e4e8 }
 .sh-prev { left: 12px } .sh-next { right: 12px }
+.sh-img .arr[hidden] { display: none }
 .cops { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
 .cop-more summary { list-style: none; height: 100% } .cop-more summary::-webkit-details-marker { display: none } .cop-more .mlist { top: calc(100% + 6px); bottom: auto }
 @media (max-width: 420px) { .cop small { display: none } }
@@ -495,7 +510,7 @@ html.mo .rv.in { opacity: 1; transform: none }
 
 <dialog id="sheet" class="sheet" aria-labelledby="st">
   <div class="sh-grid">
-  <div class="sh-img"><img id="si" alt=""><span class="sh-pos" id="spos"></span><button class="arr sh-prev" id="sprev" type="button" aria-label="Previous block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg></button><button class="arr sh-next" id="snext" type="button" aria-label="Next block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2l5 5-5 5"/></svg></button></div>
+  <div class="sh-img" id="szoom"><img id="si" alt="" draggable="false"><div class="zc" role="group" aria-label="Zoom"><button type="button" data-z="-1" aria-label="Zoom out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9"/></svg></button><button type="button" data-z="0" class="zp" id="zpct" aria-label="Fit to view">100%</button><button type="button" data-z="1" aria-label="Zoom in"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9M8 3.5v9"/></svg></button><span class="zs"></span><button type="button" data-z="fs" aria-label="Full screen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button></div><span class="sh-pos" id="spos"></span><button class="arr sh-prev" id="sprev" type="button" aria-label="Previous block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg></button><button class="arr sh-next" id="snext" type="button" aria-label="Next block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2l5 5-5 5"/></svg></button></div>
   <div class="sh-body">
     <div class="sh-top"><div class="sh-tt"><span class="sub" id="scat"></span><h3 id="st" tabindex="-1" autofocus></h3></div><button class="ibtn" id="ssave" type="button" aria-label="Save to your board" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/></svg></button><button class="ibtn" id="sshare" type="button" aria-label="Share this block"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5M5 9.5H4v7.5h12V9.5h-1"/></svg></button><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
     <div class="cops">
@@ -508,7 +523,7 @@ html.mo .rv.in { opacity: 1; transform: none }
     <div class="rel" id="srel"></div>
     <div class="fb" id="sfb"><span>Helpful?</span><button class="chip" type="button" data-fb="love" aria-label="Yes, this block is useful"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg>Yes</button><button class="chip" type="button" data-fb="Suggest a change">Suggest a change</button></div>
     <div id="sad"></div>
-    <div class="hint keys"><kbd>←</kbd> <kbd>→</kbd> browse · <kbd>C</kbd> copy · <kbd>S</kbd> save · <kbd>Esc</kbd> close</div>
+    <div class="hint keys"><kbd>←</kbd> <kbd>→</kbd> browse · <kbd>C</kbd> copy · <kbd>S</kbd> save · <kbd>+</kbd> <kbd>-</kbd> zoom · <kbd>Esc</kbd> close</div>
   </div>
   </div>
 </dialog>
@@ -800,7 +815,7 @@ const sheet = $("#sheet"), toast = $("#toast");
 let cur = null, ctx = [], openedAt = "";
 function open(i, list) {
   cur = i; ctx = list && list.length ? list : items.filter(x => x.cat === i.cat);
-  const img = $("#si"); img.classList.add("ld"); img.onload = () => img.classList.remove("ld"); img.src = i.full || i.img;
+  const img = $("#si"); img.classList.add("ld"); img.onload = () => img.classList.remove("ld"); zoomReset(false); img.dataset.hi = ""; img.src = i.full || i.img;
   $("#st").textContent = i.title; $("#sn").textContent = i.name.split(" - ")[0]; $("#scat").textContent = (LABEL[i.cat] || i.cat) + " · sd:" + i.cat + "/";
   const k = ctx.indexOf(i); $("#spos").textContent = ctx.length > 1 && k > -1 ? `${k + 1} / ${ctx.length}` : "";
   $("#sprev").hidden = $("#snext").hidden = ctx.length < 2;
@@ -837,7 +852,34 @@ sheet.addEventListener("keydown", e => {
   else if (e.key.toLowerCase() === "s" && cur) toggleSave(cur);
 });
 let sx0 = null; sheet.querySelector(".sh-img").addEventListener("touchstart", e => { sx0 = e.touches[0].clientX; }, { passive: true });
-sheet.querySelector(".sh-img").addEventListener("touchend", e => { if (sx0 === null) return; const dx = e.changedTouches[0].clientX - sx0; if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1); sx0 = null; }, { passive: true });
+sheet.querySelector(".sh-img").addEventListener("touchend", e => { if (sx0 === null || Z.k > 1.01 || e.changedTouches.length > 1) { sx0 = null; return; } const dx = e.changedTouches[0].clientX - sx0; if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1); sx0 = null; }, { passive: true });
+/* zoom: click to zoom at a point, wheel or pinch to zoom, drag to pan, controls, full screen; swaps to the SVG for crisp detail */
+const zw = $("#szoom"), zimg = $("#si"), Z = { k: 1, x: 0, y: 0 };
+zw.insertAdjacentHTML("beforeend", '<span class="zhint" id="zhint">Click to zoom · scroll to zoom · drag to move</span>');
+function zApply(anim) { zw.classList.toggle("anim", !!anim); zimg.style.transform = Z.k === 1 ? "" : `translate(${Z.x}px, ${Z.y}px) scale(${Z.k})`; zw.classList.toggle("zoomed", Z.k > 1.01); $("#zpct").textContent = Math.round(Z.k * 100) + "%"; $("#sprev").hidden = $("#snext").hidden = Z.k > 1.01 || ctx.length < 2; }
+function zClamp() { const w = zimg.offsetWidth, h = zimg.offsetHeight, ox = zimg.offsetLeft, oy = zimg.offsetTop, W = zw.clientWidth, H = zw.clientHeight; const minX = Math.min(0, W - (ox + w * Z.k)) , maxX = Math.max(0, -ox), minY = Math.min(0, H - (oy + h * Z.k)), maxY = Math.max(0, -oy); if (Z.k > 1) { Z.x = Math.min(maxX + 40, Math.max(minX - 40, Z.x)); Z.y = Math.min(maxY + 40, Math.max(minY - 40, Z.y)); } }
+function hiRes() { if (zimg.dataset.hi || !cur) return; zimg.dataset.hi = "1"; const it = cur; svgText(it).then(t => { if (cur !== it) return; const u = URL.createObjectURL(new Blob([t], { type: "image/svg+xml" })); const pre = new Image(); pre.onload = () => { if (cur === it) zimg.src = u; }; pre.src = u; }).catch(() => {}); }
+function zTo(k, cx, cy, anim) { k = Math.max(1, Math.min(8, k)); const r = zimg.getBoundingClientRect(), wr = zw.getBoundingClientRect(); if (cx === undefined) { cx = wr.left + wr.width / 2; cy = wr.top + wr.height / 2; } const px = (cx - r.left) / Z.k, py = (cy - r.top) / Z.k; const ox = zimg.offsetLeft, oy = zimg.offsetTop; Z.k = k; if (k === 1) { Z.x = 0; Z.y = 0; } else { Z.x = cx - wr.left - zw.clientLeft - ox - px * k; Z.y = cy - wr.top - zw.clientTop - oy - py * k; zClamp(); hiRes(); } zApply(anim); }
+function zoomReset(anim) { Z.k = 1; Z.x = 0; Z.y = 0; zApply(anim); }
+let drag = null, moved = false; const pts = new Map(); let pinch = null;
+zw.addEventListener("pointerdown", e => { if (e.target.closest("button")) return; zw.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); moved = false;
+  if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), k: Z.k }; drag = null; }
+  else drag = { x: e.clientX - Z.x, y: e.clientY - Z.y, sx: e.clientX, sy: e.clientY }; });
+zw.addEventListener("pointermove", e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
+  if (pinch && pts.size === 2) { const [a, b] = [...pts.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]); moved = true; zTo(pinch.k * d / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); return; }
+  if (drag && Z.k > 1.01) { if (Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) > 4) { moved = true; zw.classList.add("panning"); } Z.x = e.clientX - drag.x; Z.y = e.clientY - drag.y; zClamp(); zApply(false); } });
+const zUp = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; zw.classList.remove("panning");
+  if (drag && !moved && e.type === "pointerup" && !e.target.closest("button")) { Z.k > 1.01 ? zoomReset(true) : zTo(2.5, e.clientX, e.clientY, true); }
+  drag = null; };
+zw.addEventListener("pointerup", zUp); zw.addEventListener("pointercancel", zUp);
+zw.addEventListener("wheel", e => { e.preventDefault(); const f = Math.exp(-(e.deltaMode ? e.deltaY * 16 : e.deltaY) * (e.ctrlKey ? 0.01 : 0.0025)); zTo(Z.k * f, e.clientX, e.clientY); }, { passive: false });
+zw.querySelector(".zc").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; const z = b.dataset.z;
+  if (z === "1") zTo(Z.k * 1.6, undefined, undefined, true); else if (z === "-1") zTo(Z.k / 1.6, undefined, undefined, true); else if (z === "0") zoomReset(true);
+  else if (z === "fs") { if (document.fullscreenElement) document.exitFullscreen(); else if (zw.requestFullscreen) zw.requestFullscreen().catch(() => {}); } });
+document.addEventListener("fullscreenchange", () => zoomReset(false));
+sheet.addEventListener("keydown", e => { if (e.target.closest("input, textarea") || e.metaKey || e.ctrlKey || e.altKey) return; if (e.key === "+" || e.key === "=") { e.preventDefault(); zTo(Z.k * 1.6, undefined, undefined, true); } else if (e.key === "-") { e.preventDefault(); zTo(Z.k / 1.6, undefined, undefined, true); } else if (e.key === "0") zoomReset(true); });
+let hinted = false; try { hinted = localStorage.getItem("sdk-zoom-hint") === "1"; } catch (e) {}
+if (!hinted) { $("#zhint").classList.add("show"); zw.addEventListener("pointerdown", () => { $("#zhint").classList.remove("show"); try { localStorage.setItem("sdk-zoom-hint", "1"); } catch (e) {} }, { once: true }); }
 $("#ssave").onclick = () => cur && toggleSave(cur);
 $("#sshare").onclick = () => cur && share(cur.title + " - System Design Kit", location.origin + location.pathname + "#i=" + slug(cur));
 function say(t, act, fn) { toast.textContent = t; toast.classList.toggle("act", !!act); if (act) { const b = document.createElement("button"); b.type = "button"; b.textContent = act; b.onclick = () => { fn(); toast.classList.remove("on"); }; toast.append(b); } toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), act ? 6000 : 2400); if (sheet.open && toast.parentNode !== sheet) sheet.append(toast); else if (!sheet.open && toast.parentNode !== document.body) document.body.append(toast); }
