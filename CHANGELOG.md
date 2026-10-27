@@ -2,6 +2,12 @@
 
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
+## [1.4.0] - 2026-10-27
+- Icons: every block now has its own icon (about 55 new ones), so no two blocks look alike. Databases show PG / My, caches show Redis vs Memcached, and AI, RAG, agent and LLMOps blocks each get a clear symbol.
+- Section tiles widen to fit long titles.
+- Item names are unchanged, so search and existing boards keep working.
+- Site: light / dark toggle, GitHub star button, a Get the kit guide for excalidraw.com, Obsidian and Excalidraw+, a live demo, self-hosted fonts, and fixes for small screens.
+
 ## [1.3.0] - 2026-10-27
 First public release.
 - Namespace: every item now starts with `sd:` (`sd:<section>/ <Item> - <tags>`) so the kit never mixes with other libraries.

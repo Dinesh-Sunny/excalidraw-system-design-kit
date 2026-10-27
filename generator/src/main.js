@@ -7,7 +7,7 @@ import { AGENTIC, AI_TEMPLATES } from "./agentic.js";
 import { UI, FRAMES, SCREENS } from "./ui.js";
 
 const items = []; // {name, section, skel}
-export const KIT = "sd", KIT_VERSION = "1.3.0";
+export const KIT = "sd", KIT_VERSION = "1.4.0";
 const add = (cat, label, skel, section) => items.push({ name: `${KIT}:${cat}/ ${label}`, section: section || cat, skel });
 const one = (s) => s.replace(/\n/g, " ");
 
@@ -17,7 +17,7 @@ function section(cat, no, title, theme = "ops", hint) {
   const th = T[theme] || T.ops;
   SECTION_META.push({ cat, no, title });
   add(cat, `${no} SECTION - ${title}`, [
-    rect(0, 0, 400, 96, { strokeColor: th.stroke, backgroundColor: th.fill, strokeWidth: 3, roundness: null }),
+    rect(0, 0, Math.max(400, Math.ceil(`SD ${no}  ${title}`.length * 12.5) + 40), 96, { strokeColor: th.stroke, backgroundColor: th.fill, strokeWidth: 3, roundness: null }),
     txt(16, 12, `SD ${no}  ${title.toUpperCase()}`, { fontSize: 20, strokeColor: INK }),
     txt(16, 52, hint || `search "sd:${cat}/" for this section`, { fontSize: 15, strokeColor: th.stroke, fontFamily: 3 }),
   ], cat);
@@ -69,7 +69,7 @@ function clientGroup(label, cards, theme, out) {
 }
 function clientStarters() {
   add("client", "Clients Group - all devices mobile tablet laptop web client clients starter", clientGroup("Clients", [["Mobile", "mobile"], ["Tablet", "tablet"], ["Laptop", "laptop"], ["Web", "browser"]], "client", "HTTPS"));
-  add("client", "AI Clients Group - chat app agent mcp voice ai client clients starter", clientGroup("AI Clients", [["AI Chat App", "aichat"], ["AI Agent", "robot"], ["MCP Client", "plug"], ["Voice AI", "mic"]], "ai", "API key / OAuth"));
+  add("client", "AI Clients Group - chat app agent mcp voice ai client clients starter", clientGroup("AI Clients", [["AI Chat App", "aichat"], ["AI Agent", "robot"], ["MCP Client", "plug"], ["Voice AI", "waveform"]], "ai", "API key / OAuth"));
   add("client", "First Request - classic dns cdn lb gateway client clients starter", diagram({ nodes: [["c", "Clients\n(web, mobile)", "users", "client", 0, 1], ["dns", "DNS", "dns", "edge", 1.4, 0], ["cdn", "CDN\n(static files)", "globe", "edge", 1.4, 2],
     ["lb", "Load Balancer", "lb", "edge", 2.8, 1], ["gw", "API Gateway", "gateway", "edge", 4.1, 1], ["s", "Services", "service", "svc", 5.4, 1]],
     edges: [["c", "dns", "1. resolve"], ["c", "cdn", "2. assets"], ["c", "lb", "3. HTTPS API"], ["lb", "gw", "4."], ["gw", "s", "5. route"]] }));

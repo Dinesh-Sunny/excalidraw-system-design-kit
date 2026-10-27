@@ -7,9 +7,18 @@
 <meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#3f6c9f">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<script>try{var t=localStorage.getItem("sdk-theme");document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){}</script>
+<link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/Geist-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+@font-face { font-family: "Geist"; src: url(fonts/Geist-Regular.woff2) format("woff2"); font-weight: 400; font-display: swap }
+@font-face { font-family: "Geist"; src: url(fonts/Geist-Medium.woff2) format("woff2"); font-weight: 500; font-display: swap }
+@font-face { font-family: "Geist"; src: url(fonts/Geist-SemiBold.woff2) format("woff2"); font-weight: 600; font-display: swap }
+@font-face { font-family: "Geist Mono"; src: url(fonts/GeistMono-Regular.woff2) format("woff2"); font-weight: 400; font-display: swap }
+@font-face { font-family: "Geist Mono"; src: url(fonts/GeistMono-Medium.woff2) format("woff2"); font-weight: 500; font-display: swap }
+@font-face { font-family: "Instrument Serif"; src: url(fonts/instrument-serif-latin-400-normal.woff2) format("woff2"); font-style: normal; font-display: swap }
+@font-face { font-family: "Instrument Serif"; src: url(fonts/instrument-serif-latin-400-italic.woff2) format("woff2"); font-style: italic; font-display: swap }
+@font-face { font-family: "Excalifont"; src: url(fonts/Excalifont-Regular.woff2) format("woff2"); font-display: swap }
 /* Layout: SixthSense / Hark system. Sky atmosphere hero with one serif line and an Airbnb-style search pill,
    sticky category rail with line icons, image-first card rows per section, sheet preview, dusk closing band. */
 :root {
@@ -22,19 +31,20 @@
   --font-serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --r-md: 14px; --r-lg: 24px; --r-xl: 26px;
+  --dot: #d3d6de; --sketch: #6965db; --sketch-soft: #e0dfff; --font-hand: "Excalifont", "Comic Sans MS", cursive;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --ground: #0f1012; --surface: #17181b; --surface-sunk: #1e1f24; --ink: #f3f4f6; --ink-muted: #9aa2b4; --hairline: #2a2c33;
   --sky-100: #151a25; --sky-300: #2a3550; --slate: #8994aa; --on-ink: #141414; --pill: #f3f4f6;
   --atmo-sky-deep: #1b2c44; --atmo-sky-mid: #2a4060; --atmo-haze: #151a25; --atmo-dusk-1: #7a4a33; --atmo-dusk-2: #2e231d;
   --atmo-lav-1: #3c3762; --atmo-lav-2: #1f1d30; --glass: rgba(23,24,27,0.72); --thumb: #f4f4f2;
-  --shadow-float: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); color-scheme: dark } }
+  --shadow-float: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); --dot: #2c2f37; --sketch: #a8a5ff; --sketch-soft: #2e2c4d; color-scheme: dark } }
 :root[data-theme="dark"] {
   --ground: #0f1012; --surface: #17181b; --surface-sunk: #1e1f24; --ink: #f3f4f6; --ink-muted: #9aa2b4; --hairline: #2a2c33;
   --sky-100: #151a25; --sky-300: #2a3550; --slate: #8994aa; --on-ink: #141414; --pill: #f3f4f6;
   --atmo-sky-deep: #1b2c44; --atmo-sky-mid: #2a4060; --atmo-haze: #151a25; --atmo-dusk-1: #7a4a33; --atmo-dusk-2: #2e231d;
   --atmo-lav-1: #3c3762; --atmo-lav-2: #1f1d30; --glass: rgba(23,24,27,0.72); --thumb: #f4f4f2;
-  --shadow-float: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); color-scheme: dark }
+  --shadow-float: 0 1px 2px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); --dot: #2c2f37; --sketch: #a8a5ff; --sketch-soft: #2e2c4d; color-scheme: dark }
 
 * { box-sizing: border-box }
 body { margin: 0; background: var(--ground); color: var(--ink); font: 400 15px/22px var(--font-sans); -webkit-font-smoothing: antialiased }
@@ -57,34 +67,63 @@ a { color: inherit }
 .pill.ghost { background: transparent; border-color: var(--hairline) }
 .pill.ghost:hover { background: var(--surface) }
 .pill svg { width: 16px; height: 16px }
-.navsearch { display: none; flex: 1; max-width: 360px }
+.ibtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--hairline); background: transparent; display: grid; place-items: center; cursor: pointer; flex: none; transition: background .15s }
+.ibtn:hover { background: var(--surface) }
+.ibtn svg { width: 17px; height: 17px }
+.i-sun { display: none } :root[data-theme="dark"] .i-sun { display: block } :root[data-theme="dark"] .i-moon { display: none }
+.star .cnt { font: 500 12px/1 var(--font-mono); padding-left: 10px; margin-left: 2px; border-left: 1px solid var(--hairline); height: 16px; display: inline-flex; align-items: center }
+.star .cnt[hidden] { display: none }
+.mark .short { display: none }
 
-/* hero */
-.hero { position: relative; overflow: hidden; background: linear-gradient(180deg, var(--atmo-sky-deep) 0%, var(--atmo-sky-mid) 42%, var(--atmo-haze) 78%, var(--ground) 100%) }
-.hero::after { content: ""; position: absolute; inset: auto -10% -40% -10%; height: 70%; background: radial-gradient(60% 60% at 70% 30%, var(--atmo-lav-2), transparent 70%); opacity: .55; pointer-events: none }
-.hero .wrap { position: relative; z-index: 1; padding-block: 72px 56px; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
+/* hero: Excalidraw canvas (dot grid, island toolbar, hand-drawn note) inside the Hark atmosphere */
+.hero { position: relative; overflow: hidden; background:
+  radial-gradient(70% 55% at 50% -5%, var(--atmo-haze), transparent 70%),
+  radial-gradient(45% 40% at 88% 18%, var(--atmo-lav-2), transparent 70%),
+  radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px,
+  var(--ground) }
+.hero .wrap { position: relative; z-index: 1; padding-block: 28px 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
 .hero .wrap > * { max-width: 100% }
-.hero h1 { margin: 0; font: 400 clamp(44px, 8vw, 84px)/1 var(--font-serif); letter-spacing: -.01em; color: #fff; text-wrap: balance }
+.island { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 10px; background: var(--surface); box-shadow: 0 0 0 1px var(--hairline), 0 2px 6px rgba(0,0,0,.06); margin-bottom: 18px }
+.island span { width: 32px; height: 32px; border-radius: 7px; display: grid; place-items: center; color: var(--ink) }
+.island span svg { width: 17px; height: 17px }
+.island .on { background: var(--sketch-soft); color: var(--sketch) }
+.island .div { width: 1px; height: 20px; background: var(--hairline); margin: 0 4px; border-radius: 0 }
+.island .lib { width: auto; padding: 0 10px 0 8px; gap: 6px; display: inline-flex; font: 500 12px/1 var(--font-sans) }
+.hero h1 { margin: 0; font: 400 clamp(44px, 8vw, 84px)/1 var(--font-serif); letter-spacing: -.01em; color: var(--ink); text-wrap: balance }
 .hero h1 i { font-style: italic }
-.hero p { margin: 0; color: rgba(255,255,255,.88); font: 400 17px/24px var(--font-sans) }
-:root[data-theme="dark"] .hero h1 { color: var(--ink) }
-.search { width: min(680px, 100%); display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 9999px; padding: 8px 8px 8px 22px; box-shadow: var(--shadow-float); margin-top: 10px }
+.hero p { margin: 0; color: var(--ink-muted); font: 400 17px/24px var(--font-sans) }
+.sbox { position: relative; width: min(680px, 100%); margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) }
+.search { width: 100%; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 9999px; padding: 8px 8px 8px 22px; box-shadow: var(--shadow-float) }
 .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 400 17px/24px var(--font-sans) }
 .search input::placeholder { color: var(--ink-muted) }
+.search input::-webkit-search-cancel-button { display: none }
 .search kbd { font: 400 12px/1 var(--font-mono); color: var(--ink-muted); border: 1px solid var(--hairline); border-radius: 6px; padding: 4px 6px }
 .go { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--pill); color: var(--on-ink); display: grid; place-items: center; cursor: pointer; flex: none }
 .go svg { width: 18px; height: 18px }
+.hand { position: absolute; left: calc(100% + 6px); top: -46px; width: 190px; text-align: left; font: 400 20px/1.15 var(--font-hand); color: var(--sketch); transform: rotate(-3deg); pointer-events: none }
+.hand svg { display: block; width: 74px; height: 50px; margin: 4px 0 0 -14px; color: var(--sketch) }
+@media (max-width: 1120px) { .hand { position: static; width: auto; transform: rotate(-2deg); text-align: center; margin: 0 auto 8px; font-size: 18px } .hand svg { display: none } .hand { order: -1 } }
 .tries { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px }
-.try { height: 32px; padding: 0 14px; border-radius: 9999px; border: 1px solid rgba(255,255,255,.45); background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); font: 400 13px/1 var(--font-mono); cursor: pointer }
-.stats { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
-.stats b { font: 500 13px/1 var(--font-mono) }
-:root[data-theme="dark"] .hero p { color: var(--ink-muted) }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero h1 { color: var(--ink) } :root:not([data-theme="light"]) .hero p { color: var(--ink-muted) } }
+.try { height: 32px; padding: 0 14px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); font: 400 13px/1 var(--font-mono); cursor: pointer; transition: border-color .15s }
+.try:hover { border-color: var(--slate) }
+.stats { display: flex; gap: 8px 22px; justify-content: center; flex-wrap: wrap; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
+.stats b { font: 500 13px/1 var(--font-mono); color: var(--ink) }
+.win { width: min(1000px, 100%); margin-top: 22px; border-radius: 16px 16px 0 0; border: 1px solid var(--hairline); border-bottom: 0; background: var(--surface); box-shadow: var(--shadow-float); overflow: hidden }
+.win-bar { height: 36px; display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; padding: 0 12px; border-bottom: 1px solid var(--hairline) }
+.win-bar i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--hairline); margin-right: 6px }
+.win-bar code { justify-self: center; font: 400 12px/1 var(--font-mono); color: var(--ink-muted); background: var(--surface-sunk); padding: 6px 14px; border-radius: 9999px }
+body.filtering .win { display: none }
+body.filtering .hero .wrap { padding-bottom: 28px }
+.win video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #fff; object-fit: cover }
 
 /* rail */
 .rail { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
 .rail .wrap { display: flex; gap: 28px; overflow-x: auto; scrollbar-width: none; padding-top: 12px }
 .rail .wrap::-webkit-scrollbar { display: none }
+.rail .wrap.fr { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent) }
+.rail .wrap.fl { -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px); mask-image: linear-gradient(90deg, transparent, #000 48px) }
+.rail .wrap.fl.fr { -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent) }
+#main { scroll-margin-top: 140px }
 .cat { flex: none; display: grid; justify-items: center; gap: 8px; padding: 0 2px 12px; border: 0; border-bottom: 2px solid transparent; background: none; cursor: pointer; color: var(--ink-muted); font: 500 12px/16px var(--font-sans); transition: color .15s, border-color .15s }
 .cat svg { width: 24px; height: 24px }
 .cat:hover { color: var(--ink); border-bottom-color: var(--hairline) }
@@ -99,7 +138,7 @@ main .wrap > *, .row { min-width: 0 }
 .arr:disabled { opacity: .35; cursor: default; box-shadow: none }
 .arr svg { width: 14px; height: 14px }
 @media (max-width: 640px) { .nav-arrows { display: none } }
-.row h2 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 14px; font: 400 30px/1.1 var(--font-serif) }
+.row h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 0 0 14px; font: 400 30px/1.1 var(--font-serif) }
 .row h2 .n { font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
 .row h2 .more { margin-left: auto; font: 500 13px/1 var(--font-sans); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; color: var(--ink) }
 .track { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: thin }
@@ -159,41 +198,66 @@ dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); opacity: 0; background: var(--pill); color: var(--on-ink); padding: 10px 18px; border-radius: 9999px; font: 500 14px/1 var(--font-sans); transition: .2s ease-out; pointer-events: none; z-index: 50 }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0) }
 
+.kit { width: min(560px, calc(100vw - 32px)) }
+.kit-body { padding: 22px; display: grid; gap: 18px }
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 9999px; background: var(--surface-sunk); overflow-x: auto; scrollbar-width: none }
+.seg button { flex: 1; height: 34px; padding: 0 14px; border: 0; border-radius: 9999px; background: transparent; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); white-space: nowrap }
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12) }
+.ksteps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; counter-reset: k }
+.ksteps li { counter-increment: k; display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; font: 400 14px/20px var(--font-sans); color: var(--ink-muted) }
+.ksteps li::before { content: counter(k); width: 28px; height: 28px; border-radius: 50%; background: var(--surface-sunk); color: var(--ink); display: grid; place-items: center; font: 500 12px/1 var(--font-mono) }
+.ksteps b { display: block; color: var(--ink); font-weight: 500 }
+.ksteps kbd, .ksteps code { font: 400 12px/1 var(--font-mono); border: 1px solid var(--hairline); border-radius: 6px; padding: 2px 5px; color: var(--ink); background: var(--surface) }
+.kit-cta { display: flex; flex-wrap: wrap; gap: 10px }
+.kit-cta .pill { flex: 1 1 180px; justify-content: center }
+.kit-foot { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+
 @media (max-width: 640px) {
-  .nav .gh-label { display: none }
+  .nav .gh-label, .star .lbl { display: none }
   .mark { font-size: 22px }
   .nav .pill { height: 36px; padding: 0 12px; font-size: 13px }
   .nav .wrap { gap: 8px; height: 58px }
   .rail { top: calc(58px + env(safe-area-inset-top, 0px)) }
   .search { padding-left: 16px }
   .search kbd { display: none }
-  .hero .wrap { padding-block: 48px 40px }
+  .hero .wrap { padding-block: 20px 0 }
+  .island .xs { display: none }
+  .win-bar { grid-template-columns: 44px 1fr 44px; padding: 0 10px } .win-bar i { width: 8px; height: 8px; margin-right: 4px }
   .rail .wrap { gap: 20px }
   main .wrap { gap: 36px }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px }
+  .track { grid-auto-columns: 62% ; gap: 12px }
+  .ct { font-size: 14px; line-height: 18px }
 }
+@media (max-width: 420px) { .mark .long { display: none } .mark .short { display: inline } .nav .pill.primary { padding: 0 12px } .star { padding: 0 11px } .ibtn { width: 36px; height: 36px } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important } }
 </style>
 </head><body>
 
 <header class="nav gut"><div class="wrap">
-  <a class="mark" href="#top" aria-label="System design kit, home">System design <i>kit</i></a>
+  <a class="mark" href="#top" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>
   <span class="sp"></span>
-  <a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener">
-    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
-    <span class="gh-label">GitHub</span></a>
-  <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest" target="_blank" rel="noopener">Get the kit</a>
+  <button class="ibtn" id="theme" type="button" aria-label="Switch theme"><svg class="i-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 12.5A6.5 6.5 0 0 1 7.5 4a6.5 6.5 0 1 0 8.5 8.5z"/></svg><svg class="i-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.6M10 15.9v1.6M2.5 10h1.6M15.9 10h1.6M4.7 4.7l1.1 1.1M14.2 14.2l1.1 1.1M4.7 15.3l1.1-1.1M14.2 5.8l1.1-1.1"/></svg></button>
+  <a class="pill ghost star" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener" aria-label="Star on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg><span class="lbl">Star</span><span class="cnt" id="stars" hidden></span></a>
+  <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest" data-kit>Get the kit</a>
 </div></header>
 
 <section class="hero gut" id="top"><div class="wrap">
+  <div class="island" aria-hidden="true"><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.5V4.8a1.3 1.3 0 0 1 2.6 0V9M9.6 8.5V3.8a1.3 1.3 0 0 1 2.6 0V9M12.2 9V5a1.3 1.3 0 0 1 2.6 0v6c0 3.5-2.3 6-5.3 6-2.2 0-3.4-1.2-4.6-3.2L3.6 10.9a1.3 1.3 0 0 1 2.1-1.4L7 11"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5l10 6-4.6 1.2L8.4 15z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="13" height="11" rx="2"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l7 7-7 7-7-7z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4M10 4h6v6"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16c1-3 2.5-4 4-3s2 2.5 4 .5 2-5 4-8"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h10M10 5v11"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="13" height="12" rx="2"/><circle cx="7.5" cy="8" r="1.3"/><path d="m4 15 4.5-4.5 3 3 2-2 3 3"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16h8M4.5 12.5l6-7.5 5 4-6 7.5H6.5z"/></svg></span><span class="div"></span><span class="lib on"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h4.5v11H4zM8.5 4.5H13v11H8.5zM13.5 5l3.6-1 2.6 10.5-3.6 1z"/></svg>Library</span></div>
   <h1>Draw systems by <i>typing</i>.</h1>
   <p>292 Excalidraw blocks for system design and AI agents.</p>
-  <form class="search" role="search" id="sf">
-    <input id="q" type="search" placeholder="Search 292 blocks" autocomplete="off" aria-label="Search the kit">
-    <kbd aria-hidden="true">/</kbd>
-    <button class="go" type="submit" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
-  </form>
+  <div class="sbox">
+    <div class="hand" aria-hidden="true">type it, hit Enter<svg viewBox="0 0 74 50" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M60 4C52 22 34 36 8 42"/><path d="M17 33 7.5 42.3l12.5 3"/></svg></div>
+    <form class="search" role="search" id="sf">
+      <input id="q" type="search" placeholder="Search 292 blocks" autocomplete="off" aria-label="Search the kit">
+      <kbd aria-hidden="true">/</kbd>
+      <button class="go" type="submit" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    </form>
+  </div>
   <div class="tries" id="tries"></div>
   <div class="stats"><span><b>292</b> blocks</span><span><b>21</b> full designs</span><span><b>12</b> agent patterns</span><span>Free · MIT</span></div>
+  <div class="win"><div class="win-bar"><span><i></i><i></i><i></i></span><code>excalidraw.com</code><span></span></div>
+    <video id="demo" src="demo.mp4" poster="demo.webp" muted loop playsinline preload="metadata" aria-label="Demo: typing kafka in Excalidraw drops the Kafka block on the canvas"></video></div>
 </div></section>
 
 <nav class="rail gut" aria-label="Categories"><div class="wrap" id="rail"></div></nav>
@@ -203,7 +267,7 @@ dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
 <section class="how gut" id="install"><div class="wrap">
   <h2>Three steps</h2>
   <div class="steps">
-    <div class="step s1"><span class="k">01</span><div><b>Import once</b><span>Library › ⋯ › Open</span></div></div>
+    <div class="step s1"><span class="k">01</span><div><b>Import once</b><span>Library › ⋯ › Open the file</span></div></div>
     <div class="step s2"><span class="k">02</span><div><b>Press ⌘ /</b><span>Ctrl + / on Windows</span></div></div>
     <div class="step s3"><span class="k">03</span><div><b>Type, Enter</b><span>It lands on the board</span></div></div>
   </div>
@@ -212,12 +276,12 @@ dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
 <section class="band gut"><div class="wrap">
   <h2>Bring it to your next <i>interview</i>.</h2>
   <div class="row2">
-    <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest" target="_blank" rel="noopener">Get the kit</a>
+    <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest" data-kit>Get the kit</a>
     <a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a>
   </div>
 </div></section>
 
-<footer class="gut"><div class="wrap"><span>v1.3.0 · MIT · by Dinesh Sunny</span><span>sd:&lt;section&gt;/ Item - tags</span></div></footer>
+<footer class="gut"><div class="wrap"><span>v1.4.0 · MIT · by Dinesh Sunny</span><span>sd:&lt;section&gt;/ Item - tags</span></div></footer>
 
 <dialog id="sheet" aria-labelledby="st">
   <div class="sh-img"><img id="si" alt=""></div>
@@ -225,6 +289,22 @@ dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
     <div class="sh-top"><h3 id="st"></h3><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
     <div class="name"><code id="sn"></code><button class="pill primary" id="sc" type="button" style="height:34px">Copy</button></div>
     <div class="hint">In Excalidraw press <kbd>⌘</kbd> <kbd>/</kbd>, paste, <kbd>Enter</kbd>.</div>
+  </div>
+</dialog>
+<dialog id="kit" class="kit" aria-labelledby="kt">
+  <div class="kit-body">
+    <div class="sh-top"><h3 id="kt">Get the kit</h3><button class="x" type="button" data-close aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
+    <div class="seg" role="tablist" aria-label="Where you draw">
+      <button role="tab" type="button" aria-selected="true" data-t="web">excalidraw.com</button>
+      <button role="tab" type="button" aria-selected="false" data-t="obs">Obsidian</button>
+      <button role="tab" type="button" aria-selected="false" data-t="plus">Excalidraw+</button>
+    </div>
+    <ol class="ksteps" id="ks"></ol>
+    <div class="kit-cta">
+      <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest/download/system-design-ai-kit.excalidrawlib" download><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v10M5.5 9 10 13.5 14.5 9M4 16.5h12"/></svg>Download · 2.7 MB</a>
+      <a class="pill ghost" id="kopen" href="https://excalidraw.com" target="_blank" rel="noopener">Open Excalidraw</a>
+    </div>
+    <div class="kit-foot">Free and MIT. <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/how-to-use.md" target="_blank" rel="noopener">Full guide</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener">Star it on GitHub</a></div>
   </div>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -259,7 +339,7 @@ const ICON = {
   guide: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.2"/>',
 };
 const LABEL = { all: "All", tpl: "Designs", agentic: "Agent patterns", agent: "Agents", ai: "AI models", rag: "RAG", llmops: "LLMOps", client: "Clients", edge: "Network", svc: "Services", data: "Data", cache: "Cache", msg: "Messaging", ops: "Ops", ext: "External", zone: "Zones", link: "Arrows", ui: "UI", frame: "Frames", screen: "Screens", pattern: "Patterns", note: "Notes", guide: "Guide" };
-const ORDER = ["all", "tpl", "agentic", "agent", "ai", "rag", "llmops", "client", "screen", "ui", "frame", "pattern", "edge", "svc", "data", "cache", "msg", "ops", "ext", "note", "zone", "link"];
+const ORDER = ["all", "tpl", "agentic", "agent", "ai", "rag", "llmops", "client", "screen", "ui", "frame", "pattern", "edge", "svc", "data", "cache", "msg", "ops", "ext", "note", "zone", "link", "guide"];
 const TRIES = ["kafka", "rag", "tpl/ chat", "ai client", "sd:agent/"];
 
 const items = ITEMS.filter(i => !/ SECTION - /.test(i.name)).map(i => {
@@ -282,6 +362,7 @@ function draw(scroll) {
   [...rail.children].forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === cat)));
   const term = q.value.trim().toLowerCase();
   rows.textContent = "";
+  document.body.classList.toggle("filtering", !!(term || cat !== "all"));
   if (term || cat !== "all") {
     const list = items.filter(i => (cat === "all" || i.cat === cat) && (!term || i.hay.includes(term)));
     const sec = document.createElement("section"); sec.className = "row";
@@ -309,7 +390,7 @@ rows.addEventListener("click", e => {
 });
 let typing; q.addEventListener("input", () => { clearTimeout(typing); typing = setTimeout(() => { if (q.value.trim()) cat = "all"; draw(false); }, 120); });
 $("#sf").addEventListener("submit", e => { e.preventDefault(); cat = "all"; draw(true); });
-document.addEventListener("keydown", e => { if (e.key === "/" && document.activeElement !== q && !$("#sheet").open) { e.preventDefault(); q.focus(); } });
+document.addEventListener("keydown", e => { if (e.key === "/" && document.activeElement !== q && !document.querySelector("dialog[open]")) { e.preventDefault(); q.focus(); } });
 
 const sheet = $("#sheet"), toast = $("#toast");
 function open(i) { $("#si").src = i.full || i.img; $("#st").textContent = i.title; $("#sn").textContent = i.name.split(" - ")[0]; sheet.showModal(); }
@@ -321,6 +402,30 @@ $("#sc").onclick = async () => {
   try { await navigator.clipboard.writeText(t); say("Copied"); }
   catch (err) { const r = document.createRange(); r.selectNodeContents($("#sn")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); say("Selected. Press ⌘ C"); }
 };
+/* theme */
+$("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
+try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => { let s = null; try { s = localStorage.getItem("sdk-theme"); } catch (er) {} if (!s) document.documentElement.dataset.theme = e.matches ? "dark" : "light"; }); } catch (e) {}
+/* stars */
+fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r => r.ok ? r.json() : null).then(j => { if (j && j.stargazers_count) { const s = $("#stars"); s.textContent = j.stargazers_count >= 1000 ? (j.stargazers_count / 1000).toFixed(1) + "k" : j.stargazers_count; s.hidden = false; } }).catch(() => {});
+/* rail edge fades */
+const railFade = () => { rail.classList.toggle("fl", rail.scrollLeft > 4); rail.classList.toggle("fr", rail.scrollLeft + rail.clientWidth < rail.scrollWidth - 4); };
+rail.addEventListener("scroll", railFade, { passive: true }); addEventListener("resize", railFade); railFade();
+/* demo video: play only when visible, respect reduced motion */
+const v = $("#demo");
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) { v.controls = true; }
+else if ("IntersectionObserver" in window) { new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? v.play().catch(() => {}) : v.pause()), { threshold: .25 }).observe(v); }
+/* get the kit */
+const KS = {
+  web: ["<b>Download the file</b>One <code>.excalidrawlib</code>, every block.", "<b>Open it in Excalidraw</b>Library › <kbd>⋯</kbd> › Open, or drop the file on the canvas.", "<b>Press <kbd>⌘</kbd> <kbd>/</kbd></b>Ctrl + / on Windows. Type <code>kafka</code>, hit Enter."],
+  obs: ["<b>Download the file</b>Needs the Excalidraw plugin.", "<b>Open any drawing</b>Library › <kbd>⋯</kbd> › Open, pick the file.", "<b>Search the library</b>Type <code>sd:</code> to see every section."],
+  plus: ["<b>Download the file</b>Same file as excalidraw.com.", "<b>Open it in Excalidraw+</b>Library › <kbd>⋯</kbd> › Open, or drop it on the canvas.", "<b>Press <kbd>⌘</kbd> <kbd>/</kbd></b>Type a block name, hit Enter."],
+};
+const OPEN = { web: ["https://excalidraw.com", "Open Excalidraw"], obs: ["https://obsidian.md/plugins?id=obsidian-excalidraw-plugin", "Get the plugin"], plus: ["https://app.excalidraw.com", "Open Excalidraw+"] };
+const kit = $("#kit");
+function tab(t) { document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.t === t))); $("#ks").innerHTML = KS[t].map(x => `<li><div>${x}</div></li>`).join(""); $("#kopen").href = OPEN[t][0]; $("#kopen").textContent = OPEN[t][1]; }
+$(".seg").addEventListener("click", e => { const b = e.target.closest("button"); if (b) tab(b.dataset.t); });
+document.addEventListener("click", e => { const a = e.target.closest("[data-kit]"); if (!a || !kit.showModal) return; e.preventDefault(); tab("web"); kit.showModal(); });
+kit.addEventListener("click", e => { if (e.target === kit || e.target.closest("[data-close]")) kit.close(); });
 draw(false);
 </script>
 

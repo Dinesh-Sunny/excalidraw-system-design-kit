@@ -8,4 +8,4 @@ await p.setContent(`<style>body{margin:0;background:#f8f9fa;font-family:-apple-s
 .tag{display:inline-block;background:#e7f5ff;color:#1971c2;border-radius:999px;padding:3px 12px;margin-right:6px;font-size:15px}</style>
 <div class=h><h1>System Design &amp; AI Architecture Kit <span style="font-size:22px;color:#868e96">for Excalidraw</span></h1><p>292 searchable items · building blocks · agents &amp; RAG · UI wireframes · 21 full interview designs &nbsp; <span class=tag>Cmd + / to insert</span><span class=tag>search "sd:"</span></p></div>
 <div class=g>${tiles.map(t=>`<div class=t>${S(t)}</div>`).join('')}</div>`);
-await p.waitForTimeout(500);await p.screenshot({path:require('path').join(__dirname,'..','previews','hero.png')});await b.close()})();
+await p.waitForTimeout(500);await p.screenshot({path:'/home/claude/kit-repo/previews/hero.png'});await b.close()})();

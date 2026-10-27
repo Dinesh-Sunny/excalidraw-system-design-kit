@@ -51,8 +51,8 @@ export const AI_TEMPLATES = [
     notes: "Key decisions\n- Ground answers in help centre\n- Tools need limits (refund cap)\n- Escalate on low confidence or anger\n- Pass full context to the human\n- Track resolution rate + CSAT" } },
   { name: "Realtime Voice Agent - phone call speech ai", spec: {
     title: "Realtime Voice Agent", sub: "Voice-to-voice under ~800 ms · streaming every stage",
-    nodes: [["c", "Caller\n(phone / web)", "mobile", "client", 0, 1], ["rtc", "WebRTC / SIP\nGateway", "ws", "edge", 1.4, 1], ["stt", "Speech-to-Text\n(streaming)", "mic", "ai", 2.8, 0], ["ag", "Voice Agent\n(LLM)", "robot", "agent", 4.2, 1],
-      ["tts", "Text-to-Speech\n(streaming)", "speaker", "ai", 2.8, 2], ["vad", "Turn Detection\n(VAD)", "gauge", "ai", 1.4, -0.4], ["t", "Tools\n(booking, CRM)", "wrench", "agent", 5.6, 1]],
+    nodes: [["c", "Caller\n(phone / web)", "mobile", "client", 0, 1], ["rtc", "WebRTC / SIP\nGateway", "ws", "edge", 1.4, 1], ["stt", "Speech-to-Text\n(streaming)", "stt", "ai", 2.8, 0], ["ag", "Voice Agent\n(LLM)", "robot", "agent", 4.2, 1],
+      ["tts", "Text-to-Speech\n(streaming)", "tts", "ai", 2.8, 2], ["vad", "Turn Detection\n(VAD)", "gauge", "ai", 1.4, -0.4], ["t", "Tools\n(booking, CRM)", "wrench", "agent", 5.6, 1]],
     edges: [["c", "rtc", "audio", B], ["rtc", "stt", "audio frames"], ["stt", "ag", "partial text"], ["ag", "tts", "text stream"], ["tts", "rtc", "audio"], ["rtc", "vad", "barge-in", D], ["ag", "t"]],
     notes: "Key decisions\n- Stream STT > LLM > TTS, no waiting\n- Detect turns and interruptions\n- Short replies, fillers while tools run\n- Speech-to-speech model = fewer hops\n- Log audio + transcripts for evals" } },
   { name: "Enterprise AI Gateway - llm platform governance", spec: {
