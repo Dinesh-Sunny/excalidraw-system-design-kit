@@ -1,5 +1,5 @@
 let tierId = "";
-try { tierId = new URLSearchParams(location.search).get("tier") || ""; const c = SP.companies.find(x => x.id === tierId) || SP.people.find(x => x.id === tierId); if (c) $("#tl").textContent = `You're now a ${c.name} sponsor. Here's what happens next. You don't need to do anything.`; } catch (e) {}
+try { tierId = new URLSearchParams(location.search).get("tier") || ""; const c = SP.companies.find(x => x.id === tierId) || SP.people.find(x => x.id === tierId); if (c) $("#tl").textContent = `You're now a ${c.name} sponsor. Here's what happens next. It's all automatic.`; } catch (e) {}
 /* conversion event for the sponsor funnel (GoatCounter, no cookies) */
 if (SP.goatcounter) {
   let ab = "a"; try { ab = localStorage.getItem("sdk-ab-hero") || "a"; } catch (e) {}

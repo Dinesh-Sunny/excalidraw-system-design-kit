@@ -294,9 +294,9 @@ dialog::backdrop { background: rgba(15,16,18,.5); backdrop-filter: blur(4px) }
 <p class="lead" id="sl">Views and clicks for every sponsor logo on the kit's site. Updated every few hours.</p>
 <div id="sv" style="width:100%;display:grid;gap:16px;justify-items:center"></div>
 <p class="fine" id="sf"></p>
-<p class="fine">Numbers look off, or need a different report? <a data-mail="Stats" href="#">Email us</a>.</p>
+<p class="fine">Want a custom report or a closer look at your results? <a data-mail="Stats" href="#">Email us</a>, we're happy to help.</p>
 </div></main>
-<footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span class="help">Need help? <a data-mail="Sponsorship" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose" target="_blank" rel="noopener">Report a bug</a></span><span><a href="../../">Back to the kit</a></span></div></footer>
+<footer class="gut"><div class="wrap"><span>MIT · by Dinesh Sunny</span><span class="help">Happy to help: <a data-mail="Sponsorship" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose" target="_blank" rel="noopener">Share an idea</a></span><span><a href="../../">Back to the kit</a></span></div></footer>
 <script>
 const SP = {"github":"Dinesh-Sunny","kofi":"dineshsunny","people":[{"id":"coffee","name":"Coffee","price":"$5","per":"once","gets":"A big thank-you","gh_tier":674466},{"id":"backer","name":"Backer","price":"$5","per":"month","gets":"Your name in BACKERS.md","gh_tier":674468,"card":"https://buy.stripe.com/3cI7sK1F0g9yf5EfJrgjC05"},{"id":"supporter","name":"Supporter","price":"$15","per":"month","gets":"Your name in the README and early access to new packs","gh_tier":674469,"card":"https://buy.stripe.com/aFabJ097saPecXw0OxgjC04"}],"companies":[{"id":"featured","name":"Featured","price":"$600","per":"month","only":"1 slot","gets":["Logo next to the search on the homepage","Top of the README","Thanks in every release note and on LinkedIn"],"gh_tier":674473,"card":"https://buy.stripe.com/14A28qgzU3mMf5E68RgjC00"},{"id":"gold","name":"Gold","price":"$300","per":"month","gets":["Large logo on the homepage","Large logo in the README"],"gh_tier":674472,"card":"https://buy.stripe.com/4gMdR8erM6yYf5E0OxgjC01"},{"id":"silver","name":"Silver","price":"$150","per":"month","gets":["Logo in the homepage sponsor row","Logo in the README"],"gh_tier":674471,"card":"https://buy.stripe.com/4gMdR8erM2iI8HggNvgjC02"},{"id":"bronze","name":"Bronze","price":"$50","per":"month","gets":["Small logo in the README and BACKERS.md"],"gh_tier":674470,"card":"https://buy.stripe.com/bJe7sK83o1eE2iS9l3gjC03"}],"sponsors":[],"goatcounter":"sdkit","portal":"https://billing.stripe.com/p/login/14A28qgzU3mMf5E68RgjC00","terms":"sponsor/terms/","contact":{"user":"dineshiitb.ae18","domain":"gmail.com","discussions":"https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions","issues":"https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new/choose"}};
 const $ = s => document.querySelector(s);
@@ -317,7 +317,7 @@ Promise.all([fetch("../../sponsors.json", { cache: "no-cache" }).then(r => r.jso
   } else if (list.length) {
     $("#sv").innerHTML = `<div class="list">${list.map(x => { const m = S[x.login || x.name] || {}; return `<a href="?s=${encodeURIComponent(x.login || x.name)}"><span>${esc(x.name)} <small>${esc(x.tier)}</small></span><small>${n(m.views30)} views · ${n(m.clicks30)} clicks</small></a>`; }).join("")}</div>`;
   } else {
-    $("#sv").innerHTML = `<p class="lead">No sponsors yet. <a href="../">Be the first</a> and this page fills with your numbers.</p>`;
+    $("#sv").innerHTML = `<p class="lead">This page lights up with your results as soon as you sponsor. <a href="../">Be the first</a>.</p>`;
   }
 });
 

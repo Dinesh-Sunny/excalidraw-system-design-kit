@@ -13,6 +13,6 @@ Promise.all([fetch("../../sponsors.json", { cache: "no-cache" }).then(r => r.jso
   } else if (list.length) {
     $("#sv").innerHTML = `<div class="list">${list.map(x => { const m = S[x.login || x.name] || {}; return `<a href="?s=${encodeURIComponent(x.login || x.name)}"><span>${esc(x.name)} <small>${esc(x.tier)}</small></span><small>${n(m.views30)} views · ${n(m.clicks30)} clicks</small></a>`; }).join("")}</div>`;
   } else {
-    $("#sv").innerHTML = `<p class="lead">No sponsors yet. <a href="../">Be the first</a> and this page fills with your numbers.</p>`;
+    $("#sv").innerHTML = `<p class="lead">This page lights up with your results as soon as you sponsor. <a href="../">Be the first</a>.</p>`;
   }
 });
