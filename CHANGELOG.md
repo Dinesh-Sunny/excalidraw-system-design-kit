@@ -5,6 +5,13 @@ All notable changes to the kit. Versions follow [Semantic Versioning](https://se
 ## [Unreleased]
 - Sponsors: a sponsor page (tiers for people and companies, founding offer, FAQ), a Sponsor button on the site and in the repo, a thank-you step after download, a "Backed by" row, README sponsors section and BACKERS.md. All driven by `generator/sponsor.json`.
 
+## [1.5.0] - 2026-10-27
+- Canvas fit: groups and flows now fit next to the rest of your design. Clients Group and AI Clients Group are a 2 x 2 grid. Long one-row flows (Transactional Outbox, Write-Through, Prompt Chaining, Evaluator-Optimizer, Orchestrator-Workers, Parallelization, Human-in-the-Loop, 3-Tier, First Request) wrap into compact shapes.
+- Notes sit under each diagram instead of beside it, so items grow down, not sideways.
+- Every block is 160 x 100 (120 with a two-line title) and snaps to the 20 px grid; one block height per diagram.
+- Subtitles use 20 px, in line with the Excalidraw type scale. New "Canvas fit rules" in CONTRIBUTING.md.
+- Item names are unchanged, so search and existing boards keep working.
+
 ## [1.4.0] - 2026-10-27
 - Icons: every block now has its own icon (about 55 new ones), so no two blocks look alike. Databases show PG / My, caches show Redis vs Memcached, and AI, RAG, agent and LLMOps blocks each get a clear symbol.
 - Section tiles widen to fit long titles.

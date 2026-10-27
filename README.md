@@ -312,6 +312,7 @@ Details and how to add items: [generator/README.md](generator/README.md).
 - [x] Agents, RAG, LLMOps and agentic patterns (v1.2)
 - [x] `sd:` namespace and public release (v1.3)
 - [x] A distinct icon for every block, new site with install guide (v1.4)
+- [x] Canvas fit: compact groups and flows, notes below, 20 px grid (v1.5)
 - [ ] Listed on libraries.excalidraw.com ([#2967](https://github.com/excalidraw/excalidraw-libraries/pull/2967))
 - [ ] Cloud-provider variants (AWS / GCP / Azure names on the same cards)
 - [ ] More AI designs: eval pipeline, fine-tuning platform, agent marketplace

@@ -7,7 +7,7 @@ import { AGENTIC, AI_TEMPLATES } from "./agentic.js";
 import { UI, FRAMES, SCREENS } from "./ui.js";
 
 const items = []; // {name, section, skel}
-export const KIT = "sd", KIT_VERSION = "1.4.0";
+export const KIT = "sd", KIT_VERSION = "1.5.0";
 const add = (cat, label, skel, section) => items.push({ name: `${KIT}:${cat}/ ${label}`, section: section || cat, skel });
 const one = (s) => s.replace(/\n/g, " ");
 
@@ -52,7 +52,7 @@ add("note", "Bottleneck - spof risk callout", card(300, 150, "! Bottleneck / SPO
 add("note", "Deep Dive - focus area", card(300, 170, "Deep dive: ...\n\n- How it works\n- Failure modes\n- Scaling it 10x", { stroke: "#6741d9", fill: "#f3f0ff" }));
 add("note", "Latency Numbers - cheat sheet every engineer", card(380, 290, "Latency numbers (approx.)\n\nL1 cache ref ................... 0.5 ns\nMain memory ref .............. 100 ns\nSSD random read ............. ~100 us\nRead 1 MB from memory ...... ~250 us\nSame-DC round trip .......... 0.5 ms\nRead 1 MB from SSD .......... ~1 ms\nDisk seek ...................... 10 ms\nCross-continent round trip .. ~150 ms", { fs: 14, font: 3, stroke: "#495057", fill: "#f8f9fa" }));
 add("note", "Capacity Cheat Sheet - powers of two availability nines", card(380, 280, "Quick maths\n\n2^10 ~ 1 thousand (KB)\n2^20 ~ 1 million   (MB)\n2^30 ~ 1 billion   (GB)\n2^40 ~ 1 trillion  (TB)\n1 day = 86,400 s ~ 10^5 s\n1M req/day ~ 12 req/s\n99.9%  = 8.8 h down / year\n99.99% = 53 min down / year", { fs: 14, font: 3, stroke: "#495057", fill: "#f8f9fa" }));
-add("note", "Title - diagram heading", [txt(0, 0, "System Design: <name>", { fontSize: 36 }), txt(0, 52, "scale · latency · key constraint", { fontSize: 18, strokeColor: MUTED })]);
+add("note", "Title - diagram heading", [txt(0, 0, "System Design: <name>", { fontSize: 36 }), txt(0, 52, "scale · latency · key constraint", { fontSize: 20, strokeColor: MUTED })]);
 add("note", "Sticky Note - yellow", card(200, 140, "Note", { stroke: "#f08c00", fill: "#ffec99", fs: 18 }));
 add("note", "Sticky Note - blue question", card(200, 140, "Question for interviewer", { stroke: "#1971c2", fill: "#a5d8ff", fs: 18 }));
 add("note", "Sticky Note - pink assumption", card(200, 140, "Assumption", { stroke: "#c2255c", fill: "#fcc2d7", fs: 18 }));
@@ -60,22 +60,23 @@ for (let i = 1; i <= 9; i++) add("note", `Step ${i} - numbered flow marker`, [el
 
 // ---- client starters: the first thing you drop in every design ----
 function clientGroup(label, cards, theme, out) {
-  const W = 128, G = 16, els = [];
-  const w = cards.length * W + (cards.length + 1) * G, h = 96 + 58;
-  els.push(rect(0, 0, w, h, { strokeColor: T[theme].stroke, backgroundColor: "transparent", strokeWidth: 2, strokeStyle: "dashed" }), txt(14, 10, label, { fontSize: 20, strokeColor: T[theme].stroke }));
-  cards.forEach(([t, i, th], k) => els.push(...comp(G + k * (W + G), 44, { title: t, icon: i, theme: th || theme, w: W }).els));
-  els.push(arr(w + 8, h / 2, w + 200, h / 2, { strokeColor: "#495057", strokeWidth: 2, label: { text: out, fontSize: 14 } }));
+  // 2 x 2 grid: compact footprint that sits next to a gateway without stretching the canvas
+  const W = 160, H = 100, G = 20, COLS = 2, els = [];
+  const rows = Math.ceil(cards.length / COLS), w = COLS * W + (COLS + 1) * G, h = 60 + rows * H + (rows - 1) * G + G;
+  els.push(rect(0, 0, w, h, { strokeColor: T[theme].stroke, backgroundColor: "transparent", strokeWidth: 2, strokeStyle: "dashed" }),
+    txt(20, 14, label, { fontSize: 20, strokeColor: T[theme].stroke }), txt(w - 20 - out.length * 7.6, 18, out, { fontSize: 14, strokeColor: MUTED }));
+  cards.forEach(([t, i, th], k) => els.push(...comp(G + (k % COLS) * (W + G), 60 + Math.floor(k / COLS) * (H + G), { title: t, icon: i, theme: th || theme, w: W, h: H }).els));
   return els;
 }
 function clientStarters() {
   add("client", "Clients Group - all devices mobile tablet laptop web client clients starter", clientGroup("Clients", [["Mobile", "mobile"], ["Tablet", "tablet"], ["Laptop", "laptop"], ["Web", "browser"]], "client", "HTTPS"));
   add("client", "AI Clients Group - chat app agent mcp voice ai client clients starter", clientGroup("AI Clients", [["AI Chat App", "aichat"], ["AI Agent", "robot"], ["MCP Client", "plug"], ["Voice AI", "waveform"]], "ai", "API key / OAuth"));
   add("client", "First Request - classic dns cdn lb gateway client clients starter", diagram({ nodes: [["c", "Clients\n(web, mobile)", "users", "client", 0, 1], ["dns", "DNS", "dns", "edge", 1.4, 0], ["cdn", "CDN\n(static files)", "globe", "edge", 1.4, 2],
-    ["lb", "Load Balancer", "lb", "edge", 2.8, 1], ["gw", "API Gateway", "gateway", "edge", 4.1, 1], ["s", "Services", "service", "svc", 5.4, 1]],
+    ["lb", "Load Balancer", "lb", "edge", 1.4, 1], ["gw", "API Gateway", "gateway", "edge", 2.8, 1], ["s", "Services", "service", "svc", 2.8, 2]],
     edges: [["c", "dns", "1. resolve"], ["c", "cdn", "2. assets"], ["c", "lb", "3. HTTPS API"], ["lb", "gw", "4."], ["gw", "s", "5. route"]] }));
-  add("client", "First Request - AI llm gateway streaming ai client clients starter", diagram({ nodes: [["a", "AI Clients\n(app, agent, MCP)", "robot", "ai", 0, 1, 160], ["gw", "API Gateway\n(auth, token limits)", "gateway", "edge", 1.4, 1, 160],
-    ["s", "AI Service\n(orchestrator)", "service", "svc", 2.8, 1, 160], ["llm", "LLM", "sparkle", "ai", 4.2, 0.2], ["t", "Tools / MCP", "wrench", "ai", 4.2, 1.8]],
-    edges: [["a", "gw", "1. request"], ["gw", "s", "2."], ["s", "llm", "3. prompt"], ["s", "t", "4. tool calls"], ["s", "a", "5. stream tokens (SSE)", { dash: true, via: [[2.8 + 80 / 240, 2.6], [80 / 240, 2.6]] }]] }));
+  add("client", "First Request - AI llm gateway streaming ai client clients starter", diagram({ nodes: [["a", "AI Clients\n(app, agent, MCP)", "robot", "ai", 0, 0, 160], ["gw", "API Gateway\n(auth, token limits)", "gateway", "edge", 1.4, 0, 160],
+    ["s", "AI Service\n(orchestrator)", "service", "svc", 2.8, 0, 160], ["llm", "LLM", "sparkle", "ai", 2.1, 1.3], ["t", "Tools / MCP", "wrench", "ai", 3.5, 1.3]],
+    edges: [["a", "gw", "1. request"], ["gw", "s", "2."], ["s", "llm", "3. prompt"], ["s", "t", "4. tool calls"], ["s", "a", "5. stream tokens (SSE)", { dash: true, via: [[2.8 + 80 / 240, -0.55], [80 / 240, -0.55]] }]] }));
 }
 
 // ================= 02-10 BUILDING BLOCKS =================

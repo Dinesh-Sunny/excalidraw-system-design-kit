@@ -123,12 +123,12 @@ export const TEMPLATES = [
 ];
 
 export const PATTERNS = [
-  { name: "3-Tier Web App - client lb app db", spec: { nodes: [["c", "Clients", "users", "client", 0, 0.5], ["lb", "Load Balancer", "lb", "edge", 1, 0.5], ["a1", "App Server", "server", "svc", 2, 0], ["a2", "App Server", "server", "svc", 2, 1], ["db", "Database", "db", "data", 3, 0.5]],
-    edges: [["c", "lb"], ["lb", "a1"], ["lb", "a2"], ["a1", "db"], ["a2", "db"]], rowh: 130 } },
+  { name: "3-Tier Web App - client lb app db", spec: { nodes: [["c", "Clients", "users", "client", 0.6, 0], ["lb", "Load Balancer", "lb", "edge", 0.6, 1], ["a1", "App Server", "server", "svc", 0, 2], ["a2", "App Server", "server", "svc", 1.2, 2], ["db", "Database", "db", "data", 0.6, 3]],
+    edges: [["c", "lb"], ["lb", "a1"], ["lb", "a2"], ["a1", "db"], ["a2", "db"]], rowh: 160 } },
   { name: "Cache-Aside - lazy loading read path", spec: { nodes: [["a", "Service", "service", "svc", 0, 0.5], ["c", "Cache", "cache", "cache", 1.3, 0], ["db", "Database", "db", "data", 1.3, 1.1]],
     edges: [["a", "c", "1. get / 3. set"], ["a", "db", "2. on miss"]], rowh: 140 } },
-  { name: "Write-Through Cache - write path", spec: { nodes: [["a", "Service", "service", "svc", 0, 0], ["c", "Cache", "cache", "cache", 1.2, 0], ["db", "Database", "db", "data", 2.4, 0]],
-    edges: [["a", "c", "write"], ["c", "db", "sync write"]] } },
+  { name: "Write-Through Cache - write path", spec: { nodes: [["a", "Service", "service", "svc", 0, 0], ["c", "Cache", "cache", "cache", 1.3, 0], ["db", "Database", "db", "data", 1.3, 1]],
+    edges: [["a", "c", "1. write"], ["c", "db", "2. sync write"]] } },
   { name: "Read Replicas - leader follower replication", spec: { nodes: [["a", "Service", "service", "svc", 0, 1], ["p", "Primary", "db", "data", 1.4, 0], ["r1", "Replica", "db", "data", 1.4, 1], ["r2", "Replica", "db", "data", 1.4, 2]],
     edges: [["a", "p", "writes"], ["a", "r1", "reads"], ["a", "r2", "reads"], ["p", "r1", "", { dot: true }], ["p", "r2", "async replication", { dot: true, via: [[2.35, 0.3], [2.35, 2.3]] }]], rowh: 140 } },
   { name: "Sharding - hash partition shard router", spec: { nodes: [["a", "Service", "service", "svc", 0, 1], ["rt", "Shard Router\nhash(key) % N", "hash", "svc", 1.2, 1, 160], ["s1", "Shard 1", "db", "data", 2.5, 0], ["s2", "Shard 2", "db", "data", 2.5, 1], ["s3", "Shard 3", "db", "data", 2.5, 2]],
@@ -138,7 +138,7 @@ export const PATTERNS = [
   { name: "Saga Orchestration - distributed transaction compensation", spec: { nodes: [["o", "Saga\nOrchestrator", "gear", "svc", 0, 1], ["s1", "Order Service", "service", "svc", 1.5, 0], ["s2", "Payment Service", "card", "svc", 1.5, 1], ["s3", "Inventory Service", "service", "svc", 1.5, 2]],
     edges: [["o", "s1", "1. create"], ["o", "s2", "2. charge"], ["o", "s3", "3. reserve"]], rowh: 140,
     notes: "On failure run compensations\nin reverse: release stock,\nrefund, cancel order" } },
-  { name: "Transactional Outbox - reliable events cdc", spec: { nodes: [["s", "Service", "service", "svc", 0, 0], ["db", "DB: table +\noutbox (1 tx)", "db", "data", 1.3, 0], ["rel", "Relay / CDC", "stream", "msg", 2.6, 0], ["k", "Kafka", "stream", "msg", 3.9, 0]],
+  { name: "Transactional Outbox - reliable events cdc", spec: { nodes: [["s", "Service", "service", "svc", 0, 0], ["db", "DB: table +\noutbox (1 tx)", "db", "data", 1.3, 0], ["rel", "Relay / CDC", "stream", "msg", 1.3, 1], ["k", "Kafka", "stream", "msg", 0, 1]],
     edges: [["s", "db", "one transaction"], ["db", "rel", "poll / tail log"], ["rel", "k", "publish"]] } },
   { name: "Pub/Sub Fan-out - topic subscribers", spec: { nodes: [["p", "Producer", "service", "svc", 0, 1], ["t", "Topic", "pubsub", "msg", 1.2, 1], ["c1", "Consumer A", "gear", "svc", 2.4, 0], ["c2", "Consumer B", "gear", "svc", 2.4, 1], ["c3", "Consumer C", "gear", "svc", 2.4, 2]],
     edges: [["p", "t", "publish"], ["t", "c1"], ["t", "c2"], ["t", "c3"]], rowh: 130 } },
@@ -146,6 +146,6 @@ export const PATTERNS = [
     edges: [["w", "bw"], ["m", "bm"], ["bw", "s1"], ["bw", "s2"], ["bm", "s1"], ["bm", "s2"]], rowh: 140 } },
   { name: "Multi-Region Active-Active - geo dns failover", spec: { nodes: [["d", "Geo DNS", "dns", "edge", 1.1, 0], ["la", "LB (EU)", "lb", "edge", 0, 1], ["lb", "LB (US)", "lb", "edge", 2.2, 1], ["aa", "App (EU)", "service", "svc", 0, 2], ["ab", "App (US)", "service", "svc", 2.2, 2], ["da", "DB (EU)", "db", "data", 0, 3], ["db", "DB (US)", "db", "data", 2.2, 3]],
     edges: [["d", "la", "nearest"], ["d", "lb", "nearest"], ["la", "aa"], ["lb", "ab"], ["aa", "da"], ["ab", "db"], ["da", "db", "cross-region replication", { both: true, dot: true }]], rowh: 140 } },
-  { name: "Async Job Queue - background workers", spec: { nodes: [["a", "API", "service", "svc", 0, 0.5], ["q", "Queue", "queue", "msg", 1.2, 0.5], ["w1", "Worker", "gear", "svc", 2.4, 0], ["w2", "Worker", "gear", "svc", 2.4, 1], ["dlq", "Dead Letter\nQueue", "queue", "msg", 3.6, 0.5]],
-    edges: [["a", "q", "enqueue"], ["q", "w1"], ["q", "w2"], ["w1", "dlq", "fails x3", D], ["w2", "dlq", "", D]], rowh: 130 } },
+  { name: "Async Job Queue - background workers", spec: { nodes: [["a", "API", "service", "svc", 0, 0], ["q", "Queue", "queue", "msg", 1.2, 0], ["w1", "Worker", "gear", "svc", 2.4, 0], ["w2", "Worker", "gear", "svc", 2.4, 1], ["dlq", "Dead Letter\nQueue", "queue", "msg", 1.2, 1]],
+    edges: [["a", "q", "enqueue"], ["q", "w1"], ["q", "w2"], ["w2", "dlq", "fails x3", D]], rowh: 130 } },
 ];

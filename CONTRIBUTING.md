@@ -17,6 +17,16 @@ Thanks for helping make the System Design Kit better. Every block, fix and idea 
 3. Build and check (see [generator/README.md](generator/README.md)): every item must load and look right in the contact sheets.
 4. Open a pull request with a screenshot of the new or changed items.
 
+## Canvas fit rules
+
+Every item is something you drop into a bigger design, so it should sit next to other blocks without taking over the board.
+
+- **Compact footprint.** Groups and flows stay close to square (about 2.5 : 1 at most). Long flows wrap into an L, U or snake shape instead of one long row. Groups of cards use a 2 x 2 grid.
+- **Grow down, not sideways.** Notes and key decisions sit under the diagram at its width.
+- **On the grid.** Blocks are 160 x 100 (120 when the title has two lines), every diagram uses one block height, and positions snap to 20 px - the Excalidraw grid - so things line up when you move them.
+- **Excalidraw type scale.** 36 title, 20 subtitle and group labels, 16 block and note text, 14 arrow labels and captions.
+- **Nothing left hanging.** No arrows pointing at nothing. Arrows bind to both blocks, labels sit inside their shapes, and each item moves as one group.
+
 ## House rules
 
 - Keep the library file clean: no logos, links or ads inside it.

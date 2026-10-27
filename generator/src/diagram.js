@@ -4,19 +4,21 @@ import { comp, nid, txt, rect, INK, MUTED } from "./core.js";
 // spec: { title, sub, nodes:[[id,title,icon,theme,c,r]], edges:[[from,to,label,opts]], notes, colw, rowh }
 export function diagram(spec) {
   const gid = nid("tpl");
-  const COLW = spec.colw || 240, ROWH = spec.rowh || 170;
+  const COLW = spec.colw || 240, ROWH = spec.rowh || 180;
   const els = [];
   const minR = Math.min(...spec.nodes.map((n) => n[5]));
   const Y0 = (spec.title ? 120 : 0) - minR * ROWH;
-  const P = (c, r) => [c * COLW, Y0 + r * ROWH];
+  const S20 = (v) => Math.round(v / 20) * 20;
+  const P = (c, r) => [S20(c * COLW), S20(Y0 + r * ROWH)];
   if (spec.title) {
     els.push(txt(0, 0, spec.title, { fontSize: 36, groupIds: [gid] }));
-    if (spec.sub) els.push(txt(0, 52, spec.sub, { fontSize: 18, strokeColor: MUTED, groupIds: [gid] }));
+    if (spec.sub) els.push(txt(0, 52, spec.sub, { fontSize: 20, strokeColor: MUTED, groupIds: [gid] }));
   }
   const N = {};
+  const H = spec.nodes.some((n) => n[1].includes("\n")) ? 120 : 100; // one node height per diagram
   for (const [id, title, icon, theme, c, r, w] of spec.nodes) {
     const [x, y] = P(c, r);
-    const k = comp(x, y, { title, icon, theme, id: nid("n" + id + "_"), w }, [gid]);
+    const k = comp(x, y, { title, icon, theme, id: nid("n" + id + "_"), w, h: H }, [gid]);
     N[id] = { x, y, w: k.w, h: k.h, id: k.id };
     els.push(...k.els);
   }
@@ -53,9 +55,14 @@ export function diagram(spec) {
     els.push(arrow);
   }
   if (spec.notes) {
-    const nx = Math.max(...Object.values(N).map((n) => n.x + n.w)) + 70;
-    const ny = spec.title ? 120 : Math.min(...Object.values(N).map((n) => n.y));
-    els.push(rect(nx, ny, 370, 30 + spec.notes.split("\n").length * 21, {
+    // notes sit BELOW the diagram at its width, so the item grows down, not sideways
+    const V = Object.values(N), nx = S20(Math.min(...V.map((n) => n.x)));
+    const bottom = Math.max(...V.map((n) => n.y + n.h), ...els.filter((e) => e.type === "arrow").map((e) => e.y + Math.max(...e.points.map((p) => p[1]))));
+    const ny = S20(bottom + 60); // below every node AND every loop arrow
+    const nw = Math.max(400, S20(Math.max(...V.map((n) => n.x + n.w)) - nx));
+    const nl = spec.notes.split("\n"), cpl = Math.floor((nw - 24) / 8.6);
+    const lines = nl.reduce((a, l) => a + Math.max(1, Math.ceil(l.length / cpl)), 0);
+    els.push(rect(nx, ny, nw, S20(30 + lines * 21), {
       groupIds: [gid], strokeColor: "#f08c00", backgroundColor: "#fff9db", strokeWidth: 1,
       label: { text: spec.notes, fontSize: 16, textAlign: "left", verticalAlign: "top", strokeColor: INK },
     }));

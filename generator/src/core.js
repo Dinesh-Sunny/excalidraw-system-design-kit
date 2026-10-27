@@ -189,7 +189,8 @@ export const ICONS = {
 export function comp(x, y, spec, gids = []) {
   const th = T[spec.theme];
   const lines = spec.title.split("\n").length;
-  const w = spec.w || 150, h = spec.h || (lines > 1 ? 112 : 96);
+  const g20 = (v) => Math.max(20, Math.round(v / 20) * 20);
+  const w = g20(spec.w || 160), h = g20(spec.h || (lines > 1 ? 120 : 100));
   const g = nid("g"), id = spec.id || nid("c");
   const box = rect(x, y, w, h, {
     id, groupIds: [g, ...gids], strokeColor: th.stroke, backgroundColor: th.fill, strokeWidth: 2,
