@@ -19,7 +19,7 @@ def gql(after=None):
 
 def tier_of(n):
     amt = (n.get('tier') or {}).get('monthlyPriceInDollars') or 0
-    if n.get('isOneTimePayment') or (n.get('tier') or {}).get('isOneTime'): return 'coffee', amt
+    if n.get('isOneTimePayment') or (n.get('tier') or {}).get('isOneTime'): return ('backer' if amt >= 25 else 'coffee'), amt
     for t, floor in (('featured', 600), ('gold', 300), ('silver', 150), ('bronze', 50), ('supporter', 15)):
         if amt >= floor: return t, amt
     return 'backer', amt
