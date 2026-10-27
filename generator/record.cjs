@@ -1,5 +1,5 @@
 const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
-const FONTS='/home/claude/demoapp/node_modules/@excalidraw/excalidraw/dist/prod';
+const FONTS=path.resolve('node_modules/@excalidraw/excalidraw/dist/prod'); // demo uses a recent Excalidraw build (library search + command palette)
 const theme=process.argv[2]||'light';
 const srv=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]);let f=p.startsWith('/fonts/')?path.join(FONTS,p):path.join(__dirname,'www',p);
  if(!fs.existsSync(f)||fs.statSync(f).isDirectory()){r.writeHead(404);return r.end()} const t=f.endsWith('.js')?'text/javascript':f.endsWith('.css')?'text/css':f.endsWith('.html')?'text/html':f.endsWith('.json')?'application/json':'font/woff2';r.writeHead(200,{'content-type':t});fs.createReadStream(f).pipe(r)}).listen(8792);
