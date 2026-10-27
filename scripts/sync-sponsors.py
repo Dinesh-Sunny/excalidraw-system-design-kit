@@ -108,19 +108,26 @@ GC, GT = cfg.get('goatcounter'), os.environ.get('GOATCOUNTER_TOKEN')
 today = datetime.date.today()
 if GC and GT:
     def hits(start):
-        out, page = {}, None
+        out, seen_ids = {}, []
         while True:
-            u = f'https://{GC}.goatcounter.com/api/v0/stats/hits?start={start}&limit=100' + (f'&exclude_paths={page}' if page else '')
+            u = f'https://{GC}.goatcounter.com/api/v0/stats/hits?start={start}T00:00:00Z&limit=100' + ''.join(f'&exclude_paths={i}' for i in seen_ids)
             r = json.load(urllib.request.urlopen(urllib.request.Request(u, headers={'Authorization': f'Bearer {GT}', 'Content-Type': 'application/json'})))
-            for h in r.get('hits', []): out[h['path'].lstrip('/')] = out.get(h['path'].lstrip('/'), 0) + (h.get('count') or 0)
-            if not r.get('more'): return out
-            page = ','.join(str(h['path_id']) for h in r['hits'])
-    h30 = hits((today - datetime.timedelta(days=30)).isoformat()); hall = hits('2026-10-01')
-    st = {}
-    for sp in sponsors:
-        k = sp['login'] or sp['name']
-        st[k] = {'views30': h30.get('sponsor-view/' + k, 0), 'clicks30': h30.get('sponsor-click/' + k, 0), 'viewsAll': hall.get('sponsor-view/' + k, 0), 'clicksAll': hall.get('sponsor-click/' + k, 0)}
-    if st != prev_stats.get('sponsors'): prev_stats.update({'updated': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='minutes'), 'sponsors': st})
+            for h in r.get('hits', []):
+                p = h['path'].lstrip('/'); out[p] = out.get(p, 0) + (h.get('count') or 0); seen_ids.append(h['path_id'])
+            if not r.get('more') or not r.get('hits'): return out
+    try:
+        h30 = hits((today - datetime.timedelta(days=30)).isoformat()); hall = hits('2026-10-01')
+        st = {}
+        for sp in sponsors:
+            k = sp['login'] or sp['name']
+            st[k] = {'views30': h30.get('sponsor-view/' + k, 0), 'clicks30': h30.get('sponsor-click/' + k, 0), 'viewsAll': hall.get('sponsor-view/' + k, 0), 'clicksAll': hall.get('sponsor-click/' + k, 0)}
+        if st != prev_stats.get('sponsors'): prev_stats.update({'updated': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='minutes'), 'sponsors': st})
+        print('stats ok,', len(h30), 'paths in 30 days')
+    except Exception as e:  # analytics must never block sponsor placement or emails
+        body = ''
+        try: body = e.read().decode()[:200]
+        except Exception: pass
+        print('::warning::GoatCounter stats skipped:', e, body)
 
 # ---------------- emails (Gmail app password) ----------------
 GU, GP = 'dineshiitb.ae18@gmail.com', os.environ.get('GMAIL_APP_PASSWORD')
