@@ -7,6 +7,7 @@ SOURCES = {}  # private: where each card sponsor came from (sp_<variant>_<tier>)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CFG = os.path.join(ROOT, 'generator', 'sponsor.json')
+cfg0 = json.load(open(CFG)) if os.path.exists(CFG) else {}
 LOGIN = json.load(open(CFG)).get('github') or 'Dinesh-Sunny'
 TOKEN = os.environ.get('SPONSORS_TOKEN') or os.environ.get('GITHUB_TOKEN')
 Q = '''query($login:String!,$after:String){ user(login:$login){ sponsorshipsAsMaintainer(first:100, after:$after, activeOnly:true){
@@ -73,7 +74,8 @@ if SK:
             co = amt >= 50  # company tiers carry a logo; people tiers carry a name
             who = (cs.get('customer_details') or {}).get('name') or ''
             name = (f.get('company') or org or host or 'Sponsor') if co else (f.get('name') or org or who.split(' ')[0] or 'Backer')
-            logo = f'https://github.com/{org}.png?size=128' if org else (f'https://www.google.com/s2/favicons?domain={host}&sz=128' if host else '')
+            # best logo: GitHub org avatar, else unavatar.io (finds the site's real logo), falling back to the site icon
+            logo = f'https://github.com/{org}.png?size=128' if org else (f'https://unavatar.io/{host}?fallback=https://www.google.com/s2/favicons%3Fdomain%3D{host}%26sz%3D128' if host else '')
             t, _ = tier_of({'tier': {'monthlyPriceInDollars': amt}})
             if lk.split('_')[1:2] and lk.split('_')[1] in ('featured', 'gold', 'silver', 'bronze', 'supporter', 'backer'): t = lk.split('_')[1]
             k = org or host or name
@@ -91,6 +93,9 @@ for s in sponsors:
         if seen: s['tier'] = 'gold'; bumped.append(s['name'])
         seen = True
 for s in sponsors: s.pop('amount'); s.pop('since', None)
+# manual logo fixes (sponsor replied with a better logo): sponsor.json "logos": {"<login>": "https://..."}
+for s in sponsors:
+    if (cfg0.get('logos') or {}).get(s['login']): s['logo'] = cfg0['logos'][s['login']]
 
 SPJ_PATH = os.path.join(ROOT, 'docs', 'sponsors.json')
 prev = (json.load(open(SPJ_PATH)).get('sponsors') or []) if os.path.exists(SPJ_PATH) else []
@@ -102,6 +107,16 @@ print(len(sponsors), 'public sponsors')
 # ---------------- stats (GoatCounter) ----------------
 SITE = 'https://dinesh-sunny.github.io/excalidraw-system-design-kit/'
 PORTAL = 'https://billing.stripe.com/p/login/14A28qgzU3mMf5E68RgjC00'
+# next tier up: what it adds, used in welcome + monthly emails (Featured only when free)
+UP = {'backer': ('Supporter', 10, 'your name in the README and new packs first'),
+      'supporter': ('Bronze', 35, 'your company logo in the README'),
+      'bronze': ('Silver', 100, 'your logo on the kit homepage too'),
+      'silver': ('Gold', 150, 'a bigger logo on the homepage and README'),
+      'gold': ('Featured', 300, 'the spot under the homepage search and top of the README')}
+def nudge(sp):
+    u = UP.get(sp['tier'])
+    if not u or (u[0] == 'Featured' and any(x['tier'] == 'featured' for x in sponsors)): return ''
+    return f"\nWant more reach? {u[0]} adds {u[2]}, for ${u[1]} more a month. Switch in one click: {PORTAL}\n"
 STATS = os.path.join(ROOT, 'docs', 'stats.json')
 prev_stats = json.load(open(STATS)) if os.path.exists(STATS) else {'sponsors': {}}
 GC, GT = cfg.get('goatcounter'), os.environ.get('GOATCOUNTER_TOKEN')
@@ -156,6 +171,7 @@ Your stats (views and clicks, updated every few hours):
 Visits from your logo arrive tagged utm_source=system-design-kit, so they show in your own analytics too.
 You'll get a short results email on the 1st of each month. Invoices and receipts come from Stripe.
 Change tier, switch to yearly or update your card any time: {PORTAL}
+{nudge(sp)}
 To change the logo or link, reply to this email.
 
 Thanks for keeping it free,
@@ -167,11 +183,17 @@ Dinesh""")
 Thank you for backing the System Design Kit. Your name is now in the credits:
 https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/BACKERS.md
 {extra}
-To change how your name shows, reply to this email. Receipts come from Stripe; manage or cancel any time: {PORTAL}
+{nudge(sp)}To change how your name shows, reply to this email. Receipts come from Stripe; manage or cancel any time: {PORTAL}
 
 Thanks for keeping it free,
 Dinesh""")
     send(GU, f"New sponsor: {sp['name']} ({sp['tier']})", f"{sp['name']} is now a {sp['tier']} sponsor.\nLink: {sp['url']}\nSource: {SOURCES.get(k, 'GitHub Sponsors')}\nStats: {stats_link}" + ("\nTo do: thank them in the next release note and on LinkedIn (Featured perk)." if sp['tier'] == 'featured' else ""))
+# changes since last run: cancellations and tier moves (portal switches) -> notice to Dinesh
+now = {(x.get('login') or x.get('name')): x for x in sponsors}
+for x in prev:
+    k = x.get('login') or x.get('name')
+    if k not in now: send(GU, f"Sponsor ended: {x['name']} ({x['tier']})", f"{x['name']} is no longer an active sponsor, so their {'logo' if x.get('org') else 'name'} was removed from the site, README and BACKERS.md.")
+    elif now[k]['tier'] != x['tier']: send(GU, f"Sponsor changed tier: {x['name']} {x['tier']} -> {now[k]['tier']}", f"{x['name']} moved from {x['tier']} to {now[k]['tier']}. Placement updated automatically.")
 if bumped and prev_stats.get('bumped') != bumped:
     send(GU, 'Featured clash: refund the difference', 'Featured is already taken, so these show as Gold until it frees up: ' + ', '.join(bumped) + '. Refund the Featured - Gold difference in Stripe (Payments > the payment > Refund), or move them to Gold in the billing portal.')
 prev_stats['bumped'] = bumped
@@ -188,6 +210,7 @@ Last 30 days on the System Design Kit:
 - Click rate: {ctr}
 
 Live stats any time: {SITE}sponsor/stats/?s={k}
+{nudge(sp)}
 
 Thank you for keeping the kit free,
 Dinesh""")

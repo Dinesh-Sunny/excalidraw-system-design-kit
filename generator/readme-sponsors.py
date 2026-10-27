@@ -17,10 +17,10 @@ def logo(x,h):
     sep='&' if '?' in x['url'] else '?'
     return f'<a href="{x["url"]}{sep}utm_source=system-design-kit&utm_medium=sponsor&utm_campaign={x["tier"]}">{inner}</a>'
 lines=['<!-- sponsors:start -->','<div align="center">','']
-for tiers,h,label in ((('featured',),64,'Featured'),(('gold',),52,'Gold'),(('silver',),40,'Silver')):
+for tiers,h,label in ((('featured',),64,'Featured'),(('gold',),52,'Gold'),(('silver',),40,'Silver'),(('bronze',),28,'Bronze')):
     xs=by(*tiers)
     if xs: lines+= [f'<sub>{label.upper()}</sub><br/>',' '.join(logo(x,h) for x in xs),'<br/><br/>']
-if not by('featured','gold','silver'):
+if not by('featured','gold','silver','bronze'):
     lines+=[f'<a href="{PAGE}#companies"><img src="https://img.shields.io/badge/your%20logo-here-f8f9fa?style=for-the-badge&labelColor=e9ecef" alt="Your logo here"></a>','<br/>']
 names=[x['name'] for x in by('supporter')]
 if names: lines+=['<br/>','Supporters: '+', '.join(names)]
@@ -59,7 +59,9 @@ open(p,'w').write(s)
 b=['# Backers','','Thank you for keeping the System Design Kit free.','',f'Want to be here? [Become a sponsor]({PAGE}).','']
 for t,label in (('featured','Featured'),('gold','Gold'),('silver','Silver'),('bronze','Bronze'),('supporter','Supporters'),('backer','Backers')):
     xs=by(t)
-    if xs: b+= [f'## {label}','']+[f'- [{x["name"]}]({x["url"]})' if x.get('url') else f'- {x["name"]}' for x in xs]+['']
+    H={'featured':64,'gold':52,'silver':40,'bronze':28}
+    if xs and t in H: b+= [f'## {label}','',' '.join(logo(x,H[t]) for x in xs),'',', '.join(f'[{x["name"]}]({x["url"]})' if x.get('url') else x['name'] for x in xs),'']
+    elif xs: b+= [f'## {label}','']+[f'- [{x["name"]}]({x["url"]})' if x.get('url') else f'- {x["name"]}' for x in xs]+['']
 if not sp: b+=['_No sponsors yet. Be the first._','']
 open(os.path.join(R,'BACKERS.md'),'w').write('\n'.join(b))
 print('ok', len(sp),'sponsors')
