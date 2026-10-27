@@ -517,7 +517,66 @@ body.run > header.nav, body.run > footer { display: none }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0) }
 @media (max-width: 900px) { .tabs button { display: none } .tabs .sm { display: block } }
 @media (max-width: 700px) { .canvas { place-items: center start; overflow: auto; padding: 10px } .canvas svg { width: auto; height: 100%; min-width: 0; flex: none } }
-@media (max-width: 560px) { .bot .sp, #bExtra { display: none } .top { gap: 10px } .top h2 { font-size: 18px; flex: 1 } .tabs { flex: none } .col { padding-top: 24px } .bot .pill.primary { min-width: 0; flex: 1 } .cap { flex-direction: column; gap: 4px } .canvas { padding: 10px } }
+@media (max-width: 560px) { .bot .sp, .lg, .kbd { display: none } .bot { gap: 6px } .bot .pill { padding: 0 14px } #bExtra .link { padding: 0 4px } .tog { margin-right: 2px } .top { gap: 10px } .top h2 { font-size: 18px; flex: 1 } .tabs { flex: none } .col { padding-top: 24px } .bot .pill.primary { min-width: 0; flex: 1 } .cap { flex-direction: column; gap: 4px } .canvas { padding: 10px } }
+
+/* practice tools */
+.tool { display: grid; gap: 14px }
+.gl { font: 500 12px/16px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .05em }
+.grp { display: grid; gap: 8px }
+.chiprow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; min-height: 52px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: text }
+.chiprow:focus-within { border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
+.mc { display: inline-flex; align-items: center; gap: 6px; padding: 6px 6px 6px 12px; border-radius: 9999px; background: var(--sketch-soft); color: var(--ink); font: 400 14px/18px var(--font-sans); animation: rise .2s ease-out }
+.mc button { width: 20px; height: 20px; border: 0; border-radius: 50%; background: none; cursor: pointer; color: var(--ink-muted); font: 400 15px/1 var(--font-sans) }
+.mc button:hover { background: var(--surface) }
+.ci { flex: 1; min-width: 180px; border: 0; outline: 0; background: none; font: 400 15px/22px var(--font-sans); color: var(--ink); padding: 4px }
+.hints { display: grid; gap: 6px } .hint1 { padding: 8px 12px; border-radius: 8px; background: var(--surface-sunk); font: 400 14px/20px var(--font-sans); color: var(--ink-muted); animation: rise .25s ease-out }
+#bMain { gap: 0 } #bMain .kbd { margin-left: 8px }
+.ans .cmp li { padding: 10px 0 } .ans .cmp li::before { content: none }
+.cmp { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--hairline) }
+.cmp li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--hairline); font: 400 15px/22px var(--font-sans) }
+.cmp li code { font: 400 13px/22px var(--font-mono); word-break: break-word }
+.mk { font: 600 13px/22px var(--font-mono); color: var(--ink-muted); text-align: center }
+.cmp li.ok .mk, .mk.ok { color: #2f9e44 } .cmp li.miss .mk, .mk.miss { color: var(--sketch) }
+.cmp li.ok { color: var(--ink-muted) }
+.legend { margin: 6px 0 0; font: 400 12px/18px var(--font-sans); color: var(--ink-muted) } .legend .mk { display: inline-block; width: 18px }
+.ans { display: grid; gap: 8px; padding: 18px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--hairline); animation: rise .35s cubic-bezier(.2,.8,.2,1) }
+.ans h4 { margin: 8px 0 0; font: 500 12px/16px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .05em }
+.rate { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; font: 400 13px/1 var(--font-sans); color: var(--ink-muted) }
+.rate span { margin-right: 4px }
+.rate button { height: 32px; padding: 0 12px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink) }
+.rate button.on.nail { background: #2f9e44; color: #fff; border-color: #2f9e44 } .rate button.on.part { background: #e67700; color: #fff; border-color: #e67700 } .rate button.on.miss { background: #e03131; color: #fff; border-color: #e03131 }
+.tabs .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 6px; vertical-align: 2px } .dot.nail { background: #2f9e44 } .dot.part { background: #e67700 } .dot.miss { background: #e03131 }
+.calc { padding: 16px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface); grid-template-columns: minmax(0, 1fr) }
+@media (min-width: 700px) { .calc { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px } }
+.cin { display: grid; gap: 8px }
+.cf { display: grid; grid-template-columns: 1fr 92px 54px; align-items: center; gap: 8px; font: 400 14px/18px var(--font-sans); color: var(--ink-muted) }
+.cf input { height: 36px; border-radius: 8px; border: 1px solid var(--hairline); background: var(--ground); padding: 0 10px; font: 500 14px/1 var(--font-mono); color: var(--ink); width: 100% }
+.cf input:focus { outline: 0; border-color: var(--sketch) } .cf em { font-style: normal; font: 400 12px/1 var(--font-mono) }
+.cout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.co { display: grid; gap: 2px; padding: 12px; border-radius: var(--r-md); background: var(--surface-sunk) }
+.co span { font: 500 11px/14px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .04em }
+.co b { font: 400 28px/1.1 var(--font-serif) } .co small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+.apis, .ents { display: grid; gap: 8px }
+.api { display: grid; grid-template-columns: 96px minmax(0, 1.2fr) minmax(0, 1fr) 32px; gap: 6px }
+.api select, .api input, .ent input, .ent select { height: 40px; border-radius: 8px; border: 1px solid var(--hairline); background: var(--surface); padding: 0 10px; font: 400 14px/1 var(--font-mono); color: var(--ink); min-width: 0 }
+.api select:focus, .api input:focus, .ent input:focus, .ent select:focus { outline: 0; border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
+.ent { display: grid; gap: 6px; padding: 12px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface) }
+.ent .en { font: 500 15px/1 var(--font-sans) } .ent .er { display: grid; grid-template-columns: 150px minmax(0, 1fr) 32px; gap: 6px }
+.xbtn { width: 32px; height: 40px; border: 0; background: none; cursor: pointer; color: var(--ink-muted); font: 400 18px/1 var(--font-sans); border-radius: 8px } .xbtn:hover { background: var(--surface-sunk) }
+.addrow { justify-self: start; border: 1px dashed var(--hairline); background: none; border-radius: 9999px; height: 36px; padding: 0 14px; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) } .addrow:hover { border-color: var(--slate); color: var(--ink) }
+@media (max-width: 560px) { .api { grid-template-columns: 84px minmax(0, 1fr) 32px } .api [data-api="r"] { grid-column: 1 / 3 } .ent .er { grid-template-columns: 1fr 1fr 32px } .cf { grid-template-columns: 1fr 80px 44px } }
+.pickq { display: grid; gap: 10px; width: 100% } .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px }
+.opt { height: 44px; padding: 0 14px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--ground); cursor: pointer; font: 500 14px/1.2 var(--font-sans); color: var(--ink); text-align: left; transition: border-color .15s, background .15s }
+.opt:hover { border-color: var(--sketch); background: var(--sketch-soft) }
+.fb { animation: rise .25s ease-out } .fb b { font: 600 15px/22px var(--font-sans) } .fb.ok b { color: #2f9e44 } .fb.no b { color: #e67700 } .fb span { color: var(--ink-muted); font: 400 15px/22px var(--font-sans) }
+.cap { flex-wrap: wrap } .cap .rate { width: 100%; margin-top: 4px }
+.cnt { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.9); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px; z-index: 1 }
+.tog { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); cursor: pointer; margin-right: 8px } .tog input { accent-color: var(--sketch) }
+.qn small { font: 400 16px/1 var(--font-sans); color: var(--ink-muted) }
+.scard { display: grid; gap: 4px } .srow { display: grid; grid-template-columns: 130px 1fr 80px; align-items: center; gap: 12px; padding: 10px 12px; border: 0; border-radius: 8px; background: none; cursor: pointer; text-align: left; font: 500 14px/1 var(--font-sans); color: var(--ink) } .srow:hover { background: var(--surface-sunk) }
+.srow em { font: 400 12px/1 var(--font-mono); color: var(--ink-muted); font-style: normal; text-align: right }
+.sb { height: 8px; border-radius: 9999px; background: var(--hairline); position: relative; overflow: hidden } .sb::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w, 0); border-radius: inherit; background: #e03131 } .sb[data-v="part"]::after { background: #e67700 } .sb[data-v="nail"]::after { background: #2f9e44 }
+.col .row { display: flex; flex-wrap: wrap; gap: 10px }
 </style>
 </head><body>
 <header class="nav gut"><div class="wrap">
@@ -569,8 +628,8 @@ const store = { get() { try { return JSON.parse(localStorage.getItem("sdk-practi
 
 /* the seven steps; "look" = what the interviewer is listening for */
 const STEPS = [
-  { k: "req", t: "Requirements", ask: "What does it need to do, and how big is it?", look: "They want you to ask before you draw, and to name one scale number." },
-  { k: "est", t: "Estimates", ask: "How much traffic and storage?", look: "Quick round numbers, then use them to justify a cache, shards or a queue." },
+  { k: "req", t: "Requirements", ask: "What does it need to do, and how well?", look: "Ask before you draw. List what it does, then how fast, how big and how reliable it must be." },
+  { k: "est", t: "Estimates", ask: "How much traffic and storage?", look: "Plug in rough numbers. Use the result to justify a cache, shards or a queue." },
   { k: "api", t: "API", ask: "Which calls does the client make?", look: "Three or four clean calls. Idempotency where a retry could repeat a write." },
   { k: "data", t: "Data", ask: "What do you store, and how is it keyed?", look: "Pick the store for its main read, and say the partition key out loud." },
   { k: "hld", t: "Design", ask: "", look: "" },
@@ -591,86 +650,184 @@ $("#fTrack").addEventListener("click", e => { const b = e.target.closest("button
 $("#fLevel").onchange = drawPick; $("#fCo").onchange = drawPick;
 $("#qgrid").addEventListener("click", e => { const b = e.target.closest("[data-q]"); if (b) location.hash = "q=" + b.dataset.q; });
 
-/* ---------- workspace ---------- */
-let Q = null, step = 0, blk = 1, dv = 0, open_ = false, finished = false;
+/* ---------- workspace: a practice tool per step, hints, compare, self-rating, scorecard ---------- */
+let Q = null, step = 0, blk = 1, dv = 0, open_ = false, finished = false, pick = null;
 const BY = Object.fromEntries(D.map(d => [d.slug, d]));
+const POOL = ["CDN", "Load Balancer", "API Gateway", "Redis Cache", "SQL Database", "NoSQL Database", "Message Queue", "Object Storage (S3)", "Search Index", "Background Workers", "WebSocket Server", "Rate Limiter", "Analytics Warehouse", "Vector DB", "LLM", "Notification Service", "Service Mesh", "Data Lake", "Cron Scheduler", "GraphQL Server"];
+const STOP = new Set("the a an and or of to for in on at by with from per is are be it its as that this into over under than then when only same each every can must not no new one two very most more less also via".split(" "));
+const kw = t => [...new Set(String(t).toLowerCase().replace(/[^a-z0-9/%.+ ]/g, " ").split(/\s+/).filter(w => w.length > 2 && !STOP.has(w)))];
+function covered(model, mine) { const m = mine.toLowerCase(); const k = kw(model); if (!k.length) return false; const hit = k.filter(w => m.includes(w)).length; return hit >= Math.min(2, k.length) || hit / k.length >= 0.5; }
+function rec() { return (store.get()[Q.slug] || {}); }
+function put(patch) { const p = store.get(); p[Q.slug] = { ...(p[Q.slug] || {}), ...patch, at: Date.now() }; store.set(p); }
+function sub(key, val) { const r = rec(); put({ [key]: { ...(r[key] || {}), ...val } }); }
 function route() {
   const h = new URLSearchParams(location.hash.slice(1)), q = BY[h.get("q")];
   if (!q) { Q = null; document.body.classList.remove("run"); $("#vRun").hidden = true; $("#vPick").hidden = false; stopClock(); drawPick(); document.title = "Practice system design interviews - System Design Kit"; return; }
   if (Q !== q) { const st = store.get()[q.slug] || {}; Q = q; step = st.done ? 0 : st.step || 0; blk = st.blk || 1; dv = 0; resetClock(); ev("practice-start/" + q.slug); }
   if (h.get("s")) step = Math.max(0, Math.min(6, +h.get("s") - 1));
-  open_ = false; finished = false;
+  open_ = false; finished = h.get("s") === "done"; pick = null;
   document.body.classList.add("run"); $("#vPick").hidden = true; $("#vRun").hidden = false;
   $("#rTitle").textContent = q.title; document.title = q.title + " - Practice";
   render();
 }
 addEventListener("hashchange", route);
 $("#bBack").onclick = () => { history.pushState(null, "", location.pathname); route(); };
-function save(extra = {}) { const p = store.get(); p[Q.slug] = { ...(p[Q.slug] || {}), step, blk, at: Date.now(), ...extra }; store.set(p); }
-function setStep(s) { step = Math.max(0, Math.min(6, s)); open_ = false; finished = false; dv = 0; if (step === 4 && blk < 1) blk = 1; save(); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); }
-const li = (arr, code) => `<ul>${arr.map(x => `<li>${code ? `<code>${esc(x)}</code>` : esc(x)}</li>`).join("")}</ul>`;
-function answer(k) {
-  const C = Q.c;
-  if (k === "req") return `<h4>Functional</h4>${li(C.reqF)}<h4>Non-functional</h4>${li(C.reqN)}`;
-  if (k === "est") return li(C.est);
-  if (k === "api") return li(C.api, true);
-  if (k === "data") return li(C.data, true);
-  return li(C.wrap);
+function setStep(s) { step = Math.max(0, Math.min(6, s)); open_ = false; finished = false; dv = 0; pick = null; put({ step, blk }); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); }
+function modelList(k) { const C = Q.c; return k === "req" ? [...C.reqF, ...C.reqN] : k === "est" ? C.est : k === "api" ? C.api : k === "data" ? C.data : C.wrap; }
+const RATE = [["miss", "Missed it"], ["part", "Partly"], ["nail", "Nailed it"]];
+function rateHTML(key) { const v = (rec().rate || {})[key]; return `<div class="rate"><span>How did you do?</span>${RATE.map(([k, t]) => `<button type="button" data-rate="${key}:${k}" class="${v === k ? "on " + k : ""}">${t}</button>`).join("")}</div>`; }
+
+/* ---- step tools ---- */
+function chipsTool(key, groups) { // build lists of your own points; compare against the model
+  const mine = (rec().mine || {})[key] || {};
+  return `<div class="tool">${groups.map(([g, label, ph]) => `<div class="grp"><div class="gl">${label}</div><div class="chiprow" data-grp="${key}:${g}">${(mine[g] || []).map((t, i) => `<span class="mc">${esc(t)}<button type="button" data-del="${key}:${g}:${i}" aria-label="Remove">×</button></span>`).join("")}<input class="ci" data-add="${key}:${g}" placeholder="${ph}" aria-label="${label}"></div></div>`).join("")}</div>`;
 }
-function buttons(main, extra = "") { $("#bMain").innerHTML = main; $("#bExtra").innerHTML = extra; $("#bPrev").style.visibility = step === 0 && !(step === 4 && blk > 1) ? "hidden" : "visible"; }
+function mineText(key) { const m = (rec().mine || {})[key] || {}; return Object.values(m).flat().join(" \n ") + " " + ((rec().notes || {})[key] || ""); }
+function compareHTML(key, groups) {
+  const txt = mineText(key);
+  return groups.map(([label, arr, code]) => `${label ? `<h4>${label}</h4>` : ""}<ul class="cmp">${arr.map(x => { const ok = covered(x, txt); return `<li class="${ok ? "ok" : "miss"}"><span class="mk">${ok ? "✓" : "+"}</span>${code ? `<code>${esc(x)}</code>` : esc(x)}</li>`; }).join("")}</ul>`).join("");
+}
+function hintsHTML(key, arr) { const n = (rec().hints || {})[key] || 0; return n ? `<div class="hints"><div class="gl">Hints</div>${arr.slice(0, n).map(x => `<div class="hint1">${esc(hintOf(x))}</div>`).join("")}</div>` : ""; }
+function hintOf(x) { const w = String(x).split(/[:(→]/)[0].trim(); return w.length > 46 ? w.slice(0, 46) + "..." : w + (w === x ? "" : "..."); }
+function calcHTML() {
+  const c = rec().calc || { dau: 10, act: 10, rw: 10, size: 1, years: 5 };
+  const f = (k, l, u, step) => `<label class="cf"><span>${l}</span><input type="number" min="0" step="${step}" data-calc="${k}" value="${c[k]}"><em>${u}</em></label>`;
+  return `<div class="tool calc"><div class="cin">${f("dau", "Daily active users", "million", "any")}${f("act", "Writes per user per day", "", "any")}${f("rw", "Reads per write", "x", "any")}${f("size", "Size per write", "KB", "any")}${f("years", "Keep data for", "years", "any")}</div><div class="cout" id="cout">${calcOut(c)}</div></div>`;
+}
+const fmtN = n => n >= 1e12 ? (n / 1e12).toFixed(1) + " T" : n >= 1e9 ? (n / 1e9).toFixed(1) + " B" : n >= 1e6 ? (n / 1e6).toFixed(1) + " M" : n >= 1e3 ? (n / 1e3).toFixed(1) + " k" : Math.round(n) + "";
+const fmtB = b => b >= 1e15 ? (b / 1e15).toFixed(1) + " PB" : b >= 1e12 ? (b / 1e12).toFixed(1) + " TB" : b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : (b / 1e3).toFixed(1) + " KB";
+function calcOut(c) {
+  const w = c.dau * 1e6 * c.act / 86400, r = w * c.rw, st = c.dau * 1e6 * c.act * c.size * 1e3;
+  const o = (l, v, s) => `<div class="co"><span>${l}</span><b>${v}</b>${s ? `<small>${s}</small>` : ""}</div>`;
+  return o("Writes / s", fmtN(w), "peak about " + fmtN(w * 3)) + o("Reads / s", fmtN(r), "peak about " + fmtN(r * 3)) + o("New data / day", fmtB(st), "") + o("Total storage", fmtB(st * 365 * c.years), c.years + " years, before replication");
+}
+function apiHTML() {
+  const rows = (rec().mine || {}).api || [{ m: "POST", p: "", r: "" }];
+  return `<div class="tool"><div class="apis">${rows.map((x, i) => `<div class="api" data-i="${i}"><select data-api="m">${["GET", "POST", "PUT", "PATCH", "DELETE", "WS"].map(m => `<option${m === x.m ? " selected" : ""}>${m}</option>`).join("")}</select><input data-api="p" placeholder="/path/{id}" value="${esc(x.p)}"><input data-api="r" placeholder="returns..." value="${esc(x.r)}"><button type="button" class="xbtn" data-apidel="${i}" aria-label="Remove">×</button></div>`).join("")}</div><button type="button" class="addrow" data-x="apiadd">+ Add a call</button></div>`;
+}
+const STORES = ["SQL", "Key-value", "Wide-column", "Document", "Object storage", "Cache", "Search index", "Queue / log", "Vector DB"];
+function dataHTML() {
+  const rows = (rec().mine || {}).data || [{ n: "", f: "", s: "SQL", k: "" }];
+  return `<div class="tool"><div class="ents">${rows.map((x, i) => `<div class="ent" data-i="${i}"><input class="en" data-ent="n" placeholder="Table or entity, e.g. urls" value="${esc(x.n)}"><input data-ent="f" placeholder="Fields: code, long_url, created_at" value="${esc(x.f)}"><div class="er"><select data-ent="s">${STORES.map(s => `<option${s === x.s ? " selected" : ""}>${s}</option>`).join("")}</select><input data-ent="k" placeholder="Partition key" value="${esc(x.k)}"><button type="button" class="xbtn" data-entdel="${i}" aria-label="Remove">×</button></div></div>`).join("")}</div><button type="button" class="addrow" data-x="entadd">+ Add a table</button></div>`;
+}
+function apiText() { return ((rec().mine || {}).api || []).map(x => `${x.m} ${x.p} ${x.r}`).join(" \n "); }
+function dataText() { return ((rec().mine || {}).data || []).map(x => `${x.n} ${x.f} ${x.s} ${x.k}`).join(" \n "); }
+function optsFor(b) { // the next block plus three that are not next
+  const n = Q.nodes, next = n[b], placed = new Set(n.slice(0, b).map(x => x.title));
+  const later = n.slice(b + 1).map(x => x.title);
+  const seed = Q.slug.length * 7 + b * 13, rnd = i => (Math.sin(seed + i) + 1) / 2;
+  const pool = POOL.filter(x => !placed.has(x) && !n.some(y => y.title.toLowerCase().includes(x.toLowerCase().split(" ")[0])));
+  const d = []; if (later.length) d.push(later[Math.floor(rnd(1) * later.length)]);
+  while (d.length < 3 && pool.length) { const x = pool.splice(Math.floor(rnd(d.length + 2) * pool.length), 1)[0]; d.push(x); }
+  return [next.title, ...d].map((t, i) => [t, rnd(i + 9)]).sort((a, c) => a[1] - c[1]).map(x => x[0]);
+}
+
+/* ---- render ---- */
+function buttons(main, extra = "", prevVisible = true) { $("#bMain").innerHTML = main; $("#bExtra").innerHTML = extra; $("#bPrev").style.visibility = prevVisible ? "visible" : "hidden"; }
+function tabs() { const r = rec().rate || {}; $("#rTabs").innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}">${x.t}${(r[x.k] || (x.k === "deep" && r.deep0)) ? `<i class="dot ${r[x.k] || r.deep0}"></i>` : ""}</button>`).join("") + `<span class="sm">${finished ? "Scorecard" : (step + 1) + "/7 · " + STEPS[step].t}</span>`; }
 function render() {
-  const S = STEPS[step], C = Q.c, notes = ((store.get()[Q.slug] || {}).notes || {})[S.k] || "";
-  $("#rTabs").innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i < step ? "done" : i === step ? "on" : ""}">${x.t}</button>`).join("") + `<span class="sm">${step + 1}/7 · ${S.t}</span>`;
-  const st = $("#stage"); st.scrollTop = 0;
-  if (S.k === "hld") {
-    const n = Q.nodes.length, node = Q.nodes[blk - 1];
-    st.innerHTML = `<div class="stagecv"><div class="canvas" id="cv"></div><div class="cap"><div><span class="n">${blk}/${n}</span> <b>${esc(node.title)}</b></div><span>${esc(C.blocks[node.id] || "")}</span></div></div>`;
-    loadSvg();
-    buttons(blk < n ? `Add next block<span class="kbd">→</span>` : `Next: Deep dives<span class="kbd">↵</span>`, blk < n ? `<button class="link" type="button" data-x="all">Show all</button>` : `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>`);
-    $("#bPrev").style.visibility = "visible"; return;
-  }
-  if (S.k === "deep") {
-    const [q, a] = C.dives[dv];
-    st.innerHTML = `<div class="col"><span class="dvn">The interviewer asks · ${dv + 1} of ${C.dives.length}</span><h3 class="qn">${esc(q)}</h3>${open_ ? `<p class="dva">${esc(a)}</p>` : `<textarea class="notes" id="nt" rows="3" placeholder="Your answer">${esc(((store.get()[Q.slug] || {}).notes || {})["deep" + dv] || "")}</textarea>`}</div>`;
-    hookNotes("deep" + dv);
-    buttons(!open_ ? `Show answer<span class="kbd">↵</span>` : dv < C.dives.length - 1 ? `Next question<span class="kbd">↵</span>` : `Next: Wrap-up<span class="kbd">↵</span>`); return;
-  }
-  if (finished) {
-    const nxt = D.filter(d => d !== Q && d.track === Q.track && !(store.get()[d.slug] || {}).done)[0] || D[(D.indexOf(Q) + 1) % D.length];
-    st.innerHTML = `<div class="col"><h3 class="qn">Done. Now draw it from memory.</h3><div class="done-box"><p>Paste the full design into Excalidraw, hide it, and redraw it tomorrow. That is what makes it stick.</p><div class="row"><button class="pill primary" type="button" data-x="copy">Copy to Excalidraw</button><a class="pill ghost" href="../#i=${Q.kit}">Open in the kit</a><button class="pill ghost" type="button" data-x="restart">Start again</button></div></div></div>`;
-    buttons(`Next: ${esc(nxt.title)}`); $("#bMain").dataset.next = nxt.slug; return;
-  }
-  $("#bMain").dataset.next = "";
-  st.innerHTML = `<div class="col"><h3 class="qn">${esc(S.ask)}</h3><p class="look">${esc(S.look)}</p><textarea class="notes" id="nt" placeholder="Your answer">${esc(notes)}</textarea>${open_ ? `<div class="ans" id="ans">${answer(S.k)}</div>` : ""}</div>`;
-  hookNotes(S.k);
-  buttons(!open_ ? `Show answer<span class="kbd">↵</span>` : step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `Finish<span class="kbd">↵</span>`);
+  tabs(); const S = STEPS[step], C = Q.c, st = $("#stage"); st.scrollTop = 0; $("#bMain").dataset.next = "";
+  if (finished) return renderScore();
+  if (S.k === "hld") return renderDesign();
+  if (S.k === "deep") return renderDeep();
+  let tool = "", cmp = "";
+  if (S.k === "req") { tool = chipsTool("req", [["f", "Functional: what it does", "Type a requirement, press Enter"], ["n", "Non-functional: how well", "e.g. p99 under 100 ms, press Enter"]]); cmp = compareHTML("req", [["Functional", C.reqF], ["Non-functional", C.reqN]]); }
+  if (S.k === "est") { tool = calcHTML() + `<textarea class="notes" id="nt" rows="2" placeholder="Your numbers and what they mean for the design">${esc((rec().notes || {}).est || "")}</textarea>`; cmp = `<ul class="cmp">${C.est.map(x => `<li><span class="mk">·</span>${esc(x)}</li>`).join("")}</ul>`; }
+  if (S.k === "api") { tool = apiHTML(); cmp = `<ul class="cmp">${C.api.map(x => { const ok = covered(x, apiText()); return `<li class="${ok ? "ok" : "miss"}"><span class="mk">${ok ? "✓" : "+"}</span><code>${esc(x)}</code></li>`; }).join("")}</ul>`; }
+  if (S.k === "data") { tool = dataHTML(); cmp = `<ul class="cmp">${C.data.map(x => { const ok = covered(x, dataText()); return `<li class="${ok ? "ok" : "miss"}"><span class="mk">${ok ? "✓" : "+"}</span><code>${esc(x)}</code></li>`; }).join("")}</ul>`; }
+  if (S.k === "wrap") { tool = chipsTool("wrap", [["b", "What breaks first, and the fix", "e.g. DB on cache misses: add replicas, press Enter"], ["x", "What you would add next", "e.g. analytics dashboards, press Enter"]]); cmp = compareHTML("wrap", [["", C.wrap]]); }
+  const hint = S.k !== "est" ? hintsHTML(S.k, modelList(S.k)) : "";
+  st.innerHTML = `<div class="col"><h3 class="qn">${esc(S.ask)}</h3><p class="look">${esc(S.look)}</p>${tool}${hint}${open_ ? `<div class="ans" id="ans"><div class="gl">${S.k === "est" ? "A strong answer" : "Compared with a strong answer"}</div>${cmp}${S.k !== "est" ? `<p class="legend"><span class="mk ok">✓</span> you covered it <span class="mk miss">+</span> worth adding</p>` : ""}${rateHTML(S.k)}</div>` : ""}</div>`;
+  hookNotes(S.k); hookTools();
+  const nh = (rec().hints || {})[S.k] || 0, ml = modelList(S.k).length;
+  buttons(!open_ ? `Compare<span class="lg"> with a strong answer</span><span class="kbd">↵</span>` : step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your </span>scorecard<span class="kbd">↵</span>`, !open_ && S.k !== "est" && nh < ml ? `<button class="link" type="button" data-x="hint">Hint<span class="lg"> (${ml - nh} left)</span></button>` : "", step > 0);
 }
-function hookNotes(key) { const nt = $("#nt"); if (!nt) return; nt.addEventListener("input", () => { const p = store.get(), r = p[Q.slug] || {}; r.notes = { ...(r.notes || {}), [key]: nt.value }; p[Q.slug] = r; store.set(p); }); }
+function renderDesign() {
+  const C = Q.c, n = Q.nodes.length, node = Q.nodes[blk - 1], st = $("#stage"), auto = rec().watch;
+  const nextNode = blk < n ? Q.nodes[blk] : null;
+  let cap;
+  if (pick) { const ok = pick === nextNode.title, later = Q.nodes.slice(blk + 1).some(x => x.title === pick); cap = `<div class="fb ${ok ? "ok" : "no"}"><b>${ok ? "Right." : later ? "Good block, but later." : "Not needed here."}</b> <span>${ok ? "" : "Next is " + esc(nextNode.title) + ". "}${esc(C.blocks[nextNode.id] || "")}</span></div>`; }
+  else if (blk < n && !auto) cap = `<div class="pickq"><span class="gl">Your move: which block comes next?</span><div class="opts">${optsFor(blk).map(t => `<button type="button" class="opt" data-pick="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`;
+  else cap = `<div><span class="n">${blk}/${n}</span> <b>${esc(node.title)}</b></div><span>${esc(C.blocks[node.id] || "")}</span>`;
+  st.innerHTML = `<div class="stagecv"><div class="canvas" id="cv"><span class="cnt">${blk}/${n} blocks</span></div><div class="cap">${cap}</div></div>`;
+  loadSvg();
+  const extra = blk < n ? `<label class="tog"><input type="checkbox" data-x="watch"${auto ? " checked" : ""}> <span class="lg">Just </span>show me</label>` : `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>`;
+  const main = blk >= n ? `Next: Deep dives<span class="kbd">↵</span>` : (pick || auto) ? `Add ${esc(nextNode.title)}<span class="kbd">→</span>` : `Skip and show<span class="kbd">→</span>`;
+  buttons(main, extra);
+  if (blk >= n && !(rec().rate || {}).hld) $(".cap").insertAdjacentHTML("beforeend", rateHTML("hld"));
+}
+function renderDeep() {
+  const C = Q.c, [q, a] = C.dives[dv], key = "deep" + dv, st = $("#stage");
+  st.innerHTML = `<div class="col"><span class="dvn">The interviewer asks · ${dv + 1} of ${C.dives.length}</span><h3 class="qn">${esc(q)}</h3><textarea class="notes" id="nt" rows="3" placeholder="Say it out loud, then jot the key words">${esc((rec().notes || {})[key] || "")}</textarea>${open_ ? `<div class="ans"><div class="gl">A strong answer</div><p class="dva">${esc(a)}</p>${rateHTML(key)}</div>` : ""}</div>`;
+  hookNotes(key);
+  buttons(!open_ ? `Show<span class="lg"> a strong</span> answer<span class="kbd">↵</span>` : dv < C.dives.length - 1 ? `Next question<span class="kbd">↵</span>` : `Next: Wrap-up<span class="kbd">↵</span>`);
+}
+function stepScore() { const r = rec().rate || {}, v = { nail: 2, part: 1, miss: 0 }; const keys = ["req", "est", "api", "data", "hld", "deep", "wrap"]; return keys.map(k => { if (k === "deep") { const ds = Q.c.dives.map((_, i) => r["deep" + i]).filter(Boolean); return ds.length ? ds.reduce((a, x) => a + v[x], 0) / ds.length : null; } return r[k] ? v[r[k]] : null; }); }
+function renderScore() {
+  const sc = stepScore(), got = sc.filter(x => x !== null), pct = got.length ? Math.round(got.reduce((a, b) => a + b, 0) / (got.length * 2) * 100) : 0;
+  const weak = sc.map((x, i) => [x, i]).filter(([x]) => x !== null && x < 1.5).map(([, i]) => i);
+  const nxt = D.filter(d => d !== Q && d.track === Q.track && !(store.get()[d.slug] || {}).done)[0] || D[(D.indexOf(Q) + 1) % D.length];
+  const bar = x => x === null ? `<i class="sb"></i>` : `<i class="sb" style="--w:${x / 2 * 100}%" data-v="${x >= 1.5 ? "nail" : x >= 0.5 ? "part" : "miss"}"></i>`;
+  $("#stage").innerHTML = `<div class="col"><span class="dvn">Scorecard</span><h3 class="qn">${pct}% <small>of a strong answer, by your own rating</small></h3>
+    <div class="scard">${STEPS.map((x, i) => `<button type="button" class="srow" data-step="${i}"><span>${x.t}</span>${bar(sc[i])}<em>${sc[i] === null ? "not rated" : sc[i] >= 1.5 ? "Strong" : sc[i] >= 0.5 ? "Partly" : "Review"}</em></button>`).join("")}</div>
+    <p class="look">${weak.length ? `Practise ${weak.map(i => STEPS[i].t.toLowerCase()).join(", ")} again, then redraw the whole design from memory tomorrow.` : "Strong across the board. Redraw it from memory tomorrow to lock it in."}</p>
+    <div class="row">${weak.length ? `<button class="pill primary" type="button" data-step="${weak[0]}">Practise ${STEPS[weak[0]].t.toLowerCase()}</button>` : ""}<button class="pill ghost" type="button" data-x="copy">Copy design to Excalidraw</button><a class="pill ghost" href="../#i=${Q.kit}">Open in the kit</a><button class="pill ghost" type="button" data-x="restart">Start again</button></div></div>`;
+  put({ done: true, score: pct });
+  buttons(`Next: ${esc(nxt.title)}`); $("#bMain").dataset.next = nxt.slug;
+}
+
+/* ---- inputs ---- */
+function hookNotes(key) { const nt = $("#nt"); if (!nt) return; nt.addEventListener("input", () => sub("notes", { [key]: nt.value })); }
+function hookTools() {
+  document.querySelectorAll("[data-calc]").forEach(i => i.addEventListener("input", () => { const c = { ...(rec().calc || { dau: 10, act: 10, rw: 10, size: 1, years: 5 }), [i.dataset.calc]: Math.max(0, +i.value || 0) }; put({ calc: c }); $("#cout").innerHTML = calcOut(c); }));
+  document.querySelectorAll(".api input, .api select").forEach(el => el.addEventListener("input", () => { const rows = [...document.querySelectorAll(".api")].map(r => ({ m: r.querySelector('[data-api="m"]').value, p: r.querySelector('[data-api="p"]').value, r: r.querySelector('[data-api="r"]').value })); sub("mine", { api: rows }); }));
+  document.querySelectorAll(".ent input, .ent select").forEach(el => el.addEventListener("input", () => { const rows = [...document.querySelectorAll(".ent")].map(r => ({ n: r.querySelector('[data-ent="n"]').value, f: r.querySelector('[data-ent="f"]').value, s: r.querySelector('[data-ent="s"]').value, k: r.querySelector('[data-ent="k"]').value })); sub("mine", { data: rows }); }));
+  document.querySelectorAll("[data-add]").forEach(inp => inp.addEventListener("keydown", e => {
+    if (e.key !== "Enter" || !inp.value.trim()) return; e.preventDefault(); e.stopPropagation();
+    const [key, g] = inp.dataset.add.split(":"), m = (rec().mine || {})[key] || {}; m[g] = [...(m[g] || []), inp.value.trim()]; sub("mine", { [key]: m });
+    const keep = inp.dataset.add; render(); const again = document.querySelector(`[data-add="${keep}"]`); if (again) again.focus();
+  }));
+}
 function primary() {
   const S = STEPS[step], C = Q.c;
-  if ($("#bMain").dataset.next) { save({ done: true }); ev("practice-done/" + Q.slug); location.hash = "q=" + $("#bMain").dataset.next; return; }
-  if (S.k === "hld") { if (blk < Q.nodes.length) moveBlk(1); else setStep(5); return; }
+  if ($("#bMain").dataset.next) { location.hash = "q=" + $("#bMain").dataset.next; return; }
+  if (finished) return;
+  if (S.k === "hld") { if (blk < Q.nodes.length) { blk++; pick = null; put({ blk }); render(); } else setStep(5); return; }
   if (S.k === "deep") { if (!open_) { open_ = true; render(); } else if (dv < C.dives.length - 1) { dv++; open_ = false; render(); } else setStep(6); return; }
-  if (!open_) { open_ = true; render(); const a = $("#ans"); if (a) a.scrollIntoView({ behavior: "smooth", block: "start" }); ev("practice-reveal/" + S.k); return; }
-  if (step < 6) setStep(step + 1); else { finished = true; save({ done: true }); render(); }
+  if (!open_) { open_ = true; render(); const a = $("#ans"); if (a) a.scrollIntoView({ behavior: "smooth", block: "start" }); ev("practice-compare/" + S.k); return; }
+  if (step < 6) setStep(step + 1); else { finished = true; history.replaceState(null, "", "#q=" + Q.slug + "&s=done"); ev("practice-done/" + Q.slug); render(); }
 }
 function back() {
   const S = STEPS[step];
   if (finished) { finished = false; open_ = true; render(); return; }
-  if (S.k === "hld" && blk > 1) { moveBlk(-1); return; }
+  if (S.k === "hld" && blk > 1) { blk--; pick = null; put({ blk }); render(); return; }
   if (S.k === "deep" && dv > 0) { dv--; open_ = true; render(); return; }
   if (step === 5) { setStep(4); blk = Q.nodes.length; render(); return; }
   setStep(step - 1);
 }
 $("#bMain").onclick = primary; $("#bPrev").onclick = back;
-$("#vRun").addEventListener("click", e => { const x = e.target.closest("[data-x]"); if (x) { if (x.dataset.x === "all") { blk = Q.nodes.length; save(); render(); } if (x.dataset.x === "copy") copyDesign(); if (x.dataset.x === "restart") { const p = store.get(); delete p[Q.slug]; store.set(p); blk = 1; resetClock(); setStep(0); } } const t = e.target.closest("[data-step]"); if (t) setStep(+t.dataset.step); });
+$("#vRun").addEventListener("change", e => { if (e.target.matches('[data-x="watch"]')) { put({ watch: e.target.checked }); pick = null; render(); } });
+$("#vRun").addEventListener("click", e => {
+  const pk = e.target.closest("[data-pick]"); if (pk) { pick = pk.dataset.pick; const ok = pick === Q.nodes[blk].title; sub("picks", { [blk]: ok }); ev("practice-pick/" + (ok ? "ok" : "no")); render(); return; }
+  const rt = e.target.closest("[data-rate]"); if (rt) { const [k, v] = rt.dataset.rate.split(":"); sub("rate", { [k]: v }); rt.parentNode.querySelectorAll("button").forEach(b => b.className = b === rt ? "on " + v : ""); tabs(); return; }
+  const del = e.target.closest("[data-del]"); if (del) { const [key, g, i] = del.dataset.del.split(":"), m = (rec().mine || {})[key] || {}; (m[g] || []).splice(+i, 1); sub("mine", { [key]: m }); render(); return; }
+  const ad = e.target.closest("[data-apidel]"); if (ad) { const rows = (rec().mine || {}).api || []; rows.splice(+ad.dataset.apidel, 1); sub("mine", { api: rows }); render(); return; }
+  const ed = e.target.closest("[data-entdel]"); if (ed) { const rows = (rec().mine || {}).data || []; rows.splice(+ed.dataset.entdel, 1); sub("mine", { data: rows }); render(); return; }
+  const x = e.target.closest("[data-x]"); if (x && x.tagName !== "INPUT") { const a = x.dataset.x;
+    if (a === "hint") { const k = STEPS[step].k; sub("hints", { [k]: ((rec().hints || {})[k] || 0) + 1 }); render(); ev("practice-hint/" + k); }
+    if (a === "apiadd") { sub("mine", { api: [...((rec().mine || {}).api || [{ m: "POST", p: "", r: "" }]), { m: "GET", p: "", r: "" }] }); render(); }
+    if (a === "entadd") { sub("mine", { data: [...((rec().mine || {}).data || [{ n: "", f: "", s: "SQL", k: "" }]), { n: "", f: "", s: "SQL", k: "" }] }); render(); }
+    if (a === "copy") copyDesign();
+    if (a === "restart") { const p = store.get(); delete p[Q.slug]; store.set(p); blk = 1; resetClock(); setStep(0); }
+    return; }
+  const t = e.target.closest("[data-step]"); if (t) { if (finished) finished = false; setStep(+t.dataset.step); }
+});
 const SVGC = new Map();
 function loadSvg() {
-  const k = Q.slug + "/" + blk, put = t => { const cv = $("#cv"); if (!cv || Q.slug + "/" + blk !== k) return; cv.innerHTML = t; if (cv.scrollWidth > cv.clientWidth + 4) { const n = Q.nodes.length; cv.scrollLeft = (cv.scrollWidth - cv.clientWidth) * (n > 1 ? (blk - 1) / (n - 1) : 0); } };
-  if (SVGC.has(k)) put(SVGC.get(k)); else fetch(`../p/${k}.svg`).then(r => r.text()).then(t => { SVGC.set(k, t); put(t); }).catch(() => {});
+  const k = Q.slug + "/" + blk, putSvg = t => { const cv = $("#cv"); if (!cv || Q.slug + "/" + blk !== k) return; cv.querySelectorAll("svg").forEach(s => s.remove()); cv.insertAdjacentHTML("beforeend", t); if (cv.scrollWidth > cv.clientWidth + 4) { const n = Q.nodes.length; cv.scrollLeft = (cv.scrollWidth - cv.clientWidth) * (n > 1 ? (blk - 1) / (n - 1) : 0); } };
+  if (SVGC.has(k)) putSvg(SVGC.get(k)); else fetch(`../p/${k}.svg`).then(r => r.text()).then(t => { SVGC.set(k, t); putSvg(t); }).catch(() => {});
   const nk = Q.slug + "/" + (blk + 1); if (blk < Q.nodes.length && !SVGC.has(nk)) fetch(`../p/${nk}.svg`).then(r => r.text()).then(t => SVGC.set(nk, t)).catch(() => {});
 }
-function moveBlk(d) { blk = Math.max(1, Math.min(Q.nodes.length, blk + d)); save(); render(); }
 async function copyDesign() {
   try {
     const p = fetch(`../e/${Q.kitId}.json`).then(r => r.json()).then(els => new Blob([JSON.stringify({ type: "excalidraw/clipboard", elements: els, files: {} })], { type: "text/plain" }));
@@ -685,6 +842,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); primary(); return; }
   if (typing || e.metaKey || e.ctrlKey) return;
   if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); primary(); } else if (e.key === "ArrowLeft") { e.preventDefault(); back(); }
+  else if (STEPS[step].k === "hld" && !pick && /^[1-4]$/.test(e.key)) { const o = document.querySelectorAll(".opt")[+e.key - 1]; if (o) o.click(); }
 });
 /* 45-minute timer */
 let left = 45 * 60, tick = null;
