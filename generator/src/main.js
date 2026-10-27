@@ -171,26 +171,47 @@ window.BUILD = async () => {
   return { lib: { type: "excalidrawlib", version: 2, source: "https://excalidraw.com", libraryItems }, report, sections: SECTION_META };
 };
 
-// practice mode: each full design built up one block at a time, on a fixed frame
+// practice mode: each full design built up one block at a time, on a fixed frame (plus scenario variants with extra blocks)
+import V2 from "../practice.v2.json";
+async function practiceBuild(spec) {
+  const minR = Math.min(...spec.nodes.map((n) => n[5]));
+  const full = finalize(diagram({ ...spec, notes: undefined }).map(applyDefaults));
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const e of full) { const pts = e.points ? e.points.map((p) => [e.x + p[0], e.y + p[1]]) : [[e.x, e.y], [e.x + e.width, e.y + e.height]]; for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } }
+  const sk = diagram({ ...spec, notes: undefined }), OX = x0 - 10 - 14, OY = y0 - 10 - 14, boxes = {};
+  for (const n of spec.nodes) { const r = sk.find((e) => e.type === "rectangle" && String(e.id || "").startsWith("n" + n[0] + "_")); if (r) boxes[n[0]] = [r.x - OX, r.y - OY, r.width, r.height]; }
+  const frame = { type: "rectangle", x: x0 - 10, y: y0 - 10, width: x1 - x0 + 20, height: y1 - y0 + 20, strokeColor: "transparent", backgroundColor: "transparent" };
+  const steps = [];
+  for (let k = 1; k <= spec.nodes.length; k++) {
+    const ids = new Set(spec.nodes.slice(0, k).map((n) => n[0]));
+    const sub = { ...spec, notes: undefined, minR, nodes: spec.nodes.slice(0, k), edges: spec.edges.filter((e) => ids.has(e[0]) && ids.has(e[1])) };
+    steps.push(await window.SVG(finalize([frame, ...diagram(sub)].map(applyDefaults))));
+  }
+  return { boxes, size: [x1 - x0 + 20 + 28, y1 - y0 + 20 + 28], nodes: spec.nodes.map((n) => ({ id: n[0], title: n[1].replace(/\n/g, " "), icon: n[2] })), edges: spec.edges.map((e) => [e[0], e[1], e[2] || ""]), steps };
+}
+const pslug = (name) => name.toLowerCase().split(" - ")[0].replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 window.PRACTICE = async () => {
   const out = [];
   for (const t of [...TEMPLATES, ...AI_TEMPLATES]) {
-    const spec = t.spec, minR = Math.min(...spec.nodes.map((n) => n[5]));
-    const full = finalize(diagram({ ...spec, notes: undefined }).map(applyDefaults));
-    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-    for (const e of full) { const pts = e.points ? e.points.map((p) => [e.x + p[0], e.y + p[1]]) : [[e.x, e.y], [e.x + e.width, e.y + e.height]]; for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); } }
-    const sk = diagram({ ...spec, notes: undefined }), OX = x0 - 10 - 14, OY = y0 - 10 - 14;
-    const boxes = {};
-    for (const n of spec.nodes) { const r = sk.find((e) => e.type === "rectangle" && String(e.id || "").startsWith("n" + n[0] + "_")); if (r) boxes[n[0]] = [r.x - OX, r.y - OY, r.width, r.height]; }
-    const frame = { type: "rectangle", x: x0 - 10, y: y0 - 10, width: x1 - x0 + 20, height: y1 - y0 + 20, strokeColor: "transparent", backgroundColor: "transparent" };
-    const steps = [];
-    for (let k = 1; k <= spec.nodes.length; k++) {
-      const ids = new Set(spec.nodes.slice(0, k).map((n) => n[0]));
-      const sub = { ...spec, notes: undefined, minR, nodes: spec.nodes.slice(0, k), edges: spec.edges.filter((e) => ids.has(e[0]) && ids.has(e[1])) };
-      const els = finalize([frame, ...diagram(sub)].map(applyDefaults));
-      steps.push(await window.SVG(els));
+    const spec = t.spec, base = await practiceBuild(spec), variants = {}, v2 = V2[pslug(t.name)] || {};
+    for (const sc of v2.scenarios || []) {
+      if (!sc.add || !sc.add.nodes || !sc.add.nodes.length) continue;
+      // place each new block in a free grid spot next to its anchor, where its arrow won't cross other blocks
+      const placed = spec.nodes.map((n) => [n[0], n[4], n[5]]);
+      const free = (c, r) => placed.every(([, pc, pr]) => Math.abs(pc - c) > 1.0 || Math.abs(pr - r) > 0.9);
+      const clear = (c0, r0, c1, r1, skip) => { for (let t = 0.15; t < 0.9; t += 0.05) { const c = c0 + (c1 - c0) * t, r = r0 + (r1 - r0) * t; if (placed.some(([id, pc, pr]) => !skip.includes(id) && Math.abs(pc - c) < 0.5 && Math.abs(pr - r) < 0.45)) return false; } return true; };
+      const OFF = [[1.3, 0], [0, 1.2], [0, -1.2], [-1.3, 0], [1.3, 1.2], [1.3, -1.2], [-1.3, 1.2], [-1.3, -1.2], [2.6, 0], [0, 2.4], [0, -2.4], [2.6, 1.2], [2.6, -1.2], [-2.6, 0]];
+      const added = sc.add.nodes.map(([id, title, icon, theme, anchor]) => {
+        const e0 = sc.add.edges.find((e) => e[0] === id || e[1] === id), link = e0 ? (e0[0] === id ? e0[1] : e0[0]) : anchor;
+        const an = placed.find((n) => n[0] === link) || placed.find((n) => n[0] === anchor) || placed[0];
+        let spot = OFF.map(([dc, dr]) => [an[1] + dc, an[2] + dr]).find(([c, r]) => c >= -0.01 && free(c, r) && clear(an[1], an[2], c, r, [an[0]]));
+        if (!spot) spot = [an[1], Math.max(...placed.map((n) => n[2])) + 1.3];
+        placed.push([id, spot[0], spot[1]]);
+        return [id, title, icon, theme, spot[0], spot[1]];
+      });
+      variants[sc.id] = await practiceBuild({ ...spec, nodes: [...spec.nodes, ...added], edges: [...spec.edges, ...sc.add.edges] });
     }
-    out.push({ boxes, size: [x1 - x0 + 20 + 28, y1 - y0 + 20 + 28], name: t.name, title: spec.title, nodes: spec.nodes.map((n) => ({ id: n[0], title: n[1].replace(/\n/g, " "), icon: n[2] })), edges: spec.edges.map((e) => [e[0], e[1], e[2] || ""]), notes: spec.notes || "", steps });
+    out.push({ name: t.name, title: spec.title, notes: spec.notes || "", ...base, variants });
   }
   return out;
 };

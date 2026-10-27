@@ -214,13 +214,29 @@ body.run > header.nav, body.run > footer { display: none }
 .bot .pill.primary { min-width: 240px }
 @media (max-width: 560px) { .bot .pill.primary { min-width: 0 } }
 
-/* design: the canvas is the stage, the turn card floats over it near where blocks land */
-@media (min-width: 700px) {
-  .dz { position: relative; grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 1fr) !important }
-  .dz .move { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(780px, calc(100% - 40px)); max-height: 52%; border: 1px solid var(--hairline) !important; border-radius: var(--r-lg); box-shadow: var(--shadow-float); padding: 18px 20px; gap: 12px }
-  .dz .move .opts2 { grid-template-columns: 1fr 1fr }
-  .dz .move .mq { font-size: 22px }
-}
+
+/* setup + scenarios + lens */
+.setup .sg { display: grid; gap: 10px }
+.scs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px }
+.scn { display: grid; gap: 4px; padding: 16px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; text-align: left; color: var(--ink); transition: border-color .15s, box-shadow .15s }
+.scn b { font: 500 16px/22px var(--font-sans) } .scn span { font: 400 14px/20px var(--font-sans); color: var(--ink-muted) } .scn small { font: 500 12px/16px var(--font-mono); color: var(--sketch) }
+.scn:hover { border-color: var(--slate) } .scn.on { border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
+.lns { display: flex; flex-wrap: wrap; gap: 8px }
+.ln2 { height: 36px; padding: 0 14px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink) }
+.ln2 i { font-style: normal; font: 400 11px/1 var(--font-mono); color: var(--sketch); margin-left: 4px } .ln2.on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) } .ln2.on i { color: inherit }
+.stp { display: flex; flex-wrap: wrap; gap: 6px } .stp span { padding: 6px 10px; border-radius: 9999px; background: var(--surface-sunk); font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
+.tg { display: inline-block; font-style: normal; font: 500 10px/1 var(--font-mono); padding: 4px 6px; border-radius: 6px; margin-left: 6px; vertical-align: 2px; letter-spacing: .02em }
+.tg.sc { background: var(--sketch-soft); color: var(--sketch) } .tg.ln { background: #fff4e6; color: #d9480f } .tg.yr { background: #d3f9d8; color: #2b8a3e; margin: 0 4px 0 0 }
+.note .tg { font-family: var(--font-mono) }
+.lensl { display: grid; gap: 4px } .lensl p { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted) } .lensl .tg { margin: 0 6px 0 0 }
+.qa.mod { border-left-color: #2f9e44 }
+.chipb { height: 30px; padding: 0 12px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface-sunk); cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink); white-space: nowrap; flex: none }
+.chipb:hover { border-color: var(--slate) }
+@media (max-width: 760px) { .chipb { display: none } }
+.zc2 { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: #fff; border: 1px solid #e3e4e8; box-shadow: 0 2px 8px rgba(0,0,0,.08); z-index: 2 }
+.zc2 button { height: 30px; min-width: 30px; padding: 0 8px; border: 0; border-radius: 7px; background: none; cursor: pointer; font: 500 14px/1 var(--font-sans); color: #141414 } .zc2 button:hover { background: #f1f3f5 }
+.dz { position: relative }
+@media (max-width: 999px) { .zc2 { bottom: auto; top: 10px; left: 10px } }
 </style>
 </head><body>
 <header class="nav gut"><div class="wrap">
@@ -247,7 +263,7 @@ body.run > header.nav, body.run > footer { display: none }
 <div class="ws" id="vRun" hidden>
   <div class="top">
     <button class="ib" type="button" id="bBack" aria-label="All questions" title="All questions"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg></button>
-    <h2 id="rTitle"></h2>
+    <h2 id="rTitle"></h2><button class="chipb" type="button" id="rSetup" title="Change scenario, interviewer or mode"></button>
     <nav class="tabs" id="rTabs" aria-label="Steps"></nav>
     <button class="timer" type="button" id="rTimer" title="45-minute interview timer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.5V9l1.8 1.2M6.5 2h3"/></svg><span id="rClock">45:00</span></button>
   </div>
@@ -261,6 +277,7 @@ body.run > header.nav, body.run > footer { display: none }
 <script>
 const SP = __SPONSOR__;
 const D = __PDATA__;
+const LENSES = __LENSES__;
 const $ = s => document.querySelector(s);
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 $("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
@@ -270,8 +287,8 @@ const GC = SP.goatcounter; if (GC) { const s = document.createElement("script");
 const ev = p => { try { if (window.goatcounter && goatcounter.count) goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} };
 const store = { get() { try { return JSON.parse(localStorage.getItem("sdk-practice") || "{}"); } catch (e) { return {}; } }, set(v) { try { localStorage.setItem("sdk-practice", JSON.stringify(v)); } catch (e) {} } };
 
-/* the seven steps; "look" = what the interviewer is listening for */
-const STEPS = [
+/* the base steps; "look" = what the interviewer is listening for */
+const BASE_STEPS = [
   { k: "req", t: "Requirements", ask: "What does it need to do, and how well?", look: "Ask before you draw. List what it does, then how fast, how big and how reliable it must be." },
   { k: "est", t: "Estimates", ask: "How much traffic and storage?", look: "Plug in rough numbers. Use the result to justify a cache, shards or a queue." },
   { k: "api", t: "API", ask: "Which calls does the client make?", look: "Three or four clean calls. Idempotency where a retry could repeat a write." },
@@ -280,6 +297,9 @@ const STEPS = [
   { k: "deep", t: "Deep dives", ask: "", look: "" },
   { k: "wrap", t: "Wrap-up", ask: "What breaks first, and what would you add next?", look: "Find your own bottleneck and fix it before they do." },
 ];
+let STEPS = BASE_STEPS;
+function buildSteps(d) { const out = []; for (const x of BASE_STEPS) { out.push(x); if (x.k === "hld") { if ((d.v2.modern || []).length) out.push({ k: "modern", t: "2026 upgrades", ask: "", look: "Interviewers notice when you reach for today's defaults, not 2015's." }); if (d.v2.extra) out.push({ k: "extra", t: d.v2.extra.t, ask: "", look: d.v2.extra.look }); } } return out; }
+const LAST = () => STEPS.length - 1;
 
 /* ---------- picker ---------- */
 const cos = [...new Set(D.flatMap(d => d.companies))].sort();
@@ -288,7 +308,7 @@ let fTrack = "all";
 function drawPick() {
   const lv = $("#fLevel").value, co = $("#fCo").value, p = store.get();
   const list = D.filter(d => (fTrack === "all" || d.track === fTrack) && (!lv || d.level === lv) && (!co || d.companies.includes(co)));
-  $("#qgrid").innerHTML = list.map(d => { const st = p[d.slug]; const badge = st && st.done ? "Done" : st ? `${STEPS[Math.min(st.step || 0, 6)].t}` : ""; return `<button class="q" type="button" data-q="${d.slug}"><div class="th"><img loading="lazy" alt="" src="../${d.thumb}">${badge ? `<span class="badge">${badge}</span>` : ""}</div><div class="tt">${esc(d.title)}</div><div class="mm"><span class="lv ${d.level}">${d.level}</span>${d.companies.length ? `<span>${esc(d.companies.slice(0, 3).join(", "))}${d.companies.length > 3 ? ` +${d.companies.length - 3}` : ""}</span>` : `<span>${d.track === "AI" ? "AI design" : "Classic"}</span>`}</div></button>`; }).join("") || `<p class="src">Nothing matches. Try another filter.</p>`;
+  $("#qgrid").innerHTML = list.map(d => { const st = p[d.slug]; const badge = st && st.done ? "Done" : st ? "In progress" : ""; return `<button class="q" type="button" data-q="${d.slug}"><div class="th"><img loading="lazy" alt="" src="../${d.thumb}">${badge ? `<span class="badge">${badge}</span>` : ""}</div><div class="tt">${esc(d.title)}</div><div class="mm"><span class="lv ${d.level}">${d.level}</span>${d.companies.length ? `<span>${esc(d.companies.slice(0, 3).join(", "))}${d.companies.length > 3 ? ` +${d.companies.length - 3}` : ""}</span>` : `<span>${d.track === "AI" ? "AI design" : "Classic"}</span>`}</div></button>`; }).join("") || `<p class="src">Nothing matches. Try another filter.</p>`;
 }
 $("#fTrack").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; fTrack = b.dataset.v; [...$("#fTrack").children].forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawPick(); });
 $("#fLevel").onchange = drawPick; $("#fCo").onchange = drawPick;
@@ -301,22 +321,32 @@ const POOL = ["CDN", "Load Balancer", "API Gateway", "Redis Cache", "SQL Databas
 const STOP = new Set("the a an and or of to for in on at by with from per is are be it its as that this into over under than then when only same each every can must not no new one two very most more less also via".split(" "));
 const kw = t => [...new Set(String(t).toLowerCase().replace(/[^a-z0-9/%.+ ]/g, " ").split(/\s+/).filter(w => w.length > 2 && !STOP.has(w)))];
 function covered(model, mine) { const m = mine.toLowerCase(); const k = kw(model); if (!k.length) return false; const hit = k.filter(w => m.includes(w)).length; return hit >= Math.min(2, k.length) || hit / k.length >= 0.5; }
-function rec() { return (store.get()[Q.slug] || {}); }
-function put(patch) { const p = store.get(); p[Q.slug] = { ...(p[Q.slug] || {}), ...patch, at: Date.now() }; store.set(p); }
+function rec() { return (store.get()[Q.rid] || {}); }
+function put(patch) { const p = store.get(); p[Q.rid] = { ...(p[Q.rid] || {}), ...patch, at: Date.now() }; store.set(p); }
 function sub(key, val) { const r = rec(); put({ [key]: { ...(r[key] || {}), ...val } }); }
+const SETUP = { get(s) { try { return JSON.parse(localStorage.getItem("sdk-practice-setup") || "{}")[s]; } catch (e) { return null; } }, set(s, v) { try { const a = JSON.parse(localStorage.getItem("sdk-practice-setup") || "{}"); a[s] = v; localStorage.setItem("sdk-practice-setup", JSON.stringify(a)); } catch (e) {} } };
+function effective(d, su) { // merge the chosen scenario and interviewer lens into one question
+  const sc = (d.v2.scenarios || []).find(x => x.id === su.sc), v = sc && d.variants[sc.id], L = LENSES[su.lens];
+  const c = { ...d.c, reqF: [...d.c.reqF, ...((sc && sc.reqF) || [])], reqN: [...d.c.reqN, ...((sc && sc.reqN) || [])], est: [...((sc && sc.est) || []), ...d.c.est], blocks: { ...d.c.blocks, ...((sc && sc.blocks) || {}) }, dives: [...((L && L.dives) || []), ...((sc && sc.dives) || []), ...d.c.dives], wrap: [...((sc && sc.wrap) || []), ...d.c.wrap] };
+  const tag = { sc: new Set([...((sc && sc.reqF) || []), ...((sc && sc.reqN) || []), ...((sc && sc.est) || []), ...((sc && sc.wrap) || []), ...((sc && sc.dives) || []).map(x => x[1])]), lens: new Set(((L && L.dives) || []).map(x => x[1])) };
+  return { ...d, c, tag, su, scen: sc || null, lensInfo: L || null, rid: d.slug + (sc ? "~" + sc.id : ""), dir: d.slug + (v ? "~" + sc.id : ""), nodes: v ? v.nodes : d.nodes, boxes: v ? v.boxes : d.boxes, size: v ? v.size : d.size, edges: v ? v.edges : d.edges };
+}
+let setupMode = false;
 function route() {
   const h = new URLSearchParams(location.hash.slice(1)), q = BY[h.get("q")];
   if (!q) { Q = null; document.body.classList.remove("run"); $("#vRun").hidden = true; $("#vPick").hidden = false; stopClock(); drawPick(); document.title = "Practice system design interviews - System Design Kit"; return; }
-  if (Q !== q) { const st = store.get()[q.slug] || {}; $("#stage").innerHTML = ""; tries = new Set(); last = null; cam = null; qtries = new Set(); qlast = null; Q = q; step = st.done ? 0 : st.step || 0; blk = st.blk || 1; dv = 0; resetClock(); ev("practice-start/" + q.slug); }
-  if (h.get("s")) step = Math.max(0, Math.min(6, +h.get("s") - 1));
+  const su = SETUP.get(q.slug); setupMode = !su || h.get("s") === "setup";
+  if (!Q || Q.slug !== q.slug || (su && Q.rid !== effective(q, su).rid) || (su && Q.su.lens !== su.lens)) { $("#stage").innerHTML = ""; tries = new Set(); last = null; cam = null; qtries = new Set(); qlast = null; Q = effective(q, su || { sc: "classic", lens: "", mode: "learn" }); STEPS = buildSteps(Q); const st = store.get()[Q.rid] || {}; step = st.done ? 0 : Math.min(st.step || 0, LAST()); blk = st.blk || 1; dv = 0; resetClock(); ev("practice-start/" + q.slug); }
+  if (h.get("s") && h.get("s") !== "done" && h.get("s") !== "setup") step = Math.max(0, Math.min(LAST(), +h.get("s") - 1));
   open_ = false; finished = h.get("s") === "done"; pick = null;
   document.body.classList.add("run"); $("#vPick").hidden = true; $("#vRun").hidden = false;
   $("#rTitle").textContent = q.title; document.title = q.title + " - Practice";
+  $("#rSetup").textContent = setupMode ? "" : [Q.scen ? Q.scen.name : "Classic", Q.su.lens || ""].filter(Boolean).join(" · "); $("#rSetup").hidden = setupMode;
   render();
 }
 addEventListener("hashchange", route);
 $("#bBack").onclick = () => { history.pushState(null, "", location.pathname); route(); };
-function setStep(s) { step = Math.max(0, Math.min(6, s)); open_ = false; finished = false; dv = 0; pick = null; tries = new Set(); last = null; cam = null; qtries = new Set(); qlast = null; const st0 = $("#stage"); if (st0) st0.innerHTML = ""; put({ step, blk }); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); }
+function setStep(s) { step = Math.max(0, Math.min(LAST(), s)); open_ = false; finished = false; dv = 0; pick = null; tries = new Set(); last = null; cam = null; qtries = new Set(); qlast = null; const st0 = $("#stage"); if (st0) st0.innerHTML = ""; put({ step, blk }); history.replaceState(null, "", "#q=" + Q.slug + "&s=" + (step + 1)); render(); }
 function modelList(k) { const C = Q.c; return k === "req" ? [...C.reqF, ...C.reqN] : k === "est" ? C.est : k === "api" ? C.api : k === "data" ? C.data : C.wrap; }
 const RATE = [["miss", "Missed it"], ["part", "Partly"], ["nail", "Nailed it"]];
 function rateHTML(key) { const v = (rec().rate || {})[key]; return `<div class="rate"><span>How did you do?</span>${RATE.map(([k, t]) => `<button type="button" data-rate="${key}:${k}" class="${v === k ? "on " + k : ""}">${t}</button>`).join("")}</div>`; }
@@ -380,9 +410,9 @@ function nudge(wrongTitle) { // a thinking prompt, not the answer
 }
 function renderDesign() {
   const n = Q.nodes.length, st = $("#stage");
-  if (!$("#dz")) { st.innerHTML = `<div class="dz" id="dz"><div class="canvas" id="cv"></div><aside class="move" id="mv"></aside></div>`; cam = null; }
+  if (!$("#dz")) { st.innerHTML = `<div class="dz" id="dz"><div class="canvas" id="cv"></div><div class="zc2" role="group" aria-label="Zoom"><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="fit" aria-label="Fit">Fit</button><button type="button" data-z="in" aria-label="Zoom in">+</button></div><aside class="move" id="mv"></aside></div>`; cam = null; }
   renderMove(); loadSvg();
-  buttons(blk < n ? `Show me the next block<span class="kbd">→</span>` : `Next: Deep dives<span class="kbd">↵</span>`, blk >= n ? `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>` : "");
+  buttons(blk < n ? `Show me the next block<span class="kbd">→</span>` : `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>`, blk >= n ? `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>` : "");
 }
 function renderMove() {
   const n = Q.nodes.length, mv = $("#mv"), picks = rec().picks || {};
@@ -415,7 +445,7 @@ function camFor(k) {
   if (!bx.length) return [0, 0, W, H];
   let x0 = Math.min(...bx.map(b => b[0])), y0 = Math.min(...bx.map(b => b[1])), x1 = Math.max(...bx.map(b => b[0] + b[2])), y1 = Math.max(...bx.map(b => b[1] + b[3]));
   if (k >= Q.nodes.length) { x0 = 0; y0 = 0; x1 = W; y1 = H; }
-  const cv = $("#cv"), mv = $("#mv"), over = innerWidth >= 700 && mv, CH = cv ? cv.clientHeight : 600, avail = Math.max(160, CH - (over ? mv.offsetHeight + 40 : 0));
+  const cv = $("#cv"), CH = cv ? cv.clientHeight : 600, avail = Math.max(160, CH);
   const ar = cv ? cv.clientWidth / avail : 1.6, pad = k >= Q.nodes.length ? 10 : 90;
   let w = Math.max(x1 - x0 + pad * 2, 640), h = Math.max(y1 - y0 + pad * 2, 360);
   if (w / h > ar) h = w / ar; else w = h * ar;
@@ -428,7 +458,7 @@ function glide(svg, to) {
 }
 const SVGC = new Map();
 function loadSvg() {
-  const k = blk, key = Q.slug + "/" + k;
+  const k = blk, key = Q.dir + "/" + k;
   const show = t => {
     const cv = $("#cv"); if (!cv || blk !== k) return;
     cv.innerHTML = t; const svg = cv.querySelector("svg"); svg.removeAttribute("width"); svg.removeAttribute("height"); const bg = svg.querySelector(":scope > rect"); if (bg && bg.getAttribute("fill") === "#ffffff") bg.remove(); svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
@@ -438,7 +468,7 @@ function loadSvg() {
     if (cam) svg.setAttribute("viewBox", cam.join(" ")); glide(svg, camFor(k));
   };
   if (SVGC.has(key)) show(SVGC.get(key)); else fetch(`../p/${key}.svg`).then(r => r.text()).then(t => { SVGC.set(key, t); show(t); }).catch(() => {});
-  const nk = Q.slug + "/" + (k + 1); if (k < Q.nodes.length && !SVGC.has(nk)) fetch(`../p/${nk}.svg`).then(r => r.text()).then(t => SVGC.set(nk, t)).catch(() => {});
+  const nk = Q.dir + "/" + (k + 1); if (k < Q.nodes.length && !SVGC.has(nk)) fetch(`../p/${nk}.svg`).then(r => r.text()).then(t => SVGC.set(nk, t)).catch(() => {});
 }
 addEventListener("resize", () => { const svg = $("#cv svg"); if (svg && Q && STEPS[step].k === "hld") { cam = camFor(blk); svg.setAttribute("viewBox", cam.join(" ")); } });
 
@@ -478,19 +508,25 @@ function rounds(k) {
   if (k === "api") C.api.forEach((t, i) => R.push({ q: `Which call does a ${T} client make?`, a: t, code: 1, wrong: s => `That's an endpoint from ${s}. Which action does someone using ${T} take?`, d: decoys(poolOf(d => d.c.api), 3, C.api, hash(T) + 80 + i) }));
   if (k === "data") C.data.forEach((t, i) => R.push({ q: `What does ${T} store, and how?`, a: t, code: 1, wrong: s => `That's stored by ${s}. What does ${T} read most often, and by which key?`, d: decoys(poolOf(d => d.c.data), 3, C.data, hash(T) + 120 + i) }));
   if (k === "deep") C.dives.forEach(([q, a], i) => R.push({ q, a, long: 1, wrong: s => `That answers a question about ${s}. Read the question again: what is it really asking?`, d: seeded(others().flatMap(d => d.c.dives.map(x => ({ t: x[1], src: d.title }))), hash(T) + 160 + i).filter(x => Math.abs(x.t.length - a.length) < 70).slice(0, 2) }));
+  if (k === "modern") (Q.v2.modern || []).forEach(([title, text], i) => R.push({ q: `${T}, built today: ${title}?`, a: text, title, long: 1, modern: 1, wrong: s => `That's a 2026 upgrade for ${s}. Which one fits ${T}?`, d: seeded(others().flatMap(d => (d.v2.modern || []).map(x => ({ t: x[1], src: d.title }))), hash(T) + 240 + i).filter(x => !covered(x.t, text)).slice(0, 2) }));
+  if (k === "extra" && Q.v2.extra) Q.v2.extra.rounds.forEach(([q, a, ds], i) => R.push({ q, a, wrong: () => `Not quite. ${Q.v2.extra.look}`, d: ds.map(t => ({ t, src: "" })) }));
   if (k === "wrap") C.wrap.forEach((t, i) => R.push({ q: i === 0 ? `What breaks first in ${T}?` : `What comes next for ${T}?`, a: t, wrong: s => `That's a ${s} problem. Where does ${T} take the most load?`, d: decoys(poolOf(d => d.c.wrap), 3, C.wrap, hash(T) + 200 + i) }));
   return R.filter(r => r.info || (r.d && r.d.length)).map((r, i) => r.info ? r : { ...r, opts: seeded([{ t: r.a, ok: 1 }, ...r.d], hash(T + k) + i) });
 }
 function qi(k) { return ((rec().qi || {})[k]) || 0; }
 function boardHTML(k, R, n) {
   const done = R.slice(0, n), fresh = i => i === n - 1 && qlast && qlast.ok ? " fresh" : "";
-  if (k === "req") { const col = g => done.map((r, i) => r.g === g ? `<div class="note ${g}${fresh(i)}">${esc(r.a)}</div>` : "").join(""); return `<div class="bcols"><div><div class="bh">What it does</div>${col("f") || `<div class="bghost">Functional requirements land here</div>`}</div><div><div class="bh">How well</div>${col("n") || `<div class="bghost">Non-functional requirements land here</div>`}</div></div>`; }
-  if (k === "est") return `<div class="bh">Your estimates</div><div class="ests">${done.map((r, i) => `<div class="estc${fresh(i)}">${esc(r.info || r.full || r.a)}</div>`).join("") || `<div class="bghost">Each estimate lands here</div>`}</div>`;
+  const tg = r => Q.tag.sc.has(r.a) ? `<em class="tg sc">${esc(Q.scen.name)}</em>` : Q.tag.lens.has(r.a) ? `<em class="tg ln">${esc(Q.su.lens)}</em>` : "";
+  if (k === "req") { const col = g => done.map((r, i) => r.g === g ? `<div class="note ${g}${fresh(i)}">${esc(r.a)}${tg(r)}</div>` : "").join(""); return `<div class="bcols"><div><div class="bh">What it does</div>${col("f") || `<div class="bghost">Functional requirements land here</div>`}</div><div><div class="bh">How well</div>${col("n") || `<div class="bghost">Non-functional requirements land here</div>`}</div></div>`; }
+  if (k === "est") return `<div class="bh">Your estimates</div><div class="ests">${done.map((r, i) => `<div class="estc${fresh(i)}">${esc(r.info || r.full || r.a)}${tg({ a: r.info || r.full || r.a })}</div>`).join("") || `<div class="bghost">Each estimate lands here</div>`}</div>`;
   if (k === "api") return `<div class="bh">API</div><div class="code">${done.map((r, i) => `<div class="cl${fresh(i)}">${esc(r.a)}</div>`).join("") || `<div class="bghost">Endpoints land here</div>`}</div>`;
   if (k === "data") return `<div class="bh">Data model</div><div class="tables">${done.map((r, i) => { const [h, ...rest] = r.a.split(":"); return `<div class="tbl${fresh(i)}"><b>${esc(rest.length ? h : r.a)}</b>${rest.length ? `<span>${esc(rest.join(":"))}</span>` : ""}</div>`; }).join("") || `<div class="bghost">Tables land here</div>`}</div>`;
-  if (k === "deep") return `<div class="bh">Answers you can give</div>${done.map((r, i) => `<div class="qa${fresh(i)}"><b>${esc(r.q)}</b><span>${esc(r.a)}</span></div>`).join("") || `<div class="bghost">Each strong answer lands here</div>`}`;
-  return `<div class="bh">Bottlenecks and next steps</div><div class="bcols one">${done.map((r, i) => `<div class="note w${fresh(i)}">${esc(r.a)}</div>`).join("") || `<div class="bghost">They land here</div>`}</div>`;
+  if (k === "modern") return `<div class="bh">2026 upgrades</div>${done.map((r, i) => `<div class="qa mod${fresh(i)}"><b><em class="tg yr">2026</em> ${esc(r.title)}</b><span>${esc(r.a)}</span></div>`).join("")}`;
+  if (k === "extra") return `<div class="bh">${esc(Q.v2.extra.t)}</div>${done.map((r, i) => `<div class="qa${fresh(i)}"><b>${esc(r.q)}</b><span>${esc(r.a)}</span></div>`).join("")}`;
+  if (k === "deep") return `<div class="bh">Answers you can give</div>${done.map((r, i) => `<div class="qa${fresh(i)}"><b>${esc(r.q)} ${tg(r)}</b><span>${esc(r.a)}</span></div>`).join("") || `<div class="bghost">Each strong answer lands here</div>`}`;
+  return `<div class="bh">Bottlenecks and next steps</div><div class="bcols one">${done.map((r, i) => `<div class="note w${fresh(i)}">${esc(r.a)}${tg(r)}</div>`).join("") || `<div class="bghost">They land here</div>`}</div>`;
 }
+function lensLine() { const b = []; if (Q.scen) b.push(`<span class="tg sc">${esc(Q.scen.name)}</span> ${esc(Q.scen.lens)}`); if (Q.lensInfo) b.push(`<span class="tg ln">${esc(Q.su.lens)}</span> ${esc(Q.lensInfo.cares)}`); return b.length ? `<div class="lensl">${b.map(x => `<p>${x}</p>`).join("")}</div>` : ""; }
 function renderQuiz(k) {
   const R = rounds(k); let n = qi(k);
   while (n < R.length && R[n].info) n++; // plain facts just land
@@ -501,7 +537,7 @@ function renderQuiz(k) {
   if (n >= R.length) {
     const qs = R.filter(r => !r.info).length, first = R.map((r, i) => r.info ? null : picks[i]).filter(v => v === true).length;
     active = `<div class="act done"><div class="ah"><span class="gl">${S.t} done</span></div><p class="big2">${first} of ${qs} <small>right first time</small></p>${rateHTML(k === "deep" ? "deep0" : k)}</div>`;
-    buttons(step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `See your scorecard<span class="kbd">↵</span>`, "", step > 0);
+    buttons(step < LAST() ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `See your scorecard<span class="kbd">↵</span>`, "", step > 0);
   } else {
     const r = R[n], hard = qtries.size >= 2;
     active = `<div class="act" id="act"><div class="ah"><span class="gl">${k === "deep" ? "The interviewer asks" : "Your turn"}</span><span class="cnt2">${n + 1} of ${R.length}</span></div>
@@ -509,7 +545,7 @@ function renderQuiz(k) {
       <div class="opts2${r.long ? " long" : ""}">${r.opts.map((o, i) => { const no = qtries.has(o.t), glow = hard && o.ok; return `<button type="button" class="opt2${no ? " no" : ""}${glow ? " glow" : ""}${r.code ? " mono" : ""}" data-qp="${i}"${no ? " disabled" : ""}><span class="k">${i + 1}</span><span>${esc(o.t)}</span></button>`; }).join("")}</div></div>`;
     buttons(`Show me the answer<span class="kbd">→</span>`, "", true);
   }
-  st.innerHTML = `<div class="qcol"><div class="qtop"><span class="qtt">${esc(S.t)}</span><div class="dots">${dots}</div></div>
+  st.innerHTML = `<div class="qcol"><div class="qtop"><span class="qtt">${esc(S.t)}</span><div class="dots">${dots}</div>${lensLine()}</div>
     ${k === "est" ? `<details class="calcd" open><summary>Calculator</summary>${calcHTML()}</details>` : ""}
     ${n > 0 || k === "req" ? `<div class="board2 b-${k}">${boardHTML(k, R, n)}</div>` : ""}${active}</div>`;
   hookTools();
@@ -530,8 +566,23 @@ function quizDone() { const k = STEPS[step].k, R = rounds(k); let n = qi(k); whi
 
 /* ---- render ---- */
 function buttons(main, extra = "", prevVisible = true) { $("#bMain").innerHTML = main; $("#bExtra").innerHTML = extra; $("#bPrev").style.visibility = prevVisible ? "visible" : "hidden"; }
-function tabs() { const r = rec().rate || {}; $("#rTabs").innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}">${x.t}${(r[x.k] || (x.k === "deep" && r.deep0)) ? `<i class="dot ${r[x.k] || r.deep0}"></i>` : ""}</button>`).join("") + `<span class="sm">${finished ? "Scorecard" : (step + 1) + "/7 · " + STEPS[step].t}</span>`; }
+function tabs() { const r = rec().rate || {}; $("#rTabs").innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}">${x.t}${(r[x.k] || (x.k === "deep" && r.deep0)) ? `<i class="dot ${r[x.k] || r.deep0}"></i>` : ""}</button>`).join("") + `<span class="sm">${finished ? "Scorecard" : (step + 1) + "/" + STEPS.length + " · " + STEPS[step].t}</span>`; }
+function renderSetup() {
+  const d = Q, su = SETUP.get(d.slug) || { sc: "classic", lens: "", mode: "learn" };
+  const scs = [{ id: "classic", name: "Classic interview", blurb: "The standard version most interviewers ask.", lens: "The core design, end to end." }, ...(d.v2.scenarios || [])];
+  const lenses = Object.keys(LENSES).sort((a, b) => (d.companies.includes(b) - d.companies.includes(a)) || a.localeCompare(b));
+  $("#stage").innerHTML = `<div class="qcol setup"><div class="qtop"><span class="gl">Set up your interview · reviewed Oct 2026</span><span class="qtt">${esc(d.title)}</span></div>
+    <div class="sg"><div class="gl">Scenario</div><div class="scs">${scs.map(x => { const add = x.id === "classic" ? "" : [((x.reqF || []).length + (x.reqN || []).length) ? `+${(x.reqF || []).length + (x.reqN || []).length} requirements` : "", d.variants[x.id] ? `+${d.variants[x.id].n - d.nodes.length} blocks` : "", (x.dives || []).length ? `+${x.dives.length} deep dive` : ""].filter(Boolean).join(" · "); return `<button type="button" class="scn${su.sc === x.id ? " on" : ""}" data-sc="${x.id}"><b>${esc(x.name)}</b><span>${esc(x.blurb)}</span>${add ? `<small>${add}</small>` : ""}</button>`; }).join("")}</div></div>
+    <div class="sg"><div class="gl">Interviewer</div><div class="lns"><button type="button" class="ln2${!su.lens ? " on" : ""}" data-lens="">Any</button>${lenses.map(l => `<button type="button" class="ln2${su.lens === l ? " on" : ""}" data-lens="${l}">${l}${d.companies.includes(l) ? " <i>asks this</i>" : ""}</button>`).join("")}</div><p class="look" id="lensTxt">${su.lens ? esc(LENSES[su.lens].cares) : "A balanced interviewer. Pick a company to practise their follow-up questions."}</p></div>
+    <div class="sg"><div class="gl">Mode</div><div class="seg2" id="smode"><button type="button" data-mode="learn" aria-pressed="${su.mode !== "mock"}">Learn, no timer</button><button type="button" data-mode="mock" aria-pressed="${su.mode === "mock"}">Mock, 45 minutes</button></div></div>
+    <div class="sg"><div class="gl">Your steps</div><div class="stp">${buildSteps(d).map((x, i) => `<span>${i + 1}. ${esc(x.t)}</span>`).join("")}</div></div></div>`;
+  $("#stage")._su = su;
+  buttons(`Start practising<span class="kbd">↵</span>`, "", false);
+  $("#rTabs").innerHTML = `<span class="sm" style="display:block">Setup</span>`;
+}
+function startFromSetup() { const su = $("#stage")._su; SETUP.set(Q.slug, su); const base = BY[Q.slug]; Q = null; history.replaceState(null, "", "#q=" + base.slug + "&s=1"); route(); if (su.mode === "mock") setTimeout(() => { if (!tick) $("#rTimer").click(); }, 300); ev("practice-setup/" + su.sc + "/" + (su.lens || "any") + "/" + su.mode); }
 function render() {
+  if (setupMode) return renderSetup();
   tabs(); const S = STEPS[step], C = Q.c, st = $("#stage"); st.scrollTop = 0; $("#bMain").dataset.next = "";
   if (finished) return renderScore();
   if (S.k === "hld") return renderDesign();
@@ -546,23 +597,23 @@ function render() {
   st.innerHTML = `<div class="col"><h3 class="qn">${esc(S.ask)}</h3><p class="look">${esc(S.look)}</p>${tool}${hint}${open_ ? `<div class="ans" id="ans"><div class="gl">${S.k === "est" ? "A strong answer" : "Compared with a strong answer"}</div>${cmp}${S.k !== "est" ? `<p class="legend"><span class="mk ok">✓</span> you covered it <span class="mk miss">+</span> worth adding</p>` : ""}${rateHTML(S.k)}</div>` : ""}</div>`;
   hookNotes(S.k); hookTools();
   const nh = (rec().hints || {})[S.k] || 0, ml = modelList(S.k).length;
-  buttons(!open_ ? `Compare<span class="lg">&nbsp;with a strong answer</span><span class="kbd">↵</span>` : step < 6 ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your&nbsp;</span>scorecard<span class="kbd">↵</span>`, !open_ && S.k !== "est" && nh < ml ? `<button class="link" type="button" data-x="hint">Hint<span class="lg">&nbsp;(${ml - nh} left)</span></button>` : "", step > 0);
+  buttons(!open_ ? `Compare<span class="lg">&nbsp;with a strong answer</span><span class="kbd">↵</span>` : step < LAST() ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your&nbsp;</span>scorecard<span class="kbd">↵</span>`, !open_ && S.k !== "est" && nh < ml ? `<button class="link" type="button" data-x="hint">Hint<span class="lg">&nbsp;(${ml - nh} left)</span></button>` : "", step > 0);
 }
 function renderDeep() {
   const C = Q.c, [q, a] = C.dives[dv], key = "deep" + dv, st = $("#stage");
   st.innerHTML = `<div class="col"><span class="dvn">The interviewer asks · ${dv + 1} of ${C.dives.length}</span><h3 class="qn">${esc(q)}</h3><textarea class="notes" id="nt" rows="3" placeholder="Say it out loud, then jot the key words">${esc((rec().notes || {})[key] || "")}</textarea>${open_ ? `<div class="ans"><div class="gl">A strong answer</div><p class="dva">${esc(a)}</p>${rateHTML(key)}</div>` : ""}</div>`;
   hookNotes(key);
-  buttons(!open_ ? `Show<span class="lg">&nbsp;a strong</span> answer<span class="kbd">↵</span>` : dv < C.dives.length - 1 ? `Next question<span class="kbd">↵</span>` : `Next: Wrap-up<span class="kbd">↵</span>`);
+  buttons(!open_ ? `Show<span class="lg">&nbsp;a strong</span> answer<span class="kbd">↵</span>` : dv < C.dives.length - 1 ? `Next question<span class="kbd">↵</span>` : `Next: ${esc(STEPS[step + 1] ? STEPS[step + 1].t : "Scorecard")}<span class="kbd">↵</span>`);
 }
 function stepScore() { // your own rating if you gave one, else how many you got right first time
   const r = rec().rate || {}, v = { nail: 2, part: 1, miss: 0 }, qp = rec().qp || {}, pk = rec().picks || {};
   const ratio = o => { const vals = Object.values(o || {}); return vals.length ? vals.filter(x => x === true).length / vals.length * 2 : null; };
-  return ["req", "est", "api", "data", "hld", "deep", "wrap"].map(k => { const rk = k === "deep" ? r.deep0 : r[k]; if (rk) return v[rk]; return k === "hld" ? ratio(pk) : ratio(qp[k]); });
+  return STEPS.map(x => x.k).map(k => { const rk = k === "deep" ? r.deep0 : r[k]; if (rk) return v[rk]; return k === "hld" ? ratio(pk) : ratio(qp[k]); });
 }
 function renderScore() {
   const sc = stepScore(), got = sc.filter(x => x !== null), pct = got.length ? Math.round(got.reduce((a, b) => a + b, 0) / (got.length * 2) * 100) : 0;
   const weak = sc.map((x, i) => [x, i]).filter(([x]) => x !== null && x < 1.5).map(([, i]) => i);
-  const nxt = D.filter(d => d !== Q && d.track === Q.track && !(store.get()[d.slug] || {}).done)[0] || D[(D.indexOf(Q) + 1) % D.length];
+  const nxt = D.filter(d => d.slug !== Q.slug && d.track === Q.track && !(store.get()[d.slug] || {}).done)[0] || D[(D.indexOf(BY[Q.slug]) + 1) % D.length];
   const bar = x => x === null ? `<i class="sb"></i>` : `<i class="sb" style="--w:${x / 2 * 100}%" data-v="${x >= 1.5 ? "nail" : x >= 0.5 ? "part" : "miss"}"></i>`;
   $("#stage").innerHTML = `<div class="col"><span class="dvn">Scorecard</span><h3 class="qn">${pct}% <small>overall, from first-try answers and your ratings</small></h3>
     <div class="scard">${STEPS.map((x, i) => `<button type="button" class="srow" data-step="${i}"><span>${x.t}</span>${bar(sc[i])}<em>${sc[i] === null ? "not rated" : sc[i] >= 1.5 ? "Strong" : sc[i] >= 0.5 ? "Partly" : "Review"}</em></button>`).join("")}</div>
@@ -585,25 +636,30 @@ function hookTools() {
   }));
 }
 function primary() {
+  if (setupMode) return startFromSetup();
   const S = STEPS[step], C = Q.c;
   if ($("#bMain").dataset.next) { location.hash = "q=" + $("#bMain").dataset.next; return; }
   if (finished) return;
-  if (S.k === "hld") { if (blk < Q.nodes.length) revealNext(); else setStep(5); return; }
+  if (S.k === "hld") { if (blk < Q.nodes.length) revealNext(); else setStep(step + 1); return; }
   if (!quizDone()) { quizReveal(); return; }
-  if (step < 6) setStep(step + 1); else { finished = true; history.replaceState(null, "", "#q=" + Q.slug + "&s=done"); ev("practice-done/" + Q.slug); render(); }
+  if (step < LAST()) setStep(step + 1); else { finished = true; history.replaceState(null, "", "#q=" + Q.slug + "&s=done"); ev("practice-done/" + Q.slug); render(); }
 }
 function back() {
+  if (setupMode) { history.pushState(null, "", location.pathname); route(); return; }
   const S = STEPS[step];
   if (finished) { finished = false; open_ = true; render(); return; }
   if (S.k === "hld" && blk > 1) { blk--; tries = new Set(); last = null; put({ blk }); renderDesign(); return; }
   if (S.k !== "hld" && quizBack()) return;
-  if (step === 5) { setStep(4); blk = Q.nodes.length; render(); return; }
+  if (step > 0 && STEPS[step - 1].k === "hld") { setStep(step - 1); blk = Q.nodes.length; render(); return; }
   setStep(step - 1);
 }
+$("#rSetup").onclick = () => { location.hash = "q=" + Q.slug + "&s=setup"; };
 $("#bMain").onclick = primary; $("#bPrev").onclick = back;
 $("#vRun").addEventListener("click", e => {
+  const sb = e.target.closest("[data-sc],[data-lens],[data-mode]"); if (sb && setupMode) { const su = $("#stage")._su; if (sb.dataset.sc) su.sc = sb.dataset.sc; if (sb.dataset.lens !== undefined) su.lens = sb.dataset.lens; if (sb.dataset.mode) su.mode = sb.dataset.mode; SETUP.set(Q.slug, su); renderSetup(); return; }
   const qp = e.target.closest("[data-qp]"); if (qp) { quizPick(+qp.dataset.qp); return; }
   const pk = e.target.closest("[data-pick]"); if (pk) { pickBlock(pk.dataset.pick); return; }
+  const zz = e.target.closest("[data-z]"); if (zz && $("#cv svg") && cam) { const svg = $("#cv svg"); if (zz.dataset.z === "fit") { glide(svg, camFor(blk)); return; } const f = zz.dataset.z === "in" ? 0.75 : 1.33, [x, y, w, h] = cam; glide(svg, [x + w * (1 - f) / 2, y + h * (1 - f) / 2, w * f, h * f]); return; }
   const hn = e.target.closest("[data-node]"); if (hn) { const x = Q.nodes.find(y => y.id === hn.dataset.node); last = { ok: true, title: x.title, text: Q.c.blocks[x.id] || "" }; renderMove(); return; }
   const rt = e.target.closest("[data-rate]"); if (rt) { const [k, v] = rt.dataset.rate.split(":"); sub("rate", { [k]: v }); rt.parentNode.querySelectorAll("button").forEach(b => b.className = b === rt ? "on " + v : ""); tabs(); return; }
   const del = e.target.closest("[data-del]"); if (del) { const [key, g, i] = del.dataset.del.split(":"), m = (rec().mine || {})[key] || {}; (m[g] || []).splice(+i, 1); sub("mine", { [key]: m }); render(); return; }
@@ -614,7 +670,7 @@ $("#vRun").addEventListener("click", e => {
     if (a === "apiadd") { sub("mine", { api: [...((rec().mine || {}).api || [{ m: "POST", p: "", r: "" }]), { m: "GET", p: "", r: "" }] }); render(); }
     if (a === "entadd") { sub("mine", { data: [...((rec().mine || {}).data || [{ n: "", f: "", s: "SQL", k: "" }]), { n: "", f: "", s: "SQL", k: "" }] }); render(); }
     if (a === "copy") copyDesign();
-    if (a === "restart") { const p = store.get(); delete p[Q.slug]; store.set(p); blk = 1; resetClock(); setStep(0); }
+    if (a === "restart") { const p = store.get(); delete p[Q.rid]; store.set(p); blk = 1; resetClock(); setStep(0); }
     return; }
   const t = e.target.closest("[data-step]"); if (t) { if (finished) finished = false; setStep(+t.dataset.step); }
 });
