@@ -7,13 +7,13 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 00 | [`sd:guide/`](#00-guide) | How to use this kit | 2 |
 | 01 | [`sd:note/`](#01-note) | Interview notes | 24 |
 | 02 | [`sd:client/`](#02-client) | Clients, devices & AI clients | 28 |
-| 03 | [`sd:edge/`](#03-edge) | Edge & networking | 7 |
-| 04 | [`sd:svc/`](#04-svc) | Services & compute | 20 |
-| 05 | [`sd:data/`](#05-data) | Databases & storage | 17 |
-| 06 | [`sd:cache/`](#06-cache) | Caches | 5 |
+| 03 | [`sd:edge/`](#03-edge) | Edge & networking | 8 |
+| 04 | [`sd:svc/`](#04-svc) | Services & compute | 24 |
+| 05 | [`sd:data/`](#05-data) | Databases & storage | 19 |
+| 06 | [`sd:cache/`](#06-cache) | Caches | 6 |
 | 07 | [`sd:msg/`](#07-msg) | Messaging & streaming | 9 |
-| 08 | [`sd:ai/`](#08-ai) | AI models & inference | 13 |
-| 09 | [`sd:agent/`](#09-agent) | Agents & orchestration | 17 |
+| 08 | [`sd:ai/`](#08-ai) | AI models & inference | 15 |
+| 09 | [`sd:agent/`](#09-agent) | Agents & orchestration | 18 |
 | 10 | [`sd:rag/`](#10-rag) | Knowledge & retrieval (RAG) | 11 |
 | 11 | [`sd:llmops/`](#11-llmops) | Safety, evals & LLMOps | 11 |
 | 12 | [`sd:ops/`](#12-ops) | Observability, security & ops | 8 |
@@ -111,6 +111,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Reverse Proxy (Nginx)** - nginx envoy haproxy tls termination
 - **WAF / Firewall** - security ddos waf firewall
 - **Rate Limiter** - throttle token bucket leaky bucket sliding window
+- **Edge Function** - cloudflare workers lambda edge compute middleware
 
 <a id="04-svc"></a>
 ## 04 `sd:svc/` Services & compute
@@ -137,6 +138,10 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Config / Coord (ZooKeeper)** - zookeeper etcd consul leader election config
 - **Feature Flags** - launchdarkly toggles experiments ab test
 - **Circuit Breaker** - resilience fallback hystrix retry
+- **Service Mesh** - istio linkerd envoy sidecar mtls
+- **Distributed Lock** - redlock etcd lease fencing token mutex
+- **Autoscaler** - hpa kubernetes karpenter scale out elastic
+- **Idempotency Store** - idempotency key dedupe exactly once retries
 
 <a id="05-data"></a>
 ## 05 `sd:data/` Databases & storage
@@ -158,6 +163,8 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Object Storage (S3)** - s3 blob gcs files images video
 - **Data Warehouse** - snowflake bigquery redshift olap analytics
 - **Data Lake** - s3 parquet raw data hdfs
+- **Lakehouse (Iceberg)** - iceberg delta lake table format parquet
+- **OLAP DB (ClickHouse)** - clickhouse druid pinot realtime analytics columnar
 - **Vector DB** - pgvector pinecone weaviate qdrant embeddings ann
 - **File / Doc Store** - files documents metadata
 
@@ -171,6 +178,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Memcached** - cache in-memory kv
 - **Local Cache** - in-process lru app cache
 - **Session Store** - sessions tokens redis
+- **Bloom Filter** - probabilistic membership false positive
 
 <a id="07-msg"></a>
 ## 07 `sd:msg/` Messaging & streaming
@@ -201,7 +209,9 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Embedding Model** - embeddings encoder vectors ai
 - **Reranker** - rerank cross encoder relevance ai
 - **Model Serving (GPU)** - inference vllm triton gpu endpoint ai
-- **AI Gateway / Model Router** - litellm openrouter routing fallback multi provider ai
+- **AI Gateway / Model Router** - litellm openrouter routing fallback multi provider
+- **Prompt Cache** - prompt caching prefix cache kv cache tokens
+- **Batch Inference** - batch api offline async bulk jobs ai
 - **Fine-tuned Model** - fine tuning lora sft custom model ai
 - **Training Pipeline** - ml training mlops ai
 - **Feature Store** - feast features ml ai
@@ -215,7 +225,8 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Supervisor Agent** - orchestrator manager multi-agent lead ai agentic
 - **Sub-agent / Worker** - worker agent specialist delegate ai agentic
 - **Planner** - plan task decomposition steps ai agentic
-- **Tools** - function calling tool use api ai agentic
+- **Tools** - function calling tool use api
+- **Agent Skills** - skills instructions scripts progressive disclosure ai agentic
 - **MCP Server** - model context protocol tools resources server ai agentic
 - **A2A Protocol** - agent to agent communication interop ai agentic
 - **Short-term Memory** - context window conversation buffer session ai agentic
