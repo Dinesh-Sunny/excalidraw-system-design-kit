@@ -112,7 +112,7 @@ body.filtering .hero .wrap { padding-bottom: 28px }
 
 /* rail */
 .rail { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
-.rail .wrap { display: flex; gap: 28px; overflow-x: auto; scrollbar-width: none; padding-top: 12px }
+.rail .wrap { display: flex; gap: 28px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; padding-top: 12px }
 .rail .wrap::-webkit-scrollbar { display: none }
 .rail .wrap.fr { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent) }
 .rail .wrap.fl { -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px); mask-image: linear-gradient(90deg, transparent, #000 48px) }
@@ -135,7 +135,7 @@ main .wrap > *, .row { min-width: 0 }
 .row h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 0 0 14px; font: 400 30px/1.1 var(--font-serif) }
 .row h2 .n { font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
 .row h2 .more { margin-left: auto; font: 500 13px/1 var(--font-sans); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; color: var(--ink) }
-.track { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: thin }
+.track { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 20px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding: 6px 0 10px; margin-top: -6px; scrollbar-width: thin }
 .track > * { scroll-snap-align: start }
 @media (min-width: 900px) { .track { grid-auto-columns: calc((100% - 60px) / 4) } }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 28px 20px }
@@ -276,7 +276,7 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
 .sheet .sh-img { background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; padding: 28px }
 .sheet .sh-img img { max-height: 70dvh; transition: opacity .15s }
 .sheet .sh-img img.ld { opacity: .2 }
-.sheet .sh-img { overflow: hidden; touch-action: none; cursor: zoom-in }
+.sheet .sh-img { overflow: hidden; touch-action: pan-y; cursor: zoom-in } .sheet .sh-img.zoomed { touch-action: none }
 .sheet .sh-img.zoomed { cursor: grab } .sheet .sh-img.panning { cursor: grabbing }
 .sheet .sh-img img { transform-origin: 0 0; user-select: none; -webkit-user-drag: none }
 @media (hover: none) { .zc [data-z="-1"], .zc [data-z="1"], .zc .zs { display: none } .zc { right: 8px; bottom: 8px } }
@@ -475,7 +475,7 @@ a.card .open { cursor: pointer }
 .stg.has-hl .ib-n:not(.on) { opacity: .35 } .ib-n.on rect { stroke-width: 3.5; filter: drop-shadow(0 6px 14px rgba(105,101,219,.28)) }
 .ib-e { stroke: #868e96; stroke-width: 1.6; fill: none } .ib-e.on { stroke: #6965db; stroke-width: 2.4 } .ib-l { font: 400 12px var(--font-hand); fill: #495057 }
 .cm-n { cursor: pointer } .cm-n:hover rect { stroke: #6965db }
-.lnav { position: sticky; top: -18px; z-index: 4; min-height: 51px; align-items: center; box-shadow: 0 8px 12px -10px rgba(0,0,0,.12); margin: -6px -20px 0; padding: 10px 20px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; background: var(--surface); border-bottom: 1px solid var(--hairline) }
+.lnav { position: sticky; top: -18px; z-index: 4; overflow-y: hidden; min-height: 51px; align-items: center; box-shadow: 0 8px 12px -10px rgba(0,0,0,.12); margin: -6px -20px 0; padding: 10px 20px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; background: var(--surface); border-bottom: 1px solid var(--hairline) }
 .lnav::-webkit-scrollbar { display: none } .lnav[hidden] { display: none }
 .lnav button { flex: none; height: 30px; padding: 0 12px; border-radius: 9999px; border: 0; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); transition: background .15s, color .15s }
 .lnav button:hover { color: var(--ink) } .lnav button.on { background: var(--sketch-soft); color: var(--sketch) }
@@ -959,7 +959,7 @@ let sx0 = null; sheet.querySelector(".sh-img").addEventListener("touchstart", e 
 sheet.querySelector(".sh-img").addEventListener("touchend", e => { if (sx0 === null || Z.k > 1.01 || e.changedTouches.length > 1) { sx0 = null; return; } const dx = e.changedTouches[0].clientX - sx0; if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1); sx0 = null; }, { passive: true });
 /* zoom: click to zoom at a point, wheel or pinch to zoom, drag to pan, controls, full screen; swaps to the SVG for crisp detail */
 const zw = $("#szoom"), zimg = $("#si"), Z = { k: 1, x: 0, y: 0 };
-zw.insertAdjacentHTML("beforeend", '<span class="zhint" id="zhint">Click to zoom · scroll to zoom · drag to move</span>');
+zw.insertAdjacentHTML("beforeend", '<span class="zhint" id="zhint">Click or pinch to zoom · drag to move</span>');
 function zApply(anim) { zw.classList.toggle("anim", !!anim); zimg.style.transform = Z.k === 1 ? "" : `translate(${Z.x}px, ${Z.y}px) scale(${Z.k})`; zw.classList.toggle("zoomed", Z.k > 1.01); $("#zpct").textContent = Math.round(Z.k * 100) + "%"; $("#sprev").hidden = $("#snext").hidden = Z.k > 1.01 || ctx.length < 2; }
 function zClamp() { const w = zimg.offsetWidth, h = zimg.offsetHeight, ox = zimg.offsetLeft, oy = zimg.offsetTop, W = zw.clientWidth, H = zw.clientHeight; const minX = Math.min(0, W - (ox + w * Z.k)) , maxX = Math.max(0, -ox), minY = Math.min(0, H - (oy + h * Z.k)), maxY = Math.max(0, -oy); if (Z.k > 1) { Z.x = Math.min(maxX + 40, Math.max(minX - 40, Z.x)); Z.y = Math.min(maxY + 40, Math.max(minY - 40, Z.y)); } }
 function hiRes() { if (zimg.dataset.hi || !cur) return; zimg.dataset.hi = "1"; const it = cur; svgText(it).then(t => { if (cur !== it) return; const u = URL.createObjectURL(new Blob([t], { type: "image/svg+xml" })); const pre = new Image(); pre.onload = () => { if (cur === it) zimg.src = u; }; pre.src = u; }).catch(() => {}); }
@@ -976,7 +976,12 @@ const zUp = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; zw.c
   if (drag && !moved && e.type === "pointerup" && !e.target.closest("button")) { Z.k > 1.01 ? zoomReset(true) : zTo(2.5, e.clientX, e.clientY, true); }
   drag = null; };
 zw.addEventListener("pointerup", zUp); zw.addEventListener("pointercancel", zUp);
-zw.addEventListener("wheel", e => { e.preventDefault(); const f = Math.exp(-(e.deltaMode ? e.deltaY * 16 : e.deltaY) * (e.ctrlKey ? 0.01 : 0.0025)); zTo(Z.k * f, e.clientX, e.clientY); }, { passive: false });
+zw.addEventListener("wheel", e => {
+  const k = e.deltaMode ? 16 : 1, onStage = !$("#stg").hidden;
+  if (e.ctrlKey && !onStage) { e.preventDefault(); zTo(Z.k * Math.exp(-e.deltaY * k * 0.005), e.clientX, e.clientY); return; } // trackpad pinch or Ctrl + scroll zooms
+  if (Z.k > 1.01 && !onStage) { e.preventDefault(); Z.x -= e.deltaX * k; Z.y -= e.deltaY * k; zClamp(); zApply(false); return; } // zoomed in: scroll moves around the picture
+  if (matchMedia("(min-width: 900px)").matches) { e.preventDefault(); sheet.querySelector(".sh-body").scrollBy({ top: e.deltaY * k, left: 0 }); } // otherwise scroll the reading column
+}, { passive: false });
 zw.querySelector(".zc").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; const z = b.dataset.z;
   if (z === "1") zTo(Z.k * 1.6, undefined, undefined, true); else if (z === "-1") zTo(Z.k / 1.6, undefined, undefined, true); else if (z === "0") zoomReset(true);
   else if (z === "fs") { if (document.fullscreenElement) document.exitFullscreen(); else if (zw.requestFullscreen) zw.requestFullscreen().catch(() => {}); } });
