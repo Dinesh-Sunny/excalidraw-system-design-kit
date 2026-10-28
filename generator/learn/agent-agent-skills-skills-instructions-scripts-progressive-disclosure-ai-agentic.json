@@ -1,0 +1,92 @@
+{
+ "family": "agent",
+ "reviewed": "Oct 2026",
+ "what": "An Agent Skill is a folder with a SKILL.md file: a name, a description and instructions, plus optional scripts and reference files. The agent sees only the short description until a task needs the full skill.",
+ "like": "Like a shelf of labelled recipe binders: you read the spines all the time, but only pull one down and open it when you cook that dish.",
+ "why": [
+  "Packs team know-how into reusable, version-controlled folders the agent loads on demand",
+  "Keeps context small: hundreds of skills cost only their one-line descriptions until used",
+  "Bundled scripts make steps repeatable - the agent runs the code instead of re-inventing it"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "user", "t": "Task|fill in this PDF form", "x": 0, "y": 20, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "index", "t": "Skill index|name + description only", "x": 0, "y": 180, "w": 150, "h": 86, "c": "rag", "i": "vector"},
+   {"id": "agent", "t": "Agent loop|LLM decides next step", "x": 265, "y": 20, "w": 170, "h": 86, "c": "agent", "i": "agent"},
+   {"id": "skill", "t": "SKILL.md body|loaded when it matches", "x": 265, "y": 180, "w": 170, "h": 86, "c": "agent", "i": "doc"},
+   {"id": "refs", "t": "references/|read only if needed", "x": 265, "y": 340, "w": 170, "h": 86, "c": "data", "i": "doc"},
+   {"id": "tools", "t": "Tools and MCP|the actions", "x": 550, "y": 20, "w": 150, "h": 86, "c": "agent", "i": "tool"},
+   {"id": "scripts", "t": "scripts/|run, not read", "x": 550, "y": 180, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "sandbox", "t": "Sandbox|runs the code safely", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "shield"}
+  ],
+  "edges": [
+   ["user", "agent", "task"],
+   ["index", "agent", "match?"],
+   ["agent", "skill", "activate"],
+   ["skill", "refs", "if needed"],
+   ["skill", "scripts", "run"],
+   ["scripts", "sandbox", ""],
+   ["agent", "tools", "call"]
+  ],
+  "steps": [
+   {"t": "Only descriptions at startup", "d": "The agent loads just the name and description of every installed skill, roughly 100 tokens each, so it knows what exists without reading any instructions.", "hl": ["index", "agent"]},
+   {"t": "A task arrives", "d": "The user asks for something, like filling in a PDF form. The agent compares the task with the skill descriptions - a small retrieval problem.", "hl": ["user", "agent", "index"]},
+   {"t": "Activate the skill", "d": "When a description matches, the agent reads the full SKILL.md body into context: step-by-step instructions, examples and edge cases.", "hl": ["agent", "skill"]},
+   {"t": "Open more only if needed", "d": "Long detail lives in reference files that SKILL.md links to. The agent opens one only when the task needs it. This layering is called progressive disclosure.", "hl": ["skill", "refs"]},
+   {"t": "Run bundled scripts", "d": "Scripts do exact, repeatable work, like extracting form fields. The agent runs them in a sandbox and sees only the output, not the code.", "hl": ["scripts", "sandbox"]},
+   {"t": "Act with tools", "d": "The skill says how to do the job; tools and MCP servers are what actually reach files, APIs and apps.", "hl": ["agent", "tools"]}
+  ]
+ },
+ "numbers": [
+  {"v": "~100 tokens", "l": "per skill at startup: just name and description", "s": "https://agentskills.io/specification.md"},
+  {"v": "< 5,000 tokens", "l": "recommended size of a SKILL.md body once activated", "s": "https://agentskills.io/specification.md"},
+  {"v": "500 lines", "l": "keep the main SKILL.md under this; move detail out", "s": "https://agentskills.io/specification.md"},
+  {"v": "64 / 1,024", "l": "max characters for the name and the description", "s": "https://agentskills.io/specification.md"}
+ ],
+ "tool": "agent",
+ "choices": [
+  {"t": "The description", "d": "This is what triggers the skill. Say what it does and when to use it, with the keywords users actually type. A vague description means it never fires, or fires on the wrong task."},
+  {"t": "What goes where", "d": "Short core steps in SKILL.md, long detail in references/, exact repeatable work in scripts/. Keep file links one level deep from SKILL.md."},
+  {"t": "Skill, tool or MCP", "d": "A skill teaches how to do a job. A tool is one action the model can call. An MCP server connects the agent to an outside system's tools and data."},
+  {"t": "Versioning", "d": "Keep skills in git, add a version in metadata, and review changes like code. A small wording change can shift which tasks trigger the skill."},
+  {"t": "Trust and permissions", "d": "Install skills only from sources you trust, audit scripts and network calls, and run scripts in a sandbox. allowed-tools can pre-approve a narrow tool set."}
+ ],
+ "instead": [
+  {"slug": "agent-tools-function-calling-tool-use-api-ai-agentic", "why": "One callable action with a schema, not a whole how-to playbook"},
+  {"slug": "agent-mcp-server-model-context-protocol-tools-resources-server-ai-agentic", "why": "Connects the agent to outside systems; pairs well with skills"},
+  {"slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation", "why": "Retrieve facts from many documents rather than load procedures"},
+  {"slug": "agent-supervisor-agent-orchestrator-manager-multi-agent-lead-ai-agentic", "why": "Split work across specialist agents instead of one agent with skills"}
+ ],
+ "breaks": [
+  {"t": "Skill never triggers", "d": "The description does not match how users phrase the task.", "see": "Low activation rate in traces; the agent improvises instead", "fix": "Rewrite the description with real user keywords, then test with trigger evals"},
+  {"t": "Wrong skill triggers", "d": "Two skills have overlapping descriptions, so selection picks the wrong one.", "see": "Precision drops: activations on tasks the skill was not built for", "fix": "Sharpen boundaries, merge near-duplicates, add 'not for' notes"},
+  {"t": "Context fills up", "d": "A huge SKILL.md loads everything at once.", "see": "Token use jumps on activation; later steps lose earlier context", "fix": "Keep the body short and move detail into reference files"},
+  {"t": "Untrusted skill", "d": "A third-party skill carries scripts or instructions that send data out.", "see": "Unexpected network calls or file reads in the sandbox logs", "fix": "Only trusted sources, code review, sandboxing and narrow permissions"}
+ ],
+ "say": [
+  "I'll package each repeatable workflow as an Agent Skill: a SKILL.md with a clear name and description, plus scripts for the exact steps.",
+  "At startup the agent sees only the descriptions, about 100 tokens each, so we can keep many skills without filling the context window.",
+  "Picking a skill is a retrieval problem, so I'll measure it like one: a labelled set of tasks, with precision and recall of activation.",
+  "Skills live in git with versions and evals, and we only install skills we have reviewed, running their scripts in a sandbox."
+ ],
+ "followups": [
+  {"q": "How is a skill different from a tool or an MCP server?", "a": "A tool is one action with a JSON schema. An MCP server exposes tools and data from an outside system. A skill is a folder of instructions and scripts that teaches the agent how to do a whole job, often using those tools."},
+  {"q": "How does the agent choose a skill?", "a": "It matches the task against the short descriptions it holds in context, much like ranking documents for a query. Clear, keyword-rich descriptions with crisp boundaries act like good document titles and raise both recall and precision."},
+  {"q": "How would you test skills before shipping?", "a": "Build a small eval set: tasks that should trigger each skill, tasks that should not, and checks on the final output. Run it on every change to a description or script, and track activation precision, recall and task success."},
+  {"q": "With 300 skills, what changes?", "a": "Descriptions alone start to crowd the context and overlap. Group skills, namespace names, merge near-duplicates, and consider a search step that retrieves the top few skill descriptions per task instead of listing all of them."}
+ ],
+ "today": "In December 2025 Anthropic published Agent Skills as an open standard, now hosted at agentskills.io, so the same skill folder can be used by any skills-compatible agent.",
+ "check": [
+  {"q": "What does the agent load for every installed skill at startup?", "a": "Only the name and description", "d": ["The whole SKILL.md", "Every bundled script", "All reference files"], "why": "That is progressive disclosure: the full body loads only when a task matches."},
+  {"q": "Your skill rarely fires even on tasks it was built for. What do you fix first?", "a": "The description", "d": ["The script language", "The licence field", "The folder layout"], "why": "The description is what the agent matches tasks against, so it decides activation."},
+  {"q": "Where should a 40-page API reference go in a skill?", "a": "A file in references/ linked from SKILL.md", "d": ["Inside the description", "At the top of SKILL.md", "In the name field"], "why": "Reference files load only when needed, keeping the main body small."},
+  {"q": "A teammate shares a skill from an unknown repo. Safest move?", "a": "Review its scripts and instructions, then run it sandboxed", "d": ["Install it, skills are read-only", "Trust it if the description is clear", "Give it all tools so it works"], "why": "Skills can run code and steer the agent, so treat them like any third-party code."}
+ ],
+ "sources": [
+  {"t": "Anthropic engineering: Equipping agents with Agent Skills", "u": "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills"},
+  {"t": "Agent Skills overview (agentskills.io)", "u": "https://agentskills.io/home"},
+  {"t": "Agent Skills specification", "u": "https://agentskills.io/specification.md"}
+ ]
+}

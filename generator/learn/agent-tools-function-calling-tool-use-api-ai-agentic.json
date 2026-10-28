@@ -1,0 +1,96 @@
+{
+ "family": "agent",
+ "reviewed": "Oct 2026",
+ "what": "Tool use (function calling) lets an LLM ask your code to do things. You describe each tool with a JSON schema; the model replies with a tool call, your code runs it and sends back the result.",
+ "like": "Like a manager with a phone list: they cannot fix the boiler themselves, but they know who to call, what to say, and they read the reply.",
+ "why": [
+  "Gives the model fresh data and real actions: search, databases, APIs, payments",
+  "Structured JSON arguments instead of parsing free text",
+  "Your code stays in charge: it decides what runs, with which permissions"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "app", "t": "Your code|sends tools + message", "x": 0, "y": 20, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "llm", "t": "LLM|picks a tool or answers", "x": 265, "y": 20, "w": 170, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "schema", "t": "Tool definitions|name, description, schema", "x": 550, "y": 20, "w": 150, "h": 86, "c": "agent", "i": "doc"},
+   {"id": "result", "t": "tool_result|short, matched by id", "x": 0, "y": 180, "w": 150, "h": 86, "c": "agent", "i": "doc"},
+   {"id": "call", "t": "tool_use block|name + JSON arguments", "x": 265, "y": 180, "w": 170, "h": 86, "c": "agent", "i": "tool"},
+   {"id": "search", "t": "Tool search|loads a few on demand", "x": 550, "y": 180, "w": 150, "h": 86, "c": "rag", "i": "vector"},
+   {"id": "exec", "t": "Run the tool|API, DB, search", "x": 265, "y": 340, "w": 170, "h": 86, "c": "svc", "i": "service"},
+   {"id": "perm", "t": "Permission check|allow, ask or deny", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "shield"}
+  ],
+  "edges": [
+   ["app", "llm", "request"],
+   ["schema", "llm", "defs"],
+   ["search", "schema", "loads few"],
+   ["llm", "call", ""],
+   ["call", "perm", "check"],
+   ["perm", "exec", "allowed"],
+   ["exec", "result", "output"],
+   ["result", "app", "next turn"]
+  ],
+  "steps": [
+   {"t": "Describe your tools", "d": "Each tool has a name, a plain-language description of what it does and when to use it, and a JSON Schema for its inputs. They go in the request with the user message.", "hl": ["app", "schema", "llm"]},
+   {"t": "Model asks for a call", "d": "If a tool helps, the model stops with stop_reason tool_use and returns tool_use blocks: a tool name, JSON arguments and an id. It can ask for several at once.", "hl": ["llm", "call"]},
+   {"t": "Check before running", "d": "Your code validates the arguments and checks permissions. Read-only calls can run freely; writes, payments or deletes may need a human to approve.", "hl": ["call", "perm"]},
+   {"t": "Run it, keep it short", "d": "Your code runs the real function. Parallel calls can run together if they are independent and read-only. Trim the output to what the model needs.", "hl": ["perm", "exec"]},
+   {"t": "Send results back", "d": "Return one tool_result per call, matched by tool_use_id, all in the next user message. Failures come back with is_error and a helpful hint.", "hl": ["exec", "result", "app"]},
+   {"t": "Many tools? Search them", "d": "With hundreds of tools, mark most as deferred. A tool search step loads only the few that fit this request, which saves tokens and improves selection.", "hl": ["search", "schema"]}
+  ]
+ },
+ "numbers": [
+  {"v": "30-50", "l": "available tools before picking the right one gets harder", "s": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool"},
+  {"v": "~55k", "l": "tokens of tool definitions in a five-server MCP setup", "s": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool"},
+  {"v": "85%+", "l": "fewer definition tokens with tool search, loading 3-5 tools", "s": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool"},
+  {"v": "3-4", "l": "sentences at least for each tool description", "s": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"},
+  {"v": "25,000", "l": "token cap on a tool response in Claude Code by default", "s": "https://www.anthropic.com/engineering/writing-tools-for-agents"}
+ ],
+ "tool": "agent",
+ "choices": [
+  {"t": "tool_choice", "d": "auto lets the model decide (the default), any forces some tool, tool forces one named tool, none turns tools off. Some newer models accept only auto and none."},
+  {"t": "Strict mode", "d": "strict: true makes the model's arguments follow your JSON Schema exactly, so your code never gets a missing field or a wrong type."},
+  {"t": "Parallel calls", "d": "On by default. Run independent read-only calls together for speed; run calls with side effects in order. disable_parallel_tool_use limits it to one call per turn."},
+  {"t": "Tool count and loading", "d": "Fewer, well-named tools with namespaces like github_list_prs. Past a few dozen, defer the rest and let tool search load the few that fit."},
+  {"t": "Result size and format", "d": "Return concise, human-readable fields, paginate or filter long output, and offer a concise or detailed format option. Errors should say how to fix the call."}
+ ],
+ "instead": [
+  {"slug": "agent-mcp-server-model-context-protocol-tools-resources-server-ai-agentic", "why": "Share one set of tools across many agents and apps"},
+  {"slug": "agent-code-sandbox-code-execution-e2b-container-isolated-ai-agentic", "why": "Let the model write code that calls tools in a loop"},
+  {"slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation", "why": "Always fetch context up front instead of waiting for a call"},
+  {"slug": "agent-human-approval-human-in-the-loop-hitl-review-approve-ai-agentic", "why": "Add a person before risky tool calls actually run"}
+ ],
+ "breaks": [
+  {"t": "Wrong tool picked", "d": "Vague or overlapping descriptions confuse selection, worse with many tools.", "see": "Tool-selection accuracy drops in evals; odd tools in traces", "fix": "Detailed descriptions, namespaces, fewer tools, tool search for the long tail"},
+  {"t": "Bad arguments", "d": "The model sends a missing field or the wrong type.", "see": "Validation errors and retries in logs", "fix": "strict: true, input examples, clear errors that say what to change"},
+  {"t": "Huge results", "d": "A tool dumps thousands of rows into context.", "see": "Token use per turn spikes; the model forgets earlier steps", "fix": "Paginate, filter, truncate with a note, concise format by default"},
+  {"t": "Duplicate side effects", "d": "A retry or repeated call runs a write twice.", "see": "Double orders or double emails after timeouts", "fix": "Idempotency keys on writes, read-only tools kept separate, approval for risky ones"}
+ ],
+ "say": [
+  "I'll expose search, fetch and save as tools, each with a clear description and a strict JSON Schema, and keep my code in charge of running them.",
+  "Read-only tools run freely and in parallel; writes need idempotency keys, and anything risky goes through a permission check or human approval.",
+  "With a large tool library I'll defer most tools and use tool search, because selection accuracy drops past a few dozen tools.",
+  "Each tool returns short, readable results with pagination, and I measure tool-selection accuracy with an eval set on every change."
+ ],
+ "followups": [
+  {"q": "Who actually runs the function?", "a": "Your code. The model only returns a tool name and JSON arguments. You validate them, check permissions, run the function and send back a tool_result. The model never touches your systems directly."},
+  {"q": "How do parallel tool calls work?", "a": "The model can return several tool_use blocks in one turn. You can run them concurrently, then return every tool_result together in the next user message, each matched by its tool_use_id."},
+  {"q": "How do you scale to 500 tools?", "a": "Namespace and consolidate tools, keep the 3-5 most used always loaded, and mark the rest as deferred. A tool search step, like a small retrieval index over tool descriptions, loads only the few each request needs."},
+  {"q": "How do you make tool calls safe?", "a": "Least privilege per tool, read-only by default, idempotency keys on writes, a permission layer that can allow, ask or deny, and logs of every call. Treat tool output as untrusted data, never as instructions."}
+ ],
+ "today": "Anthropic reported in November 2025 that its Tool Search Tool raised Claude Opus 4's accuracy on large tool sets from 49% to 74%, so deferred loading is now normal practice for big tool libraries.",
+ "check": [
+  {"q": "The model returns a tool_use block. What happens next?", "a": "Your code runs the tool and sends back a tool_result", "d": ["The model runs the tool itself", "The API calls your server automatically", "The conversation ends"], "why": "The model only asks; your code decides and runs it."},
+  {"q": "You must be sure arguments always match your schema. What do you turn on?", "a": "strict: true on the tool", "d": ["A higher temperature", "tool_choice none", "A longer system prompt"], "why": "Strict mode validates the tool input against your JSON Schema."},
+  {"q": "Your agent has 400 tools and keeps picking the wrong one. Best fix?", "a": "Defer most tools and add tool search", "d": ["Add 100 more tools", "Shorten every description", "Turn off parallel calls"], "why": "Loading only the few relevant tools keeps selection sharp and saves tokens."},
+  {"q": "The model makes three parallel calls. How do you return the results?", "a": "All three tool_results in one user message, matched by id", "d": ["Three separate user messages", "Only the first result", "As plain text in the system prompt"], "why": "One message with every result keeps parallel tool use working well."}
+ ],
+ "sources": [
+  {"t": "Claude docs: Define tools", "u": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"},
+  {"t": "Claude docs: Parallel tool use", "u": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use"},
+  {"t": "Claude docs: Tool search tool", "u": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool"},
+  {"t": "Anthropic engineering: Writing effective tools for agents", "u": "https://www.anthropic.com/engineering/writing-tools-for-agents"},
+  {"t": "Anthropic engineering: Advanced tool use", "u": "https://anthropic.com/engineering/advanced-tool-use"}
+ ]
+}
