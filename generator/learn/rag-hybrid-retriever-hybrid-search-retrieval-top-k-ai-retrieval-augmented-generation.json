@@ -1,0 +1,99 @@
+{
+ "family": "rag",
+ "reviewed": "Oct 2026",
+ "what": "A hybrid retriever runs keyword search (BM25) and vector search side by side, then merges the two ranked lists into one top-k list of chunks to hand to an LLM.",
+ "like": "Like asking both a librarian who knows exact titles and one who knows topics, then shortlisting the books both of them suggest.",
+ "why": [
+  "Keyword search nails exact words, names, IDs and error codes",
+  "Vector search finds the same idea in different words",
+  "Together they miss fewer relevant chunks than either one alone"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "query", "t": "User question", "x": 0, "y": 20, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "filter", "t": "Metadata filter|tenant, date, type", "x": 0, "y": 180, "w": 150, "h": 86, "c": "data", "i": "shield"},
+   {"id": "ctx", "t": "Contextual chunks|context added first", "x": 0, "y": 340, "w": 150, "h": 86, "c": "rag", "i": "doc"},
+   {"id": "bm25", "t": "Keyword search|BM25 exact words", "x": 265, "y": 20, "w": 170, "h": 86, "c": "data", "i": "hash"},
+   {"id": "fuse", "t": "Fusion (RRF)|1 / (60 + rank)", "x": 265, "y": 180, "w": 170, "h": 86, "c": "rag", "i": "router"},
+   {"id": "vec", "t": "Vector search|meaning match", "x": 265, "y": 340, "w": 170, "h": 86, "c": "rag", "i": "vector"},
+   {"id": "llm", "t": "LLM answer|top-k as context", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "rerank", "t": "Reranker|cross-encoder", "x": 550, "y": 180, "w": 150, "h": 86, "c": "ai", "i": "eye"},
+   {"id": "eval", "t": "Evaluation|recall@k on test set", "x": 550, "y": 340, "w": 150, "h": 86, "c": "llmops", "i": "chart"}
+  ],
+  "edges": [
+   ["query", "filter", ""],
+   ["filter", "bm25", "words"],
+   ["filter", "vec", "embedding"],
+   ["ctx", "vec", "indexed"],
+   ["bm25", "fuse", "ranked list"],
+   ["vec", "fuse", "ranked list"],
+   ["fuse", "rerank", "top 100"],
+   ["rerank", "llm", "top k"],
+   ["rerank", "eval", "measure"]
+  ],
+  "steps": [
+   {"t": "Filter first", "d": "Metadata filters (tenant, language, date, document type) narrow the search space so both searches only look at chunks this user may see.", "hl": ["query", "filter"]},
+   {"t": "Two searches in parallel", "d": "BM25 scores chunks by matching words, weighting rare words more. Vector search embeds the question and finds chunks with the closest meaning.", "hl": ["bm25", "vec"]},
+   {"t": "Merge with RRF", "d": "Reciprocal rank fusion adds 1 / (k + rank) from each list, with k = 60. It uses positions, not raw scores, so the two very different score scales need no tuning.", "hl": ["fuse"]},
+   {"t": "Or weight with alpha", "d": "Score fusion normalizes both scores and blends them: alpha 0 is keyword only, 1 is vector only. Weaviate's server default is 0.75.", "hl": ["bm25", "vec", "fuse"]},
+   {"t": "Rerank the shortlist", "d": "A cross-encoder reads the question and each candidate together and scores how well they match. It is slower, so it only sees the fused shortlist.", "hl": ["fuse", "rerank"]},
+   {"t": "Top-k to the LLM", "d": "The best k chunks go into the prompt. Contextual chunks, which carry a short summary of their document, make both searches more accurate.", "hl": ["ctx", "rerank", "llm"]}
+  ]
+ },
+ "numbers": [
+  {"v": "60", "l": "the k constant in reciprocal rank fusion, from the original paper", "s": "https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf"},
+  {"v": "0.75", "l": "Weaviate's default alpha, leaning towards vector search", "s": "https://docs.weaviate.io/weaviate/concepts/search/hybrid-search"},
+  {"v": "49%", "l": "fewer failed retrievals: contextual embeddings plus contextual BM25", "s": "https://www.anthropic.com/engineering/contextual-retrieval"},
+  {"v": "67%", "l": "fewer failed retrievals once reranking is added on top", "s": "https://www.anthropic.com/engineering/contextual-retrieval"},
+  {"v": "20", "l": "chunks passed to the model worked best of 5, 10, 20", "s": "https://www.anthropic.com/engineering/contextual-retrieval"}
+ ],
+ "tool": "vector",
+ "choices": [
+  {"t": "Fusion method", "d": "RRF is the safe default: rank-based, no tuning. Score fusion with alpha lets you lean towards keywords (codes, names) or vectors (natural questions) once you can measure it."},
+  {"t": "Top-k at each stage", "d": "Fetch a wide candidate set from each search, rerank it, then pass a small top-k to the LLM. Anthropic found 20 chunks beat 5 or 10 in their tests."},
+  {"t": "Reranker on or off", "d": "A cross-encoder reranker gives the biggest quality jump but adds latency and cost per query. Keep its input list modest, such as the top 100."},
+  {"t": "Contextual retrieval", "d": "Before indexing, prepend a short LLM-written note (about 50-100 tokens) placing each chunk in its document. Prompt caching keeps this one-time cost low."},
+  {"t": "Metadata filters", "d": "Filter by tenant, permissions, language or date inside the search, not after it, so top-k is not emptied by filtering later."}
+ ],
+ "instead": [
+  {"slug": "data-vector-db-pgvector-pinecone-weaviate-qdrant-embeddings-ann", "why": "Vector search alone: simpler, fine for natural-language questions"},
+  {"slug": "data-search-index-elasticsearch-elasticsearch-opensearch-inverted-index-full-text", "why": "Keyword search alone when users type exact terms and codes"},
+  {"slug": "ai-llm-large-language-model-gpt-claude-gemini-api-inference-ai", "why": "Under about 200k tokens, put the whole knowledge base in the prompt"},
+  {"slug": "rag-semantic-cache-cache-similar-prompts-ai-retrieval-augmented-generation", "why": "Repeated similar questions: reuse earlier answers before retrieving"}
+ ],
+ "breaks": [
+  {"t": "Exact codes missed", "d": "Pure vector search blurs IDs like ERR-4012 into similar-looking codes.", "see": "Users searching for a product code or error get near misses", "fix": "Add BM25 to the mix, or lower alpha towards keywords"},
+  {"t": "Scores mixed raw", "d": "BM25 scores and cosine scores live on different scales, so a naive sum lets one search dominate.", "see": "Results look the same as one search alone", "fix": "Use RRF, or normalize both scores before blending with alpha"},
+  {"t": "Chunks lose their context", "d": "A chunk says \"revenue grew 3%\" but not which company or quarter, so neither search can match it.", "see": "The right document exists but the right chunk never ranks", "fix": "Contextual retrieval: add a short document summary to each chunk before indexing"},
+  {"t": "Filter after search", "d": "Top-k is fetched first and then filtered by permission, leaving few or no chunks.", "see": "Some users get thin answers or none at all", "fix": "Apply metadata filters inside both searches"},
+  {"t": "No way to tell if it improved", "d": "Changes to alpha, k or chunking are judged by gut feel.", "see": "Quality drifts up and down between releases", "fix": "Keep a labelled question set and track recall@k on every change"}
+ ],
+ "say": [
+  "I'll run BM25 and vector search in parallel over the same chunks, with metadata filters applied inside both.",
+  "I'll merge the lists with reciprocal rank fusion, k = 60, because it uses ranks and needs no score tuning.",
+  "Then a cross-encoder reranks the top 100 or so, and I pass the best 20 chunks to the LLM.",
+  "I'd measure recall@k on a labelled question set, and try contextual retrieval, which Anthropic found cut failed retrievals by 49%, or 67% with reranking."
+ ],
+ "followups": [
+  {"q": "Why does RRF use k = 60?", "a": "The constant stops one list's top result from dominating and lets lower ranks still count. The original paper fixed 60 in a pilot study and found it near-optimal, with the exact value not critical."},
+  {"q": "RRF or alpha weighting?", "a": "RRF is robust with zero tuning because it ignores raw scores. Alpha score fusion can do better when you have an evaluation set to tune it, and lets you favour keywords or vectors per use case."},
+  {"q": "What is recall@k and why track it?", "a": "Of the chunks that truly answer a question, the share that appear in the top k. If the right chunk is not retrieved, the LLM cannot use it, so this is the first number to watch."},
+  {"q": "Why not rerank every document?", "a": "A cross-encoder reads query and document together, which is accurate but slow. Running it on millions of chunks per query is too costly, so it only reorders the retriever's shortlist."}
+ ],
+ "today": "Hybrid search is built into mainstream engines: Elasticsearch has an RRF retriever with rank_constant 60 by default, and Weaviate's hybrid query defaults to relativeScoreFusion since v1.24.",
+ "check": [
+  {"q": "In reciprocal rank fusion, what does each list add for a document?", "a": "1 / (k + its rank in that list)", "d": ["Its raw BM25 score", "Its cosine similarity times k", "The rank multiplied by 60"], "why": "RRF only uses positions, so lists with different score scales combine fairly."},
+  {"q": "In Weaviate hybrid search, what does alpha = 0 mean?", "a": "Keyword (BM25) search only", "d": ["Vector search only", "An equal mix of both", "Reranking switched off"], "why": "Alpha weights the vector side: 0 is pure keyword, 1 is pure vector."},
+  {"q": "Why rerank only the top results rather than the whole index?", "a": "Cross-encoders are accurate but too slow for every document", "d": ["Rerankers can only read 10 documents", "The index is already perfectly sorted", "Reranking removes the need for top-k"], "why": "Reading each query-document pair together is costly, so it runs on a shortlist."},
+  {"q": "What does contextual retrieval add to each chunk before indexing?", "a": "A short note explaining where the chunk sits in its document", "d": ["The chunk's embedding twice", "A random ID for deduplication", "The user's past questions"], "why": "The added context lets both BM25 and embeddings match chunks that were vague on their own."}
+ ],
+ "sources": [
+  {"t": "Anthropic: Introducing Contextual Retrieval", "u": "https://www.anthropic.com/engineering/contextual-retrieval"},
+  {"t": "Elasticsearch docs: reciprocal rank fusion", "u": "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion"},
+  {"t": "Weaviate docs: hybrid search", "u": "https://docs.weaviate.io/weaviate/concepts/search/hybrid-search"},
+  {"t": "Cormack et al. 2009: Reciprocal Rank Fusion", "u": "https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf"},
+  {"t": "Sentence Transformers: retrieve and re-rank", "u": "https://sbert.net/examples/applications/retrieve_rerank"}
+ ]
+}

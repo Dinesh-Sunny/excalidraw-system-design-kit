@@ -1,0 +1,97 @@
+{
+ "family": "ai",
+ "reviewed": "Oct 2026",
+ "what": "An embedding model turns a piece of text (or an image) into a fixed-length list of numbers called a vector. Texts with similar meaning get vectors that sit close together.",
+ "like": "Like giving every book a map pin by topic: cookbooks cluster in one corner, space books in another, so finding neighbours finds related books.",
+ "why": [
+  "Search by meaning, not exact words - \"cheap flights\" finds \"low-cost airfare\"",
+  "Powers RAG, recommendations, clustering and duplicate detection with one simple idea: nearby vectors",
+  "Cheap to run once per document, then every search is just a fast vector lookup"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "docs", "t": "Your documents|PDFs, pages, tickets", "x": 0, "y": 20, "w": 150, "h": 86, "c": "rag", "i": "doc"},
+   {"id": "chunk", "t": "Chunker|size + overlap", "x": 0, "y": 180, "w": 150, "h": 86, "c": "rag", "i": "partition"},
+   {"id": "batch", "t": "Batch requests|many texts per call", "x": 0, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "queue"},
+   {"id": "query", "t": "User query|input_type = query", "x": 265, "y": 20, "w": 170, "h": 86, "c": "client", "i": "user"},
+   {"id": "model", "t": "Embedding model|same one for both", "x": 265, "y": 180, "w": 170, "h": 86, "c": "ai", "i": "vector"},
+   {"id": "vec", "t": "Vector|e.g. 1024 numbers", "x": 550, "y": 180, "w": 150, "h": 86, "c": "data", "i": "vector"},
+   {"id": "sim", "t": "Cosine similarity|closest vectors win", "x": 550, "y": 20, "w": 150, "h": 86, "c": "rag", "i": "chart"},
+   {"id": "db", "t": "Vector DB|stores + indexes", "x": 550, "y": 340, "w": 150, "h": 86, "c": "data", "i": "db"}
+  ],
+  "edges": [
+   ["docs", "chunk", "split"],
+   ["chunk", "batch", ""],
+   ["batch", "model", "documents"],
+   ["query", "model", "query"],
+   ["model", "vec", "encode"],
+   ["vec", "db", "store"],
+   ["vec", "sim", "compare"]
+  ],
+  "steps": [
+   {"t": "Split into chunks", "d": "Long documents are cut into chunks of a few hundred tokens, with a small overlap so a sentence on the border is not lost.", "hl": ["docs", "chunk"]},
+   {"t": "Send in batches", "d": "Many chunks go in one API call to save round trips. Providers cap texts and tokens per request, and you pay per input token.", "hl": ["chunk", "batch"]},
+   {"t": "Text becomes numbers", "d": "The model reads each chunk and outputs one vector of fixed length, whatever the text length. Each number captures a little of the meaning.", "hl": ["batch", "model", "vec"]},
+   {"t": "Stored for later", "d": "Vectors go into a vector database with the chunk text and metadata, ready for fast nearest-neighbour search.", "hl": ["vec", "db"]},
+   {"t": "Query uses same model", "d": "At search time the question is embedded by the same model (often marked as a query). Vectors from different models live in different spaces and cannot be compared.", "hl": ["query", "model"]},
+   {"t": "Closest meaning wins", "d": "Cosine similarity measures the angle between vectors. With vectors normalized to length 1, a plain dot product gives the same ranking, just faster.", "hl": ["vec", "sim"]}
+  ]
+ },
+ "numbers": [
+  {"v": "1536 / 3072", "l": "default dimensions of OpenAI text-embedding-3-small / -large", "s": "https://developers.openai.com/api/docs/guides/embeddings.md"},
+  {"v": "8,192", "l": "max input tokens per text for OpenAI embedding models", "s": "https://developers.openai.com/api/docs/guides/embeddings.md"},
+  {"v": "32,000", "l": "context tokens for Voyage 4 series embedding models", "s": "https://docs.voyageai.com/embeddings/"},
+  {"v": "1,000", "l": "max texts in one Voyage embeddings request", "s": "https://docs.voyageai.com/embeddings/"},
+  {"v": "98.37%", "l": "quality kept by a Matryoshka model at 8.3% of size", "s": "https://huggingface.co:443/blog/matryoshka"}
+ ],
+ "tool": "vector",
+ "choices": [
+  {"t": "Which model", "d": "Check MTEB for your task and language, then test on your own data. Domain models (code, law, finance) can beat general ones. Anthropic has no embedding model and points to Voyage AI."},
+  {"t": "Dimensions", "d": "More dimensions can hold more detail but cost more storage and slower search. Matryoshka models let you keep just the first 256 or 512 numbers with little quality lost."},
+  {"t": "Chunk size and overlap", "d": "Small chunks give precise matches but lose context; big chunks keep context but blur meaning. Start around a few hundred tokens with a little overlap, then measure."},
+  {"t": "Query vs document mode", "d": "Voyage and Cohere take an input type such as query or document, which adds a short prompt so questions and passages line up better."},
+  {"t": "Number format", "d": "Float32 is the default. int8 or binary vectors shrink storage by 4x or 32x, trading a little accuracy for cheaper, faster search."}
+ ],
+ "instead": [
+  {"slug": "data-search-index-elasticsearch-elasticsearch-opensearch-inverted-index-full-text", "why": "Keyword search: exact words, IDs and codes, no model needed"},
+  {"slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation", "why": "Keyword plus vectors together usually beats either one alone"},
+  {"slug": "ai-reranker-rerank-cross-encoder-relevance-ai", "why": "Reads query and passage together for sharper ordering of a shortlist"},
+  {"slug": "ai-llm-large-language-model-gpt-claude-gemini-api-inference-ai", "why": "Small knowledge base? Put it all in the prompt instead"}
+ ],
+ "breaks": [
+  {"t": "Mixed models", "d": "Documents were embedded with one model and queries with another, so distances mean nothing.", "see": "Search returns random-looking results after a model change", "fix": "Store the model name with each vector and re-embed everything when you switch"},
+  {"t": "Text cut off silently", "d": "A chunk longer than the model's limit gets truncated, so its end is never searchable.", "see": "Facts near the end of long chunks are never found", "fix": "Chunk below the token limit, or turn truncation off so it errors instead"},
+  {"t": "Chunks too big or too small", "d": "Huge chunks blur several topics into one vector; tiny ones lose the surrounding context.", "see": "Low recall@k on a test set of real questions", "fix": "Try a few chunk sizes and overlaps and keep the one that scores best"},
+  {"t": "Shortened vectors not normalized", "d": "Cutting a vector to fewer dimensions changes its length, so cosine and dot product disagree.", "see": "Rankings shift oddly after truncating dimensions", "fix": "Use the API dimensions setting, or re-normalize to length 1 after cutting"},
+  {"t": "Embedding bill grows", "d": "Re-embedding unchanged documents on every sync wastes tokens.", "see": "Embedding spend rising while content barely changes", "fix": "Hash each chunk and only embed new or changed ones; batch the rest"}
+ ],
+ "say": [
+  "I'll chunk documents into a few hundred tokens with some overlap and embed them in batches with one embedding model, storing vectors plus metadata in a vector database.",
+  "At query time I embed the question with the same model and fetch the nearest chunks by cosine similarity.",
+  "I'll keep the model name and version next to each vector, because switching models means re-embedding the whole corpus.",
+  "To pick a model I start from MTEB, then run a small recall@k test on our own questions before committing."
+ ],
+ "followups": [
+  {"q": "Why must queries and documents use the same model?", "a": "Each model builds its own space where the numbers mean different things. A vector from model A next to one from model B is like comparing GPS coordinates with postcodes - the distance is meaningless."},
+  {"q": "How do you cut storage for 100 million vectors?", "a": "Use fewer dimensions with a Matryoshka model, and quantize to int8 or binary. Search the small vectors first, then re-score the top hits with full-precision vectors if needed."},
+  {"q": "What does MTEB tell you?", "a": "It is a public benchmark covering many tasks, datasets and languages. Scores vary a lot by task, so look at the retrieval tab for your language, then confirm on your own data."},
+  {"q": "How do you handle many languages or images?", "a": "Pick a multilingual model so a French question can find an English answer, or a multimodal model that puts text and images in the same space."}
+ ],
+ "today": "Voyage AI's 4 series (2026) offers 32,000-token inputs, flexible 256 to 2048 dimensions and an open-weight voyage-4-nano, and it is the provider Anthropic's own embeddings guide walks through.",
+ "check": [
+  {"q": "You switch to a new embedding model. What must you do with your stored vectors?", "a": "Re-embed all documents with the new model", "d": ["Nothing, vectors are universal", "Only re-embed new documents", "Normalize the old vectors again"], "why": "Each model has its own vector space, so old and new vectors cannot be compared."},
+  {"q": "Two vectors both have length 1. Which quick maths gives the same ranking as cosine similarity?", "a": "The dot product", "d": ["The sum of the numbers", "The number of dimensions", "The longest vector"], "why": "For unit-length vectors, cosine similarity and dot product are the same value."},
+  {"q": "What makes a Matryoshka embedding special?", "a": "Its first numbers still work well if you cut the rest off", "d": ["It embeds images only", "It never needs normalizing", "It has unlimited input length"], "why": "It is trained so the most important meaning sits in the early dimensions."},
+  {"q": "Why add a small overlap between chunks?", "a": "So ideas split across a border appear whole in at least one chunk", "d": ["To make vectors longer", "To lower the embedding price", "So the model reads faster"], "why": "Overlap keeps border sentences together, which helps retrieval find them."}
+ ],
+ "sources": [
+  {"t": "OpenAI: vector embeddings guide", "u": "https://developers.openai.com/api/docs/guides/embeddings.md"},
+  {"t": "Voyage AI: text embeddings", "u": "https://docs.voyageai.com/embeddings/"},
+  {"t": "Claude docs: embeddings", "u": "https://platform.claude.com/docs/en/build-with-claude/embeddings"},
+  {"t": "Cohere docs: embeddings", "u": "https://docs.cohere.com/docs/embeddings.mdx"},
+  {"t": "Hugging Face: MTEB benchmark", "u": "https://huggingface.co/blog/mteb"},
+  {"t": "Hugging Face: Matryoshka embeddings", "u": "https://huggingface.co:443/blog/matryoshka"}
+ ]
+}

@@ -1,0 +1,421 @@
+{
+ "family": "storage",
+ "reviewed": "Oct 2026",
+ "what": "Object storage keeps files (photos, videos, backups, logs) as whole objects in buckets, each found by a key. It is cheap, almost endless, and very hard to lose data from.",
+ "like": "Like a huge coat check: you hand over a bag, get a ticket (the key), and later swap the ticket for the exact same bag.",
+ "why": [
+  "Stores any amount of data at low cost, with no disks for you to manage",
+  "Built to keep data safe: 11 nines of durability across separate data centres",
+  "Browsers upload directly with presigned URLs, and analytics engines read it as a data lake"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "client",
+    "t": "Browser or app|uploads and downloads",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "api",
+    "t": "Your API|signs short-lived URLs",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "mpu",
+    "t": "Multipart upload|parts sent in parallel",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "partition"
+   },
+   {
+    "id": "front",
+    "t": "S3 endpoint|REST over HTTPS",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "globe"
+   },
+   {
+    "id": "index",
+    "t": "Key index|bucket + key to data",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "hash"
+   },
+   {
+    "id": "store",
+    "t": "Bytes on disks|copies across zones",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "bucket"
+   },
+   {
+    "id": "life",
+    "t": "Lifecycle rules|move to colder class",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "clock"
+   },
+   {
+    "id": "ver",
+    "t": "Versions|old copies kept",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "replica"
+   },
+   {
+    "id": "events",
+    "t": "Events|to SQS, SNS, Lambda",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "msg",
+    "i": "queue"
+   }
+  ],
+  "edges": [
+   [
+    "api",
+    "client",
+    "signed URL"
+   ],
+   [
+    "client",
+    "front",
+    "PUT / GET"
+   ],
+   [
+    "front",
+    "index",
+    "find key"
+   ],
+   [
+    "index",
+    "store",
+    ""
+   ],
+   [
+    "mpu",
+    "store",
+    "assembled"
+   ],
+   [
+    "index",
+    "ver",
+    "new version"
+   ],
+   [
+    "life",
+    "ver",
+    "expire"
+   ],
+   [
+    "store",
+    "events",
+    "created"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Ask for an upload URL",
+    "d": "Your API checks who the user is, then signs a presigned URL: a link that allows one action on one key for a short time. No cloud keys reach the browser.",
+    "hl": [
+     "api",
+     "client"
+    ]
+   },
+   {
+    "t": "Upload straight to storage",
+    "d": "The browser PUTs the file to the bucket over HTTPS. Big files (from about 100 MB) go as a multipart upload: parts in parallel, retried one by one, then joined.",
+    "hl": [
+     "client",
+     "front",
+     "mpu"
+    ]
+   },
+   {
+    "t": "Saved as one object",
+    "d": "An object is the bytes plus metadata (name-value pairs like content type), found by bucket and key. You never edit part of it - you replace the whole object.",
+    "hl": [
+     "front",
+     "index",
+     "store"
+    ]
+   },
+   {
+    "t": "Copied for safety",
+    "d": "S3 Standard keeps copies across several Availability Zones (separate data centres). Once a write succeeds, every read and list sees it straight away - strong read-after-write consistency.",
+    "hl": [
+     "store"
+    ]
+   },
+   {
+    "t": "Events start the next job",
+    "d": "A new object can send an event to a queue, topic or Lambda - for example to make thumbnails. Delivery is at least once, so handlers should be safe to repeat.",
+    "hl": [
+     "store",
+     "events"
+    ]
+   },
+   {
+    "t": "Versions and lifecycle",
+    "d": "Versioning keeps old copies so a bad overwrite or delete can be undone. Lifecycle rules move old objects to cheaper, colder classes, then delete them on a schedule.",
+    "hl": [
+     "ver",
+     "life"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "11 nines",
+   "l": "designed durability per year (99.999999999%)",
+   "s": "https://docs.amazonaws.cn/en_us/AmazonS3/latest/userguide/DataDurability.md"
+  },
+  {
+   "v": "3,500 / 5,500",
+   "l": "writes / reads per second per prefix, at least",
+   "s": "https://docs.aws.amazon.com/AmazonS3/latest/dev/optimizing-performance.html"
+  },
+  {
+   "v": "10,000",
+   "l": "max parts in one multipart upload, each 5 MiB to 5 GiB",
+   "s": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.md"
+  },
+  {
+   "v": "50 TB",
+   "l": "largest single object",
+   "s": "https://docs.aws.amazon.com/us_en/AmazonS3/latest/userguide/UsingObjects.html"
+  },
+  {
+   "v": "7 days",
+   "l": "longest life of a presigned URL made with the CLI",
+   "s": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.md"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Key naming",
+   "d": "Request limits apply per prefix (the start of the key). Spread hot traffic over many prefixes, e.g. users/42/... or a short hash first, and you can scale reads and writes in parallel."
+  },
+  {
+   "t": "Storage class",
+   "d": "Standard for hot files. Colder classes cost less to store but more to read and have a minimum stay - on GCS 30 days for Nearline, 90 for Coldline, 365 for Archive."
+  },
+  {
+   "t": "Lifecycle rules",
+   "d": "Move objects to colder classes as they age, delete temp uploads after a few days, and expire old versions so versioning does not grow your bill forever."
+  },
+  {
+   "t": "Upload path",
+   "d": "Small files: one PUT. Big files: multipart with parallel parts and retries. From the browser: presigned URLs, so your servers never carry the bytes."
+  },
+  {
+   "t": "Data lake layout",
+   "d": "Used as a data lake, store analytics data as columnar files (like Parquet) under prefixes such as date=2026-10-28/, so query engines like Spark or Athena read only the slices they need."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "edge-cdn-cloudfront-akamai-edge-cache-static-assets",
+   "why": "Sits in front of the bucket to serve popular files fast worldwide"
+  },
+  {
+   "slug": "data-postgresql-postgres-sql-relational",
+   "why": "For small structured rows you query, filter and update in place"
+  },
+  {
+   "slug": "data-key-value-dynamodb-dynamodb-kv-nosql",
+   "why": "Millisecond lookups of small items that change often"
+  },
+  {
+   "slug": "data-data-warehouse-snowflake-bigquery-redshift-olap-analytics",
+   "why": "Fast SQL analytics over data you load from the lake"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Hot prefix",
+   "d": "Every upload lands under one prefix, like today's date, so requests pile up on one slice.",
+   "see": "503 Slow Down errors and rising latency on PUTs",
+   "fix": "Spread keys over many prefixes and retry with backoff"
+  },
+  {
+   "t": "Uploads stall on big files",
+   "d": "A single PUT of a huge file restarts from zero on any network blip.",
+   "see": "Long uploads failing near the end, users retrying",
+   "fix": "Multipart upload with parallel parts that retry on their own"
+  },
+  {
+   "t": "Half-finished uploads cost money",
+   "d": "Multipart uploads that never complete leave stored parts behind.",
+   "see": "Storage bill higher than the objects you can list",
+   "fix": "A lifecycle rule that aborts incomplete multipart uploads after a few days"
+  },
+  {
+   "t": "Event handler runs twice",
+   "d": "Events are delivered at least once and can arrive late or out of order.",
+   "see": "Duplicate thumbnails or double-counted files",
+   "fix": "Make handlers idempotent (safe to repeat), keyed by object key and version"
+  },
+  {
+   "t": "Event loop on one bucket",
+   "d": "A Lambda triggered by uploads writes its output back to the same bucket and triggers itself.",
+   "see": "Invocations and objects climbing without end",
+   "fix": "Write output to another bucket or prefix, and filter the trigger by prefix"
+  }
+ ],
+ "say": [
+  "Media goes in object storage, not the database - the database keeps only the key, size and owner for each file.",
+  "Clients upload straight to the bucket with a presigned URL from my API, so large files never pass through my servers, and big ones use multipart upload.",
+  "An ObjectCreated event goes to a queue, and workers make thumbnails or transcode video, with idempotent handlers because delivery is at least once.",
+  "A CDN serves reads, versioning protects against bad deletes, and lifecycle rules move old files to colder, cheaper classes."
+ ],
+ "followups": [
+  {
+   "q": "How do you let users upload a 5 GB video?",
+   "a": "The API creates a multipart upload and returns presigned URLs for each part. The client sends parts in parallel, retries failed ones, then calls complete. A lifecycle rule cleans up uploads that never finish."
+  },
+  {
+   "q": "Can you read a file right after writing it?",
+   "a": "Yes. S3 has strong read-after-write consistency for new writes, overwrites, deletes and lists, at no extra cost. A CDN in front can still serve an old copy until its cache time runs out."
+  },
+  {
+   "q": "How would you handle 50,000 reads per second?",
+   "a": "Each prefix supports at least 5,500 reads per second, so spread keys over 10 or more prefixes and read in parallel. Put a CDN in front so most reads never reach the bucket."
+  },
+  {
+   "q": "Why not store images in the database?",
+   "a": "Big blobs bloat backups and replicas and waste expensive database memory and I/O. Object storage is cheaper per GB, scales on its own and plugs into CDNs. Keep the key in the database."
+  }
+ ],
+ "today": "Since December 2025 a single S3 object can be up to 50 TB, ten times the old 5 TB limit, which helps with large video and AI training files.",
+ "check": [
+  {
+   "q": "How should a browser upload a large file without passing through your servers?",
+   "a": "With a presigned URL from your API",
+   "d": [
+    "By sending your cloud access keys to the browser",
+    "Through a database BLOB column",
+    "By emailing it to a worker"
+   ],
+   "why": "A presigned URL allows one action on one key for a short time, so the browser can upload safely on its own."
+  },
+  {
+   "q": "All uploads go under one prefix and you start seeing 503 Slow Down. What helps most?",
+   "a": "Spread keys across many prefixes",
+   "d": [
+    "Turn on versioning",
+    "Move to a colder storage class",
+    "Make objects smaller than 1 MB"
+   ],
+   "why": "Request limits apply per prefix, so more prefixes means more parallel capacity."
+  },
+  {
+   "q": "You need to change one line inside a 2 GB object. What really happens?",
+   "a": "You upload a whole new object to replace it",
+   "d": [
+    "S3 patches just that byte range",
+    "S3 appends a small diff",
+    "S3 locks the object and edits it on disk"
+   ],
+   "why": "Objects are written as a whole. With versioning on, the old copy stays as an earlier version."
+  },
+  {
+   "q": "Your thumbnail worker made two thumbnails for one upload. Why?",
+   "a": "Events are delivered at least once",
+   "d": [
+    "S3 is eventually consistent",
+    "Multipart uploads always send two events",
+    "Versioning doubles every write"
+   ],
+   "why": "Duplicates can happen, so handlers should be idempotent."
+  }
+ ],
+ "sources": [
+  {
+   "t": "AWS S3 user guide: data durability (China region mirror)",
+   "u": "https://docs.amazonaws.cn/en_us/AmazonS3/latest/userguide/DataDurability.md"
+  },
+  {
+   "t": "AWS: S3 strong consistency",
+   "u": "https://aws.amazon.com/s3/consistency/"
+  },
+  {
+   "t": "AWS S3 user guide: multipart upload limits",
+   "u": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.md"
+  },
+  {
+   "t": "AWS S3 user guide: optimizing performance",
+   "u": "https://docs.aws.amazon.com/AmazonS3/latest/dev/optimizing-performance.html"
+  },
+  {
+   "t": "AWS S3 user guide: objects overview",
+   "u": "https://docs.aws.amazon.com/us_en/AmazonS3/latest/userguide/UsingObjects.html"
+  },
+  {
+   "t": "AWS S3 user guide: sharing objects with presigned URLs",
+   "u": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.md"
+  },
+  {
+   "t": "AWS S3 user guide: event notifications",
+   "u": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.md"
+  },
+  {
+   "t": "AWS S3 user guide: delete incomplete multipart uploads",
+   "u": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.md"
+  },
+  {
+   "t": "AWS S3 user guide: versioning",
+   "u": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.md"
+  },
+  {
+   "t": "Google Cloud Storage: storage classes",
+   "u": "https://docs.cloud.google.com/storage/docs/storage-classes"
+  },
+  {
+   "t": "Google Cloud Storage: consistency",
+   "u": "https://docs.cloud.google.com/storage/docs/consistency"
+  },
+  {
+   "t": "DoiT: understanding Cloud Storage (objects are immutable)",
+   "u": "https://www.doit.com/blog/understanding-cloud-storage-gcs"
+  },
+  {
+   "t": "AWS What's New: S3 maximum object size 50 TB",
+   "u": "https://aws.amazon.com/about-aws/whats-new/2025/12/amazon-s3-maximum-object-size-50-tb/"
+  }
+ ]
+}

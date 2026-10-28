@@ -1,0 +1,100 @@
+{
+ "family": "shard",
+ "reviewed": "Oct 2026",
+ "what": "Sharding splits one big dataset across many database nodes. A shard key, such as user_id, decides which node (shard) owns each row, so data and writes grow by adding machines.",
+ "like": "Like a library splitting books across rooms by the author's surname: A to F in room one, G to M in room two. Each room stays small and quick.",
+ "why": [
+  "Scales writes and storage past what one machine can hold",
+  "Each shard keeps a smaller index, so queries that use the key stay fast",
+  "A problem on one shard touches only part of your users"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "app", "t": "Your service|query by user_id", "x": 0, "y": 20, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "keyfn", "t": "Shard key|hash or range", "x": 0, "y": 180, "w": 150, "h": 86, "c": "data", "i": "hash"},
+   {"id": "map", "t": "Shard map|key range to shard", "x": 0, "y": 340, "w": 150, "h": 86, "c": "data", "i": "doc"},
+   {"id": "router", "t": "Shard router|mongos, VTGate, Citus", "x": 265, "y": 20, "w": 170, "h": 86, "c": "data", "i": "router"},
+   {"id": "scatter", "t": "Scatter-gather|no key = ask every shard", "x": 265, "y": 180, "w": 170, "h": 86, "c": "data", "i": "chart"},
+   {"id": "balancer", "t": "Balancer|moves data between shards", "x": 265, "y": 340, "w": 170, "h": 86, "c": "ops", "i": "loop"},
+   {"id": "shardA", "t": "Shard A|keys in range -80", "x": 550, "y": 20, "w": 150, "h": 86, "c": "data", "i": "partition"},
+   {"id": "shardB", "t": "Shard B|keys in range 80-", "x": 550, "y": 180, "w": 150, "h": 86, "c": "data", "i": "partition"},
+   {"id": "shardC", "t": "New shard C|split from B", "x": 550, "y": 340, "w": 150, "h": 86, "c": "data", "i": "partition"}
+  ],
+  "edges": [
+   ["app", "router", "user_id=42"],
+   ["router", "keyfn", "which shard?"],
+   ["keyfn", "map", "lookup"],
+   ["router", "shardA", "targeted"],
+   ["router", "scatter", "no key"],
+   ["scatter", "shardB", "fan out"],
+   ["shardB", "shardC", "split"],
+   ["balancer", "shardC", "migrate"]
+  ],
+  "steps": [
+   {"t": "Pick a shard key", "d": "Choose a field almost every query includes and that has many distinct, evenly used values - for example user_id or tenant_id.", "hl": ["app", "keyfn"]},
+   {"t": "Key maps to shard", "d": "Hash sharding hashes the key so rows spread evenly. Range sharding keeps nearby keys together. Directory sharding looks each key up in a table.", "hl": ["keyfn", "map", "router"]},
+   {"t": "Targeted query, one shard", "d": "When the query carries the shard key, the router sends it to just the one shard that owns it. This is the fast, scalable path.", "hl": ["router", "shardA"]},
+   {"t": "No key? Ask everyone", "d": "Without the shard key the router asks every shard and merges the answers (scatter-gather). Fine for big analytics, slow for busy app queries.", "hl": ["router", "scatter", "shardB"]},
+   {"t": "Grow by splitting", "d": "When a shard gets too big or busy, its range is split and a balancer moves part of the data to a new node while the old one keeps serving.", "hl": ["shardB", "shardC", "balancer"]},
+   {"t": "Cross-shard writes cost more", "d": "A transaction touching two shards needs coordination such as two-phase commit (2PC), which adds commit latency. Good keys keep related rows on one shard.", "hl": ["router", "shardA", "shardB"]}
+  ]
+ },
+ "numbers": [
+  {"v": "128 MB", "l": "default MongoDB chunk (range) size before it is split", "s": "https://www.mongodb.com/docs/manual/core/sharding-data-partitioning/"},
+  {"v": "3,000 / 1,000", "l": "read / write units per second per DynamoDB partition", "s": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-design.html"},
+  {"v": "32", "l": "default shard count for a Citus hash-distributed table", "s": "https://docs.citusdata.com/en/v13.0/develop/api_guc.html"},
+  {"v": "a few s", "l": "of read-only time when Vitess cuts over a reshard", "s": "https://vitess.io/docs/reference/features/sharding/"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "The shard key", "d": "High cardinality (many values), low frequency (no single value dominates), and present in most queries. Avoid ever-increasing keys like timestamps with range sharding - every insert lands on one shard."},
+  {"t": "Hash, range or directory", "d": "Hash spreads load evenly but makes range scans scatter. Range keeps neighbours together for scans but can create hot spots. A directory (lookup table) is flexible but is one more thing to keep fast."},
+  {"t": "How many shards up front", "d": "Start with many small logical shards (Citus defaults to 32 per table) on few machines. Later you move whole shards to new nodes instead of rehashing every row."},
+  {"t": "Keep related data together", "d": "Shard related tables on the same key so joins stay on one node (Citus co-location). Copy small lookup tables to every node as reference tables."},
+  {"t": "Cross-shard transactions", "d": "Vitess offers SINGLE (one shard), MULTI (best effort, the default) and TWOPC (atomic, slower). Design so most writes touch one shard."}
+ ],
+ "instead": [
+  {"slug": "data-read-replica-follower-slave-reader-replication", "why": "If only reads are too heavy, replicas are far simpler than sharding"},
+  {"slug": "cache-cache-in-memory-read-through-cache-aside", "why": "A cache can absorb hot reads before you need to split data"},
+  {"slug": "data-key-value-dynamodb-dynamodb-kv-nosql", "why": "Partitioning is built in and managed for you"},
+  {"slug": "data-wide-column-cassandra-cassandra-scylla-hbase-nosql", "why": "Designed from day one to spread data over many nodes"}
+ ],
+ "breaks": [
+  {"t": "Hot shard", "d": "One key, like a celebrity account, gets most of the traffic, so one shard maxes out while others idle.", "see": "One shard at high CPU or throttled while the rest are calm", "fix": "Add a suffix to spread that key (write sharding), cache it, or pick a key with more spread"},
+  {"t": "Insert hot spot", "d": "An always-increasing key with range sharding sends every new row to the last range.", "see": "All writes landing on one shard; that range keeps splitting", "fix": "Hashed sharding, or a compound key that leads with a well-spread field"},
+  {"t": "Scatter-gather everywhere", "d": "Queries that lack the shard key fan out to every shard and get slower as you add shards.", "see": "p99 latency (the slowest 1 in 100 requests) grows with shard count", "fix": "Include the key in hot queries, or add a lookup index from other fields to the key"},
+  {"t": "Jumbo chunk", "d": "Too many rows share one shard key value, so that chunk cannot be split or moved.", "see": "Balancer flags chunks it cannot split; one shard stays big", "fix": "Refine the key with an extra field (MongoDB refineCollectionShardKey)"},
+  {"t": "Partial cross-shard commit", "d": "A best-effort multi-shard write commits on one shard but fails on another.", "see": "Mismatched totals between related records", "fix": "Keep the write on one shard, use 2PC, or use a saga with compensating steps"}
+ ],
+ "say": [
+  "One primary can no longer keep up with writes, so I'll shard by user_id - nearly every query includes it and it spreads evenly.",
+  "I'll use hash sharding so new users don't all land on one shard, and start with many logical shards so we can move them to new nodes later.",
+  "Queries without user_id would hit every shard, so for lookups by email I'll keep a small table mapping email to user_id.",
+  "Most transactions stay inside one user's shard; the rare cross-shard case I'd handle with a saga rather than distributed locks."
+ ],
+ "followups": [
+  {"q": "How do you add shards without moving everything?", "a": "Avoid hash mod N, which reshuffles almost every key when N changes. Use consistent hashing or many fixed logical shards, then split ranges or move whole shards. MongoDB's balancer and Vitess resharding copy data while the old shard keeps serving."},
+  {"q": "What makes a good shard key?", "a": "Many distinct values, evenly used, present in the hot queries, and not steadily increasing. Tenant or user IDs often work well. MongoDB lets you change it later with reshardCollection, but that is a heavy job, so choose carefully."},
+  {"q": "How do you handle a query that spans shards?", "a": "The router fans it out and merges results. That suits occasional analytics, but busy paths should include the shard key, or use a secondary lookup table or a separate search or analytics store."},
+  {"q": "How do you keep a cross-shard transaction safe?", "a": "Best is to design so it rarely happens. Otherwise use two-phase commit, such as Vitess TWOPC, which adds commit latency, or a saga of local transactions with compensating steps if one fails."}
+ ],
+ "today": "Vitess 22 (April 2025) completed its atomic distributed transaction feature, so sharded MySQL can now commit across shards all-or-nothing when you opt in.",
+ "check": [
+  {"q": "You range-shard on created_at. What happens to new inserts?", "a": "They all go to the shard holding the newest range", "d": ["They spread evenly across shards", "They are rejected until a split", "They go to a random shard"], "why": "An always-increasing key keeps hitting the top range. Hashed sharding spreads them out."},
+  {"q": "A query has no shard key in its filter. What does the router do?", "a": "Sends it to every shard and merges the results", "d": ["Sends it to the primary shard only", "Rejects the query", "Reads from a cache instead"], "why": "Without the key it cannot know which shard owns the rows, so it asks them all (scatter-gather)."},
+  {"q": "Why can hash mod N be painful when you add a node?", "a": "Almost every key maps to a new shard and must move", "d": ["Hashes stop being unique", "The router must be restarted", "Only reads stop working"], "why": "Changing N changes nearly every result. Consistent hashing or fixed logical shards move only a small part."},
+  {"q": "Which shard key is the best fit for a multi-tenant SaaS app?", "a": "tenant_id", "d": ["country", "is_active", "created_at"], "why": "tenant_id has many values, appears in almost every query and keeps one tenant's data together."}
+ ],
+ "sources": [
+  {"t": "MongoDB manual: data partitioning with chunks", "u": "https://www.mongodb.com/docs/manual/core/sharding-data-partitioning/"},
+  {"t": "MongoDB manual: choose a shard key", "u": "https://www.mongodb.com/docs/manual/core/sharding-choose-a-shard-key/"},
+  {"t": "Vitess docs: sharding", "u": "https://vitess.io/docs/reference/features/sharding/"},
+  {"t": "Vitess docs: distributed transactions", "u": "https://vitess.io/docs/reference/features/distributed-transaction/"},
+  {"t": "CNCF blog: announcing Vitess 22", "u": "https://www.cncf.io/blog/2025/04/29/announcing-vitess-22/"},
+  {"t": "Citus docs: configuration reference", "u": "https://docs.citusdata.com/en/v13.0/develop/api_guc.html"},
+  {"t": "Citus docs: utility functions", "u": "https://docs.citusdata.com/en/v12.0/develop/api_udf.html"},
+  {"t": "DynamoDB docs: partition key design", "u": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-design.html"}
+ ]
+}

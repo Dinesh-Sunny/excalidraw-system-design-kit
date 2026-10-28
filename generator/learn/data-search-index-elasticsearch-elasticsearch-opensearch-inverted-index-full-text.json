@@ -1,0 +1,104 @@
+{
+ "family": "search",
+ "reviewed": "Oct 2026",
+ "what": "A search index like Elasticsearch or OpenSearch finds documents by the words inside them, ranks them by relevance, and answers in milliseconds - even across billions of documents.",
+ "like": "Like the index at the back of a book: look up a word and it lists every page that word appears on.",
+ "why": [
+  "Fast full-text search with typo-tolerant, ranked results that SQL LIKE cannot match",
+  "Filters, facets (counts per category) and aggregations on the same query",
+  "Scales out by splitting data into shards, and keeps replica copies for safety and read speed"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "app", "t": "Your app|search box", "x": 0, "y": 20, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "db", "t": "Database|source of truth", "x": 0, "y": 180, "w": 150, "h": 86, "c": "data", "i": "db"},
+   {"id": "cdc", "t": "CDC stream|every row change", "x": 0, "y": 340, "w": 150, "h": 86, "c": "msg", "i": "log"},
+   {"id": "analyzer", "t": "Analyzer|split, lowercase, stem", "x": 265, "y": 20, "w": 170, "h": 86, "c": "svc", "i": "doc"},
+   {"id": "coord", "t": "Coordinator|fans out, merges", "x": 265, "y": 180, "w": 170, "h": 86, "c": "svc", "i": "router"},
+   {"id": "refresh", "t": "Refresh|new segment every 1 s", "x": 265, "y": 340, "w": 170, "h": 86, "c": "data", "i": "clock"},
+   {"id": "shards", "t": "Primary shards|data split by doc id", "x": 550, "y": 20, "w": 150, "h": 86, "c": "data", "i": "partition"},
+   {"id": "inv", "t": "Inverted index|term to doc list", "x": 550, "y": 180, "w": 150, "h": 86, "c": "data", "i": "hash"},
+   {"id": "rep", "t": "Replicas|copies serve reads", "x": 550, "y": 340, "w": 150, "h": 86, "c": "data", "i": "replica"}
+  ],
+  "edges": [
+   ["app", "coord", "query"],
+   ["coord", "analyzer", "analyze"],
+   ["analyzer", "shards", "terms"],
+   ["coord", "inv", "search"],
+   ["inv", "rep", "copy"],
+   ["db", "cdc", "changes"],
+   ["cdc", "refresh", "index docs"],
+   ["refresh", "inv", "searchable"]
+  ],
+  "steps": [
+   {"t": "Text becomes terms", "d": "An analyzer runs on every text field: a tokenizer splits it into words, then filters lowercase them and stem them (foxes becomes fox). The same analyzer runs on the query, so both match.", "hl": ["analyzer"]},
+   {"t": "Terms point to documents", "d": "The inverted index is a sorted list of every unique term, each with the list of documents that contain it. Searching means looking up a few terms, not scanning every document.", "hl": ["inv"]},
+   {"t": "Split into shards", "d": "An index is split into primary shards, each a small search engine (a Lucene index). The primary count is set when you create the index; replicas copy each shard to other nodes.", "hl": ["shards", "rep"]},
+   {"t": "Query fans out", "d": "A coordinator node sends the query to one copy of every shard, each returns its best hits, and the coordinator merges them into one ranked page of results.", "hl": ["app", "coord", "inv"]},
+   {"t": "Ranked by BM25", "d": "BM25 scores a match higher when the term is rare across all documents, appears often in this one (with diminishing returns), and the field is short.", "hl": ["inv"]},
+   {"t": "Visible after a refresh", "d": "New documents land in a buffer. A refresh, every 1 second by default on recently searched indices, writes them as a new segment so searches can see them - near real time.", "hl": ["db", "cdc", "refresh"]}
+  ]
+ },
+ "numbers": [
+  {"v": "1 s", "l": "default refresh interval before new documents become searchable", "s": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/index-modules.html"},
+  {"v": "10-50 GB", "l": "recommended size of each shard", "s": "https://www.elastic.co/docs/deploy-manage/production-guidance/optimize-performance/size-shards"},
+  {"v": "200 M", "l": "keep documents per shard below this", "s": "https://www.elastic.co/docs/deploy-manage/production-guidance/optimize-performance/size-shards"},
+  {"v": "1.2 / 0.75", "l": "BM25 defaults: k1 (term saturation) and b (length normalisation)", "s": "https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index-modules-similarity.html"},
+  {"v": "60", "l": "default rank constant when RRF merges keyword and vector results", "s": "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrievers/rrf-retriever"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Mapping and analyzers", "d": "Decide per field: text (analyzed, for full-text search) or keyword (exact value, for filters, sorting and facets). Pick a language analyzer so stemming fits your users."},
+  {"t": "Shard and replica count", "d": "Primaries are fixed at index creation (default 1), so size for growth at 10-50 GB per shard. Replicas (default 1) can change any time and add read capacity and safety."},
+  {"t": "Refresh interval", "d": "1 s gives near real-time search. For big bulk loads set it longer, or -1 to switch it off, then turn it back on - indexing gets much faster."},
+  {"t": "Aliases for reindexing", "d": "Point the app at an alias, not an index. Build a new index with the new mapping, reindex into it, then swap the alias in one atomic step - no downtime."},
+  {"t": "Keyword, vector or hybrid", "d": "BM25 for exact words, names and codes; vector (kNN) search for meaning; hybrid runs both and merges the lists with RRF or score normalisation."}
+ ],
+ "instead": [
+  {"slug": "data-postgresql-postgres-sql-relational", "why": "Small data: Postgres full-text search avoids running a second system"},
+  {"slug": "data-vector-db-pgvector-pinecone-weaviate-qdrant-embeddings-ann", "why": "Pure meaning-based search over embeddings, no keyword ranking needed"},
+  {"slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation", "why": "Keyword plus vector retrieval feeding an LLM in a RAG pipeline"},
+  {"slug": "data-data-warehouse-snowflake-bigquery-redshift-olap-analytics", "why": "Heavy SQL analytics and joins over history, not text search"}
+ ],
+ "breaks": [
+  {"t": "Search falls behind the database", "d": "The sync job lags or drops events, so search shows old prices or deleted items.", "see": "CDC consumer lag rising; users find items that no longer exist", "fix": "Stream changes with CDC, make updates idempotent by id, and run a regular full reindex to catch drift"},
+  {"t": "Wrong number of shards", "d": "Too many tiny shards waste memory; too few huge ones are slow to search and recover.", "see": "High heap use with many small shards, or shards far over 50 GB", "fix": "Aim for 10-50 GB per shard; split or reindex behind an alias"},
+  {"t": "Mapping change needed", "d": "A field's type or analyzer cannot change on an existing index.", "see": "Mapping errors, or a field that will not filter or sort", "fix": "Create a new index, reindex, then swap the alias"},
+  {"t": "Bulk load is slow", "d": "Refreshing every second while loading millions of documents creates many small segments.", "see": "Low indexing rate and lots of merge activity", "fix": "Raise the refresh interval or set it to -1 during the load, use the bulk API, add replicas after"},
+  {"t": "Deep paging hurts", "d": "Asking for page 5,000 makes every shard sort and return thousands of hits; from + size is capped at 10,000 by default.", "see": "Slow, memory-heavy queries, or result window errors past 10,000", "fix": "Page with search_after and a sort key instead of a large from"}
+ ],
+ "say": [
+  "The database stays the source of truth, and Elasticsearch is a read-optimised copy built for search.",
+  "Changes flow from the database through CDC into a queue, and an indexer upserts documents by id, so replays are safe.",
+  "Search is near real time - new data shows up within about a second after a refresh - and the product is fine with that.",
+  "The app talks to an alias, so when the mapping changes I build a new index, reindex, and swap the alias with no downtime."
+ ],
+ "followups": [
+  {"q": "Why not just use SQL LIKE '%term%'?", "a": "A leading wildcard cannot use a normal B-tree index, so the database scans every row. It also cannot stem words, handle typos or rank by relevance. An inverted index looks up terms directly and scores results with BM25."},
+  {"q": "How do you keep search in sync with the database?", "a": "Capture row changes with CDC (reading the database log), send them through a queue, and upsert by document id. Updates are idempotent, so retries are safe. A scheduled full reindex catches anything missed."},
+  {"q": "Can I use Elasticsearch as my main database?", "a": "Better not. It is built for search, not transactions, and new writes only become searchable after a refresh. Keep a real database as the source of truth so you can always rebuild the index."},
+  {"q": "How would you add semantic search?", "a": "Store an embedding per document in a dense vector field and run kNN search. For best results run hybrid: BM25 and kNN together, merged with reciprocal rank fusion, then optionally a reranker on the top hits."}
+ ],
+ "today": "Elasticsearch 9.0 (April 2025) made BBQ - Better Binary Quantization, a way to shrink vectors so vector search uses far less memory - generally available, and OpenSearch has offered built-in hybrid search since 2.10.",
+ "check": [
+  {"q": "What does an inverted index map?", "a": "Each term to the list of documents that contain it", "d": ["Each document to its row on disk", "Each user to their recent searches", "Each shard to its replica"], "why": "Looking up a term gives its matching documents straight away, which is why full-text search is fast."},
+  {"q": "You index a document and search for it straight away, but it is not found. Why?", "a": "It becomes visible after the next refresh, about 1 second", "d": ["The replica must be rebuilt first", "Documents are searchable only after a nightly job", "The analyzer rejected it"], "why": "Search is near real time: a refresh turns new documents into a searchable segment."},
+  {"q": "You need to change a field's analyzer in production. What is the safe way?", "a": "New index, reindex, then swap the alias", "d": ["Edit the mapping in place", "Add more replicas", "Restart the cluster with the new setting"], "why": "Existing fields keep their mapping, so you rebuild and switch atomically behind an alias."},
+  {"q": "In BM25, which match tends to score highest?", "a": "A rare term in a short field", "d": ["A common word like 'the' in a long field", "Any term in the newest document", "A term in the largest document"], "why": "Rare terms carry more meaning, and short fields are not diluted by extra words."}
+ ],
+ "sources": [
+  {"t": "Elasticsearch guide: inverted index", "u": "https://www.elastic.co/guide/en/elasticsearch/guide/master/inverted-index.html"},
+  {"t": "Elasticsearch reference 8.19: near real-time search", "u": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/near-real-time.html"},
+  {"t": "Elasticsearch reference 8.19: general index settings", "u": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/index-modules.html"},
+  {"t": "Elasticsearch reference 7.17: similarity (BM25)", "u": "https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index-modules-similarity.html"},
+  {"t": "Elastic docs: size your shards", "u": "https://www.elastic.co/docs/deploy-manage/production-guidance/optimize-performance/size-shards"},
+  {"t": "Elasticsearch API: update field mappings", "u": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-indices-put-mapping"},
+  {"t": "Elastic docs: aliases", "u": "https://www.elastic.co/docs/manage-data/data-store/aliases"},
+  {"t": "Elastic docs: RRF retriever", "u": "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrievers/rrf-retriever"},
+  {"t": "OpenSearch docs: hybrid search", "u": "https://docs.opensearch.org/2.11/search-plugins/hybrid-search/"},
+  {"t": "OpenSearch docs: normalization processor", "u": "https://docs.opensearch.org/3.5/search-plugins/search-pipelines/normalization-processor/"},
+  {"t": "Elastic blog: Elasticsearch 9.0 and 8.18", "u": "https://www.elastic.co/blog/whats-new-elastic-search-9-0-0"}
+ ]
+}

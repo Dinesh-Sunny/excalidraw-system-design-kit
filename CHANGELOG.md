@@ -3,6 +3,7 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Eight more sourced lessons: API Gateway, DNS, Object Storage (S3), Search Index (Elasticsearch), Read Replica, Shard, Embedding Model and Hybrid Retriever. 19 blocks now have a full lesson.
 - 11 new modern blocks, each with its own icon: Edge Function, Service Mesh, Distributed Lock, Autoscaler, Idempotency Store, Lakehouse (Iceberg), OLAP DB (ClickHouse), Bloom Filter, Prompt Cache, Batch Inference and Agent Skills. The library now has 303 items.
 - Eight new lessons, every fact checked against official docs: Load Balancer (routing methods, health checks, draining), Rate Limiter (token bucket vs windows, 429), Kafka (partitions, consumer groups, KRaft), Message Queue (visibility timeout, retries, dead letters), PostgreSQL (B-tree, MVCC, WAL, pooling), Cassandra (partition keys, quorum, LSM writes), LLM (tokens, prefill and decode, prompt caching, batching) and AI Agent (the loop, MCP, approvals, stop limits). Each comes with its own hands-on tool.
 - New lessons: CDN (cache keys, TTLs, s-maxage, purge vs versioned files, with a play-a-minute TTL simulator) and Vector DB (embeddings, HNSW vs IVF, recall, hybrid search, with an exact vs graph-walk neighbour explorer). Ten hands-on tools are ready for the next lessons: load balancer, rate limiter, Kafka, message queue, B-tree index, quorum, CDN, vectors, LLM call planner and the agent loop.

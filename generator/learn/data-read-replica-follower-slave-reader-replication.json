@@ -1,0 +1,399 @@
+{
+ "family": "replica",
+ "reviewed": "Oct 2026",
+ "what": "A read replica is a live, read-only copy of your database. The primary (leader) takes every write and streams the changes to its replicas (followers), which then answer read queries.",
+ "like": "Like a head chef who writes each new recipe once, while photocopies go out to every counter so many people can read them at the same time.",
+ "why": [
+  "Spreads read traffic over many machines so the primary has room for writes",
+  "Puts a copy in another zone or region, close to users and ready if the primary fails",
+  "Gives reports and analytics their own copy so heavy queries never slow the app"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "app",
+    "t": "Your service|reads and writes",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "router",
+    "t": "Query router|writes vs reads",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "router"
+   },
+   {
+    "id": "backup",
+    "t": "Backups|point-in-time restore",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "snapshot"
+   },
+   {
+    "id": "primary",
+    "t": "Primary|takes every write",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "wal",
+    "t": "WAL / binlog|ordered change log",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "log"
+   },
+   {
+    "id": "monitor",
+    "t": "Failover monitor|promotes a replica",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   },
+   {
+    "id": "rep1",
+    "t": "Replica 1|read-only, same region",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "replica"
+   },
+   {
+    "id": "rep2",
+    "t": "Replica 2|another zone",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "replica"
+   },
+   {
+    "id": "cascade",
+    "t": "Cascading replica|fed by replica 2",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "replica"
+   }
+  ],
+  "edges": [
+   [
+    "app",
+    "router",
+    ""
+   ],
+   [
+    "router",
+    "primary",
+    "writes"
+   ],
+   [
+    "router",
+    "rep1",
+    "reads"
+   ],
+   [
+    "primary",
+    "wal",
+    "append"
+   ],
+   [
+    "wal",
+    "rep1",
+    "stream"
+   ],
+   [
+    "wal",
+    "rep2",
+    "stream"
+   ],
+   [
+    "rep2",
+    "cascade",
+    "relay"
+   ],
+   [
+    "monitor",
+    "rep2",
+    "promote"
+   ],
+   [
+    "wal",
+    "backup",
+    "archive"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Writes go to primary",
+    "d": "Every INSERT, UPDATE and DELETE is sent to the one primary. Having a single writer keeps the order of changes simple and clear.",
+    "hl": [
+     "app",
+     "router",
+     "primary"
+    ]
+   },
+   {
+    "t": "Changes are logged",
+    "d": "The primary records each change in order in its log - the WAL (write-ahead log) in PostgreSQL, the binary log in MySQL.",
+    "hl": [
+     "primary",
+     "wal"
+    ]
+   },
+   {
+    "t": "Streamed to replicas",
+    "d": "Replicas pull the log and replay it. By default this is asynchronous: the primary confirms the commit without waiting, so replicas trail by a little (replication lag).",
+    "hl": [
+     "wal",
+     "rep1",
+     "rep2"
+    ]
+   },
+   {
+    "t": "Reads spread out",
+    "d": "The router or app sends SELECTs to replicas and keeps writes on the primary. Reads that must see a just-made write go to the primary.",
+    "hl": [
+     "router",
+     "rep1",
+     "rep2"
+    ]
+   },
+   {
+    "t": "Replicas feed replicas",
+    "d": "A cascading replica copies from another replica instead of the primary. That saves primary connections and cross-region bandwidth, at the cost of a bit more lag.",
+    "hl": [
+     "rep2",
+     "cascade"
+    ]
+   },
+   {
+    "t": "Primary fails, promote",
+    "d": "A monitor promotes the most caught-up replica to be the new primary and repoints traffic. With async replication the last few writes may not have arrived yet.",
+    "hl": [
+     "monitor",
+     "rep2"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "15",
+   "l": "RDS read replicas per source instance, up to 5 cross-Region",
+   "s": "https://aws.amazon.com/about-aws/whats-new/2022/10/amazon-rds-mysql-mariadb-postgre-sql-support-15-read-replicas-3x-read-capacity"
+  },
+  {
+   "v": "15",
+   "l": "Aurora Replicas per cluster, all sharing one storage volume",
+   "s": "https://docs.aws.amazon.com/en_us/AmazonRDS/latest/AuroraUserGuide/Aurora.Replication.html"
+  },
+  {
+   "v": "< 100 ms",
+   "l": "usual Aurora replica lag after the primary writes",
+   "s": "https://docs.aws.amazon.com/en_us/AmazonRDS/latest/AuroraUserGuide/Aurora.Replication.html"
+  },
+  {
+   "v": "< 1 s",
+   "l": "typical PostgreSQL streaming lag when the standby keeps up",
+   "s": "https://www.postgresql.org/docs/current/warm-standby.html"
+  },
+  {
+   "v": "10 s",
+   "l": "MySQL semisync wait before falling back to async (default)",
+   "s": "https://dev.mysql.com/doc/refman/8.4/en/replication-semisync-interface.html"
+  }
+ ],
+ "tool": "quorum",
+ "choices": [
+  {
+   "t": "Async, semisync or sync",
+   "d": "Async is fastest but a failover can lose recent writes. MySQL semisync waits for one replica to receive the change. PostgreSQL synchronous_commit=remote_apply waits until the standby has applied it."
+  },
+  {
+   "t": "How many sync standbys",
+   "d": "PostgreSQL synchronous_standby_names can say FIRST 2 (by priority) or ANY 2 (a quorum). More acknowledgements mean safer commits but slower ones."
+  },
+  {
+   "t": "Read routing rules",
+   "d": "Send most reads to replicas, but route a user's reads to the primary for a few seconds after they write, so they always see their own change."
+  },
+  {
+   "t": "Where replicas live",
+   "d": "Same zone for cheap read scaling, another zone for failover, another region for nearby users and disaster recovery. Cross-region copies add lag and transfer cost."
+  },
+  {
+   "t": "Failover plan",
+   "d": "Automatic promotion (Aurora, RDS Multi-AZ, Patroni) or manual. Decide which replica wins, how clients find the new primary, and how other replicas follow it."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "cache-cache-in-memory-read-through-cache-aside",
+   "why": "Hot, repeated reads served from memory, cheaper than another database copy"
+  },
+  {
+   "slug": "data-shard-partition-horizontal-scaling",
+   "why": "When writes or data size outgrow one primary, split the data"
+  },
+  {
+   "slug": "data-search-index-elasticsearch-elasticsearch-opensearch-inverted-index-full-text",
+   "why": "Full-text and faceted search belongs in a search index"
+  },
+  {
+   "slug": "data-data-warehouse-snowflake-bigquery-redshift-olap-analytics",
+   "why": "Big analytical queries over history run better in a warehouse"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Stale read after a write",
+   "d": "A user saves a change, the next page reads a replica that has not caught up, and the change seems missing.",
+   "see": "Bug reports like 'my edit vanished, then came back'",
+   "fix": "Read-your-own-writes: read from the primary for a short window after a write, or wait for the replica to reach that log position"
+  },
+  {
+   "t": "Replica falls behind",
+   "d": "Heavy write bursts or a slow replica make lag grow from milliseconds to minutes.",
+   "see": "Replica lag metric climbing (ReplicaLag, pg_stat_replication)",
+   "fix": "Bigger replica, fewer large batch writes, take lagging replicas out of the read pool"
+  },
+  {
+   "t": "Failover drops recent writes",
+   "d": "With async replication the promoted replica may miss the newest commits.",
+   "see": "Last few orders missing after a failover",
+   "fix": "Semisync or a synchronous standby for data that must not be lost"
+  },
+  {
+   "t": "Sync standby goes away",
+   "d": "In fully synchronous mode, commits wait for the standby, so if it disappears writes pause.",
+   "see": "Write latency spikes, commits hanging",
+   "fix": "Use ANY n of several standbys, or allow a timeout fallback like MySQL semisync"
+  },
+  {
+   "t": "A bad change is copied too",
+   "d": "An accidental DELETE replays on every replica within moments.",
+   "see": "Rows missing on primary and all replicas alike",
+   "fix": "Keep real backups with point-in-time restore - a replica is a copy, not a backup"
+  }
+ ],
+ "say": [
+  "Reads outnumber writes here, so I'll keep one primary for writes and add read replicas behind a router for the reads.",
+  "Replication is async by default, so replicas can be slightly behind - for a user's own profile right after an edit, I'll read from the primary.",
+  "One replica sits in another availability zone so we can promote it if the primary fails, and we still keep backups because replicas copy mistakes too.",
+  "If writes outgrow one primary, replicas won't help - that's when I'd look at sharding."
+ ],
+ "followups": [
+  {
+   "q": "How do you guarantee read-your-own-writes?",
+   "a": "Route that user's reads to the primary for a short window after a write, or record the log position (LSN) of the write and only read from a replica that has replayed past it. PostgreSQL remote_apply makes the commit wait until standbys have applied it."
+  },
+  {
+   "q": "Async or sync replication?",
+   "a": "Async gives the fastest writes but a failover may lose the latest commits. Sync (or semisync) waits for a replica to confirm, so it is safer but every commit pays a network round trip. Many teams run one sync standby plus async read replicas."
+  },
+  {
+   "q": "What happens during failover?",
+   "a": "A monitor detects the primary is down, promotes the most up-to-date replica, and repoints the writer endpoint. Aurora can promote a reader quickly because all instances share storage. Other replicas then follow the new primary."
+  },
+  {
+   "q": "Why not just add more replicas for writes?",
+   "a": "Every replica must replay every write, so replicas scale reads only. To scale writes you split data across primaries (sharding) or use a database built for many writers."
+  }
+ ],
+ "check": [
+  {
+   "q": "A user edits their bio and the next page shows the old one. Most likely cause?",
+   "a": "The read hit a replica that had not caught up yet",
+   "d": [
+    "The primary lost the write",
+    "The cache key had no TTL",
+    "The replica rejected the write"
+   ],
+   "why": "Async replicas trail the primary a little. Reading your own writes from the primary fixes it."
+  },
+  {
+   "q": "What do read replicas scale?",
+   "a": "Read traffic",
+   "d": [
+    "Write traffic",
+    "Total storage per row",
+    "Both reads and writes equally"
+   ],
+   "why": "Every replica still replays every write, so only reads spread out."
+  },
+  {
+   "q": "With MySQL semisync, when does the source commit?",
+   "a": "After at least one replica confirms it received the change",
+   "d": [
+    "After every replica applies it",
+    "Without waiting for any replica",
+    "After a nightly backup"
+   ],
+   "why": "Semisync waits for a receive acknowledgement, not for replicas to apply. On timeout it falls back to async."
+  },
+  {
+   "q": "Someone runs DELETE without a WHERE. Which saves you?",
+   "a": "A point-in-time backup",
+   "d": [
+    "A read replica",
+    "A cascading replica",
+    "A synchronous standby"
+   ],
+   "why": "Replicas faithfully copy the mistake within moments. Only a backup lets you go back in time."
+  }
+ ],
+ "sources": [
+  {
+   "t": "PostgreSQL docs: log-shipping standby servers (streaming, cascading, synchronous)",
+   "u": "https://www.postgresql.org/docs/current/warm-standby.html"
+  },
+  {
+   "t": "MySQL 8.4 manual: semisynchronous replication",
+   "u": "https://dev.mysql.com/doc/refman/8.4/en/replication-semisync.html"
+  },
+  {
+   "t": "MySQL 8.4 manual: configuring semisynchronous replication",
+   "u": "https://dev.mysql.com/doc/refman/8.4/en/replication-semisync-interface.html"
+  },
+  {
+   "t": "Amazon RDS docs: working with DB instance read replicas",
+   "u": "https://docs.aws.amazon.com/AmazonRDS/latest/DeveloperGuide/USER_ReadRepl.html"
+  },
+  {
+   "t": "AWS What's New: RDS supports 15 read replicas",
+   "u": "https://aws.amazon.com/about-aws/whats-new/2022/10/amazon-rds-mysql-mariadb-postgre-sql-support-15-read-replicas-3x-read-capacity"
+  },
+  {
+   "t": "Amazon Aurora docs: replication with Aurora",
+   "u": "https://docs.aws.amazon.com/en_us/AmazonRDS/latest/AuroraUserGuide/Aurora.Replication.html"
+  }
+ ]
+}

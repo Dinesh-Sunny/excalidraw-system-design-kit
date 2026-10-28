@@ -1,0 +1,392 @@
+{
+ "family": "edge",
+ "reviewed": "Oct 2026",
+ "what": "An API gateway is the single front door to many backend services. It checks who is calling, slows down callers who send too much, and sends each request to the right service.",
+ "like": "Like a hotel reception desk: it checks your booking, hands out keys, and points you to the right room, so guests never wander the corridors alone.",
+ "why": [
+  "One public address for many services, so clients never need to know your internal layout",
+  "Shared jobs done once: auth, throttling, caching, logging and request reshaping",
+  "Safe releases: send a small slice of traffic to a new version first (a canary)"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "client",
+    "t": "Clients|web · mobile · partners",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "auth",
+    "t": "Auth check|verify JWT or API key",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "shield"
+   },
+   {
+    "id": "limit",
+    "t": "Throttle|token bucket per key",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "clock"
+   },
+   {
+    "id": "route",
+    "t": "Router|path · host · header",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "router"
+   },
+   {
+    "id": "cache",
+    "t": "Response cache|GET only, with a TTL",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "cache",
+    "i": "cache"
+   },
+   {
+    "id": "users",
+    "t": "Users service|/users/*",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "v1",
+    "t": "Orders v1|stable release",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "v2",
+    "t": "Orders v2|canary release",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   }
+  ],
+  "edges": [
+   [
+    "client",
+    "auth",
+    "HTTPS call"
+   ],
+   [
+    "auth",
+    "limit",
+    "valid"
+   ],
+   [
+    "limit",
+    "route",
+    "allowed"
+   ],
+   [
+    "route",
+    "cache",
+    "cached?"
+   ],
+   [
+    "route",
+    "users",
+    "/users"
+   ],
+   [
+    "route",
+    "v1",
+    "/orders 95%"
+   ],
+   [
+    "route",
+    "v2",
+    "canary 5%"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "One front door",
+    "d": "Every client calls one address, like api.shop.com. The gateway ends the HTTPS connection (TLS termination) and handles the request before any backend sees it.",
+    "hl": [
+     "client",
+     "auth"
+    ]
+   },
+   {
+    "t": "Who is calling?",
+    "d": "The gateway checks the token: a JWT (a signed JSON pass) has its signature and expiry (exp) verified, or an API key is looked up. Bad tokens never reach a service.",
+    "hl": [
+     "auth"
+    ]
+   },
+   {
+    "t": "Not too fast",
+    "d": "Each caller gets a token bucket: a steady refill rate plus a burst allowance. An empty bucket means the gateway replies 429 Too Many Requests and the caller retries later.",
+    "hl": [
+     "limit"
+    ]
+   },
+   {
+    "t": "Pick the service",
+    "d": "Routing rules match the path, host or a header and forward to the right service. The gateway can rewrite the URL, add or strip headers, and reshape the body on the way.",
+    "hl": [
+     "route",
+     "users"
+    ]
+   },
+   {
+    "t": "Answer from cache",
+    "d": "For repeat GET requests the gateway can keep the response for a TTL (time to live). A cache hit returns at once and the backend does no work.",
+    "hl": [
+     "route",
+     "cache"
+    ]
+   },
+   {
+    "t": "Try new versions safely",
+    "d": "A weighted rule sends, say, 5% of traffic to a canary. If its errors and latency look good you promote it; if not, you set it back to 0%.",
+    "hl": [
+     "route",
+     "v1",
+     "v2"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "10,000 /s",
+   "l": "default AWS API Gateway rate per account, per Region",
+   "s": "https://docs.aws.amazon.com/us_en/apigateway/latest/developerguide/limits.html"
+  },
+  {
+   "v": "5,000",
+   "l": "burst: the token bucket's maximum size on AWS",
+   "s": "https://docs.aws.amazon.com/us_en/apigateway/latest/developerguide/limits.html"
+  },
+  {
+   "v": "29 s",
+   "l": "default longest backend wait on AWS REST APIs",
+   "s": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-execution-service-limits-table"
+  },
+  {
+   "v": "10 MB",
+   "l": "largest request payload on AWS REST APIs",
+   "s": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-execution-service-limits-table"
+  },
+  {
+   "v": "300 s",
+   "l": "default AWS cache TTL; 3,600 s is the maximum",
+   "s": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-caching.html"
+  }
+ ],
+ "tool": "ratelimit",
+ "choices": [
+  {
+   "t": "Managed or self-run",
+   "d": "Managed (AWS API Gateway, Azure API Management) means no servers to run. Self-run (Kong, Envoy) gives full control and no vendor quotas, but you operate and scale it."
+  },
+  {
+   "t": "Where auth happens",
+   "d": "Verify tokens at the gateway so services trust one checked identity. Services still check permissions for their own data (authorization), since the gateway only knows who you are."
+  },
+  {
+   "t": "Rate limit key and store",
+   "d": "Limit per API key, user or IP. Counters kept on each node are fast but drift as you add nodes; a shared store like Redis keeps every node's count accurate."
+  },
+  {
+   "t": "Timeouts and retries",
+   "d": "Set a timeout per route and retry only safe, idempotent calls (ones you can repeat without harm). Long jobs belong in a queue, not a waiting HTTP call."
+  },
+  {
+   "t": "One gateway or a BFF per app",
+   "d": "One shared gateway for common jobs. Add a BFF (backend for frontend) per client type when web and mobile need very different response shapes."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "edge-load-balancer-lb-elb-alb-nlb-l4-l7-round-robin",
+   "why": "Just spreads traffic over copies of one service, no auth or API keys"
+  },
+  {
+   "slug": "edge-rate-limiter-throttle-token-bucket-leaky-bucket-sliding-window",
+   "why": "Only throttling, as a small focused piece you can place anywhere"
+  },
+  {
+   "slug": "edge-cdn-cloudfront-akamai-edge-cache-static-assets",
+   "why": "Caches files close to users worldwide, before traffic reaches the gateway"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "The front door gets crowded",
+   "d": "Every request passes through the gateway, so a single small instance limits the whole system.",
+   "see": "Gateway CPU high and p99 latency (the slowest 1 in 100 requests) rising while services look calm",
+   "fix": "Keep the gateway stateless and run several copies across zones behind a load balancer, with autoscaling"
+  },
+  {
+   "t": "Everyone gets 429s",
+   "d": "One busy client uses up a shared account limit, so other callers get throttled too.",
+   "see": "429 Too Many Requests across many APIs while backends are idle",
+   "fix": "Per-client limits and quotas (usage plans), a higher account quota, and client retries with backoff plus jitter"
+  },
+  {
+   "t": "Slow calls time out",
+   "d": "A backend takes longer than the gateway is willing to wait.",
+   "see": "504 Gateway Timeout on reports or exports, often at the same duration each time",
+   "fix": "Return 202 Accepted with a job id, do the work from a queue, and let the client poll or get a push"
+  },
+  {
+   "t": "Limits drift across nodes",
+   "d": "Each gateway node counts on its own, so a client spread across nodes gets more than its limit.",
+   "see": "A client's real rate is several times its configured limit",
+   "fix": "Share counters in Redis, or put a consistent-hashing load balancer in front so a client sticks to one node"
+  },
+  {
+   "t": "Business logic creeps in",
+   "d": "Feature rules get added to the gateway until every release needs a gateway change.",
+   "see": "Most deploys touch gateway config; one team becomes a bottleneck",
+   "fix": "Keep the gateway to shared jobs; move client-specific shaping into a BFF and rules into services"
+  }
+ ],
+ "say": [
+  "I'll put an API gateway in front of the services so clients have one address, and it handles TLS, JWT checks and per-key rate limits in one place.",
+  "Routing is by path, so /users goes to the users service and /orders to the orders service, and the gateway can split traffic by weight for canary releases.",
+  "The gateway stays stateless and runs as several copies behind a load balancer, with rate limit counters shared in Redis so limits stay accurate.",
+  "If web and mobile need very different payloads, I'd add a thin BFF per client behind the gateway rather than piling that logic into the gateway."
+ ],
+ "followups": [
+  {
+   "q": "How is a gateway different from a load balancer and a service mesh?",
+   "a": "A load balancer spreads traffic over copies of one service. A gateway is the front door for outside callers, adding auth, API keys, throttling and routing to many services. A service mesh, often built on Envoy sidecars, handles service-to-service traffic inside the system."
+  },
+  {
+   "q": "Should services trust the gateway completely?",
+   "a": "Trust it for identity, since it verified the token. Each service still checks what that caller may do with its own data, and services should only accept traffic from the gateway or the mesh."
+  },
+  {
+   "q": "How do you rate limit across 10 gateway nodes?",
+   "a": "Keep counters in a shared store like Redis so every node sees the same count, or route each client to the same node. Purely local counters are fastest but let a client exceed its limit."
+  },
+  {
+   "q": "When would you add a BFF?",
+   "a": "When different clients need different data shapes, like a slim mobile payload and a rich web page. Each frontend team owns its BFF. Skip it when all clients make similar calls, since it adds a hop and some duplicated code."
+  }
+ ],
+ "today": "Gateways now front AI models too: Azure API Management's AI gateway can cap LLM tokens per minute per caller, cache similar prompts and spread load across model backends.",
+ "check": [
+  {
+   "q": "A client sends too many requests and the gateway throttles it. Which status code comes back?",
+   "a": "429 Too Many Requests",
+   "d": [
+    "401 Unauthorized",
+    "503 Service Unavailable",
+    "504 Gateway Timeout"
+   ],
+   "why": "429 means slow down and retry later. 401 is for a missing or bad token."
+  },
+  {
+   "q": "Your gateway runs on 5 nodes and each keeps its own rate counters. What can happen?",
+   "a": "A client can get more than its limit",
+   "d": [
+    "Every request is blocked",
+    "Tokens stop being verified",
+    "Caching turns itself off"
+   ],
+   "why": "Each node counts only its share. Shared counters (for example in Redis) fix it."
+  },
+  {
+   "q": "You want 5% of users on a new orders version first. Which gateway feature helps?",
+   "a": "Weighted routing for a canary release",
+   "d": [
+    "A longer cache TTL",
+    "A bigger burst limit",
+    "JSON to XML transform"
+   ],
+   "why": "A weight sends a small slice of traffic to the new version so you can watch it before promoting."
+  },
+  {
+   "q": "Web and mobile need very different response shapes. What is a good pattern?",
+   "a": "A backend for frontend (BFF) per client type",
+   "d": [
+    "One huge gateway rule per screen",
+    "A separate DNS name per user",
+    "Turning off the response cache"
+   ],
+   "why": "A BFF tailors data for one client and keeps that logic out of the shared gateway."
+  }
+ ],
+ "sources": [
+  {
+   "t": "AWS: Amazon API Gateway quotas",
+   "u": "https://docs.aws.amazon.com/us_en/apigateway/latest/developerguide/limits.html"
+  },
+  {
+   "t": "AWS: Quotas for configuring and running a REST API",
+   "u": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-execution-service-limits-table"
+  },
+  {
+   "t": "AWS: Throttle requests to your REST APIs",
+   "u": "https://docs.aws.amazon.com/en_en/apigateway/latest/developerguide/api-gateway-request-throttling.html"
+  },
+  {
+   "t": "AWS: Cache settings for REST APIs",
+   "u": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-caching.html"
+  },
+  {
+   "t": "AWS: Set up a canary release deployment",
+   "u": "https://docs.aws.amazon.com/us_en/apigateway/latest/developerguide/canary-release.html"
+  },
+  {
+   "t": "Kong: Rate Limiting plugin",
+   "u": "https://developer.konghq.com/plugins/rate-limiting"
+  },
+  {
+   "t": "Kong: JWT plugin",
+   "u": "https://developer.konghq.com/plugins/jwt/"
+  },
+  {
+   "t": "Envoy docs: What is Envoy",
+   "u": "https://envoyproxy.io/docs/envoy/latest/intro/what_is_envoy"
+  },
+  {
+   "t": "Azure API Management: policy reference",
+   "u": "https://docs.azure.cn/en-us/api-management/api-management-policies"
+  },
+  {
+   "t": "Azure Architecture Center: Backends for Frontends pattern",
+   "u": "https://learn.microsoft.com/en-us/azure/architecture/patterns/backends-for-frontends"
+  },
+  {
+   "t": "Azure: AI gateway in API Management",
+   "u": "https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities"
+  }
+ ]
+}

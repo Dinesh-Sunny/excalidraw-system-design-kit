@@ -1,0 +1,374 @@
+{
+ "family": "edge",
+ "reviewed": "Oct 2026",
+ "what": "DNS (the Domain Name System) turns a name like shop.com into the IP address of a server. Managed DNS like Route 53 can also choose which server each user gets.",
+ "like": "Like the phone's contacts list: you tap a name, it looks up the number, and you never need to remember the digits yourself.",
+ "why": [
+  "People and apps use stable names while server addresses change underneath",
+  "Answers are cached everywhere, so most lookups are quick and cheap",
+  "Smart answers send users to the nearest healthy region, or away from a broken one"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "client",
+    "t": "Your device|asks for api.shop.com",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "resolver",
+    "t": "Recursive resolver|ISP or public, caches",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "cache"
+   },
+   {
+    "id": "root",
+    "t": "Root servers|13 named, 600+ copies",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "globe"
+   },
+   {
+    "id": "tld",
+    "t": "TLD servers|.com, .org, .uk",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "doc"
+   },
+   {
+    "id": "auth",
+    "t": "Authoritative NS|your zone, e.g. Route 53",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "db"
+   },
+   {
+    "id": "policy",
+    "t": "Routing policy|latency · geo · weight",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "router"
+   },
+   {
+    "id": "health",
+    "t": "Health checks|every 10 or 30 s",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   }
+  ],
+  "edges": [
+   [
+    "client",
+    "resolver",
+    "lookup"
+   ],
+   [
+    "resolver",
+    "root",
+    ".com who?"
+   ],
+   [
+    "resolver",
+    "tld",
+    "shop.com NS?"
+   ],
+   [
+    "resolver",
+    "auth",
+    "A record?"
+   ],
+   [
+    "auth",
+    "policy",
+    "choose"
+   ],
+   [
+    "health",
+    "policy",
+    "healthy?"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Ask the resolver",
+    "d": "Your device asks a recursive resolver, run by your ISP or a public service. If it looked up this name recently, it answers straight from its cache.",
+    "hl": [
+     "client",
+     "resolver"
+    ]
+   },
+   {
+    "t": "Start at the root",
+    "d": "On a cache miss the resolver asks a root server. The root does not know shop.com, but it points to the servers for .com.",
+    "hl": [
+     "resolver",
+     "root"
+    ]
+   },
+   {
+    "t": "Ask the TLD",
+    "d": "The .com TLD (top-level domain) servers reply with the nameservers for shop.com, using NS records. Now the resolver knows who holds the real answer.",
+    "hl": [
+     "resolver",
+     "tld"
+    ]
+   },
+   {
+    "t": "Get the real answer",
+    "d": "The authoritative nameserver holds your zone's records and returns, say, an A record (IPv4 address) with a TTL saying how long it may be cached.",
+    "hl": [
+     "resolver",
+     "auth"
+    ]
+   },
+   {
+    "t": "Pick the best target",
+    "d": "With several records for one name, a routing policy chooses: the lowest-latency region, the user's country, a weighted split, or a backup for failover.",
+    "hl": [
+     "auth",
+     "policy"
+    ]
+   },
+   {
+    "t": "Skip broken targets",
+    "d": "Health checkers around the world probe your endpoints. Records whose endpoint fails are left out, so new lookups go to healthy servers.",
+    "hl": [
+     "policy",
+     "health"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "13",
+   "l": "named root server types, with over 600 copies worldwide",
+   "s": "https://www.cloudflare.com/learning/dns/dns-server-types"
+  },
+  {
+   "v": "300 s",
+   "l": "Cloudflare's Auto TTL; DNS-only records allow 60 s to 1 day",
+   "s": "https://developers.cloudflare.com/dns/manage-dns-records/reference/ttl/"
+  },
+  {
+   "v": "512 bytes",
+   "l": "classic size limit for a DNS message over UDP",
+   "s": "https://rfc-editor.org/rfc/rfc1035"
+  },
+  {
+   "v": "10 or 30 s",
+   "l": "how often Route 53 health checkers probe an endpoint",
+   "s": "https://docs.aws.eu/Route53/latest/DeveloperGuide/dns-failover-determining-health-of-endpoints.html"
+  },
+  {
+   "v": "> 18%",
+   "l": "of Route 53 checkers must report healthy for healthy status",
+   "s": "https://docs.aws.eu/Route53/latest/DeveloperGuide/dns-failover-determining-health-of-endpoints.html"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "TTL length",
+   "d": "Long TTLs mean more cache hits and fewer lookups; short TTLs mean changes reach users sooner. Many teams use minutes for app endpoints and hours or a day for stable records."
+  },
+  {
+   "t": "Routing policy",
+   "d": "Simple for one target. Latency to send users to the fastest region, geolocation for country rules, weighted for gradual shifts, failover for an active-passive backup."
+  },
+  {
+   "t": "CNAME or ALIAS",
+   "d": "A CNAME points one name at another name, but not at the zone apex (shop.com itself). Route 53 ALIAS records work at the apex and track AWS resources' changing IPs."
+  },
+  {
+   "t": "Health checks",
+   "d": "Attach a health check to each record in a failover, latency or weighted set. Without one, DNS keeps handing out the address of a server that is down."
+  },
+  {
+   "t": "Record types",
+   "d": "A for IPv4, AAAA for IPv6, CNAME for an alias name, MX for mail servers, TXT for verification and email security (SPF, DKIM), NS for delegating a zone."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "edge-load-balancer-lb-elb-alb-nlb-l4-l7-round-robin",
+   "why": "Spreads traffic inside a region and reacts in seconds, not TTLs"
+  },
+  {
+   "slug": "edge-cdn-cloudfront-akamai-edge-cache-static-assets",
+   "why": "Serves the content itself from nearby edges, not just the address"
+  },
+  {
+   "slug": "edge-api-gateway-auth-routing-throttling-bff-kong",
+   "why": "Routes by URL path and checks auth, after DNS found the door"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Migration changes arrive slowly",
+   "d": "You point the name at new servers, but resolvers keep the old answer until its TTL runs out.",
+   "see": "Traffic still reaching old servers hours after the change",
+   "fix": "Lower the TTL to a minute or so at least one old-TTL period before moving, then raise it again afterwards"
+  },
+  {
+   "t": "Some clients hold on longer",
+   "d": "Some resolvers, apps and runtimes cache longer than the TTL says.",
+   "see": "A small trickle of requests on the old IP days later",
+   "fix": "Keep the old servers running (or redirecting) for a while after the switch"
+  },
+  {
+   "t": "CNAME at the apex refused",
+   "d": "You try to point shop.com itself at a load balancer name with a CNAME.",
+   "see": "Your DNS provider rejects the record",
+   "fix": "Use an ALIAS (Route 53) or similar flattened record at the apex, and CNAME only for subdomains like www"
+  },
+  {
+   "t": "Failover does not happen",
+   "d": "A region goes down but DNS still returns its address.",
+   "see": "Errors from one region and the DNS answer unchanged",
+   "fix": "Attach health checks to the records, use a short TTL on them, and test failover on purpose"
+  },
+  {
+   "t": "DNS provider has trouble",
+   "d": "If your names cannot be resolved, every service looks down at once.",
+   "see": "SERVFAIL or timeouts on lookups, while servers themselves are fine",
+   "fix": "Use an anycast DNS provider, and consider a second provider serving the same zone"
+  }
+ ],
+ "say": [
+  "Clients find us through DNS: the resolver walks root, then the .com TLD, then our authoritative nameservers, and caches the answer for its TTL.",
+  "I'd use latency-based routing in Route 53 so each user gets the closest region, with health checks so an unhealthy region drops out of the answers.",
+  "For the apex domain I'd use an ALIAS record to the load balancer, since a CNAME isn't allowed there.",
+  "Before a migration I lower the TTL ahead of time so the switch spreads within minutes, and keep the old servers running briefly for slow caches."
+ ],
+ "followups": [
+  {
+   "q": "Why can't DNS failover be instant?",
+   "a": "Answers are cached for their TTL, and health checks need a few failed probes before a record is pulled. So users switch over within roughly the TTL plus detection time. A load balancer inside a region reacts much faster."
+  },
+  {
+   "q": "Latency routing or geolocation routing?",
+   "a": "Latency routing picks the region with the best measured network latency for the user, which suits speed. Geolocation picks by the user's location, which suits legal or content rules, like keeping EU users in an EU region."
+  },
+  {
+   "q": "What is anycast and why do DNS providers use it?",
+   "a": "Many servers in different places share one IP address, and internet routing delivers each query to the nearest one. That gives fast answers, spreads attack traffic across many sites, and if one site goes offline, traffic flows to the next closest."
+  },
+  {
+   "q": "How would you shift 10% of traffic to a new stack?",
+   "a": "Weighted records: traffic goes to each record as its weight over the total, so weights 90 and 10 give a 90/10 split. Setting a weight to 0 stops traffic to that record."
+  }
+ ],
+ "today": "In July 2026 Cloudflare Gateway added a maximum DNS TTL setting, so admins can cap how long answers are cached and make DNS policy changes reach clients faster.",
+ "check": [
+  {
+   "q": "On a cache miss, which server does the recursive resolver ask first?",
+   "a": "A root nameserver",
+   "d": [
+    "The authoritative nameserver",
+    "The .com TLD server",
+    "The website's load balancer"
+   ],
+   "why": "The root points to the TLD servers, which point to the authoritative ones. That is the lookup chain."
+  },
+  {
+   "q": "You move to new servers but users still hit the old IP for hours. Why?",
+   "a": "Resolvers cached the old answer for its TTL",
+   "d": [
+    "The root servers are out of date",
+    "MX records override A records",
+    "Health checks are too frequent"
+   ],
+   "why": "Each record may be cached for its TTL. Lowering the TTL before the move makes the switch quicker."
+  },
+  {
+   "q": "You want shop.com itself to point at an AWS load balancer. Which record?",
+   "a": "A Route 53 ALIAS record",
+   "d": [
+    "A CNAME record",
+    "An MX record",
+    "A TXT record"
+   ],
+   "why": "A CNAME is not allowed at the zone apex. An ALIAS works there and follows the load balancer's IPs."
+  },
+  {
+   "q": "Which Route 53 policy sends each user to the region with the best network latency?",
+   "a": "Latency routing",
+   "d": [
+    "Simple routing",
+    "Weighted routing",
+    "Multivalue answer routing"
+   ],
+   "why": "Latency routing compares regions for each user. Geolocation is for location rules instead."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Cloudflare Learning: DNS server types",
+   "u": "https://www.cloudflare.com/learning/dns/dns-server-types"
+  },
+  {
+   "t": "Cloudflare Learning: What is a DNS record?",
+   "u": "https://www.cloudflare.com/learning/dns/dns-records"
+  },
+  {
+   "t": "Cloudflare DNS docs: Time to Live (TTL)",
+   "u": "https://developers.cloudflare.com/dns/manage-dns-records/reference/ttl/"
+  },
+  {
+   "t": "Cloudflare blog: A brief primer on anycast",
+   "u": "https://blog.cloudflare.com/a-brief-anycast-primer/"
+  },
+  {
+   "t": "AWS Route 53: Choosing a routing policy",
+   "u": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html"
+  },
+  {
+   "t": "AWS Route 53: Weighted routing",
+   "u": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-weighted.html"
+  },
+  {
+   "t": "AWS Route 53: How health checks determine health",
+   "u": "https://docs.aws.eu/Route53/latest/DeveloperGuide/dns-failover-determining-health-of-endpoints.html"
+  },
+  {
+   "t": "AWS Route 53: Choosing between alias and non-alias records",
+   "u": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.md"
+  },
+  {
+   "t": "RFC 1035: Domain names - implementation and specification",
+   "u": "https://rfc-editor.org/rfc/rfc1035"
+  },
+  {
+   "t": "Cloudflare changelog: Gateway maximum DNS TTL (July 2026)",
+   "u": "https://developers.cloudflare.com/changelog/post/2026-07-28-gateway-maximum-dns-ttl/"
+  }
+ ]
+}
