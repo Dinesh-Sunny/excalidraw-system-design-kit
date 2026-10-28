@@ -1,0 +1,357 @@
+{
+ "family": "llmops",
+ "reviewed": "Oct 2026",
+ "what": "PII redaction finds personal data - names, emails, phone numbers, card numbers - in text and masks or replaces it before it reaches logs, traces or an outside LLM.",
+ "like": "Like a clerk with a black marker who covers names and phone numbers on a letter before photocopying it for the whole office.",
+ "why": [
+  "Keeps personal data out of logs, traces and third-party models that never needed it",
+  "Supports GDPR principles: data minimisation and storage limitation",
+  "Shrinks the blast radius if a log store or vendor is ever exposed"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "app",
+    "t": "User message|\"I'm Ana, ana@x.com\"",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "regex",
+    "t": "Pattern rules|regex + checksums",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "llmops",
+    "i": "shield"
+   },
+   {
+    "id": "ner",
+    "t": "NER model|names, places, orgs",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "llmops",
+    "i": "eye"
+   },
+   {
+    "id": "anon",
+    "t": "Anonymizer|mask, replace, encrypt",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "lock"
+   },
+   {
+    "id": "vault",
+    "t": "Token vault|token to real value",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "lock"
+   },
+   {
+    "id": "llm",
+    "t": "LLM API|sees <PERSON_1>",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "logs",
+    "t": "Logs and traces|redacted only",
+    "x": 0,
+    "y": 340,
+    "w": 160,
+    "h": 86,
+    "c": "ops",
+    "i": "log"
+   },
+   {
+    "id": "restore",
+    "t": "Restore step|put names back",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "llmops",
+    "i": "service"
+   }
+  ],
+  "edges": [
+   [
+    "app",
+    "regex",
+    "raw text"
+   ],
+   [
+    "regex",
+    "ner",
+    ""
+   ],
+   [
+    "ner",
+    "anon",
+    "found spans"
+   ],
+   [
+    "anon",
+    "llm",
+    "safe prompt"
+   ],
+   [
+    "anon",
+    "vault",
+    "map"
+   ],
+   [
+    "vault",
+    "restore",
+    ""
+   ],
+   [
+    "restore",
+    "logs",
+    "redacted"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Text arrives",
+    "d": "A support message holds a name, email and phone number. Redaction runs at the edge of your system, before anything is logged or sent to a model.",
+    "hl": [
+     "app"
+    ]
+   },
+   {
+    "t": "Patterns catch fixed formats",
+    "d": "Recognizers use regex, deny lists and checksums (a check digit on card numbers) for things with a known shape: emails, IBANs, phone numbers.",
+    "hl": [
+     "regex"
+    ]
+   },
+   {
+    "t": "A model catches the rest",
+    "d": "Named Entity Recognition (NER, a model that tags names, places and organisations) plus nearby context words finds PII with no fixed shape.",
+    "hl": [
+     "ner"
+    ]
+   },
+   {
+    "t": "Mask or tokenise",
+    "d": "Irreversible: replace with <EMAIL>, mask or hash. Reversible: swap in a token or AES-encrypt it, and keep the mapping in a locked vault.",
+    "hl": [
+     "anon",
+     "vault"
+    ]
+   },
+   {
+    "t": "Only safe text travels",
+    "d": "The LLM sees <PERSON_1> instead of Ana. Logs, traces and eval datasets store the redacted version only.",
+    "hl": [
+     "llm",
+     "logs"
+    ]
+   },
+   {
+    "t": "Restore where allowed",
+    "d": "If the reply must say Ana, a trusted service swaps tokens back just before showing it to the user. The real values never enter logs.",
+    "hl": [
+     "restore",
+     "vault"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "128/192/256",
+   "l": "AES key sizes, in bits, Presidio's encrypt operator accepts",
+   "s": "https://pypi.org/project/presidio-anonymizer/"
+  },
+  {
+   "v": "SHA-256",
+   "l": "default hash for Presidio's hash operator (SHA-512 also available)",
+   "s": "https://pypi.org/project/presidio-anonymizer/"
+  },
+  {
+   "v": "1",
+   "l": "deanonymizer operator in Presidio: decrypt, which reverses encrypt",
+   "s": "https://pypi.org/project/presidio-anonymizer/"
+  },
+  {
+   "v": "Jan 2025",
+   "l": "EDPB adopted Guidelines 01/2025 on pseudonymisation",
+   "s": "https://www.hunton.com/insights/publications/edpb-advises-on-pseudonymisation-for-gdpr-compliance"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Mask or tokenise",
+   "d": "Irreversible masking (replace, redact, hash) for logs and analytics. Reversible tokens or encryption only when a later step truly needs the real value back."
+  },
+  {
+   "t": "Detection mix",
+   "d": "Regex and checksums are fast and precise for fixed formats. NER finds names but is slower and fuzzier. Combine them, and add custom recognizers for your own IDs."
+  },
+  {
+   "t": "Confidence threshold",
+   "d": "A lower threshold catches more PII but over-redacts useful text. For logs, lean towards catching more; for prompts, balance against answer quality."
+  },
+  {
+   "t": "Where it runs",
+   "d": "Inline in an AI gateway before every LLM call, and in the logging pipeline before data is stored. Run it in-region so raw PII never crosses borders."
+  },
+  {
+   "t": "Retention",
+   "d": "Short TTLs on raw prompts and traces, longer only for redacted copies. GDPR storage limitation means keep identifiable data no longer than needed."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "llmops-guardrails-safety-moderation-input-output-filter-ai-observability",
+   "why": "Broader input and output filters; PII redaction is often one guardrail among several"
+  },
+  {
+   "slug": "llmops-tracing-langfuse-langsmith-opentelemetry-spans-ai-observability",
+   "why": "Tracing tools can mask fields at capture time, so raw data never lands"
+  },
+  {
+   "slug": "ai-llm-large-language-model-gpt-claude-gemini-api-inference-ai",
+   "why": "A self-hosted model in your region avoids sending PII to a third party"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Missed PII (false negatives)",
+   "d": "A name spelled oddly, a new ID format or another language slips past the detectors.",
+   "see": "Spot checks or a canary scan find real emails or names in logs",
+   "fix": "Custom recognizers, multilingual models, regular sampled audits and a PII eval set"
+  },
+  {
+   "t": "Over-redaction",
+   "d": "Common words or product names get masked, so the LLM loses context.",
+   "see": "Answer quality drops; prompts full of <PERSON> tags",
+   "fix": "Tune thresholds, allow lists for known terms, measure precision and recall"
+  },
+  {
+   "t": "Raw text leaks around the redactor",
+   "d": "Debug logs, exception traces or a tracing SDK capture the prompt before redaction.",
+   "see": "PII found in error logs or span attributes",
+   "fix": "Redact at the first hop, scrub logging and tracing hooks, block raw fields"
+  },
+  {
+   "t": "Token vault becomes the target",
+   "d": "The mapping table holds every real value, so it is the new crown jewel.",
+   "see": "Broad read access or no access logs on the vault",
+   "fix": "Encrypt it, strict least-privilege access, short retention, separate key management"
+  },
+  {
+   "t": "Data leaves its region",
+   "d": "Prompts or logs go to an LLM or log store in another region.",
+   "see": "Vendor endpoint or bucket region differs from the data's home",
+   "fix": "Pin regional endpoints, redact before any cross-border call"
+  }
+ ],
+ "say": [
+  "I put a redaction step at the first hop - in the AI gateway and the logging pipeline - so raw PII never reaches the LLM vendor, our traces or our eval datasets.",
+  "Detection mixes regex and checksums for fixed formats with an NER model for names, using something like Microsoft Presidio plus custom recognizers for our own IDs.",
+  "For logs I mask irreversibly; if the answer needs the real name, I use reversible tokens with the mapping in an encrypted vault and swap them back only at display time.",
+  "No detector is perfect, so I measure recall on a labelled PII set, audit samples of logs, and keep retention short as GDPR's storage limitation principle asks."
+ ],
+ "followups": [
+  {
+   "q": "Is pseudonymised data still personal data under GDPR?",
+   "a": "Yes. If someone holds the key or mapping to re-identify people, it is still personal data. The EDPB's 2025 guidelines treat pseudonymisation as a useful safeguard, not an exit from GDPR. Only truly anonymous data falls outside it."
+  },
+  {
+   "q": "Regex or an ML model for detection?",
+   "a": "Both. Regex with checksums is fast and precise for emails, cards and IBANs. NER handles names and addresses that have no fixed shape. Presidio's recognizers combine regex, deny lists, checksums, NER and context words."
+  },
+  {
+   "q": "How do you know redaction works?",
+   "a": "Build a labelled test set with real-looking PII, measure recall and precision per entity type, and run it in CI as a regression test. In production, sample logs and scan for leaks."
+  },
+  {
+   "q": "Why not just trust the LLM vendor's privacy terms?",
+   "a": "Data minimisation says send only what the task needs. Redacting first lowers risk with any vendor, helps with data residency, and keeps your own logs clean too."
+  }
+ ],
+ "today": "The EDPB adopted Guidelines 01/2025 on pseudonymisation in January 2025, confirming that tokenised data you can re-identify still counts as personal data.",
+ "check": [
+  {
+   "q": "Which GDPR principle says collect and process only the data you need?",
+   "a": "Data minimisation",
+   "d": [
+    "Storage limitation",
+    "Accuracy",
+    "Portability"
+   ],
+   "why": "Article 5(1)(c): adequate, relevant and limited to what is necessary."
+  },
+  {
+   "q": "You need the user's real name back in the final reply. Which approach?",
+   "a": "Reversible tokens with a secure mapping",
+   "d": [
+    "Irreversible hashing",
+    "Redact and drop the name",
+    "Send the raw name to the LLM"
+   ],
+   "why": "Tokens let a trusted step swap the real value back without the model or logs seeing it."
+  },
+  {
+   "q": "A redactor misses a name written in another language. What is that?",
+   "a": "A false negative",
+   "d": [
+    "A false positive",
+    "Over-redaction",
+    "Data drift"
+   ],
+   "why": "Real PII slipped through. Measure recall and add multilingual recognizers."
+  },
+  {
+   "q": "Which detector suits credit card numbers best?",
+   "a": "Regex plus a checksum",
+   "d": [
+    "An NER model alone",
+    "An LLM judge",
+    "A deny list of names"
+   ],
+   "why": "Card numbers have a fixed shape and a check digit, so patterns are fast and precise."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Presidio Anonymizer on PyPI (operators)",
+   "u": "https://pypi.org/project/presidio-anonymizer/"
+  },
+  {
+   "t": "Presidio Analyzer (Microsoft)",
+   "u": "https://microsoft.github.io/presidio/analyzer/"
+  },
+  {
+   "t": "GDPR Article 5 (legislation.gov.uk)",
+   "u": "https://www.legislation.gov.uk/eur/2016/679/article/5/data.htm?view=plain"
+  },
+  {
+   "t": "Hunton: EDPB guidelines on pseudonymisation",
+   "u": "https://www.hunton.com/insights/publications/edpb-advises-on-pseudonymisation-for-gdpr-compliance"
+  }
+ ]
+}

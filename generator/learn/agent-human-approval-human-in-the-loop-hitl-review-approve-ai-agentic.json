@@ -1,0 +1,93 @@
+{
+ "family": "agent",
+ "reviewed": "Oct 2026",
+ "what": "Human approval is a pause point in an agent: before a risky or irreversible tool call (publish, send, delete, spend money), the agent stops, shows a person what it plans to do, and only continues once they approve.",
+ "like": "Like a junior writer who drafts the newsletter but waits for the editor to sign it off before it goes to print.",
+ "why": [
+  "Stops costly mistakes the model cannot undo - a wrong email, a deleted table, a refund",
+  "Keeps people accountable: every approval says who decided, what and when",
+  "Lets you ship agents earlier, then loosen the gate as trust and evals grow"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "agent", "t": "Agent loop|drafts a blog post", "x": 0, "y": 20, "w": 160, "h": 86, "c": "agent", "i": "agent"},
+   {"id": "policy", "t": "Policy check|risk tier per tool", "x": 265, "y": 20, "w": 170, "h": 86, "c": "agent", "i": "shield"},
+   {"id": "tool", "t": "Tool call|publish to CMS", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ext", "i": "tool"},
+   {"id": "wait", "t": "Durable wait|state saved, can pause days", "x": 265, "y": 180, "w": 170, "h": 86, "c": "agent", "i": "clock"},
+   {"id": "review", "t": "Review screen|diff + preview", "x": 0, "y": 180, "w": 160, "h": 86, "c": "client", "i": "eye"},
+   {"id": "human", "t": "Marketer|approve, edit, reject", "x": 0, "y": 340, "w": 160, "h": 86, "c": "client", "i": "user"},
+   {"id": "escal", "t": "Timeout|escalate or auto-reject", "x": 265, "y": 340, "w": 170, "h": 86, "c": "ops", "i": "clock"},
+   {"id": "audit", "t": "Audit log|who, what, when", "x": 550, "y": 180, "w": 150, "h": 86, "c": "ops", "i": "log"}
+  ],
+  "edges": [
+   ["agent", "policy", "wants tool"],
+   ["policy", "tool", "safe: allow"],
+   ["policy", "wait", "risky: pause"],
+   ["wait", "review", "show"],
+   ["review", "human", ""],
+   ["wait", "escal", "no answer"],
+   ["wait", "audit", "decision"]
+  ],
+  "steps": [
+   {"t": "Agent proposes an action", "d": "The agent drafts a blog post and asks to call publish_post. Nothing has happened yet - it is only a proposal with arguments.", "hl": ["agent", "policy"]},
+   {"t": "Policy sorts by risk", "d": "Code, not the model, checks a risk tier. Read-only or reversible calls (search, save draft) run straight away. Publish, send, delete and spend need a person.", "hl": ["policy", "tool"]},
+   {"t": "Pause and save state", "d": "The run pauses durably: LangGraph interrupt() saves state through a checkpointer, or a Temporal workflow waits for a signal. Workers can restart; the run waits safely.", "hl": ["wait"]},
+   {"t": "Human sees a preview", "d": "The marketer sees exactly what will happen: the rendered post, a diff against the last version, the target channel. They approve, edit the arguments, or reject with a note.", "hl": ["review", "human"]},
+   {"t": "Timeout and escalation", "d": "Every wait has a deadline. If nobody answers, notify a backup approver, then auto-reject safely. Never auto-approve on timeout.", "hl": ["wait", "escal"]},
+   {"t": "Resume and record", "d": "The decision resumes the run with the approved arguments, the tool runs once, and the audit log stores who approved what, when and why.", "hl": ["tool", "audit"]}
+  ]
+ },
+ "numbers": [
+  {"v": "24 h", "l": "escalation wait in Temporal's approval pattern before auto-reject", "s": "https://docs.temporal.io/design-patterns/approval"},
+  {"v": "10 s", "l": "timeout on the notify-manager activity in that same example", "s": "https://docs.temporal.io/design-patterns/approval"},
+  {"v": "3", "l": "approval levels (L1 to L3) in Temporal's multi-level example", "s": "https://docs.temporal.io/design-patterns/approval"},
+  {"v": "v1.0", "l": "LangGraph version where interrupt() became the recommended pause", "s": "https://docs.langchain.com/oss/python/langgraph/add-human-in-the-loop"}
+ ],
+ "tool": "agent",
+ "choices": [
+  {"t": "Risk tiers", "d": "Sort every tool: auto (read-only, reversible), notify (runs, then tells someone), approve (publish, send, delete, spend). Keep the approve list short so each request deserves attention."},
+  {"t": "Where the wait lives", "d": "Durable engine: LangGraph interrupt with a database checkpointer, or Temporal signals. Never an in-memory loop or open HTTP request - a deploy would lose the pending approval."},
+  {"t": "What the reviewer sees", "d": "A rendered preview plus a diff, the exact tool arguments, the agent's reason and sources. Let the reviewer edit arguments, not only click yes or no."},
+  {"t": "Timeout policy", "d": "Pick a deadline per tier, a backup approver to escalate to, and a safe default (reject or keep as draft). Signals that arrive after the timeout must be ignored cleanly."},
+  {"t": "Who may approve", "d": "Check the approver's role in code, and for big spends require two people. The agent's own output must never count as an approval."}
+ ],
+ "instead": [
+  {"slug": "llmops-guardrails-safety-moderation-input-output-filter-ai-observability", "why": "Automatic filters catch known bad content without a person in the loop"},
+  {"slug": "agent-code-sandbox-code-execution-e2b-container-isolated-ai-agentic", "why": "Let the agent act freely inside an isolated box that cannot hurt anything"},
+  {"slug": "llmops-llm-as-judge-online-eval-grading-judge-ai-observability", "why": "A second model grades outputs at scale; humans review only the low scores"},
+  {"slug": "agent-tools-function-calling-tool-use-api-ai-agentic", "why": "Narrow, least-privilege tools remove the risky action in the first place"}
+ ],
+ "breaks": [
+  {"t": "Approval fatigue", "d": "Too many requests, so reviewers click approve without reading.", "see": "Median review time drops to seconds; approve rate near 100%", "fix": "Auto-allow low-risk tiers, batch similar items, show only what changed"},
+  {"t": "Side effect runs twice", "d": "On resume LangGraph re-runs the node from its start, so code before the interrupt repeats.", "see": "Duplicate emails or posts after an approval", "fix": "Put the interrupt first in the node and side effects after it; make tools idempotent"},
+  {"t": "Pending approvals lost", "d": "The wait lived in memory and a deploy restarted the worker.", "see": "Requests stuck with no reviewer task, or agents that never resume", "fix": "Use a durable checkpointer or workflow engine; keep thread_id with the request"},
+  {"t": "Preview differs from action", "d": "The reviewer approves one thing and the agent runs slightly different arguments.", "see": "Audit log arguments do not match what was shown", "fix": "Approve a hash of the exact arguments; run only those, re-ask on any change"},
+  {"t": "Approval sits forever", "d": "Nobody owns the queue and there is no deadline.", "see": "Growing age of the oldest pending request", "fix": "Timeouts per tier, escalation to a backup, safe auto-reject"}
+ ],
+ "say": [
+  "I give the agent free use of read-only and reversible tools, and a policy check in code puts publish, send, delete and spend behind a human approval gate.",
+  "The pause is durable - LangGraph interrupt with a Postgres checkpointer, or a Temporal workflow waiting on a signal with a timeout - so a deploy never loses a pending approval.",
+  "The reviewer sees a preview and a diff of the exact arguments, can edit or reject, and the tool runs only with what was approved; every decision lands in an audit log.",
+  "I watch approve rate and review time to spot approval fatigue, and as evals improve I move tools down a risk tier."
+ ],
+ "followups": [
+  {"q": "Why not let the model decide when to ask for approval?", "a": "The model can be wrong or prompt-injected. OWASP's excessive agency guidance says enforce authorisation in downstream code, so the gate is a fixed policy on the tool, not a choice the model makes."},
+  {"q": "How do you stop approval fatigue?", "a": "Risk tiers so only high-impact calls reach a person, batching similar requests, a clear diff instead of a wall of text, and tracking approve rate and time per review. If everything is approved, the gate is in the wrong place."},
+  {"q": "What happens if the approver never answers?", "a": "Each wait has a timeout. Escalate to a backup approver, then reject safely or keep the item as a draft. Ignore approvals that arrive after the timeout fired."},
+  {"q": "How do you scale review for thousands of items?", "a": "Auto-approve what passes guardrails and an LLM judge, sample a small share for human review, and send only low-confidence or high-risk items to the queue."}
+ ],
+ "today": "LangGraph made interrupt() the recommended way to pause for a human as of v1.0, and OWASP's 2025 LLM Top 10 lists human approval of high-impact actions as a core fix for excessive agency.",
+ "check": [
+  {"q": "An agent wants to publish a post and to search the web. Which needs approval?", "a": "Publishing the post", "d": ["Searching the web", "Both, always", "Neither, the model decides"], "why": "Publishing is public and hard to undo; read-only search is safe to auto-allow."},
+  {"q": "Nobody answers an approval within the deadline. The safest default?", "a": "Escalate, then reject or keep as draft", "d": ["Approve automatically", "Retry the tool call", "Wait forever with no alert"], "why": "A timeout should fail safe. Auto-approving would make the gate pointless."},
+  {"q": "Why must the pause be stored durably?", "a": "So a restart or deploy does not lose the pending approval", "d": ["To make the model faster", "So the reviewer can skip the preview", "Because LLMs need disk to think"], "why": "Approvals can take hours or days; a checkpointer or workflow engine keeps the state safe."},
+  {"q": "Reviewers approve almost everything in two seconds. What is happening?", "a": "Approval fatigue", "d": ["Prompt injection", "Model drift", "A cache stampede"], "why": "Too many low-risk requests. Auto-allow safe tiers so each request deserves real attention."}
+ ],
+ "sources": [
+  {"t": "LangGraph docs: add human in the loop", "u": "https://docs.langchain.com/oss/python/langgraph/add-human-in-the-loop"},
+  {"t": "Temporal docs: approval pattern", "u": "https://docs.temporal.io/design-patterns/approval"},
+  {"t": "OWASP GenAI: LLM06:2025 Excessive Agency", "u": "https://genai.owasp.org/llmrisk/llm062025-excessive-agency/"}
+ ]
+}
