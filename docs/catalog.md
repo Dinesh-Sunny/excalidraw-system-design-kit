@@ -8,16 +8,16 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 01 | [`sd:note/`](#01-note) | Interview notes | 24 |
 | 02 | [`sd:client/`](#02-client) | Clients, devices & AI clients | 28 |
 | 03 | [`sd:edge/`](#03-edge) | Edge & networking | 8 |
-| 04 | [`sd:svc/`](#04-svc) | Services & compute | 24 |
+| 04 | [`sd:svc/`](#04-svc) | Services & compute | 25 |
 | 05 | [`sd:data/`](#05-data) | Databases & storage | 19 |
 | 06 | [`sd:cache/`](#06-cache) | Caches | 6 |
 | 07 | [`sd:msg/`](#07-msg) | Messaging & streaming | 9 |
 | 08 | [`sd:ai/`](#08-ai) | AI models & inference | 15 |
 | 09 | [`sd:agent/`](#09-agent) | Agents & orchestration | 18 |
-| 10 | [`sd:rag/`](#10-rag) | Knowledge & retrieval (RAG) | 11 |
+| 10 | [`sd:rag/`](#10-rag) | Knowledge & retrieval (RAG) | 12 |
 | 11 | [`sd:llmops/`](#11-llmops) | Safety, evals & LLMOps | 11 |
 | 12 | [`sd:ops/`](#12-ops) | Observability, security & ops | 8 |
-| 13 | [`sd:ext/`](#13-ext) | External systems | 5 |
+| 13 | [`sd:ext/`](#13-ext) | External systems | 6 |
 | 14 | [`sd:zone/`](#14-zone) | Boundaries & zones | 9 |
 | 15 | [`sd:link/`](#15-link) | Arrows & connectors | 11 |
 | 16 | [`sd:ui/`](#16-ui) | UI components | 31 |
@@ -25,7 +25,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 18 | [`sd:screen/`](#18-screen) | Screen wireframes | 13 |
 | 19 | [`sd:pattern/`](#19-pattern) | Architecture patterns | 12 |
 | 20 | [`sd:agentic/`](#20-agentic) | Agentic patterns | 12 |
-| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 21 |
+| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 29 |
 
 <a id="00-guide"></a>
 ## 00 `sd:guide/` How to use this kit
@@ -121,6 +121,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Service** - microservice api backend app server
 - **Web Server** - http app server host vm ec2
 - **Worker** - consumer background job processor async
+- **Headless Browser Farm** - playwright puppeteer chromium rendering scraping pool
 - **Scheduler / Cron** - cron job batch scheduled timer
 - **Serverless Function** - lambda cloud function faas
 - **Container / Pod** - docker kubernetes k8s pod ecs
@@ -251,7 +252,8 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Embedding Pipeline** - embed index batch ai retrieval augmented generation
 - **Vector Index** - vector db ann hnsw pgvector pinecone ai retrieval augmented generation
 - **Keyword Index (BM25)** - bm25 full text elasticsearch ai retrieval augmented generation
-- **Hybrid Retriever** - hybrid search retrieval top k ai retrieval augmented generation
+- **Hybrid Retriever** - hybrid search retrieval top k
+- **Late Interaction (ColBERT)** - colbert maxsim multi vector token level retrieval ai retrieval augmented generation
 - **Knowledge Graph** - graphrag entities relations neo4j ai retrieval augmented generation
 - **Context Builder** - prompt assembly context window packing ai retrieval augmented generation
 - **Semantic Cache** - cache similar prompts ai retrieval augmented generation
@@ -294,6 +296,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 ![External systems](../previews/ext.png)
 
 - **Third-party API** - external partner saas
+- **AI Answer Engine** - chatgpt search perplexity ai overviews gemini answer engine aeo citations
 - **Payment Gateway (Stripe)** - stripe adyen psp external
 - **Push Provider (APNs / FCM)** - apns fcm push notifications external
 - **Maps API** - google maps mapbox routing eta

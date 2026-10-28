@@ -43,6 +43,7 @@ export const SECTIONS = [
     ["Service", "service", "microservice api backend app server"],
     ["Web Server", "server", "http app server host vm ec2"],
     ["Worker", "gear", "consumer background job processor async"],
+    ["Headless Browser\nFarm", "browserfarm", "playwright puppeteer chromium rendering scraping pool"],
     ["Scheduler / Cron", "clock", "cron job batch scheduled timer"],
     ["Serverless\nFunction", "lambda", "lambda cloud function faas"],
     ["Container / Pod", "cube", "docker kubernetes k8s pod ecs"],
@@ -150,6 +151,7 @@ export const SECTIONS = [
     ["Vector Index", "hnsw", "vector db ann hnsw pgvector pinecone"],
     ["Keyword Index\n(BM25)", "textaa", "bm25 full text elasticsearch"],
     ["Hybrid Retriever", "merge", "hybrid search retrieval top k"],
+    ["Late Interaction\n(ColBERT)", "lateint", "colbert maxsim multi vector token level retrieval"],
     ["Knowledge Graph", "kg", "graphrag entities relations neo4j"],
     ["Context Builder", "context", "prompt assembly context window packing"],
     ["Semantic Cache", "semcache", "cache similar prompts"],
@@ -180,6 +182,7 @@ export const SECTIONS = [
   ]},
   { cat: "ext", no: "13", label: "External systems", theme: "ext", items: [
     ["Third-party API", "cloud", "external partner saas"],
+    ["AI Answer Engine", "answereng", "chatgpt search perplexity ai overviews gemini answer engine aeo citations"],
     ["Payment Gateway\n(Stripe)", "bank", "stripe adyen psp external"],
     ["Push Provider\n(APNs / FCM)", "phonebell", "apns fcm push notifications external"],
     ["Maps API", "map", "google maps mapbox routing eta"],
