@@ -1,0 +1,374 @@
+{
+ "family": "resilience",
+ "reviewed": "Oct 2026",
+ "what": "A circuit breaker sits in front of a call to another service. When that service keeps failing, it stops calling for a while and answers fast with a fallback, then tests carefully before trusting it again.",
+ "like": "Like the fuse box at home: when a circuit overloads, the switch trips so the whole house stays safe, and you flip it back once the fault is fixed.",
+ "why": [
+  "Stops one sick dependency from tying up threads and dragging your whole service down",
+  "Gives the struggling service room to recover instead of a flood of retries",
+  "Users get a quick fallback answer instead of a long wait and an error"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "app",
+    "t": "AI search service|asks many answer engines",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "retry",
+    "t": "Timeout + retry|backoff, jitter, budget",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "loop"
+   },
+   {
+    "id": "cb",
+    "t": "Circuit breaker|closed, open, half-open",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "lock"
+   },
+   {
+    "id": "eng",
+    "t": "Engine A|the provider that is down",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "ext",
+    "i": "llm"
+   },
+   {
+    "id": "win",
+    "t": "Sliding window|failure rate of last N",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "chart"
+   },
+   {
+    "id": "timer",
+    "t": "Wait timer|then let a few probes in",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "clock"
+   },
+   {
+    "id": "fb",
+    "t": "Fallback|cached or partial answer",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "cache",
+    "i": "cache"
+   },
+   {
+    "id": "bf",
+    "t": "Back-fill queue|re-run when engine is back",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "msg",
+    "i": "queue"
+   }
+  ],
+  "edges": [
+   [
+    "app",
+    "retry",
+    "call"
+   ],
+   [
+    "retry",
+    "cb",
+    ""
+   ],
+   [
+    "cb",
+    "eng",
+    "if closed"
+   ],
+   [
+    "cb",
+    "win",
+    "record"
+   ],
+   [
+    "win",
+    "timer",
+    "trips"
+   ],
+   [
+    "timer",
+    "eng",
+    "probe"
+   ],
+   [
+    "retry",
+    "fb",
+    "fail fast"
+   ],
+   [
+    "fb",
+    "bf",
+    "save job"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Call with a timeout",
+    "d": "Each call to Engine A gets a deadline. A slow answer counts as a failure, so threads are never stuck waiting forever.",
+    "hl": [
+     "app",
+     "retry"
+    ]
+   },
+   {
+    "t": "Breaker counts results",
+    "d": "While closed, every success, error and slow call goes into a sliding window, either the last N calls or the last N seconds.",
+    "hl": [
+     "cb",
+     "win"
+    ]
+   },
+   {
+    "t": "Too many failures: open",
+    "d": "Once enough calls are counted and the failure rate passes the threshold, the breaker opens. A wait timer starts.",
+    "hl": [
+     "win",
+     "timer"
+    ]
+   },
+   {
+    "t": "Fail fast, fall back",
+    "d": "While open, calls are rejected at once without touching Engine A. The service shows a cached or partial answer and saves the job for later.",
+    "hl": [
+     "retry",
+     "fb",
+     "bf"
+    ]
+   },
+   {
+    "t": "Half-open probe",
+    "d": "When the timer ends, a small number of trial calls go through. If they succeed the breaker closes; if they fail it opens again.",
+    "hl": [
+     "timer",
+     "eng"
+    ]
+   },
+   {
+    "t": "Closed again, back-fill",
+    "d": "Traffic flows normally and a worker drains the back-fill queue slowly, so the recovered engine is not hit by a sudden burst.",
+    "hl": [
+     "cb",
+     "bf"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "50%",
+   "l": "Resilience4j default failure rate that opens the breaker",
+   "s": "https://camel.apache.org/components/eips/resilience4jConfiguration-eip.html"
+  },
+  {
+   "v": "60 s",
+   "l": "Resilience4j default wait in open before half-open",
+   "s": "https://camel.apache.org/components/eips/resilience4jConfiguration-eip.html"
+  },
+  {
+   "v": "100",
+   "l": "Resilience4j default sliding window size, counted in calls",
+   "s": "https://camel.apache.org/components/eips/resilience4jConfiguration-eip.html"
+  },
+  {
+   "v": "243x",
+   "l": "extra load when 5 layers each retry 3 times",
+   "s": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter"
+  },
+  {
+   "v": "30 s",
+   "l": "Envoy default time a failing host is ejected",
+   "s": "https://envoyproxy.io/docs/envoy/latest/api-v3/config/cluster/v3/outlier_detection.proto"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Failure threshold and window",
+   "d": "Pick the failure rate that trips it and the window: count-based (last 100 calls) or time-based (last 30 seconds). Set a minimum number of calls so three errors at night do not trip it."
+  },
+  {
+   "t": "Wait duration",
+   "d": "How long to stay open before probing. Defaults differ: Polly (.NET) waits 5 seconds, Resilience4j (Java) 60. Too short hammers a sick service; too long keeps users on the fallback."
+  },
+  {
+   "t": "Timeouts",
+   "d": "Base them on the dependency's real latency, for example its p99.9 (the slowest 1 in 1,000 calls). Count slow calls as failures too."
+  },
+  {
+   "t": "Retries",
+   "d": "Retry only safe (idempotent) calls, at one layer of the stack, with exponential backoff plus random jitter and a retry budget that caps retries."
+  },
+  {
+   "t": "Bulkhead and fallback",
+   "d": "Cap concurrent calls per dependency so one engine cannot use every thread. Decide the fallback: cached answer, another provider, partial result or a queued job."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "edge-rate-limiter-throttle-token-bucket-leaky-bucket-sliding-window",
+   "why": "Protects your service from too many callers, not from a sick dependency"
+  },
+  {
+   "slug": "msg-message-queue-mq-async-buffer-decouple",
+   "why": "Make the call async so a slow provider just delays the queue"
+  },
+  {
+   "slug": "msg-dead-letter-queue-dlq-retry-failed-messages",
+   "why": "Park messages that keep failing for later inspection and replay"
+  },
+  {
+   "slug": "edge-load-balancer-lb-elb-alb-nlb-l4-l7-round-robin",
+   "why": "With outlier detection, ejects one bad host while others keep serving"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Retry storm",
+   "d": "Every layer retries, so a small blip becomes many times the normal load and the dependency cannot recover.",
+   "see": "Request rate to the dependency jumps far above user traffic",
+   "fix": "Retry at one layer only, add backoff with jitter and a retry budget"
+  },
+  {
+   "t": "Breaker never trips",
+   "d": "Timeouts are too long, so calls hang instead of failing and threads run out first.",
+   "see": "Thread pool or connection pool full, p99 latency at the timeout value",
+   "fix": "Shorter timeouts, count slow calls as failures, add a bulkhead"
+  },
+  {
+   "t": "Breaker flaps",
+   "d": "It opens and closes again and again on low or noisy traffic.",
+   "see": "State change events every few seconds on the dashboard",
+   "fix": "Raise the minimum number of calls, widen the window, longer wait"
+  },
+  {
+   "t": "Thundering return",
+   "d": "When the breaker closes, the whole back-fill hits the engine at once and knocks it over again.",
+   "see": "Breaker reopens right after half-open succeeds",
+   "fix": "Drain the back-fill queue at a capped rate with jitter"
+  },
+  {
+   "t": "Fallback hides the problem",
+   "d": "Users quietly get stale answers for hours and nobody notices.",
+   "see": "Fallback rate climbing while error rate looks fine",
+   "fix": "Alert on breaker state and fallback rate, not only on errors"
+  }
+ ],
+ "say": [
+  "Every call to an answer engine goes through a timeout and a circuit breaker per provider, so one engine being down never ties up our workers.",
+  "The breaker uses a sliding window with a minimum call count, opens above a failure rate threshold, and probes in half-open after a wait.",
+  "Retries happen at one layer only, with exponential backoff, full jitter and a retry budget, so we do not create a retry storm.",
+  "While Engine A is open we serve the other engines, mark its results as pending, and back-fill from a queue at a capped rate once it recovers."
+ ],
+ "followups": [
+  {
+   "q": "Why add jitter to backoff?",
+   "a": "Without it, clients that failed together retry together, in waves. Random jitter spreads the retries over time so the dependency sees a smooth trickle instead of spikes."
+  },
+  {
+   "q": "Circuit breaker vs retry: which goes outside?",
+   "a": "Usually the breaker wraps the retries' attempts or sits at the same layer, so when it is open no retries happen at all. Retries handle short blips; the breaker handles longer outages."
+  },
+  {
+   "q": "What is a bulkhead?",
+   "a": "A separate limit of threads or concurrent calls per dependency, like watertight compartments in a ship. If one engine hangs, only its compartment fills; calls to other engines still run."
+  },
+  {
+   "q": "How does Envoy outlier detection differ?",
+   "a": "It works per host inside a cluster: after 5 consecutive 5xx errors by default it ejects that host for a while, longer each time, while healthy hosts keep serving."
+  }
+ ],
+ "check": [
+  {
+   "q": "The breaker's wait timer has ended. What happens next?",
+   "a": "A few trial calls are let through (half-open)",
+   "d": [
+    "All traffic flows again at once",
+    "It stays open until restarted by hand",
+    "It retries every queued call immediately"
+   ],
+   "why": "Half-open lets a small number of probes test the dependency before trusting it fully."
+  },
+  {
+   "q": "Five layers each retry 3 times during an outage. What happens to the bottom service?",
+   "a": "Its load is multiplied many times over",
+   "d": [
+    "Load stays the same",
+    "Load goes up by 15 calls",
+    "The retries cancel each other out"
+   ],
+   "why": "Retries multiply per layer (3 to the power 5 gives 243x), which is why you retry at one layer only."
+  },
+  {
+   "q": "Why set a minimum number of calls before the breaker can trip?",
+   "a": "So a few errors on low traffic do not open it",
+   "d": [
+    "To make it trip faster",
+    "To limit retries",
+    "To size the thread pool"
+   ],
+   "why": "Two failures out of three calls is 66%, but it says little. The minimum makes the rate meaningful."
+  },
+  {
+   "q": "Which retry pattern spreads clients out best?",
+   "a": "Exponential backoff with random jitter",
+   "d": [
+    "Fixed one-second retries",
+    "Immediate retries",
+    "Exponential backoff with no jitter"
+   ],
+   "why": "Jitter adds randomness so clients that failed together do not retry in the same instant."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Amazon Builders' Library: Timeouts, retries and backoff with jitter",
+   "u": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter"
+  },
+  {
+   "t": "Apache Camel docs: Resilience4j configuration (default values)",
+   "u": "https://camel.apache.org/components/eips/resilience4jConfiguration-eip.html"
+  },
+  {
+   "t": "Polly docs: circuit breaker strategy",
+   "u": "https://www.pollydocs.org/strategies/circuit-breaker"
+  },
+  {
+   "t": "Envoy docs: outlier detection",
+   "u": "https://envoyproxy.io/docs/envoy/latest/api-v3/config/cluster/v3/outlier_detection.proto"
+  }
+ ]
+}

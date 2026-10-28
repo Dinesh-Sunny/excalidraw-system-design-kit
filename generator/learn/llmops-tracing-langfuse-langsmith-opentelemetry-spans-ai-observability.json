@@ -1,0 +1,93 @@
+{
+ "family": "llmops",
+ "reviewed": "Oct 2026",
+ "what": "LLM tracing records every step of an AI request - each model call, tool call and retrieval - as a tree of timed spans, so you see exactly what the agent did, what it cost and where it slipped.",
+ "like": "Like a flight recorder for each answer: when something odd happens, you replay every step instead of guessing.",
+ "why": [
+  "Debug bad answers by seeing the exact prompt, documents and tool results the model saw",
+  "Track cost, tokens and latency per step, per user and per model",
+  "Join traces to eval scores and user feedback, then turn bad ones into test cases"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "run", "t": "Agent run|root span = one trace", "x": 0, "y": 20, "w": 150, "h": 86, "c": "agent", "i": "agent"},
+   {"id": "llm", "t": "LLM span|model, tokens, cost", "x": 0, "y": 180, "w": 150, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "tool", "t": "Tool + retrieval|args, docs, latency", "x": 0, "y": 340, "w": 150, "h": 86, "c": "agent", "i": "tool"},
+   {"id": "sdk", "t": "OTel SDK|redact PII, sample", "x": 265, "y": 180, "w": 170, "h": 86, "c": "llmops", "i": "shield"},
+   {"id": "dash", "t": "Dashboards|cost, p95, errors", "x": 265, "y": 20, "w": 170, "h": 86, "c": "ops", "i": "chart"},
+   {"id": "store", "t": "Trace store|Langfuse, LangSmith", "x": 550, "y": 180, "w": 150, "h": 86, "c": "llmops", "i": "eye"},
+   {"id": "score", "t": "Scores|evals + thumbs up/down", "x": 550, "y": 20, "w": 150, "h": 86, "c": "llmops", "i": "chart"},
+   {"id": "data", "t": "Eval dataset|bad traces saved", "x": 550, "y": 340, "w": 150, "h": 86, "c": "llmops", "i": "doc"}
+  ],
+  "edges": [
+   ["run", "llm", "child span"],
+   ["llm", "tool", "child span"],
+   ["llm", "sdk", "spans"],
+   ["tool", "sdk", "spans"],
+   ["sdk", "store", "export"],
+   ["score", "store", "attach"],
+   ["store", "dash", "aggregate"],
+   ["store", "data", "add item"]
+  ],
+  "steps": [
+   {"t": "One request, one trace", "d": "A user question starts a trace. The agent run is the root span, and each step inside it becomes a child span with a start time, end time and status.", "hl": ["run"]},
+   {"t": "Every step is a span", "d": "Each model call records model, input and output tokens, cost and latency. Tool and retrieval spans record arguments, returned documents and timing, so the tree shows the whole path.", "hl": ["llm", "tool"]},
+   {"t": "Clean and sample", "d": "Before export, the SDK can mask PII (personal data like emails) and keep only a sample of traces. OpenTelemetry GenAI keeps prompt content off unless you opt in.", "hl": ["sdk"]},
+   {"t": "Stored and searchable", "d": "Spans flow to a trace store such as Langfuse, LangSmith, Arize Phoenix or Braintrust. You filter by user, model, latency or error and open any single run.", "hl": ["store", "dash"]},
+   {"t": "Scores join the trace", "d": "Eval scores (LLM-as-judge, rules) and user thumbs up or down are attached to the same trace id, so you can sort runs by quality, not just speed.", "hl": ["score", "store"]},
+   {"t": "Bad traces become tests", "d": "A reviewer corrects a poor answer and adds it to an eval dataset. Next release, that case runs in offline evals so the same mistake cannot quietly return.", "hl": ["store", "data"]}
+  ]
+ },
+ "numbers": [
+  {"v": "Off", "l": "prompt and tool-argument capture by default in OTel GenAI telemetry", "s": "https://opentelemetry.io/blog/2026/genai-observability/"},
+  {"v": "0 to 1", "l": "Langfuse sample rate range; default 1 keeps every trace", "s": "https://langfuse.com/docs/observability/features/sampling"},
+  {"v": "100", "l": "runs you can add to a LangSmith annotation queue at once", "s": "https://docs.langchain.com/langsmith/annotation-queues"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Standard or vendor SDK", "d": "OpenTelemetry with GenAI conventions (gen_ai.request.model, gen_ai.usage.input_tokens) keeps you portable across backends. A vendor SDK is quicker to start and adds richer UI features."},
+  {"t": "What content to record", "d": "Always record model, tokens, cost, latency and tool names. Full prompts, outputs and tool arguments are the most useful and the most sensitive - capture them on purpose, with redaction."},
+  {"t": "Sampling rate", "d": "Keep 100% in development. In high traffic production, sample a share of normal traces but keep all errors, slow runs and anything a user flagged."},
+  {"t": "PII redaction", "d": "Mask emails, phone numbers and keys in the SDK before export, so sensitive data never leaves your service. Set retention limits on stored traces too."},
+  {"t": "Linking to quality", "d": "Use one trace id everywhere: online eval scores, user feedback and annotation all attach to it, so dashboards can show cost and quality side by side."}
+ ],
+ "instead": [
+  {"slug": "ops-monitoring-metrics-prometheus-grafana-dashboards", "why": "Counts and averages only - cheaper, but no per-request story"},
+  {"slug": "llmops-offline-evals-eval-dataset-benchmark-regression-ai-observability", "why": "Tests before release; tracing watches real traffic after release"},
+  {"slug": "llmops-llm-as-judge-online-eval-grading-judge-ai-observability", "why": "Grades the answers; tracing records how each answer was made"},
+  {"slug": "data-olap-db-clickhouse-clickhouse-druid-pinot-realtime-analytics-columnar", "why": "Roll your own: log spans to a columnar store and query them"}
+ ],
+ "breaks": [
+  {"t": "Sensitive data in traces", "d": "Prompts carry emails or account details into the trace store.", "see": "A privacy review finds personal data in stored spans", "fix": "Redact in the SDK before export, opt in to content only where needed, set retention"},
+  {"t": "Trace volume and cost grow", "d": "Every run with full prompts and documents makes storage heavy.", "see": "Tracing bill or ingest lag climbing with traffic", "fix": "Sample normal traffic, keep errors and flagged runs, trim large payloads"},
+  {"t": "Broken trace tree", "d": "Context is not passed across async jobs or services, so spans land in separate traces.", "see": "Orphan spans and agent runs missing their tool calls", "fix": "Propagate trace context through queues and HTTP headers"},
+  {"t": "Scores not linked", "d": "Feedback is stored with its own id, so it cannot be joined back.", "see": "Thumbs-down counts with no way to open the runs", "fix": "Send the trace id to the client and attach feedback to it"}
+ ],
+ "say": [
+  "Every request gets one trace: the agent run is the root span, with child spans for each LLM call, retrieval and tool call.",
+  "On each LLM span I record model, input and output tokens, cost and latency, using the OpenTelemetry GenAI attribute names so we can switch backends.",
+  "We redact PII in the SDK, sample normal traffic, and always keep errors, slow runs and anything a user flagged.",
+  "Eval scores and user feedback attach to the same trace id, and reviewers turn bad traces into dataset items that run in our offline evals."
+ ],
+ "followups": [
+  {"q": "How is a trace different from a log line?", "a": "A log line is one event on its own. A trace links many timed spans into a tree under one id, so you see order, nesting and where the time went across the whole agent run."},
+  {"q": "How do you find why one answer cited the wrong page?", "a": "Open its trace, look at the retrieval span to see which documents came back and their scores, then the LLM span to see the exact prompt. Usually retrieval or reranking picked the wrong page."},
+  {"q": "How do you trace a multi-step agent across services?", "a": "Pass the trace context in HTTP headers and queue message metadata. Each service continues the same trace, so tool workers and sub-agents appear as children of the original run."},
+  {"q": "How do traces feed evals?", "a": "Sample traces, score them online with rules or an LLM judge, and queue low scores for human review. Corrected examples go into the eval dataset that gates the next release."}
+ ],
+ "today": "In 2026 the OpenTelemetry GenAI conventions (invoke_agent, chat and execute_tool spans) are in active use and still evolving, and tools like Arize Phoenix, through OpenInference, build on OpenTelemetry.",
+ "check": [
+  {"q": "An agent made 3 model calls and 2 tool calls for one question. How many traces is that?", "a": "One trace with several spans", "d": ["Five separate traces", "Three traces, one per model call", "No trace until the answer is graded"], "why": "One request is one trace; each step inside it is a child span."},
+  {"q": "With OpenTelemetry GenAI defaults, are full prompts stored in spans?", "a": "No, content capture is opt-in", "d": ["Yes, always", "Only the system prompt", "Only when there is an error"], "why": "Prompts and tool arguments can hold sensitive data, so they are off until you opt in."},
+  {"q": "Traffic is huge and the tracing bill is high. Which traces should you always keep?", "a": "Errors, slow runs and user-flagged runs", "d": ["Only the fastest runs", "A random 1% of everything, nothing else", "Only runs from new users"], "why": "These are the ones you will debug, so sample the normal traffic instead."},
+  {"q": "A user gives a thumbs-down. What makes it useful later?", "a": "Attaching it to the trace id of that run", "d": ["Storing it in a separate table with a timestamp", "Emailing it to the team", "Adding it to the system prompt"], "why": "With the trace id you can open the exact run and add it to an eval dataset."}
+ ],
+ "sources": [
+  {"t": "OpenTelemetry blog: GenAI observability with OpenTelemetry", "u": "https://opentelemetry.io/blog/2026/genai-observability/"},
+  {"t": "Langfuse docs: sampling", "u": "https://langfuse.com/docs/observability/features/sampling"},
+  {"t": "LangSmith docs: annotation queues", "u": "https://docs.langchain.com/langsmith/annotation-queues"},
+  {"t": "OpenInference (Arize) on GitHub", "u": "https://github.com/Arize-ai/openinference"}
+ ]
+}

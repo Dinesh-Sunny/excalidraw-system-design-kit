@@ -13,7 +13,7 @@
 **Draw any system design or agentic AI architecture on Excalidraw in minutes, by typing instead of dragging.**
 
 [![Latest release](https://img.shields.io/github/v/release/Dinesh-Sunny/excalidraw-system-design-kit?label=release&color=5b57d1)](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest)
-[![Items](https://img.shields.io/badge/items-314-2f9e44)](docs/catalog.md)
+[![Items](https://img.shields.io/badge/items-317-2f9e44)](docs/catalog.md)
 [![Full designs](https://img.shields.io/badge/full%20designs-21-e67700)](#-whats-inside)
 [![Agentic patterns](https://img.shields.io/badge/agentic%20patterns-12-9c36b5)](#-whats-inside)
 [![Excalidraw](https://img.shields.io/badge/made%20for-Excalidraw-6965db)](https://excalidraw.com)

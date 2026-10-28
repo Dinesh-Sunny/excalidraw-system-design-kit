@@ -1,0 +1,98 @@
+{
+ "family": "service",
+ "reviewed": "Oct 2026",
+ "what": "A headless browser farm is a pool of real browsers (like Chromium) with no screen, driven by code such as Playwright or Puppeteer. It loads pages, runs their JavaScript and returns the final HTML, text or screenshot.",
+ "like": "Like a room of helpers each with a laptop: you hand one a link, they open it, wait for it to finish, and read back what they see.",
+ "why": [
+  "Many sites are SPAs (single page apps) that only show content after JavaScript runs",
+  "Captures what a real user sees, including what a consumer AI app displays versus its API",
+  "A shared pool reuses browsers, so thousands of pages render without starting a browser each time"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "queue", "t": "Job queue|URLs to render", "x": 0, "y": 20, "w": 150, "h": 86, "c": "msg", "i": "queue"},
+   {"id": "pool", "t": "Pool manager|lease a browser", "x": 0, "y": 180, "w": 150, "h": 86, "c": "svc", "i": "lb"},
+   {"id": "filter", "t": "Request filter|block images, fonts", "x": 0, "y": 340, "w": 150, "h": 86, "c": "edge", "i": "shield"},
+   {"id": "browser", "t": "Browser|one Chromium process", "x": 265, "y": 20, "w": 170, "h": 86, "c": "svc", "i": "service"},
+   {"id": "ctx", "t": "Context|own cookies per job", "x": 265, "y": 180, "w": 170, "h": 86, "c": "svc", "i": "lock"},
+   {"id": "page", "t": "Page|wait for selector", "x": 265, "y": 340, "w": 170, "h": 86, "c": "svc", "i": "doc"},
+   {"id": "proxy", "t": "Proxy / region|egress IP", "x": 550, "y": 20, "w": 150, "h": 86, "c": "edge", "i": "globe"},
+   {"id": "site", "t": "Target site|SPA or AI app", "x": 550, "y": 180, "w": 150, "h": 86, "c": "ext", "i": "globe"},
+   {"id": "out", "t": "Results|HTML, text, screenshot", "x": 550, "y": 340, "w": 150, "h": 86, "c": "data", "i": "bucket"}
+  ],
+  "edges": [
+   ["queue", "pool", "next URL"],
+   ["pool", "browser", "lease"],
+   ["browser", "ctx", "new context"],
+   ["ctx", "page", ""],
+   ["page", "filter", "route()"],
+   ["browser", "proxy", "egress"],
+   ["proxy", "site", "GET"],
+   ["page", "out", "save"]
+  ],
+  "steps": [
+   {"t": "A URL is queued", "d": "Jobs wait in a queue. The pool manager takes the next one and leases a browser that is already running, instead of paying to launch a new one each time.", "hl": ["queue", "pool"]},
+   {"t": "Fresh context per job", "d": "Each job gets its own browser context - an incognito-like profile with separate cookies and storage. Contexts are cheap, so one browser safely serves many jobs.", "hl": ["browser", "ctx"]},
+   {"t": "Skip what you don't need", "d": "A route handler aborts images, fonts and media. Pages load faster and use less bandwidth, which matters a lot at farm scale.", "hl": ["page", "filter"]},
+   {"t": "Fetch from the right place", "d": "Traffic leaves through a proxy in a chosen region, so you see the page as a user in that country would. Keep rates polite and follow robots.txt and terms.", "hl": ["proxy", "site"]},
+   {"t": "Wait for real content", "d": "Wait for a specific selector to appear rather than a fixed sleep. Every step has a timeout, so a stuck page is closed instead of holding a browser forever.", "hl": ["page", "site"]},
+   {"t": "Save and recycle", "d": "Store HTML, text and a screenshot, close the context, and return the browser to the pool. Restart each browser after a set number of jobs to free memory.", "hl": ["page", "out", "pool"]}
+  ]
+ },
+ "numbers": [
+  {"v": "30 s", "l": "Playwright default navigation timeout; 0 turns it off", "s": "https://github.com/microsoft/playwright/blob/114d586f071b767ad2f2bd7adf25001bb2566f24/docs/src/api/params.md"},
+  {"v": "500 ms", "l": "of no network connections before networkidle counts as done", "s": "https://github.com/microsoft/playwright/blob/114d586f071b767ad2f2bd7adf25001bb2566f24/docs/src/api/params.md"},
+  {"v": "200", "l": "concurrent browsers per account on Cloudflare Browser Run (paid)", "s": "https://developers.cloudflare.com/browser-run/limits/"},
+  {"v": "60 s", "l": "idle time before Cloudflare closes a browser; keep_alive extends it", "s": "https://developers.cloudflare.com/browser-run/limits/"},
+  {"v": "24 h", "l": "longest a crawler should reuse a cached robots.txt", "s": "https://www.rfc-editor.org/rfc/rfc9309"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Self-hosted or managed", "d": "Run Chromium on your own containers for full control and lowest unit cost. Managed services like Browserbase or Cloudflare Browser Run handle scaling, but have concurrency and session limits."},
+  {"t": "Browser and context reuse", "d": "Keep browsers warm and give each job a new context for isolation. Recycle a browser after N jobs or when its memory grows, since long-lived browsers tend to bloat."},
+  {"t": "Wait strategy", "d": "Prefer waiting for a selector or a specific network response. load and networkidle are simple but can be slow or never settle on pages that keep polling."},
+  {"t": "What to block", "d": "Abort images, fonts and media when you only need text. Keep CSS and scripts when the layout or a screenshot matters."},
+  {"t": "Regions and IPs", "d": "Route through proxies in the countries you care about, since AI answers and search results often differ by location. Rotate gently and stay within the site's terms."}
+ ],
+ "instead": [
+  {"slug": "client-bot-crawler-scraper-crawler-search-bot-client-clients-device", "why": "Plain HTTP crawler: far cheaper when pages work without JavaScript"},
+  {"slug": "agent-tools-function-calling-tool-use-api-ai-agentic", "why": "Use the official API when one exists - stable and allowed"},
+  {"slug": "agent-code-sandbox-code-execution-e2b-container-isolated-ai-agentic", "why": "Isolated sandbox when an agent must browse untrusted pages"},
+  {"slug": "msg-message-queue-mq-async-buffer-decouple", "why": "The queue that feeds the farm and smooths bursts"}
+ ],
+ "breaks": [
+  {"t": "Memory keeps growing", "d": "Long-lived browsers and leaked pages slowly fill RAM until the host struggles.", "see": "Container memory climbing, then out-of-memory restarts", "fix": "Close every page and context, cap jobs per browser, restart browsers on a schedule"},
+  {"t": "Pages never finish", "d": "A page keeps polling, so networkidle never fires and jobs hang.", "see": "Timeout errors and a pool with no free browsers", "fix": "Wait for a selector, set per-step timeouts, kill and recycle stuck pages"},
+  {"t": "Blocked or challenged", "d": "The site sees heavy traffic from one IP and shows a challenge page.", "see": "Screenshots of captchas, 429 or 403 responses", "fix": "Slow down, respect robots.txt and terms, spread regions, prefer an official API"},
+  {"t": "Content changed shape", "d": "The site redesigns, so selectors stop matching.", "see": "Empty fields or a drop in parsed results", "fix": "Alert on empty extractions, keep screenshots, use sturdier text or role selectors"}
+ ],
+ "say": [
+  "I'll put a queue in front of a pool of warm Chromium browsers driven by Playwright, and give each job its own browser context for isolation.",
+  "We block images and fonts, wait for a specific selector rather than a sleep, and put a timeout on every step so stuck pages get recycled.",
+  "To see what a consumer AI app shows users in each market, we render from proxies in those regions and store HTML, text and a screenshot.",
+  "We stay polite: rate limits per domain, robots.txt cached for at most a day, and the official API whenever one exists."
+ ],
+ "followups": [
+  {"q": "Why not just use a plain HTTP fetch?", "a": "Many modern pages are single page apps: the first HTML is mostly empty and JavaScript fills it in. A plain fetch is far cheaper, so try it first and use the browser only for pages that need it."},
+  {"q": "Browser or context - which do you create per job?", "a": "Contexts. They are cheap and fully isolated, with their own cookies and storage, while launching a whole browser is slow. Reuse browsers, create a context per job, and recycle browsers now and then."},
+  {"q": "How do you scale to a million pages a day?", "a": "A queue plus many workers, each running a few browsers. Autoscale on queue depth, block heavy resources, cap jobs per browser, and keep per-domain rate limits so no single site is overloaded."},
+  {"q": "Why can the AI app's screen differ from its API?", "a": "The consumer app may add web search, citations, personalisation and location. To track what users really see, render the app in a browser from the right region and compare it to the API answer."}
+ ],
+ "today": "In April 2026 Cloudflare renamed Browser Rendering to Browser Run, with paid plans allowing up to 200 concurrent browsers per account.",
+ "check": [
+  {"q": "You need isolated cookies for each job but want speed. What do you create per job?", "a": "A new browser context", "d": ["A new browser process", "A new operating system user", "A new proxy only"], "why": "Contexts are cheap, incognito-like and fully isolated inside one browser."},
+  {"q": "A page keeps polling an API every second. Which wait is safest?", "a": "Wait for a specific selector", "d": ["networkidle", "A fixed 60 second sleep", "No wait at all"], "why": "networkidle needs 500 ms of quiet, which a polling page may never give."},
+  {"q": "You only need page text. What cuts cost most easily?", "a": "Blocking images, fonts and media", "d": ["Taking larger screenshots", "Disabling all timeouts", "Launching a browser per URL"], "why": "Aborting heavy resources saves bandwidth and time without changing the text."},
+  {"q": "Does robots.txt act as access control?", "a": "No, it is a polite request crawlers should follow", "d": ["Yes, the server enforces it", "Only for logged-in pages", "Only for search engines"], "why": "RFC 9309 says the rules are not access authorization, so honouring them is on you."}
+ ],
+ "sources": [
+  {"t": "Playwright docs: browser contexts", "u": "https://playwright.dev/docs/browser-contexts"},
+  {"t": "Playwright docs: network (route and abort)", "u": "https://playwright.dev/docs/network"},
+  {"t": "Playwright API params (waitUntil, timeout)", "u": "https://github.com/microsoft/playwright/blob/114d586f071b767ad2f2bd7adf25001bb2566f24/docs/src/api/params.md"},
+  {"t": "Cloudflare Browser Run: limits", "u": "https://developers.cloudflare.com/browser-run/limits/"},
+  {"t": "Cloudflare changelog: Browser Rendering renamed to Browser Run", "u": "https://developers.cloudflare.com/changelog/post/2026-04-15-br-rename/index.md"},
+  {"t": "RFC 9309: Robots Exclusion Protocol", "u": "https://www.rfc-editor.org/rfc/rfc9309"}
+ ]
+}

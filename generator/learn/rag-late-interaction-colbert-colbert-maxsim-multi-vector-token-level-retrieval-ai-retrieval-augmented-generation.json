@@ -1,0 +1,99 @@
+{
+ "family": "rag",
+ "reviewed": "Oct 2026",
+ "what": "Late interaction (ColBERT) stores one small vector per token instead of one vector per document, then scores a match with MaxSim: every query token looks for its best partner token in the document.",
+ "like": "Like checking a shopping list item by item against a shelf, instead of comparing a blurry photo of the whole list with a photo of the shelf.",
+ "why": [
+  "Keeps specifics that a single averaged vector washes out, so 'X AND Y' queries match better",
+  "Much cheaper than a cross-encoder, because documents are encoded once, offline",
+  "Shows which query token matched which document token, so scores are explainable"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "q", "t": "Query|'cheap AND vegan ramen'", "x": 0, "y": 20, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "first", "t": "First stage|BM25 or one dense vector", "x": 265, "y": 20, "w": 170, "h": 86, "c": "rag", "i": "vector"},
+   {"id": "cands", "t": "Candidates|a few hundred doc ids", "x": 550, "y": 20, "w": 150, "h": 86, "c": "rag", "i": "partition"},
+   {"id": "qenc", "t": "Query encoder|one vector per token", "x": 0, "y": 180, "w": 150, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "docs", "t": "Token index|centroid + tiny residual", "x": 265, "y": 180, "w": 170, "h": 86, "c": "data", "i": "db"},
+   {"id": "maxsim", "t": "MaxSim scorer|sum of best matches", "x": 550, "y": 180, "w": 150, "h": 86, "c": "rag", "i": "chart"},
+   {"id": "denc", "t": "Doc encoder|offline, every token", "x": 0, "y": 340, "w": 150, "h": 86, "c": "ai", "i": "doc"},
+   {"id": "comp", "t": "Compression|residuals or 1-bit", "x": 265, "y": 340, "w": 170, "h": 86, "c": "data", "i": "snapshot"},
+   {"id": "top", "t": "Top-k|to the LLM or the user", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ai", "i": "llm"}
+  ],
+  "edges": [
+   ["q", "first", "query"],
+   ["first", "cands", "ids"],
+   ["q", "qenc", "tokens"],
+   ["qenc", "docs", "q vectors"],
+   ["docs", "maxsim", "doc tokens"],
+   ["cands", "maxsim", "rescore"],
+   ["denc", "comp", "vectors"],
+   ["comp", "docs", "store"],
+   ["maxsim", "top", "ranked"]
+  ],
+  "steps": [
+   {"t": "Encode every token", "d": "A BERT-style encoder turns each token into its own 128-number vector. Documents are encoded once, offline, so a whole passage becomes a small matrix, not one point.", "hl": ["qenc", "denc"]},
+   {"t": "Shrink the index", "d": "Many vectors per doc means a big index. ColBERTv2 stores each vector as its nearest centroid id plus a 1-2 bit residual; Vespa can binarize a vector to 16 bytes.", "hl": ["denc", "comp", "docs"]},
+   {"t": "Cheap first stage", "d": "BM25, a single dense vector, or PLAID's centroid search quickly picks a few hundred candidates. Late interaction then only has to score those.", "hl": ["q", "first", "cands"]},
+   {"t": "MaxSim scoring", "d": "For each query token, take the highest dot product with any document token, then add those maxima up. Every query term has to find its own match.", "hl": ["qenc", "docs", "maxsim"]},
+   {"t": "Hand on the winners", "d": "The best passages go to the LLM, which reads and cites them. Per-token matches tell you why each one ranked high.", "hl": ["maxsim", "top"]}
+  ]
+ },
+ "numbers": [
+  {"v": "128", "l": "numbers in each ColBERT token vector", "s": "https://qdrant.tech/documentation/fastembed/fastembed-colbert/index.md"},
+  {"v": "6-10x", "l": "smaller index from ColBERTv2 residual compression", "s": "https://arxiv.org/pdf/2112.01488"},
+  {"v": "154 to 16 GiB", "l": "MS MARCO index, ColBERT vs ColBERTv2 at 1 bit", "s": "https://arxiv.org/pdf/2112.01488"},
+  {"v": "up to 45x", "l": "faster on CPU with PLAID than vanilla ColBERTv2", "s": "https://arxiv.org/pdf/2205.09707"},
+  {"v": "~90%", "l": "lower latency for MUVERA than PLAID, with ~10% higher recall", "s": "https://research.google/blog/muvera-making-multi-vector-retrieval-as-fast-as-single-vector-search/"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "First stage or reranker only", "d": "Most teams rerank a few hundred candidates from BM25 or a dense retriever. Full first-stage needs an engine built for it, like PLAID or MUVERA-style single-vector encodings."},
+  {"t": "Rerank depth (k)", "d": "Deeper k lifts recall@K but costs more MaxSim work. Measure nDCG@10 and recall at several depths and stop where gains flatten."},
+  {"t": "Compression", "d": "Full floats, int8, 2-bit or 1-bit residuals, or binarized vectors. Smaller means cheaper RAM; check nDCG on your own eval set after each step."},
+  {"t": "Text or page images", "d": "ColBERT-style models for text. ColPali embeds page images directly, so tables, charts and layout count without an OCR pipeline."},
+  {"t": "Where to run it", "d": "Vespa (ColBERT embedder, MaxSim in ranking), Qdrant multivectors with MAX_SIM, or Elasticsearch rank_vectors in a script_score rescore."}
+ ],
+ "instead": [
+  {"slug": "ai-reranker-rerank-cross-encoder-relevance-ai", "why": "Cross-encoder reads query and doc together: sharper, but slower per candidate"},
+  {"slug": "rag-vector-index-vector-db-ann-hnsw-pgvector-pinecone-ai-retrieval-augmented-generation", "why": "One vector per doc: tiny index and fast, but meaning gets averaged"},
+  {"slug": "rag-keyword-index-bm25-bm25-full-text-elasticsearch-ai-retrieval-augmented-generation", "why": "Exact terms, IDs and names, cheap and strong as a first stage"},
+  {"slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation", "why": "Blend BM25 and dense lists, then add late interaction on top"}
+ ],
+ "breaks": [
+  {"t": "Index grows huge", "d": "One vector per token multiplies storage by document length.", "see": "RAM or disk per shard far above your single-vector index", "fix": "Residual compression or binarization, token pruning, or keep it rerank-only"},
+  {"t": "Brute-force MaxSim on everything", "d": "Scoring the whole corpus token by token is slow.", "see": "p99 latency (slowest 1 in 100) climbs with corpus size", "fix": "Cheap first stage, then MaxSim on a few hundred candidates"},
+  {"t": "First stage misses the doc", "d": "A reranker cannot rescue a document it never sees.", "see": "recall@500 of the first stage is low on the eval set", "fix": "Hybrid BM25 + dense first stage, or a deeper candidate list"},
+  {"t": "Compression costs quality", "d": "Too few bits blur fine distinctions.", "see": "nDCG@10 or MRR drops after re-indexing", "fix": "Step bits back up and A/B on a fixed eval set before rollout"}
+ ],
+ "say": [
+  "A single dense vector averages the whole passage, so a query like 'cheap AND vegan' can match a doc that is only strongly about one of them.",
+  "ColBERT keeps one vector per token and scores with MaxSim: each query token takes its best match in the doc, and we sum those.",
+  "Because that index is large, I'd retrieve a few hundred candidates with BM25 plus dense, then rescore them with late interaction.",
+  "I'd judge it on a labelled set with recall@K for the first stage and nDCG@10 and MRR after rescoring."
+ ],
+ "followups": [
+  {"q": "Why not just use a cross-encoder?", "a": "A cross-encoder runs the model on every query-doc pair at query time, so cost grows with candidates. Late interaction pre-computes doc vectors offline and only does cheap dot products at query time - often used before a cross-encoder."},
+  {"q": "How do you keep the index size down?", "a": "ColBERTv2 stores a centroid id plus a 1-2 bit residual per token, about 6-10x smaller. Vespa can binarize to 16 bytes per token. PLAID uses those centroids to prune candidates before full scoring."},
+  {"q": "Can late interaction be first-stage?", "a": "Yes with PLAID-style centroid search, or MUVERA, which squeezes the token set into one fixed-length vector for a normal ANN search, then rescores exact MaxSim on the candidates."},
+  {"q": "What is ColPali?", "a": "A vision-language model that turns a page image into ColBERT-style patch vectors of 128 numbers. Text queries match pages with MaxSim, so tables and charts are searchable without OCR."}
+ ],
+ "today": "Late interaction is now a stock feature: Elasticsearch has a rank_vectors field scored with maxSimDotProduct, Qdrant offers MAX_SIM multivectors, and Vespa ships a ColBERT embedder.",
+ "check": [
+  {"q": "How does MaxSim score a document?", "a": "Best doc-token match for each query token, summed", "d": ["Cosine of the two averaged vectors", "Count of shared words", "Highest single token match only"], "why": "Each query token finds its own best partner, and those best scores add up."},
+  {"q": "What is the biggest cost of storing one vector per token?", "a": "A much larger index", "d": ["Slower document encoding at query time", "No support for ANN", "It needs labelled data"], "why": "Storage grows with document length. ColBERTv2 compression shrinks it about 6-10x."},
+  {"q": "Where is late interaction most often used in a pipeline?", "a": "Rescoring a few hundred first-stage candidates", "d": ["Replacing the LLM", "Before tokenization", "Only for exact ID lookups"], "why": "A cheap first stage finds candidates, then MaxSim reorders them more precisely."},
+  {"q": "Why can one dense vector miss 'cheap AND vegan'?", "a": "It averages the passage into one point", "d": ["It cannot store numbers", "It ignores stop words", "It only works in English"], "why": "Averaging blends topics, so one strong topic can outweigh a missing second one."}
+ ],
+ "sources": [
+  {"t": "ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction", "u": "https://arxiv.org/pdf/2112.01488"},
+  {"t": "PLAID: An Efficient Engine for Late Interaction Retrieval", "u": "https://arxiv.org/pdf/2205.09707"},
+  {"t": "Google Research: MUVERA", "u": "https://research.google/blog/muvera-making-multi-vector-retrieval-as-fast-as-single-vector-search/"},
+  {"t": "Qdrant: ColBERT with FastEmbed", "u": "https://qdrant.tech/documentation/fastembed/fastembed-colbert/index.md"},
+  {"t": "Vespa: announcing the ColBERT embedder", "u": "https://blog.vespa.ai/announcing-colbert-embedder-in-vespa/"},
+  {"t": "Elasticsearch: rank_vectors field", "u": "https://www.elastic.co/docs/reference/elasticsearch/mapping-reference/rank-vectors"},
+  {"t": "ColPali: Efficient Document Retrieval with Vision Language Models", "u": "https://arxiv.org/html/2407.01449v5"}
+ ]
+}

@@ -1,0 +1,97 @@
+{
+ "family": "scheduling",
+ "reviewed": "Oct 2026",
+ "what": "A scheduler starts jobs at set times or intervals, like every hour or every night at 2am. Cron is the classic way to write those times.",
+ "like": "Like an alarm clock with a rota: it rings on time, and the rota says exactly one person gets up to do the job.",
+ "why": [
+  "Runs repeating work (reports, re-crawls, cleanups, re-scoring) with no human pressing a button",
+  "Turns a big daily target into a steady, predictable flow of work",
+  "A durable scheduler remembers missed runs and catches up after downtime"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "spec", "t": "Schedule spec|cron: 0 * * * *", "x": 0, "y": 20, "w": 150, "h": 86, "c": "ops", "i": "clock"},
+   {"id": "lead", "t": "Leader or lock|only one copy fires", "x": 265, "y": 20, "w": 170, "h": 86, "c": "ops", "i": "lock"},
+   {"id": "store", "t": "Durable state|last run, next run", "x": 550, "y": 20, "w": 150, "h": 86, "c": "data", "i": "db"},
+   {"id": "spread", "t": "Spreader|jitter across the hour", "x": 265, "y": 180, "w": 170, "h": 86, "c": "svc", "i": "router"},
+   {"id": "quota", "t": "Tenant quotas|fair share per customer", "x": 550, "y": 180, "w": 150, "h": 86, "c": "svc", "i": "shield"},
+   {"id": "q", "t": "Work queue|prompts waiting to run", "x": 0, "y": 180, "w": 150, "h": 86, "c": "msg", "i": "queue"},
+   {"id": "work", "t": "Workers|idempotent by job key", "x": 0, "y": 340, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "eng", "t": "AI answer engines|steady rate, no spikes", "x": 265, "y": 340, "w": 170, "h": 86, "c": "ext", "i": "llm"}
+  ],
+  "edges": [
+   ["spec", "lead", "tick"],
+   ["lead", "store", "claim run"],
+   ["lead", "spread", "plan batch"],
+   ["spread", "quota", "per tenant"],
+   ["spread", "q", "enqueue"],
+   ["q", "work", "pull"],
+   ["work", "eng", "prompt"]
+  ],
+  "steps": [
+   {"t": "The clock ticks", "d": "A cron expression has five fields: minute, hour, day of month, month, day of week. 0 * * * * means at minute 0 of every hour.", "hl": ["spec", "lead"]},
+   {"t": "Exactly one runner", "d": "Many scheduler copies run for safety, but one must fire. A leader election or a lock row, plus a recorded run id, stops the double-run problem.", "hl": ["lead", "store"]},
+   {"t": "Spread, don't spike", "d": "3.6 million prompts a day is about 42 a second. Instead of firing all at midnight, the spreader gives each job a random offset across the window.", "hl": ["spread", "q"]},
+   {"t": "Fair share per tenant", "d": "Each customer gets a quota per hour, so one big account cannot fill the queue and starve everyone else.", "hl": ["spread", "quota"]},
+   {"t": "Idempotent workers", "d": "Workers pull from the queue and call the engines. Each job has a key like tenant+prompt+hour, so a run that fires twice writes one result.", "hl": ["q", "work", "eng"]},
+   {"t": "Catch up after downtime", "d": "The durable state knows which runs were missed. A catch-up window decides which still run, and they drain at the normal rate, not all at once.", "hl": ["store", "lead"]}
+  ]
+ },
+ "numbers": [
+  {"v": "1,440 min", "l": "largest EventBridge Scheduler flexible time window (24 hours)", "s": "https://docs.amazonaws.cn/scheduler/latest/APIReference/API_FlexibleTimeWindow.html"},
+  {"v": "10 million", "l": "default EventBridge Scheduler schedules per Region, adjustable", "s": "https://docs.aws.amazon.com/scheduler/latest/UserGuide/scheduler-quotas.html"},
+  {"v": "1,000 TPS", "l": "default EventBridge Scheduler invocation limit in large Regions", "s": "https://docs.aws.amazon.com/scheduler/latest/UserGuide/scheduler-quotas.html"},
+  {"v": "1 year", "l": "Temporal default catch-up window for late schedule actions", "s": "https://docs.temporal.io/schedule"},
+  {"v": "52", "l": "max characters in a Kubernetes CronJob name", "s": "https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Where the schedule lives", "d": "Plain cron on one box is simple but single. Durable schedulers (Temporal Schedules, EventBridge Scheduler, Kubernetes CronJob) survive restarts and record what ran."},
+  {"t": "Overlap policy", "d": "What if the last run is still going? Kubernetes concurrencyPolicy: Allow (default), Forbid or Replace. Temporal: Skip (default), BufferOne, BufferAll, CancelOther, TerminateOther or AllowAll."},
+  {"t": "Start deadline and catch-up", "d": "How late may a missed run still start? Kubernetes uses startingDeadlineSeconds; Temporal uses a catch-up window. Short for fresh data, long for runs that must happen."},
+  {"t": "Jitter and windows", "d": "Spread starts with random jitter or a flexible window instead of everyone at 00:00. Temporal adds jitter per action; EventBridge has flexible time windows."},
+  {"t": "Quotas per tenant", "d": "Cap jobs per customer per hour and use a fair queue, so one large tenant cannot use all the engine capacity."}
+ ],
+ "instead": [
+  {"slug": "msg-message-queue-mq-async-buffer-decouple", "why": "Event-driven work: run when something happens, not on the clock"},
+  {"slug": "msg-batch-etl-spark-spark-airflow-etl-batch-pipeline-mapreduce", "why": "Many dependent steps in order: an Airflow-style DAG, not lone cron jobs"},
+  {"slug": "msg-stream-processor-flink-flink-spark-streaming-kafka-streams-realtime", "why": "Results needed continuously, within seconds, rather than on a timer"},
+  {"slug": "edge-rate-limiter-throttle-token-bucket-leaky-bucket-sliding-window", "why": "Pace the calls to each engine once the jobs are queued"}
+ ],
+ "breaks": [
+  {"t": "Double run", "d": "Two scheduler copies both fire the same job, or a retry repeats it.", "see": "Duplicate rows, double the engine calls and cost for one hour", "fix": "Leader election or a lock, plus an idempotency key per run"},
+  {"t": "Midnight thundering herd", "d": "Every job is written as 0 0 * * *, so all of them hit the engines at once.", "see": "A big spike of calls and 429 rate-limit errors right at 00:00", "fix": "Random jitter or a flexible window, spread across the day"},
+  {"t": "Runs pile up", "d": "Each run takes longer than the gap between runs, so runs overlap.", "see": "Several copies of the same job active together", "fix": "Forbid or Skip overlap, or make each run smaller"},
+  {"t": "Silent missed runs", "d": "The scheduler was down and runs were skipped with no alert.", "see": "Gaps in the results table; missed-action metrics rising", "fix": "Durable scheduler, catch-up window and an alert when a run is missed"},
+  {"t": "Catch-up flood", "d": "After an outage, every missed run fires at once.", "see": "Queue depth jumps after recovery", "fix": "Short catch-up window, drain backlog at a capped rate"}
+ ],
+ "say": [
+  "3.6 million prompts a day is about 42 a second, so I schedule them as a steady flow, not a midnight batch.",
+  "A durable scheduler fires each hour's batch, with a lock or leader so only one copy runs, and a spreader adds jitter across the hour.",
+  "Each job has an idempotency key of tenant, prompt and time slot, so a double fire or a retry writes the result once.",
+  "Per-tenant quotas keep it fair, and after downtime a catch-up window decides which missed runs still matter, drained at the normal rate."
+ ],
+ "followups": [
+  {"q": "How do you stop two scheduler instances running the same job?", "a": "Elect one leader (for example with a lease in etcd or a database row), or take a lock per run. Still make jobs idempotent, because locks can expire and Kubernetes warns one CronJob can sometimes create more than one Job."},
+  {"q": "Why not schedule everything at midnight?", "a": "Everyone picks round times, so load arrives as one spike that hits rate limits. Jitter or flexible windows spread the same work evenly, so you need far less peak capacity."},
+  {"q": "What happens to runs missed during an outage?", "a": "It depends on the catch-up setting. Temporal defaults to one year; Kubernetes uses startingDeadlineSeconds. For fresh visibility data, skip old runs and only run the latest."},
+  {"q": "How would you handle tenants of very different sizes?", "a": "Give each tenant a quota per window and use a fair queue (round-robin across tenants), so small tenants are served promptly even when a large one has a big backlog."}
+ ],
+ "check": [
+  {"q": "What does the cron expression 0 * * * * mean?", "a": "At minute 0 of every hour", "d": ["Every minute", "Once a day at midnight", "Every hour on Sundays only"], "why": "The five fields are minute, hour, day of month, month, day of week. Only minute is fixed, to 0."},
+  {"q": "A CronJob run is still going when the next one is due. Which setting skips the new one?", "a": "concurrencyPolicy: Forbid", "d": ["concurrencyPolicy: Allow", "concurrencyPolicy: Replace", "successfulJobsHistoryLimit: 0"], "why": "Forbid skips the new run. Allow, the default, lets them overlap; Replace cancels the old one."},
+  {"q": "Why give each job an idempotency key?", "a": "So a job that fires twice still writes one result", "d": ["So it runs faster", "So the cron expression is shorter", "So it skips the queue"], "why": "Double fires and retries happen in distributed systems. The key makes the second run a harmless no-op."},
+  {"q": "All tenants' jobs run at 00:00 and the engines return 429 errors. Best fix?", "a": "Spread start times with jitter or a flexible window", "d": ["Run them all at 01:00 instead", "Add more retries", "Remove the schedule"], "why": "Moving the spike just moves the problem. Spreading the same work flattens the load."}
+ ],
+ "sources": [
+  {"t": "Kubernetes docs: CronJob", "u": "https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs"},
+  {"t": "Google Cloud GKE docs: running CronJobs", "u": "https://docs.cloud.google.com/kubernetes-engine/docs/how-to/cronjobs"},
+  {"t": "AWS docs: EventBridge Scheduler quotas", "u": "https://docs.aws.amazon.com/scheduler/latest/UserGuide/scheduler-quotas.html"},
+  {"t": "AWS API reference: EventBridge Scheduler FlexibleTimeWindow", "u": "https://docs.amazonaws.cn/scheduler/latest/APIReference/API_FlexibleTimeWindow.html"},
+  {"t": "Temporal docs: Schedules", "u": "https://docs.temporal.io/schedule"},
+  {"t": "Temporal docs: troubleshooting missed schedule actions", "u": "https://docs.temporal.io/troubleshooting/schedule-missed-actions"},
+  {"t": "Amazon Builders' Library: Timeouts, retries and backoff with jitter", "u": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter"}
+ ]
+}

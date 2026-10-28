@@ -1925,5 +1925,202 @@
    "Next: track fixes over time and link them to visibility changes.",
    "Next: a crawl budget per plan."
   ]
+ },
+ "search-relevance-eval-loop": {
+  "level": "Medium",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Tell whether a new ranker is better before shipping",
+   "Cover real user queries, including rare ones",
+   "Catch regressions automatically",
+   "Explain why a query got worse"
+  ],
+  "reqN": [
+   "Trustworthy: metrics agree with human judgement",
+   "Fast enough to run on every change",
+   "Cheap: human labels are expensive",
+   "Repeatable across model versions"
+  ],
+  "est": [
+   "Golden set: a few hundred to a few thousand real queries",
+   "Graded labels (0-3) on the top ~20 results per query",
+   "Interleaving detects ranking differences with far less traffic than A/B",
+   "One offline run = queries x rankers, minutes on a laptop"
+  ],
+  "api": [
+   "POST /evals/run {rankerA, rankerB, set} -> {recall@100, ndcg@10, mrr}",
+   "GET /evals/{id}/worst?k=50 -> queries with biggest drops",
+   "POST /judgments {query, doc, grade, rater}"
+  ],
+  "data": [
+   "query(id, text, source, frequency)",
+   "judgment(query_id, doc_id, grade 0-3, rater, ts)",
+   "eval_run(id, ranker_version, metrics, per_query_scores)"
+  ],
+  "blocks": {
+   "q": "Sample real queries, not invented ones - head and long tail.",
+   "gs": "The golden set: queries with graded judgments of which results are relevant.",
+   "hj": "Domain experts label first; their labels define 'right'.",
+   "jd": "An LLM judge scales labelling - only after it agrees with the humans.",
+   "run": "Runs old and new rankers on the same queries.",
+   "met": "recall@100 for the first stage, nDCG@10 for the final order, MRR when one answer matters.",
+   "ab": "Online check: interleaving (mix both rankers' results, see which gets clicks) or a full A/B test.",
+   "ci": "A CI gate blocks merges that drop the metrics.",
+   "err": "Read the worst queries by hand - that is where the next fix comes from."
+  },
+  "dives": [
+   [
+    "Why nDCG and not accuracy?",
+    "Ranking quality depends on order and graded relevance; nDCG rewards putting the best results first and discounts lower positions."
+   ],
+   [
+    "recall@100 vs nDCG@10 - which when?",
+    "recall@100 for the first-stage retriever (did the right docs make the candidate pool?), nDCG@10 after the reranker (is the top in the right order?)."
+   ],
+   [
+    "How do you trust an LLM judge?",
+    "Label ~100 items with experts, measure the judge's agreement (true positive and true negative rates), fix the rubric until it agrees, then re-check on every judge model change."
+   ],
+   [
+    "Interleaving or A/B?",
+    "Interleaving for ranking comparisons - each user sees a mix, so it needs much less traffic; A/B for business metrics like conversion."
+   ]
+  ],
+  "wrap": [
+   "Risk: overfitting to the golden set - refresh it with new queries.",
+   "Next: per-segment metrics (locale, query type).",
+   "Next: track cost per query next to quality."
+  ]
+ },
+ "agentic-search-loop": {
+  "level": "Hard",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Answer complex questions needing several searches",
+   "Use several tools: keyword, vector, web, SQL",
+   "Decide when enough evidence is found",
+   "Cite the evidence"
+  ],
+  "reqN": [
+   "Bounded cost and latency per question",
+   "High recall of the needed evidence",
+   "Traceable: every step logged",
+   "Robust to bad tool results"
+  ],
+  "est": [
+   "Classic tool calling: one search per turn, many turns",
+   "Batching searches in one turn cuts turns roughly 2-3x",
+   "Each turn re-sends context: fewer turns = fewer tokens",
+   "Cap: e.g. 5 turns, 40k tokens per question"
+  ],
+  "api": [
+   "POST /ask {question} -> stream {steps[], answer, citations[]}",
+   "Tools: search_keyword(q, k), search_vector(q, k, filter), web(q), sql(query)",
+   "Sandbox: run_code(script) for code mode"
+  ],
+  "data": [
+   "trace(question, plan, tool_calls[], passages, judge_verdicts, tokens)",
+   "Eval set: question -> required evidence ids",
+   "Cache: tool results per (tool, args) for the session"
+  ],
+  "blocks": {
+   "u": "A compound question - needs more than one search.",
+   "pl": "The planner splits it into sub-queries and picks tools.",
+   "cm": "Code mode: the model writes one small script that fires many searches at once.",
+   "s1": "Keyword search for names, ids and exact phrases.",
+   "s2": "Vector search for meaning.",
+   "s3": "Web search or SQL for fresh facts and numbers.",
+   "ctx": "Context packing is ranking: dedupe, rank, truncate to the budget.",
+   "jg": "The judge decides: enough evidence, or refine and search again.",
+   "ans": "The final answer, every claim tied to a citation."
+  },
+  "dives": [
+   [
+    "Why batch tool calls?",
+    "Each turn re-sends the whole context. Fanning out several searches in one turn (or one script) cuts turns, tokens and latency while raising recall."
+   ],
+   [
+    "How does the agent know when to stop?",
+    "A judge step checks coverage of each sub-question, plus hard caps on turns and tokens; stop early when every sub-question has strong evidence."
+   ],
+   [
+    "How do you evaluate it?",
+    "Questions with known required evidence: measure evidence recall, answer correctness, turns and cost per question - on every model or prompt change."
+   ],
+   [
+    "Tool selection with many tools?",
+    "Treat it as retrieval: retrieve the few relevant tools per request, measure tool-selection recall."
+   ]
+  ],
+  "wrap": [
+   "Risk: runaway loops - caps and a budget per question.",
+   "Risk: injected instructions in fetched pages - treat as data.",
+   "Next: learn from traces which plans work."
+  ]
+ },
+ "pipeline-migration": {
+  "level": "Medium",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Merge an acquired company's data pipeline into yours",
+   "Keep customers' historic trends continuous",
+   "Move tenants without downtime",
+   "Retire the old pipeline"
+  ],
+  "reqN": [
+   "No silent metric jumps for customers",
+   "Reversible per tenant",
+   "Cost of running both is time-boxed",
+   "Clear audit of what changed"
+  ],
+  "est": [
+   "Dual run for 2-4 weeks doubles collection cost for migrated tenants",
+   "Compare thousands of metrics per tenant per day",
+   "Define tolerance up front, e.g. visibility within the confidence interval",
+   "Backfill: re-parse months of raw answers with the new parser"
+  ],
+  "api": [
+   "POST /migrations/{tenant}:dual-run",
+   "GET /migrations/{tenant}/diff -> per metric {old, new, within}",
+   "POST /migrations/{tenant}:cutover"
+  ],
+  "data": [
+   "mapping(old_id, new_id, kind: brand | prompt | project)",
+   "diff(tenant, metric, day, old, new, within_tolerance)",
+   "cutover(tenant, ts, by) shown as a chart annotation"
+  ],
+  "blocks": {
+   "src": "Feed both pipelines exactly the same prompts and engines.",
+   "a": "The acquired pipeline keeps running as the reference.",
+   "b": "Your pipeline runs in shadow on the same inputs.",
+   "ra": "Old results.",
+   "rb": "New results.",
+   "map": "A mapping table translates ids, brand names and prompts between the two worlds.",
+   "rec": "The reconciler diffs metrics per tenant and checks them against agreed tolerances.",
+   "bf": "Backfill: re-parse history with the new parser so trends line up.",
+   "sw": "Cut over tenant by tenant behind a flag, with a quick rollback."
+  },
+  "dives": [
+   [
+    "How do you decide the new pipeline is 'the same'?",
+    "Agree tolerances per metric up front (inside the confidence interval for noisy rates, exact for counts), then require N clean days before cutover."
+   ],
+   [
+    "The numbers differ. Who is right?",
+    "Inspect sampled raw answers from both, labelled by hand - the golden set decides, not either pipeline."
+   ],
+   [
+    "How do you avoid a cliff in customers' charts?",
+    "Backfill history with the new parser, annotate the cutover date, and explain any method change in the product."
+   ]
+  ],
+  "wrap": [
+   "Risk: double cost - time-box the dual run.",
+   "Risk: hidden differences in prompts or regions - log every input.",
+   "Next: delete the old pipeline and its data per retention rules."
+  ]
  }
 }

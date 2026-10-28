@@ -25,7 +25,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 18 | [`sd:screen/`](#18-screen) | Screen wireframes | 13 |
 | 19 | [`sd:pattern/`](#19-pattern) | Architecture patterns | 12 |
 | 20 | [`sd:agentic/`](#20-agentic) | Agentic patterns | 12 |
-| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 29 |
+| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 32 |
 
 <a id="00-guide"></a>
 ## 00 `sd:guide/` How to use this kit
@@ -472,3 +472,6 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **AI Crawler Analytics** - gptbot claudebot perplexitybot logs referrals llm analytics
 - **Dual-served Content** - markdown for ai crawlers middleware llms txt
 - **Site Audit Crawler** - technical seo aeo audit schema robots
+- **Search Relevance Eval Loop** - golden set ndcg judgments interleaving
+- **Agentic Search Loop** - plan fan-out judge refine code mode
+- **Pipeline Migration** - merge two data pipelines dual run reconcile backfill

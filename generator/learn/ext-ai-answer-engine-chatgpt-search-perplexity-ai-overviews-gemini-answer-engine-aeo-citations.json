@@ -1,0 +1,101 @@
+{
+ "family": "ext",
+ "reviewed": "Oct 2026",
+ "what": "An AI answer engine (ChatGPT search, Perplexity, Google AI Overviews and AI Mode, Gemini, Claude with web search) searches the web, reads the best pages and writes one answer with cited links.",
+ "like": "Like a librarian who runs several catalogue searches for your question, skims the best books, then hands you a short summary with sticky notes on the pages used.",
+ "why": [
+  "More and more people ask these engines instead of clicking ten blue links",
+  "Being cited or named in the answer is the new 'ranking', so brands want to measure it",
+  "Official APIs let you run the same retrieve-then-cite loop in your own system"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "prompt", "t": "Tracked prompt|'best CRM for startups?'", "x": 0, "y": 20, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "fan", "t": "Query fan-out|LLM writes sub-queries", "x": 265, "y": 20, "w": 170, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "index", "t": "Web index|search results", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ext", "i": "globe"},
+   {"id": "gen", "t": "Generate answer|LLM writes from sources", "x": 0, "y": 180, "w": 150, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "rerank", "t": "Rerank and read|open the best pages", "x": 265, "y": 180, "w": 170, "h": 86, "c": "rag", "i": "chart"},
+   {"id": "bots", "t": "Search crawlers|OAI-SearchBot, PerplexityBot", "x": 550, "y": 180, "w": 150, "h": 86, "c": "client", "i": "eye"},
+   {"id": "cite", "t": "Citations|url + title + text span", "x": 0, "y": 340, "w": 150, "h": 86, "c": "ext", "i": "doc"},
+   {"id": "parse", "t": "Visibility parser|brand mentions + cites", "x": 265, "y": 340, "w": 170, "h": 86, "c": "svc", "i": "service"},
+   {"id": "store", "t": "Metrics store|rates per engine over time", "x": 550, "y": 340, "w": 150, "h": 86, "c": "data", "i": "db"}
+  ],
+  "edges": [
+   ["prompt", "fan", "question"],
+   ["fan", "index", "sub-queries"],
+   ["bots", "index", "fills"],
+   ["index", "rerank", "results"],
+   ["rerank", "gen", "top pages"],
+   ["gen", "cite", ""],
+   ["cite", "parse", "answer"],
+   ["parse", "store", "scores"]
+  ],
+  "steps": [
+   {"t": "Fan the question out", "d": "The engine's LLM turns one question into several searches. Google described AI Mode splitting a trip question into restaurants, bars and things to do with kids, then searching each.", "hl": ["prompt", "fan"]},
+   {"t": "Search a crawled index", "d": "Sub-queries hit a web index filled by crawlers. A site that blocks OAI-SearchBot drops out of ChatGPT search answers, so robots.txt is the first visibility check.", "hl": ["fan", "index", "bots"]},
+   {"t": "Rerank and read", "d": "Results are reranked and the best pages opened. Reasoning models can open a page, find text in it, and search again before answering.", "hl": ["index", "rerank"]},
+   {"t": "Generate and cite", "d": "The model writes the answer and attaches citations. In the OpenAI API these are url_citation notes with url, title and the text span they support.", "hl": ["rerank", "gen", "cite"]},
+   {"t": "Measure many runs", "d": "Answers vary run to run, so a visibility system repeats each prompt per engine and location, parses brand mentions and cited domains, and stores rates, not single results.", "hl": ["cite", "parse", "store"]}
+  ]
+ },
+ "numbers": [
+  {"v": "$10 / 1k", "l": "Claude web searches, plus tokens; failed searches not billed", "s": "https://platform.claude.com/docs/en/about-claude/pricing"},
+  {"v": "$10-25 / 1k", "l": "OpenAI web search calls: reasoning vs non-reasoning models", "s": "https://developers.openai.com/api/docs/pricing"},
+  {"v": "$14 / 1k", "l": "Gemini 3 grounding with Google Search after the free allowance", "s": "https://ai.google.dev/gemini-api/docs/pricing"},
+  {"v": "5,000", "l": "free grounded search requests a month across Gemini 3 models", "s": "https://ai.google.dev/gemini-api/docs/pricing"},
+  {"v": "~24 h", "l": "for ChatGPT search to honour a robots.txt change", "s": "https://developers.openai.com/api/docs/bots.md"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "API or consumer app", "d": "APIs are cheap, legal and repeatable, but may differ from what users see in the app. Compare both on a sample and report which surface each number came from."},
+  {"t": "Force search or let it decide", "d": "With tool_choice auto the model may skip searching. Use required (OpenAI) or a set max_uses (Claude) so every tracked run actually retrieves."},
+  {"t": "Location", "d": "Answers change by place. Pass user_location (country, city, timezone) in OpenAI, and track markets separately rather than mixing them."},
+  {"t": "Runs per prompt", "d": "One answer is a sample, not the truth. Run each prompt several times and report a mention rate with a range, so trends are not just noise."},
+  {"t": "Search depth and budget", "d": "search_context_size, reasoning effort and deep research raise cost and latency. Pick per job: cheap daily tracking, deep runs for audits."}
+ ],
+ "instead": [
+  {"slug": "client-bot-crawler-scraper-crawler-search-bot-client-clients-device", "why": "Scrape the consumer UI to see exactly what users see"},
+  {"slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation", "why": "Build your own retrieve-and-cite pipeline over a known corpus"},
+  {"slug": "llmops-llm-as-judge-online-eval-grading-judge-ai-observability", "why": "Grade answer quality and sentiment, not just whether you appear"},
+  {"slug": "data-olap-db-clickhouse-clickhouse-druid-pinot-realtime-analytics-columnar", "why": "Store millions of runs and slice visibility by engine and market"}
+ ],
+ "breaks": [
+  {"t": "Noisy, non-deterministic answers", "d": "The same prompt cites different pages on each run.", "see": "Visibility jumps day to day with no site change", "fix": "Several runs per prompt, report rates with ranges, compare week over week"},
+  {"t": "API differs from the app", "d": "Search on or off, model or location differ from what users get.", "see": "Customer screenshots disagree with your dashboard", "fix": "Force search, set location, and spot-check against the consumer app"},
+  {"t": "Cost and rate limits", "d": "Every search adds a per-call fee plus tokens; bursts hit limits.", "see": "429 errors and a bill above forecast", "fix": "Queue with backoff, budget per prompt, cap max_uses and search depth"},
+  {"t": "Crawler blocked", "d": "robots.txt or a firewall blocks the engine's search bot.", "see": "A brand never cited by one engine; no bot hits in server logs", "fix": "Allow OAI-SearchBot, PerplexityBot, Claude-SearchBot; check the WAF rules too"},
+  {"t": "Brand matching misses", "d": "Aliases, misspellings and product names are not matched.", "see": "Hand review finds mentions the parser missed", "fix": "Alias lists, domain matching on citations, and an LLM judge sample"}
+ ],
+ "say": [
+  "Answer engines fan a prompt out into sub-queries, retrieve and rerank pages, then generate an answer with citations.",
+  "To measure brand visibility I'd call the official APIs with search forced on and location set, and run each prompt several times because answers vary.",
+  "I'd parse two signals per answer - is the brand named, and is its domain cited - and store rates per engine, market and week.",
+  "I'd also check robots.txt for OAI-SearchBot, PerplexityBot and Claude-SearchBot, because a blocked crawler means no citations at all."
+ ],
+ "followups": [
+  {"q": "How do you handle non-determinism?", "a": "Treat each answer as a sample. Run each prompt several times per engine and location, report the share of runs that mention or cite the brand, and only call a change real when it holds across days."},
+  {"q": "What does a web-search API call cost?", "a": "A per-search fee plus tokens. Claude is $10 per 1,000 searches; OpenAI lists $10 per 1,000 calls for reasoning models and $25 for non-reasoning ones; Gemini 3 grounding is $14 per 1,000 after 5,000 free a month."},
+  {"q": "Does blocking Google-Extended remove you from AI Overviews?", "a": "Google-Extended is a robots.txt token, not a separate crawler. Google says it controls Gemini training and grounding, and does not affect inclusion in Google Search. Its docs do not say it controls AI Overviews."},
+  {"q": "Which API features matter for tracking?", "a": "OpenAI: the web_search tool with user_location, tool_choice required and the sources list. Claude: the web_search tool with max_uses. Gemini: grounding with Google Search. Perplexity: its Sonar API."}
+ ],
+ "today": "Answer engines now search in loops: OpenAI's web search lets reasoning models open pages and search again, and deep research can read hundreds of sources over several minutes.",
+ "check": [
+  {"q": "What is query fan-out?", "a": "One question split into several searches", "d": ["Sending one query to many engines", "Caching popular answers", "Splitting the index into shards"], "why": "The LLM writes sub-queries, searches each, then merges what it found."},
+  {"q": "Why run each tracked prompt several times?", "a": "Answers and citations vary between runs", "d": ["The first run is always cached", "APIs need a warm-up call", "It lowers the cost per search"], "why": "One run is a sample, so you report a rate across runs."},
+  {"q": "A site blocks OAI-SearchBot. What happens?", "a": "It stops appearing in ChatGPT search answers", "d": ["It is removed from Google Search", "GPTBot also stops crawling it", "Nothing, the bot ignores robots.txt"], "why": "OpenAI's crawlers are set separately; OAI-SearchBot is the one for search."},
+  {"q": "Your API results differ from what users see in the app. First thing to check?", "a": "Whether search was forced on and location set", "d": ["The temperature value only", "The API key's age", "The answer's word count"], "why": "With tool_choice auto the model may skip search, and answers vary by place."}
+ ],
+ "sources": [
+  {"t": "OpenAI: web search tool guide", "u": "https://developers.openai.com/api/docs/guides/tools-web-search.md"},
+  {"t": "OpenAI: API pricing", "u": "https://developers.openai.com/api/docs/pricing"},
+  {"t": "OpenAI: overview of crawlers", "u": "https://developers.openai.com/api/docs/bots.md"},
+  {"t": "Claude: pricing (web search tool)", "u": "https://platform.claude.com/docs/en/about-claude/pricing"},
+  {"t": "Claude: Anthropic crawlers and robots.txt", "u": "https://support.claude.com/en/articles/8896518"},
+  {"t": "Gemini API pricing", "u": "https://ai.google.dev/gemini-api/docs/pricing"},
+  {"t": "Google: common crawlers (Google-Extended)", "u": "https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers?afsrc=1"},
+  {"t": "Perplexity: PerplexityBot", "u": "https://docs.perplexity.ai/docs/perplexitybot"},
+  {"t": "Search Engine Journal: query fan-out in AI Mode", "u": "https://www.searchenginejournal.com/query-fan-out-technique-in-ai-mode-new-details-from-google/"}
+ ]
+}

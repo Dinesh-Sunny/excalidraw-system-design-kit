@@ -68,4 +68,27 @@ export const AEO_TEMPLATES = [
       ["llm", "Small LLM\n(liftable facts?)", "sparkle", "ai", 4.2, 2.5], ["pg", "Findings DB\n(+ last crawl)", "dbpg", "data", 5.6, 1], ["fix", "Fix Suggestions\n(Content Studio)", "wrench", "agent", 5.6, 2.5, 170]],
     edges: [["start", "fr"], ["rb", "fr", "allowed?", D], ["fr", "f", "next URL"], ["f", "js", "JS page", D], ["f", "dd", "new links"], ["dd", "fr", "unseen only"], ["f", "chk", "html"], ["chk", "llm", "", D], ["chk", "pg"], ["pg", "fix"]],
     notes: "Key decisions\n- One queue per domain = politeness\n- Bloom filter for 'seen URL?'\n  (tiny memory, no false misses)\n- Render JS only when the raw HTML\n  is empty (10x cheaper)\n- Re-crawl changed pages first\n  (ETag / Last-Modified)\n- Check GPTBot/ClaudeBot not blocked" } },
+  { name: "Search Relevance Eval Loop - golden set ndcg judgments interleaving", spec: {
+    title: "Search Relevance Eval Loop", sub: "Measure before you change ranking · offline judgments, then online tests",
+    nodes: [["q", "Query Logs\n(sampled)", "doc", "data", 0, 1], ["gs", "Golden Set\n(queries + graded\njudgments)", "clipboard", "llmops", 1.4, 1, 170], ["hj", "Human Labels\n(domain experts)", "users", "client", 1.4, -0.4, 170],
+      ["jd", "LLM Judge\n(calibrated vs\nhumans)", "scales", "llmops", 1.4, 2.5, 170], ["run", "Offline Runner\n(old vs new\nranker)", "gear", "svc", 2.8, 1, 170], ["met", "Metrics\n(recall@100,\nnDCG@10, MRR)", "chart", "ops", 4.2, 1, 170],
+      ["ab", "Online Test\n(interleaving\nor A/B)", "flag", "svc", 5.6, 1, 170], ["ci", "CI Gate\n(no regressions)", "cicd2", "ops", 4.2, 2.5], ["err", "Error Analysis\n(read failures)", "eye", "llmops", 2.8, 2.5, 170]],
+    edges: [["q", "gs", "sample"], ["hj", "gs", "label"], ["jd", "gs", "scale up", D], ["gs", "run"], ["run", "met"], ["met", "ab", "if better"], ["met", "ci"], ["run", "err", "worst queries", D]],
+    notes: "Key decisions\n- Golden set first: ~100s of real\n  queries with graded labels\n- recall@100 for the first stage,\n  nDCG@10 after rerank\n- LLM judge only after it agrees\n  with humans\n- Interleaving needs far less traffic\n  than A/B for ranking changes\n- Read the failures, not just scores" } },
+
+  { name: "Agentic Search Loop - plan fan-out judge refine code mode", spec: {
+    title: "Agentic Search Loop", sub: "The agent plans searches, fans them out in one turn, judges 'enough?', and refines",
+    nodes: [["u", "Question", "user", "client", 0, 1], ["pl", "Planner\n(decompose)", "checklist", "agent", 1.4, 1], ["cm", "Code Mode\n(one script,\nmany calls)", "code", "agent", 2.8, 1, 170],
+      ["s1", "Keyword Search", "textaa", "rag", 4.2, -0.2], ["s2", "Vector Search", "hnsw", "rag", 4.2, 1], ["s3", "Web / SQL Tool", "wrench", "agent", 4.2, 2.2],
+      ["jg", "Judge\n(enough evidence?)", "scales", "llmops", 5.6, 2.6, 170], ["ans", "Answer +\nCitations", "quote", "rag", 4.2, 3.8], ["ctx", "Context Packer\n(rank, truncate)", "context", "rag", 5.6, 1, 170]],
+    edges: [["u", "pl"], ["pl", "cm", "sub-queries"], ["cm", "s1"], ["cm", "s2"], ["cm", "s3"], ["s1", "ctx"], ["s2", "ctx"], ["s3", "ctx"], ["ctx", "jg", "top passages"], ["jg", "pl", "refine", { dash: true, via: [[5.6 + 85 / 240, 4.9], [1.4 + 80 / 240, 4.9]] }], ["jg", "ans", "enough"]],
+    notes: "Key decisions\n- Fan out searches in one turn:\n  fewer turns, lower cost\n- Context packing = ranking +\n  truncation\n- The hard part is planning:\n  which tool, when to stop\n- Cap turns and tokens per question\n- Evaluate with recall of the\n  evidence, not just the answer" } },
+
+  { name: "Pipeline Migration - merge two data pipelines dual run reconcile backfill", spec: {
+    title: "Pipeline Migration (dual run)", sub: "Merge an acquired company's data pipeline without breaking customers' trend lines",
+    nodes: [["src", "Same Inputs\n(prompts, engines)", "folder", "rag", 0, 1, 170], ["a", "Old Pipeline\n(acquired)", "conveyor2", "svc", 1.4, 0], ["b", "New Pipeline\n(ours)", "conveyor2", "svc", 1.4, 2],
+      ["ra", "Old Results", "table", "data", 2.8, 0], ["rb", "New Results", "table", "data", 2.8, 2], ["rec", "Reconciler\n(diff by metric,\nper tenant)", "scales", "ops", 4.2, 1, 170],
+      ["map", "Mapping Table\n(ids, brands,\nprompts)", "kv", "data", 2.8, 1], ["bf", "Backfill +\nRe-parse History", "conveyor", "svc", 5.6, 2], ["sw", "Cutover Flag\n(per tenant)", "flag", "svc", 5.6, 0]],
+    edges: [["src", "a"], ["src", "b"], ["a", "ra"], ["b", "rb"], ["ra", "rec"], ["rb", "rec"], ["map", "rec", "", D], ["rec", "sw", "within tolerance"], ["rec", "bf", "", D]],
+    notes: "Key decisions\n- Run both on the same inputs\n  for weeks (shadow / dual run)\n- Define tolerance per metric\n  before comparing\n- Mapping table for ids and brands\n- Cut over tenant by tenant\n  behind a flag\n- Mark the switch on charts so\n  trends stay explainable" } },
 ];
