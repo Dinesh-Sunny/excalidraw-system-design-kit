@@ -2223,5 +2223,95 @@
    "Cost: speech and big-model calls dominate - route most turns to small models and cache the system prompt.",
    "Next: kids mode behind a policy profile, uploads (search over the learner's own notes), an MCP server for learner progress."
   ]
+ },
+ "workplace-knowledge-agent": {
+  "level": "Hard",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Employee asks in chat, Jira or Slack and gets a cited answer from the company's tools",
+   "Agent can draft and act (create a ticket, update a page) with a person's OK",
+   "Agents start on events too: a new hire, a Sev-1 incident, a deal moving stage",
+   "Connect 3rd-party tools (Drive, Slack, GitHub, Salesforce) alongside the company's own",
+   "Admins see every action an agent took and can switch agents off"
+  ],
+  "reqN": [
+   "Never show anything the asker can't open in the source tool - fail closed",
+   "Search answers in about a second; full RAG answers stream within a few seconds",
+   "Tenant isolation: one customer's data and caches never reach another",
+   "Predictable cost per tenant: quotas and credits, small models where they are enough",
+   "Measured quality: online success rate plus offline evals before every change"
+  ],
+  "est": [
+   "Assume a 10k-employee tenant: ~50M objects (pages, tickets, messages) and ~5 queries per person per day = ~50k queries/day, peak ~5/s",
+   "Index: 50M objects x ~3 chunks x 768-dim vectors (~3 KB) = ~450 GB of vectors per large tenant - shard by tenant",
+   "ACLs ride with each object: up to 500 principals across its access controls (Teamwork Graph limit)",
+   "Only natural-language questions need full RAG; person, team and bookmark lookups return near-instantly - most traffic never touches the big model",
+   "Event-triggered agents can burst (a reorg creates 1,000 tickets): queue and throttle per tenant, never fire 1,000 LLM calls at once"
+  ],
+  "api": [
+   "POST /ask {question, surface} -> stream {answer, citations[], actions[]}",
+   "POST /agents/:id/run {event} (from automation triggers)",
+   "POST /actions/:id/approve (Draft / Act tools only)",
+   "PUT /connectors/:id/objects (bulk push objects, users, groups, relationships + permissions)"
+  ],
+  "data": [
+   "objects: id (ARI-style), type, tenant, properties, permissions [ACLs: AND of access controls, OR of principals]",
+   "relationships: object -> object (page <-> ticket, PR <-> service owner)",
+   "identity map: external user -> company account (no mapping = no access)",
+   "search index per tenant: BM25 fields + embeddings + popularity and freshness signals",
+   "agent runs: plan, tool calls, approvals, results (append-only audit log)"
+  ],
+  "blocks": {
+   "u": "Start from the employee: they ask where they already work - chat, a Jira ticket, Slack - and expect a cited answer.",
+   "trig": "Agents also start on events (new hire, Sev-1, deal stage). Same agent, different entry, so the design must handle bursts.",
+   "ag": "The agent plans the steps, retrieves context, and calls skills. Writes go through approval; reads don't.",
+   "rt": "Small, fast classifiers pick the intent (person, team, bookmark or a real question) and rewrite the query. Big models stay off this hop.",
+   "srch": "Hybrid retrieval: keyword (BM25) plus vectors, with the asker's permissions applied as a filter right inside the query.",
+   "rr": "A cross-encoder reranks the top results for real relevance; popularity and freshness signals help.",
+   "perm": "Before anything reaches the model, re-check each result against the source tool. Stale ACLs or a failed check = drop it.",
+   "kg": "A work graph: every object carries its type, its relationships and its permissions. Agents can follow links: ticket -> page -> PR -> owner.",
+   "con": "Connectors bring 3rd-party tools in three ways: full sync, light sync, or federated live search. Each pushes ACLs with the data.",
+   "gw": "An AI gateway in front of every model: tenant quotas, routing, fallbacks and cost metering in one place.",
+   "llm": "Model per stage: small models for routing and rewriting, a strong model for the final answer, which must decline when the context can't answer.",
+   "appr": "Read tools run freely. Draft and Act tools show the plan or the change and wait for a person.",
+   "tools": "Skills are typed tools tagged Read, Draft or Act - the tag decides the approval path and the audit trail.",
+   "obs": "Every action is logged for admins; traces feed evals: an online success rate plus offline judge suites."
+  },
+  "dives": [
+   [
+    "How do you guarantee nobody sees a page they can't open?",
+    "Permissions travel with the data: each object stores its ACLs (AND of access controls, OR of principals). Filter at retrieval time inside the index, then re-check the final results against the source tool before the model sees them. If a user isn't mapped to an identity, or a check fails, drop the item - fail closed."
+   ],
+   [
+    "Why not one big model for every step?",
+    "Each stage has its own job. Small models matched big ones on query rewriting with lower latency; binary classifiers route to the right source; the strong model only writes the final answer and must say 'I don't know' when context is missing. Pick per stage on quality, latency and cost with its own eval set."
+   ],
+   [
+    "How do you measure if it's any good?",
+    "Online: query success rate from clicks, dwell time and thumbs. Offline: Recall@k, NDCG and MRR for retrieval, plus an LLM judge checked against human labels for answers. Freeze earlier stages when testing one stage so you know what changed."
+   ],
+   [
+    "An automation fires the agent 1,000 times and calls start failing. What now?",
+    "Tenant-level caps return 429s. Queue and stagger runs, batch where possible, back off with jitter, and log the rate limit clearly in the audit trail so admins can see why a run failed."
+   ],
+   [
+    "What can an agent do without a person?",
+    "Tag every tool Read, Draft or Act. Read runs freely. Draft produces a proposal; Act changes systems and needs approval, or a scoped standing rule. Agents started by automations only get read tools by default."
+   ],
+   [
+    "How do you plug in a customer's own system?",
+    "Build a connector: extract, map to shared object types, then bulk push objects, users, groups, relationships and permissions. Test retrieval offline with synthetic questions before real users arrive."
+   ],
+   [
+    "How do you ship this into a big customer in 12 weeks?",
+    "Discover (pick one workflow with a baseline metric), Build (connector + agent + evals), Adopt (champions, training, feedback loop), Value (report the metric against the baseline). Leave behind a pattern the next team can reuse."
+   ]
+  ],
+  "wrap": [
+   "Recap: hybrid retrieval with permissions checked twice, model per stage, typed tools with approvals, audit + evals.",
+   "Next: tenant-tuned embeddings, more event-triggered agents, connector kit for customers' own systems.",
+   "Risks: stale ACLs, rate-limit bursts, over-eager write actions - each has a guard above."
+  ]
  }
 }

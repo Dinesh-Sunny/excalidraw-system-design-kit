@@ -2938,5 +2938,141 @@
     ]
    }
   ]
+ },
+ "workplace-knowledge-agent": {
+  "modern": [
+   [
+    "Grounding on a work graph",
+    "Agents follow relationships between tickets, pages, code and people instead of searching flat documents; vendors report better accuracy with fewer tokens."
+   ],
+   [
+    "Permission-aware retrieval as a hard rule",
+    "ACLs are ingested with the data and enforced at query time, with a second check against the source."
+   ],
+   [
+    "Hybrid LLM pipelines",
+    "A different model per stage: small models for routing and rewriting, strong ones for answers, each with its own eval set."
+   ],
+   [
+    "Event-triggered agents",
+    "Agents start on business events and run inside automations, so throttling and queues matter as much as prompts."
+   ],
+   [
+    "MCP and CLI access to company context",
+    "The same graph is exposed to outside assistants and coding agents through MCP servers and CLIs."
+   ],
+   [
+    "Plans for approval",
+    "Reasoning modes show the plan first and wait for a person before writing to systems."
+   ]
+  ],
+  "extra": {
+   "t": "Permissions and trust",
+   "look": "They want permissions designed in from the start, a clear write-approval story, and a way to prove value to the customer.",
+   "rounds": [
+    [
+     "Where do you apply permissions?",
+     "At retrieval inside the index, then again against the source before the model sees anything",
+     [
+      "Only in the UI",
+      "Only in the system prompt",
+      "After the answer is generated"
+     ]
+    ],
+    [
+     "A user isn't mapped to a company identity. What do they see?",
+     "Nothing from that source - fail closed",
+     [
+      "Everything public in the tenant",
+      "Whatever the connector account can see",
+      "A warning plus the results"
+     ]
+    ],
+    [
+     "Which tools can an automation-triggered agent run by default?",
+     "Read tools; writes need approval or a scoped rule",
+     [
+      "Every tool",
+      "Only delete tools",
+      "None at all"
+     ]
+    ],
+    [
+     "How do you know an answer change helped?",
+     "Offline evals on a fixed set plus the online success rate, one stage changed at a time",
+     [
+      "Ask the model if it improved",
+      "Count thumbs-up only",
+      "Ship and watch for complaints"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "atlassian",
+    "name": "Atlassian FDE engagement",
+    "blurb": "Deploy an agent for one big customer on their Jira and Confluence in 12 weeks.",
+    "lens": "Forward deployed: one workflow, a baseline metric, adoption and a reusable pattern.",
+    "reqF": [
+     "Pick one high-value workflow with the customer (e.g. incident triage)",
+     "Connect the customer's own system with a Forge connector"
+    ],
+    "reqN": [
+     "Ship value in 12 weeks with a measured baseline",
+     "Leave the pattern reusable for the next team"
+    ],
+    "dives": [
+     [
+      "How do you choose the first workflow?",
+      "High volume, clear owner, measurable today (time to triage, questions to senior engineers), low write risk. Start Read-only, add Draft, then Act."
+     ],
+     [
+      "The customer's admin blocks agents in automations. Plan B?",
+      "The agent still answers; downstream steps use its response text (agentResponse) and a person applies the change."
+     ]
+    ],
+    "wrap": [
+     "Next: turn the engagement into a reusable template and feedback to the product team."
+    ]
+   },
+   {
+    "id": "bank",
+    "name": "Regulated bank",
+    "blurb": "Same agent where every answer can be audited.",
+    "lens": "Data residency, audit and least privilege.",
+    "reqN": [
+     "Data stays in region; admin allow/block lists for each connector",
+     "Every answer stores its sources and the ACL check result"
+    ],
+    "dives": [
+     [
+      "An auditor asks why the agent showed a document. What can you show?",
+      "The audit record: question, retrieved items, both permission checks with their results, the model and prompt version, and the approver for any write."
+     ]
+    ],
+    "wrap": [
+     "Next: per-tenant keys and residency, red-team evals for data leakage."
+    ]
+   },
+   {
+    "id": "startup",
+    "name": "Startup on day one",
+    "blurb": "200 people, Slack, Google Drive and GitHub, no platform team.",
+    "lens": "Use managed pieces; keep it simple.",
+    "est": [
+     "200 people x ~5 questions/day = ~1k queries/day: one Postgres with pgvector and a managed reranker is plenty"
+    ],
+    "dives": [
+     [
+      "What do you not build?",
+      "No custom index cluster or graph database yet: managed search, one database, and a gateway with quotas. Add the graph when relationship questions show up."
+     ]
+    ],
+    "wrap": [
+     "Next: add connectors as tools grow; move to a dedicated index past a few million chunks."
+    ]
+   }
+  ]
  }
 }
