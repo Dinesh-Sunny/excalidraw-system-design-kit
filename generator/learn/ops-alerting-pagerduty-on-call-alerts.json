@@ -1,0 +1,96 @@
+{
+ "family": "ops",
+ "reviewed": "Oct 2026",
+ "what": "Alerting watches your metrics and wakes a human (a page) only when users are being hurt and someone must act. Everything less urgent becomes a ticket or a dashboard line.",
+ "like": "Like a smoke alarm: it should ring for real fire, loudly and rarely. One that beeps at toast gets its battery pulled.",
+ "why": [
+  "Problems are fixed in minutes instead of when a customer complains",
+  "Paging on SLO burn ties every page to real user pain",
+  "Grouping, routing and runbooks let one tired person handle a night shift calmly"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "metrics", "t": "Metrics|SLIs, error ratios", "x": 0, "y": 20, "w": 150, "h": 86, "c": "ops", "i": "chart"},
+   {"id": "probes", "t": "Probes|fixed checks, noisy", "x": 0, "y": 180, "w": 150, "h": 86, "c": "ops", "i": "clock"},
+   {"id": "rules", "t": "Alert rules|burn rate, for 2m", "x": 265, "y": 20, "w": 170, "h": 86, "c": "ops", "i": "eye"},
+   {"id": "am", "t": "Alertmanager|group, inhibit, silence", "x": 265, "y": 180, "w": 170, "h": 86, "c": "ops", "i": "shield"},
+   {"id": "route", "t": "Routing tree|by team and severity", "x": 265, "y": 340, "w": 170, "h": 86, "c": "ops", "i": "router"},
+   {"id": "page", "t": "Pager|on-call human, now", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ext", "i": "user"},
+   {"id": "ticket", "t": "Ticket or chat|next working day", "x": 550, "y": 180, "w": 150, "h": 86, "c": "ext", "i": "doc"},
+   {"id": "runbook", "t": "Runbook|what to check, how to fix", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "doc"}
+  ],
+  "edges": [
+   ["metrics", "rules", "every 1m"],
+   ["probes", "rules", "with CI"],
+   ["rules", "am", "firing"],
+   ["am", "route", "grouped"],
+   ["route", "page", "critical"],
+   ["route", "ticket", "warning"],
+   ["route", "runbook", "link"]
+  ],
+  "steps": [
+   {"t": "Alert on symptoms", "d": "Rules watch what users feel - errors, latency, failed checks - not causes like high CPU. A cause gets a page only when it is certain and close, like a disk about to fill.", "hl": ["metrics", "rules"]},
+   {"t": "Measure budget burn rate", "d": "Burn rate is how fast you spend the error budget. Burn rate 1 spends it exactly over the SLO window; 14.4 spends 2% of a 30-day budget in one hour.", "hl": ["rules"]},
+   {"t": "Two windows must agree", "d": "Fire only if both a long window (1 hour) and a short window (5 minutes, 1/12 of it) are burning. The long one proves it matters; the short one ends the alert quickly once fixed.", "hl": ["rules"]},
+   {"t": "Noisy probes need intervals", "d": "AI answers change run to run. Alert when a citation rate's confidence interval moves clearly below its baseline, not when one run misses. Per-series baselines beat one fixed threshold.", "hl": ["probes", "rules"]},
+   {"t": "Group, mute, then route", "d": "Alertmanager bundles related alerts into one message, mutes warnings while a matching critical fires (inhibition), and routes by labels: critical pages a person, warning opens a ticket.", "hl": ["am", "route"]},
+   {"t": "Human gets a runbook", "d": "Every page links a runbook: what the alert means, a dashboard, first checks and safe fixes. If the steps are robotic, automate them and delete the page.", "hl": ["page", "runbook"]}
+  ]
+ },
+ "numbers": [
+  {"v": "14.4x", "l": "burn over 1h (5m short window) pages: 2% budget spent", "s": "https://sre.google/workbook/alerting-on-slos/"},
+  {"v": "6x", "l": "burn over 6h (30m short window) pages: 5% budget spent", "s": "https://sre.google/workbook/alerting-on-slos/"},
+  {"v": "1x", "l": "burn over 3 days (6h short window) opens a ticket", "s": "https://sre.google/workbook/alerting-on-slos/"},
+  {"v": "1/12", "l": "short window length compared with the long window", "s": "https://sre.google/workbook/alerting-on-slos/"},
+  {"v": "30s / 4h", "l": "Alertmanager default group_wait and repeat_interval", "s": "https://prometheus.io/docs/alerting/latest/configuration/"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Page or ticket", "d": "Page only for user-facing harm that needs action now. Slow budget burn, capacity trends and single failures go to tickets or a dashboard."},
+  {"t": "Burn-rate thresholds", "d": "Start from the SRE workbook set: 14.4x over 1h and 6x over 6h page, 1x over 3 days tickets. Tune for your traffic; low-traffic services need minimum request counts."},
+  {"t": "Grouping and timers", "d": "group_by cluster and alertname so one outage is one message. Defaults: wait 30s to batch, 5m between updates, 4h before repeating."},
+  {"t": "Inhibition rules", "d": "Mute warnings when a critical alert with the same cluster is firing, and mute everything behind a downed dependency, so on-call sees the root symptom."},
+  {"t": "Static or adaptive thresholds", "d": "Static is clear and fine for SLOs. Per-series or seasonal baselines suit metrics with daily cycles or very different normal levels, but are harder to explain."}
+ ],
+ "instead": [
+  {"slug": "ops-monitoring-metrics-prometheus-grafana-dashboards", "why": "Dashboards for slow trends and subcritical issues that should not page"},
+  {"slug": "llmops-tracing-langfuse-langsmith-opentelemetry-spans-ai-observability", "why": "After the page: trace one slow request to find the cause"},
+  {"slug": "llmops-offline-evals-eval-dataset-benchmark-regression-ai-observability", "why": "Catch quality drops before release instead of alerting after"},
+  {"slug": "svc-circuit-breaker-resilience-fallback-hystrix-retry", "why": "Let the system fix known failures itself so nobody gets paged"}
+ ],
+ "breaks": [
+  {"t": "Alert fatigue", "d": "Too many pages, most needing no action, so people skim or ignore them.", "see": "Pages per shift rising, many acked and closed with no change", "fix": "Delete or demote non-actionable alerts, review paging load every week, page on SLO burn"},
+  {"t": "Alert storm", "d": "One failure fires hundreds of alerts across services.", "see": "Phone buzzing nonstop, the real cause buried", "fix": "group_by and inhibition rules; alert on the user symptom at the edge"},
+  {"t": "Flapping alert", "d": "A value hovers near the line and fires and resolves again and again.", "see": "Same alert opening and closing many times an hour", "fix": "A for duration, multiwindow burn rates, or keep_firing_for"},
+  {"t": "Noisy probe false alarms", "d": "A sampled signal, like LLM citation checks, dips by chance.", "see": "Pages that clear on the next run with no change made", "fix": "Alert on confidence intervals over enough runs, compare to a per-series baseline"},
+  {"t": "Silent failure", "d": "The alert never fires because the metric itself vanished.", "see": "Users report an outage, dashboards show gaps instead of red", "fix": "Alert on up == 0 and absent(), plus an always-firing heartbeat alert checked externally"}
+ ],
+ "say": [
+  "I alert on symptoms users feel, measured as SLO burn rate, not on causes like CPU.",
+  "Using the SRE workbook pattern, I page when 14.4x burn shows over both 1 hour and 5 minutes, or 6x over 6 hours and 30 minutes, and open a ticket for 1x over 3 days.",
+  "Alertmanager groups related alerts, inhibits warnings under a critical one and routes by severity, and every page links a runbook.",
+  "For noisy signals like AI citation checks, I alert when the confidence interval moves below baseline, not on a single missed run."
+ ],
+ "followups": [
+  {"q": "Why two windows instead of one?", "a": "A long window alone is slow to reset after a fix; a short one alone is jumpy. Requiring both means the problem is big enough to matter and still happening now."},
+  {"q": "What is burn rate 1 versus 14.4?", "a": "Burn rate 1 spends exactly the whole error budget over the SLO period, say 30 days. At 14.4 you would spend it in about two days, and one hour of it already uses 2% of the budget."},
+  {"q": "How do you measure if alerting is good?", "a": "Precision (how many alerts were real), recall (how many real problems alerted), detection time and reset time. Also track pages per shift and the share that needed action."},
+  {"q": "Anomaly detection or static thresholds?", "a": "Static SLO-based alerts are easy to reason about and should carry paging. Adaptive baselines help for seasonal or per-customer metrics, often as warnings first, because unexplained model alerts erode trust."}
+ ],
+ "today": "The multiwindow multi-burn-rate pattern from the Google SRE workbook is now built into common tools; Grafana Cloud, for example, has a 2025 guide to setting it up for SLOs.",
+ "check": [
+  {"q": "Which is the best paging signal?", "a": "Error budget burning fast for users", "d": ["CPU above 80% on one node", "A single failed health check", "Disk usage at 50%"], "why": "Pages should be about symptoms users feel. CPU and disk are causes, better as tickets or dashboards."},
+  {"q": "In the SRE workbook, what does burn rate 14.4 over 1 hour mean for a 30-day budget?", "a": "About 2% of the budget is spent", "d": ["The whole budget is gone", "About 50% is spent", "Nothing until 30 days pass"], "why": "14.4 x 1 hour / 720 hours = 2%. That is fast enough to wake someone."},
+  {"q": "A critical 'cluster down' alert fires. What stops 40 warnings from the same cluster paging too?", "a": "An Alertmanager inhibition rule", "d": ["A longer scrape interval", "A recording rule", "A histogram bucket"], "why": "Inhibition mutes target alerts while a matching source alert is firing."},
+  {"q": "Your AI citation-rate check drops for one run then recovers. Best alerting design?", "a": "Alert when the confidence interval over many runs falls below baseline", "d": ["Page on every single missed citation", "Raise the static threshold to zero", "Turn the check off"], "why": "LLM answers vary run to run, so judge a sample, not one result."}
+ ],
+ "sources": [
+  {"t": "Google SRE workbook: Alerting on SLOs", "u": "https://sre.google/workbook/alerting-on-slos/"},
+  {"t": "Google SRE book: Monitoring Distributed Systems", "u": "https://sre.google/sre-book/monitoring-distributed-systems/"},
+  {"t": "Prometheus docs: Alertmanager configuration", "u": "https://prometheus.io/docs/alerting/latest/configuration/"},
+  {"t": "Grafana docs: dynamic thresholds", "u": "https://grafana.com/docs/grafana/latest/alerting/best-practices/dynamic-thresholds/"},
+  {"t": "Grafana blog: multi-window multi-burn-rate alerts", "u": "https://grafana.com/blog/2025/02/28/how-to-implement-multi-window-multi-burn-rate-alerts-with-grafana-cloud/"}
+ ]
+}

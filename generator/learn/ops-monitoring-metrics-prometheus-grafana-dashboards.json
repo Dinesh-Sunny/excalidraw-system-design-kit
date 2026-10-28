@@ -1,0 +1,103 @@
+{
+ "family": "ops",
+ "reviewed": "Oct 2026",
+ "what": "Monitoring collects numbers about your system over time - requests, errors, latency, memory - so dashboards show its health and alerts fire when users are affected. Prometheus gathers the numbers; Grafana draws them.",
+ "like": "Like the dashboard in a car: speed, fuel and engine warning lights tell you how the trip is going without opening the bonnet.",
+ "why": [
+  "You see problems from the user's side before they write in",
+  "Trends show when you will run out of capacity, so you scale in time",
+  "SLOs and error budgets turn 'is it reliable enough?' into a number the team agrees on"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "app", "t": "Your service|exposes /metrics", "x": 0, "y": 20, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "exp", "t": "Exporters|node, database, queue", "x": 0, "y": 180, "w": 150, "h": 86, "c": "ops", "i": "eye"},
+   {"id": "probe", "t": "Synthetic probes|fixed checks on a schedule", "x": 0, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "clock"},
+   {"id": "rules", "t": "Recording rules|SLIs worked out early", "x": 265, "y": 20, "w": 170, "h": 86, "c": "ops", "i": "loop"},
+   {"id": "prom", "t": "Prometheus|pulls every 1m default", "x": 265, "y": 180, "w": 170, "h": 86, "c": "ops", "i": "chart"},
+   {"id": "tsdb", "t": "Time-series store|one series per label set", "x": 265, "y": 340, "w": 170, "h": 86, "c": "data", "i": "db"},
+   {"id": "graf", "t": "Grafana|dashboards", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ops", "i": "chart"},
+   {"id": "am", "t": "Alertmanager|groups and routes", "x": 550, "y": 180, "w": 150, "h": 86, "c": "ops", "i": "shield"},
+   {"id": "slo", "t": "SLO and budget|e.g. 99.9% in 30 days", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "chart"}
+  ],
+  "edges": [
+   ["app", "prom", "scrape"],
+   ["exp", "prom", "scrape"],
+   ["probe", "prom", "results"],
+   ["prom", "rules", "evaluate"],
+   ["prom", "tsdb", "store"],
+   ["rules", "graf", "PromQL"],
+   ["prom", "am", "alerts"],
+   ["tsdb", "slo", "error ratio"]
+  ],
+  "steps": [
+   {"t": "Count inside the code", "d": "Your service keeps counters (only go up, like requests_total), gauges (go up and down, like queue depth) and histograms (latency counted into buckets). They sit at a /metrics URL.", "hl": ["app"]},
+   {"t": "Prometheus pulls the numbers", "d": "Prometheus scrapes each target over HTTP, every 1 minute by default, with a 10 second timeout. Exporters translate machines and databases; short batch jobs push through the Pushgateway.", "hl": ["app", "exp", "prom"]},
+   {"t": "Probes act like users", "d": "Synthetic (black-box) probes send the same fixed requests on a schedule and record the result. An AI visibility tracker works this way: fixed prompts, run often, answers recorded.", "hl": ["probe", "prom"]},
+   {"t": "Stored as time series", "d": "Each metric name plus each unique label combination is its own series. A label like user_id creates millions of series - that is cardinality, and it costs memory.", "hl": ["tsdb"]},
+   {"t": "Turned into SLIs", "d": "Recording rules precompute useful views: request rate, error ratio, p99 latency (the slowest 1 in 100) from histogram buckets. Grafana draws them with PromQL.", "hl": ["rules", "graf"]},
+   {"t": "Compared with the SLO", "d": "The SLI (good requests / all requests) is checked against the SLO target. What is left of the allowed failure is the error budget; Alertmanager pages when it burns fast.", "hl": ["slo", "am"]}
+  ]
+ },
+ "numbers": [
+  {"v": "1 m", "l": "Prometheus default scrape and rule evaluation interval", "s": "https://next.prometheus.io/docs/prometheus/latest/configuration/configuration/"},
+  {"v": "10 s", "l": "default scrape timeout, never longer than the interval", "s": "https://next.prometheus.io/docs/prometheus/latest/configuration/configuration/"},
+  {"v": "< 10", "l": "suggested label cardinality per metric, as a general guideline", "s": "https://prometheus.io/docs/practices/instrumentation/"},
+  {"v": "4", "l": "golden signals: latency, traffic, errors, saturation", "s": "https://sre.google/sre-book/monitoring-distributed-systems/"},
+  {"v": "~43 min", "l": "of full outage uses a 30-day 99.9% error budget", "s": "https://sre.google/workbook/alerting-on-slos/"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Which signals to track", "d": "RED for each service (Rate, Errors, Duration) and USE for each resource (Utilization, Saturation, Errors). Together they cover the four golden signals."},
+  {"t": "Scrape interval", "d": "Default 1m. 15-30s gives quicker alerts and smoother graphs but more samples to store. Keep the timeout under the interval."},
+  {"t": "Labels and cardinality", "d": "Label by bounded things: route, status code, region. Never user IDs, emails or full URLs. Set sample_limit so one bad deploy cannot flood the server."},
+  {"t": "Histogram buckets", "d": "Pick bucket edges around your SLO (for example 100 ms, 300 ms, 1 s) so percentiles near the target are accurate. Histograms can be added up across instances."},
+  {"t": "SLO target and window", "d": "Choose what users actually need, such as 99.9% of requests good over 30 days. A higher target means a smaller error budget and slower releases."}
+ ],
+ "instead": [
+  {"slug": "data-time-series-db-influxdb-timescale-prometheus-metrics", "why": "Long-term or push-based metric storage beyond one Prometheus server"},
+  {"slug": "llmops-tracing-langfuse-langsmith-opentelemetry-spans-ai-observability", "why": "Follow one request across services when metrics say something is slow"},
+  {"slug": "data-olap-db-clickhouse-clickhouse-druid-pinot-realtime-analytics-columnar", "why": "Slice raw events by high-cardinality fields like user or prompt"},
+  {"slug": "llmops-offline-evals-eval-dataset-benchmark-regression-ai-observability", "why": "Measure answer quality, which request metrics cannot see"}
+ ],
+ "breaks": [
+  {"t": "Cardinality explosion", "d": "A new label with unbounded values creates millions of series.", "see": "Prometheus memory climbs, scrapes slow down, head series count jumps after a deploy", "fix": "Drop or bucket the label, use relabeling, set sample_limit, move per-user detail to logs or an OLAP store"},
+  {"t": "Averages hide the pain", "d": "Mean latency looks fine while a slice of users waits seconds.", "see": "Complaints while the average graph is flat; p99 far above p50", "fix": "Use histograms and track p95 and p99, not the mean"},
+  {"t": "Counter treated as a gauge", "d": "Graphing a raw counter shows a line that only rises and resets on restart.", "see": "Sawtooth graphs that drop to zero at each deploy", "fix": "Wrap counters in rate() or increase(), which handle resets"},
+  {"t": "Monitoring goes quiet", "d": "A target stops being scraped, so its alerts can never fire.", "see": "up == 0, gaps in graphs, alerts that never resolve or never start", "fix": "Alert on up and on absent() series, and watch Prometheus from a second instance"},
+  {"t": "Dashboard sprawl", "d": "Hundreds of panels, nobody knows which one matters.", "see": "On-call scrolls for minutes during an incident", "fix": "One top dashboard per service with the golden signals and SLO, drill-downs linked below"}
+ ],
+ "say": [
+  "Every service exposes RED metrics - request rate, error rate and a latency histogram - and Prometheus scrapes them every 15 to 60 seconds.",
+  "I define an SLI as good requests over all requests, set an SLO like 99.9% over 30 days, and page on error budget burn rather than on CPU.",
+  "I keep labels bounded, like route and status code, because every label combination is a new time series that costs memory.",
+  "For the AI visibility product itself, the tracker is a monitoring system: fixed prompts probed on a schedule, results stored as time series, dashboards and alerts on top."
+ ],
+ "followups": [
+  {"q": "Why does Prometheus pull instead of receiving pushes?", "a": "The server controls the pace, a failed scrape instantly tells you a target is down (up == 0), and you can scrape any target by hand to debug. Short batch jobs that end before a scrape use the Pushgateway."},
+  {"q": "Histogram or summary for latency?", "a": "Usually histogram. Its bucket counters add up across many instances, so you can compute a fleet-wide p99 with histogram_quantile. Summaries compute quantiles inside each instance, which you cannot average correctly."},
+  {"q": "What is an error budget used for?", "a": "It is the failure you are allowed, for example 0.1% of requests in 30 days. While budget remains, ship features fast. When it runs low, slow releases and fix reliability. It turns a debate into a shared rule."},
+  {"q": "How would you monitor AI search visibility?", "a": "Treat it like synthetic checks: a fixed prompt set run on a schedule against each answer engine, recording cited or not, position and sources. Store as time series per engine and topic, and chart share of citations with confidence bands because answers vary run to run."}
+ ],
+ "today": "Prometheus 3.0 (Nov 2024) brought a new UI, a built-in OTLP endpoint so OpenTelemetry metrics can go straight in, UTF-8 metric names and Remote Write 2.0; native histograms were still behind a feature flag at that release.",
+ "check": [
+  {"q": "Which metric type fits 'number of jobs waiting in the queue right now'?", "a": "Gauge", "d": ["Counter", "Histogram", "Summary"], "why": "A gauge can go up and down. A counter only ever rises."},
+  {"q": "You add a user_id label to a request metric. What is the main risk?", "a": "Too many time series (high cardinality)", "d": ["Slower PromQL syntax", "Lost histogram buckets", "Scrapes switch to push"], "why": "Every unique label combination is a new series, and each one costs memory and CPU."},
+  {"q": "What are the four golden signals?", "a": "Latency, traffic, errors, saturation", "d": ["CPU, memory, disk, network", "Rate, errors, duration, uptime", "Logs, metrics, traces, events"], "why": "They come from the Google SRE book. RED covers three of them; saturation is the fourth."},
+  {"q": "How does a fixed-prompt AI visibility tracker relate to monitoring?", "a": "It is a synthetic (black-box) probe run on a schedule", "d": ["It is a white-box counter inside the engine", "It is a log shipper", "It replaces SLOs"], "why": "Like a synthetic check, it tests what users see from outside, on a fixed schedule, and stores results as time series."}
+ ],
+ "sources": [
+  {"t": "Prometheus docs: metric types", "u": "https://prometheus.io/docs/concepts/metric_types"},
+  {"t": "Prometheus docs: configuration", "u": "https://next.prometheus.io/docs/prometheus/latest/configuration/configuration/"},
+  {"t": "Prometheus docs: overview", "u": "https://prometheus.io/docs/introduction/overview/"},
+  {"t": "Prometheus docs: instrumentation practices", "u": "https://prometheus.io/docs/practices/instrumentation/"},
+  {"t": "Prometheus docs: metric and label naming", "u": "https://prometheus.io/docs/practices/naming/"},
+  {"t": "Google SRE book: Monitoring Distributed Systems", "u": "https://sre.google/sre-book/monitoring-distributed-systems/"},
+  {"t": "Google SRE workbook: Alerting on SLOs", "u": "https://sre.google/workbook/alerting-on-slos/"},
+  {"t": "Grafana blog: the RED method", "u": "https://grafana.com/blog/2018/08/02/the-red-method-how-to-instrument-your-services/"},
+  {"t": "Brendan Gregg: the USE method", "u": "https://www.brendangregg.com/usemethod.html"},
+  {"t": "Announcing Prometheus 3.0", "u": "https://prometheus.io/blog/2024/11/14/prometheus-3-0/"}
+ ]
+}
