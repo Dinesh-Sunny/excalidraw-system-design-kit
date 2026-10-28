@@ -1,179 +1,2450 @@
 {
-"_lenses": {
- "Amazon": {"cares": "Cost, ownership and what happens when a dependency fails. Name managed services and say how you'd operate them.", "dives": [["How would you cut the running cost of this in half?", "Right-size with autoscaling, move cold data to cheaper storage tiers, cache hot reads, use spot or Graviton instances for workers, and drop over-provisioned replicas."], ["A dependency in one Availability Zone goes down. What happens?", "Run every tier across 3 AZs behind a load balancer, keep services stateless, use timeouts, retries with jitter and circuit breakers, and fail over the database automatically."]]},
- "Google": {"cares": "Huge scale, clean estimates and consistency trade-offs. Show the numbers drive the design.", "dives": [["Traffic grows 100x. What breaks first and how do you shard?", "The single database and hot keys break first. Shard by a high-cardinality key with consistent hashing, add caches in front, and split read and write paths."], ["Strong or eventual consistency here, and why?", "Strong only where users would notice (money, uniqueness, ownership); eventual everywhere else for latency and availability, with idempotent writes to make retries safe."]]},
- "Meta": {"cares": "Product sense, fast iteration and fan-out to billions of users. Start from the user experience.", "dives": [["How would you roll out a change to this safely to 3 billion users?", "Feature flags, a dark launch, then 1% to 10% to 100% with dashboards and automatic rollback on error or latency regressions."], ["Where does fan-out hurt, and how do you tame it?", "Write fan-out explodes for huge audiences: switch to pull for big accounts, batch writes, and cache the merged result."]]},
- "Microsoft": {"cares": "Enterprise needs: identity, multi-tenancy, compliance and reliability SLAs.", "dives": [["How do you isolate tenants?", "Tenant id on every row and request, per-tenant quotas, and dedicated cells for the biggest customers; never share caches across tenants without the tenant in the key."], ["What SLA can you promise and how do you meet it?", "99.9% needs multi-AZ and automated failover; 99.99% needs multi-region active-active, health checks and tested runbooks."]]},
- "Uber": {"cares": "Realtime data, geography and staying up during spikes.", "dives": [["Demand spikes 10x at 6 pm in one city. What happens?", "Partition by city or geo-cell so the spike stays local, autoscale that cell, shed low-priority work and protect the core write path."], ["How do you handle a region going dark mid-trip?", "Replicate trip state across regions, let clients reconnect to the next region, and make every state change idempotent so retries are safe."]]},
- "Stripe": {"cares": "Correctness above all: idempotency, exactly-once effects and an audit trail.", "dives": [["A request times out. Did it happen or not?", "Every write carries an idempotency key; retry with the same key and the server returns the first result instead of acting twice."], ["How do you prove the numbers are right?", "Append-only, double-entry records, daily reconciliation against the source of truth, and alerts on any mismatch."]]},
- "Apple": {"cares": "Privacy, on-device work and a smooth experience on flaky networks.", "dives": [["What can run on the device instead of the server?", "Caching, ranking and some ML can run on-device; send only what the server truly needs, encrypted, and sync when the network is good."], ["How do you keep user data private?", "Collect the minimum, encrypt in transit and at rest, end-to-end where possible, and keep identifiers out of logs and analytics."]]}
-},
-"url-shortener": {
- "modern": [["Edge redirects", "Serve hot redirects from edge functions and an edge key-value cache (Cloudflare Workers KV, CloudFront Functions) so most clicks never reach your region."], ["Serverless key-value store", "A managed KV store (DynamoDB, Bigtable) partitioned by code replaces a self-run cluster."], ["Streaming analytics", "Click events go to a managed stream and land in a lakehouse (Iceberg) for analytics instead of nightly batch jobs."], ["Safety", "Scan new URLs against threat-intel APIs before they go live; phishing abuse is the top real-world risk."]],
- "extra": {"t": "Abuse & safety", "look": "Shorteners are a favourite for phishing. They want you to think about abuse before scale.", "rounds": [["How do you stop people shortening phishing links?", "Check new URLs against Safe Browsing / threat-intel APIs and block known-bad domains", ["Ask users to promise they won't", "Make codes longer", "Only allow HTTPS links"]], ["Someone creates millions of links a minute. What do you do?", "Rate limit creation per user and IP, require auth for bulk use", ["Add more database shards", "Switch to 302 redirects", "Cache the creation endpoint"]], ["A link turns malicious after creation. Now what?", "Re-scan popular links, let users report, and show an interstitial warning page", ["Delete the user's account immediately", "Change the code", "Nothing, links are permanent"]]]},
- "scenarios": [
-  {"id": "scale", "name": "Big Tech scale", "blurb": "Billions of clicks a day across every continent.", "lens": "Global latency, multi-region and hot links.", "reqN": ["Redirect under 20 ms worldwide", "Survive a full region outage"], "est": ["Reads: 1M/s at peak, mostly a few hot links", "Edge cache hit rate target: 95%+"], "add": {"nodes": [["edge", "Edge Cache (CDN KV)", "globe", "edge", "u"], ["rep", "Multi-region Replica", "dbreplica", "data", "db"]], "edges": [["u", "edge", "hot links"], ["db", "rep", "replicate"]]}, "blocks": {"edge": "Hot redirects answered at the edge, close to the user.", "rep": "Every region has a replica so redirects survive a region outage."}, "dives": [["One link goes viral: 1M clicks a second. What happens?", "It's served from the edge cache and the in-region Redis; origin sees almost none of it. Pre-warm the edge for known campaigns."]], "wrap": ["Next: geo-routed DNS and per-region write ownership for custom aliases."]},
-  {"id": "mvp", "name": "Startup MVP", "blurb": "Ship in a week, a few thousand users, tiny budget.", "lens": "Simplicity and cost: the smallest thing that works and can grow.", "reqN": ["Costs a few dollars a month", "One person can run it"], "est": ["Writes: ~10/s at most; one Postgres handles it easily"], "add": {"nodes": [["pg", "Managed Postgres", "dbpg", "data", "api"]], "edges": [["api", "pg", "all data"]]}, "blocks": {"pg": "One managed Postgres holds links and clicks until scale demands more."}, "dives": [["Why not start with Kafka and a KV store?", "You don't need them yet. One Postgres with an index on code serves thousands of redirects a second; add pieces when numbers say so."]], "wrap": ["First thing to add when traffic grows: Redis for hot codes."]}
- ]
-},
-"rate-limiter": {
- "modern": [["Edge and gateway limits", "Most teams use the API gateway's built-in limiter (Envoy, Kong, API Gateway) or edge WAF rules before writing their own."], ["Token-aware limits for AI", "AI APIs limit by tokens per minute and concurrent requests, not just request count."], ["Adaptive limits", "Limits adjust to backend health (load shedding) instead of fixed numbers."]],
- "extra": {"t": "Fairness & tiers", "look": "Real limiters protect paying customers first. Show you think in plans and priorities.", "rounds": [["Free and paid users share the API. How do limits differ?", "Per-plan rules: higher limits and burst for paid tiers, separate buckets per API key", ["Same limit for everyone", "Block free users at peak", "Paid users have no limit"]], ["The backend is overloaded but no user is over limit. What now?", "Load shedding: drop or queue low-priority traffic first", ["Raise all limits", "Restart the backend", "Return 500 for everyone"]], ["How do clients know when to retry?", "429 with Retry-After and rate-limit headers", ["Return 200 with an error body", "Close the connection", "Return 404"]]]},
- "scenarios": [
-  {"id": "ai", "name": "AI API (tokens)", "blurb": "Limit an LLM API where one request can cost 100x another.", "lens": "Cost per request varies wildly, so count tokens, not calls.", "reqF": ["Limit tokens per minute and concurrent requests per key"], "est": ["A request can use 100 to 100,000 tokens: count after the response streams"], "add": {"nodes": [["tok", "Token Meter", "coins", "llmops", "r"]], "edges": [["gw", "tok", "tokens used"]]}, "blocks": {"tok": "Counts tokens per key as responses stream, and debits the bucket."}, "dives": [["You don't know the token count until the answer finishes. How do you limit?", "Reserve an estimate up front, then settle the real count when the stream ends; cap concurrent requests too."]], "wrap": ["Next: per-model limits and priority queues for paying customers."]},
-  {"id": "global", "name": "Global gateway", "blurb": "Many regions, one limit per customer.", "lens": "Accuracy across regions versus latency.", "reqN": ["Limit is global, not per region", "No cross-region call on the hot path"], "add": {"nodes": [["sync", "Async Count Sync", "flow", "msg", "r"]], "edges": [["r", "sync", "share counts"]]}, "blocks": {"sync": "Regions keep local counters and share them every second, so limits are nearly global without a slow call."}, "dives": [["Strict global limits need a cross-region call. How do you avoid it?", "Split the limit across regions by recent traffic and rebalance every few seconds; accept a small overshoot."]], "wrap": ["Trade-off accepted: up to ~5% overshoot for low latency."]}
- ]
-},
-"chat-system": {
- "modern": [["Managed realtime", "Many teams use managed WebSocket or pub/sub layers (AWS AppSync, Ably, Pusher) or a WebSocket gateway instead of running their own fleet."], ["End-to-end encryption", "Signal protocol style E2EE is expected for consumer chat; the server stores ciphertext."], ["Cheap storage tiers", "Recent messages in a fast store, older history tiered to object storage."], ["AI features", "Smart replies and summaries run as async consumers of the message stream."]],
- "extra": {"t": "Connections", "look": "Chat is a connection problem first. They want to hear how you hold and route millions of sockets.", "rounds": [["How does a message find the server holding B's connection?", "A registry (Redis) maps user id to chat server; route through the queue to that server", ["Broadcast to every server", "B polls every second", "Store it in the DB and hope"]], ["A chat server restarts with 50k connections. What happens?", "Clients reconnect with backoff to another server and sync missed messages by last message id", ["Messages are lost", "Users must log in again", "Nothing, sockets survive restarts"]], ["How do you scale to 100M open sockets?", "Many stateless connection servers (~50k-100k each) behind a load balancer with sticky routing", ["One very large server", "Use HTTP polling only", "Store sockets in the database"]]]},
- "scenarios": [
-  {"id": "e2ee", "name": "Private messenger (E2EE)", "blurb": "Like Signal or WhatsApp: the server must not read messages.", "lens": "Privacy: keys, devices and what the server can't see.", "reqN": ["Server never sees plaintext", "Multi-device support"], "add": {"nodes": [["keys", "Key Directory", "key", "ops", "w1"]], "edges": [["w1", "keys", "public keys"]]}, "blocks": {"keys": "Stores each device's public keys so senders can encrypt for every device."}, "dives": [["How do group messages work with E2EE?", "Sender keys: encrypt once with a group key shared to each member device; rotate it when someone leaves."]], "wrap": ["Trade-off: no server-side search or spam scanning of content."]},
-  {"id": "workplace", "name": "Workplace chat", "blurb": "Like Slack: channels, threads, search, enterprise customers.", "lens": "Search, retention rules and multi-tenancy.", "reqF": ["Channels and threads", "Search all history"], "add": {"nodes": [["idx", "Search Index", "search", "data", "db"]], "edges": [["k", "idx", "index"]]}, "blocks": {"idx": "Messages are indexed from the stream so search stays fresh."}, "dives": [["A customer needs 7-year retention and legal hold. How?", "Per-tenant retention policies, legal-hold flags that block deletion, and tiered storage for old messages."]], "wrap": ["Next: per-tenant encryption keys for enterprise customers."]}
- ]
-},
-"news-feed": {
- "modern": [["ML ranking", "Feeds are ranked by models in two stages (candidate retrieval, then ranking), not just by time."], ["Feature store", "User and post features served from a low-latency feature store for ranking."], ["Event streaming", "Posts and interactions flow through Kafka for fan-out, ranking signals and analytics."]],
- "extra": {"t": "Ranking", "look": "Modern feeds are ranked. They want a simple, staged ranking story.", "rounds": [["How do you pick 20 posts from 10,000 candidates fast?", "Two stages: cheap candidate retrieval, then a heavier ranking model on a few hundred", ["Score all 10,000 with the big model", "Sort by time only", "Pick randomly"]], ["What signals feed the ranking?", "Engagement history, relationship strength, recency and content type", ["Post length only", "Alphabetical order", "Server load"]], ["How do you test a new ranking model?", "A/B test on a small slice and watch engagement and quality metrics", ["Ship it to everyone", "Ask users by email", "Run it only in staging"]]]},
- "scenarios": [
-  {"id": "celeb", "name": "Celebrity scale", "blurb": "Accounts with 100M followers post every hour.", "lens": "Fan-out limits and hot keys.", "dives": [["A celebrity posts. Do you write to 100M feeds?", "No: pull their posts at read time and merge with the precomputed feed."]], "wrap": ["Watch: hot partitions for celebrity posts; replicate them widely."]},
-  {"id": "realtime", "name": "Realtime feed", "blurb": "New posts appear live without refresh.", "lens": "Push updates and connection cost.", "add": {"nodes": [["ws", "Live Updates (WebSocket)", "ws", "svc", "feed"]], "edges": [["fo", "ws", "new post"]]}, "blocks": {"ws": "Pushes a 'new posts' signal to open clients instead of them polling."}, "dives": [["Push every new post to every open client?", "Push a lightweight 'new posts available' hint; clients fetch when the user scrolls up."]], "wrap": ["Trade-off: connection cost versus freshness."]}
- ]
-},
-"video-streaming": {
- "modern": [["Per-title encoding", "Encoding ladders tuned per video (AV1 where supported) cut bandwidth 30-50%."], ["Managed transcoding", "Cloud media services (MediaConvert, Transcoder API) or GPU encoders instead of a self-run farm."], ["Multi-CDN", "Large services steer traffic across several CDNs and their own edge caches (Open Connect style)."]],
- "extra": {"t": "Delivery", "look": "Bytes are the cost. They want to hear how you get video close to viewers cheaply.", "rounds": [["Where should a popular video's bytes come from?", "Edge caches near the viewer, pre-positioned before peak", ["The origin bucket", "The upload service", "The metadata DB"]], ["How do you cut bandwidth without hurting quality?", "Per-title encoding and newer codecs like AV1 on supported devices", ["Lower every video to 480p", "Disable seeking", "Send one bitrate to everyone"]], ["Playback stutters on mobile. What helps?", "Adaptive bitrate with short segments and a sensible starting quality", ["Bigger segments", "Only highest quality", "Download the whole file first"]]]},
- "scenarios": [
-  {"id": "live", "name": "Live streaming", "blurb": "Like Twitch: millions watch a stream live.", "lens": "Latency from camera to viewer.", "reqN": ["Glass-to-glass latency under 5 s"], "add": {"nodes": [["ing", "Live Ingest (RTMP/SRT)", "video", "edge", "up"]], "edges": [["cr", "ing", "live feed"], ["ing", "tr", "segments"]]}, "blocks": {"ing": "Takes the live feed and hands short segments to transcoders in real time."}, "dives": [["How do you get latency under 5 seconds?", "Low-latency HLS or WebRTC, 1-2 s segments, and transcoding as the stream arrives."]], "wrap": ["Next: live chat and clips."]},
-  {"id": "short", "name": "Short video", "blurb": "Like TikTok: short clips, endless scroll.", "lens": "Prefetching and recommendation, not long playback.", "dives": [["How do you make the next video start instantly?", "Prefetch the first seconds of the next few recommended clips while the current one plays."]], "wrap": ["The recommender is the product: plan its feature pipeline early."]}
- ]
-},
-"ride-sharing": {
- "modern": [["H3 hexagons", "Uber's H3 grid is the common choice for geo cells and supply-demand maps."], ["Cell-based architecture", "Cities run in isolated cells so a failure or spike stays local."], ["Streaming ETA", "ETA and pricing models consume live location streams (Kafka + Flink)."]],
- "extra": {"t": "Realtime geo", "look": "Location data is huge and short-lived. They want memory, cells and streams.", "rounds": [["Where do live driver locations live?", "In memory, indexed by geo cell (Redis GEO or H3)", ["A SQL table updated every 4 s", "Object storage", "The driver's phone only"]], ["How do you find drivers within 2 km?", "Look up the rider's cell and its neighbours, then rank by ETA", ["Scan every driver", "Ask drivers to bid", "Sort by driver id"]], ["How does surge pricing get computed?", "Stream supply and demand per cell and update prices every minute", ["Manually by ops", "Once a day in batch", "By the rider app"]]]},
- "scenarios": [
-  {"id": "food", "name": "Food delivery", "blurb": "Like Uber Eats: restaurant, courier and customer.", "lens": "Three-sided matching and prep time.", "reqF": ["Track order from restaurant to door"], "add": {"nodes": [["rest", "Restaurant Service", "service", "svc", "t"]], "edges": [["t", "rest", "order"]]}, "blocks": {"rest": "Restaurants accept orders and share prep time, which decides when to dispatch a courier."}, "dives": [["When do you send the courier?", "Time dispatch so they arrive as food is ready: predicted prep time minus travel time."]], "wrap": ["Next: batching multiple orders per courier."]},
-  {"id": "scale", "name": "Global, many cities", "blurb": "Hundreds of cities, each with its own peaks.", "lens": "Isolation by city and failover.", "dives": [["How do you stop one city's spike hurting others?", "Partition by city or region into cells with their own capacity and failover."]], "wrap": ["Cells make failures local and deploys safer."]}
- ]
-},
-"notification-system": {
- "modern": [["Managed providers", "Use managed delivery (SNS, Firebase, Twilio, SES) and focus on preferences and routing."], ["Event-driven triggers", "Services publish events; the notification service subscribes, so senders don't call it directly."], ["Smart delivery", "Batching, digests and send-time optimisation reduce noise and opt-outs."]],
- "extra": {"t": "Noise control", "look": "Good notification systems send less. They want user trust, not volume.", "rounds": [["A user gets 30 likes in a minute. What do you send?", "One grouped notification (digest), not 30", ["30 separate pushes", "Nothing ever", "An email per like"]], ["How do you respect time zones?", "Hold non-urgent messages until the user's local quiet hours end", ["Send at midnight UTC", "Ignore it", "Ask users daily"]], ["How do you know a channel is working?", "Track delivered and opened rates per channel and alert on drops", ["Assume providers never fail", "Check once a month", "Count API calls only"]]]},
- "scenarios": [
-  {"id": "otp", "name": "Security codes (OTP)", "blurb": "Login codes that must arrive in seconds.", "lens": "Speed and reliability over volume.", "reqN": ["Delivered in under 5 s", "Never queued behind marketing messages"], "add": {"nodes": [["prio", "Priority Queue", "queue", "msg", "n"]], "edges": [["n", "prio", "urgent"]]}, "blocks": {"prio": "Urgent messages skip the bulk queues entirely."}, "dives": [["The SMS provider is slow. What now?", "Fail over to a second provider after a short timeout and offer an app or email fallback."]], "wrap": ["Separate urgent from bulk end to end."]},
-  {"id": "mkt", "name": "Marketing campaigns", "blurb": "Send 50M messages for a sale tonight.", "lens": "Throughput, provider limits and opt-outs.", "dives": [["How do you send 50M without getting blocked?", "Throttle to provider limits, spread over time, honour opt-outs and warm up sending domains."]], "wrap": ["Next: send-time optimisation per user."]}
- ]
-},
-"web-crawler": {
- "modern": [["Headless rendering", "Many pages need JavaScript: a pool of headless browsers renders the important ones."], ["Respect AI-crawl rules", "Honour robots.txt including AI-bot rules and site licensing signals."], ["Lakehouse storage", "Pages land in compressed columnar storage (WARC + Parquet) for search and AI training pipelines."]],
- "extra": {"t": "Politeness & rules", "look": "Crawling is about being a good citizen. They test rules and rate limits.", "rounds": [["How do you avoid overloading a small website?", "One queue per host with a delay between requests", ["Fetch everything in parallel", "Use more IPs", "Crawl only at night"]], ["A site's robots.txt disallows your bot. What do you do?", "Respect it and skip those paths", ["Crawl anyway with a fake user agent", "Email the owner", "Crawl half of it"]], ["Pages need JavaScript to show content. What now?", "Render a prioritised subset with headless browsers", ["Ignore those pages", "Render every page", "Ask sites for static copies"]]]},
- "scenarios": [
-  {"id": "ai", "name": "AI training data", "blurb": "Collect web text for model training.", "lens": "Quality, licensing and dedupe.", "add": {"nodes": [["q", "Quality + License Filter", "funnel", "llmops", "pa"]], "edges": [["pa", "q", "text"]]}, "blocks": {"q": "Drops low-quality, duplicate and disallowed content before storage."}, "dives": [["How do you keep training data clean?", "Dedupe near-duplicates, filter by quality scores and licence signals, and strip personal data."]], "wrap": ["Next: provenance tracking per document."]},
-  {"id": "monitor", "name": "Price monitoring", "blurb": "Re-check 10M product pages every hour.", "lens": "Freshness and change detection.", "dives": [["How do you crawl only what changed?", "Re-crawl by change rate: fast-changing pages often, stable ones rarely; use ETags and sitemaps."]], "wrap": ["Next: alerts when a tracked price drops."]}
- ]
-},
-"payment-system": {
- "modern": [["Orchestration across providers", "Route payments across several PSPs for cost, approval rate and failover."], ["Event-sourced ledger", "The ledger is an append-only event log; balances are projections."], ["Real-time fraud ML", "Fraud scoring runs inline in milliseconds using streaming features."], ["Network tokens", "Store network tokens instead of card numbers to cut PCI scope."]],
- "extra": {"t": "Correctness", "look": "Money must never be lost or doubled. They push hard on failure cases.", "rounds": [["The provider times out. Did the charge happen?", "Unknown: retry with the same idempotency key or query the provider before acting", ["Assume it failed and charge again", "Assume it succeeded", "Ask the customer"]], ["How do you keep the ledger correct?", "Double-entry, append-only entries that always balance", ["Update one balance column", "Delete wrong rows", "Recalculate monthly"]], ["Your records and the provider's disagree. What now?", "Daily reconciliation flags the mismatch for automatic or manual fix", ["Ignore small differences", "Trust your DB", "Refund everyone"]]]},
- "scenarios": [
-  {"id": "wallet", "name": "Digital wallet", "blurb": "Users hold a balance and send money to each other.", "lens": "Balances, transfers and consistency.", "reqF": ["Peer-to-peer transfers", "Show balance instantly"], "dives": [["Two transfers spend the same balance at once. How do you stop it?", "Atomic debit with a balance check in one transaction (or a per-account lock); the ledger rejects overdrafts."]], "wrap": ["Next: compliance checks (KYC, limits)."]},
-  {"id": "marketplace", "name": "Marketplace payouts", "blurb": "Like Uber or Airbnb: collect from buyers, pay sellers.", "lens": "Splits, holds and payouts.", "add": {"nodes": [["po", "Payout Scheduler", "clock", "svc", "led"]], "edges": [["led", "po", "seller balances"]]}, "blocks": {"po": "Pays sellers on a schedule from their ledger balance."}, "dives": [["When do sellers get paid?", "After a hold period for refunds and disputes, from the ledger balance, in batches."]], "wrap": ["Next: currency conversion and tax reporting."]}
- ]
-},
-"search-autocomplete": {
- "modern": [["Hybrid suggestions", "Combine prefix matches with semantic and personalised suggestions."], ["Edge caching", "Popular prefixes cached at the edge for single-digit milliseconds."], ["Streaming trends", "Trending queries updated in minutes from a stream, not hourly batch."]],
- "extra": {"t": "Freshness & quality", "look": "Suggestions must be fast, fresh and safe.", "rounds": [["A news event makes a new query explode. How fast does it show?", "Stream recent counts and blend them into suggestions within minutes", ["After tomorrow's batch", "Never", "When an engineer adds it"]], ["How do you stop offensive suggestions?", "Filter with blocklists and classifiers before publishing the trie", ["Let users report only", "Show everything", "Disable autocomplete"]], ["How do you personalise without slowing down?", "Merge a small per-user list with the global top-k at request time", ["Build a trie per user", "Ask users to configure", "Skip personalisation"]]]},
- "scenarios": [
-  {"id": "ecom", "name": "E-commerce search", "blurb": "Suggest products and categories as you type.", "lens": "Catalogue data and conversions.", "dives": [["What should rank first: popular queries or products in stock?", "Blend popularity with conversion and stock; never suggest out-of-stock items first."]], "wrap": ["Next: spelling correction and synonyms."]},
-  {"id": "ai", "name": "AI-assisted search", "blurb": "Suggest full questions, not just words.", "lens": "Semantic matches and cost.", "add": {"nodes": [["emb", "Semantic Suggestions", "vector", "rag", "ac"]], "edges": [["ac", "emb", "fallback"]]}, "blocks": {"emb": "Finds suggestions by meaning when prefixes don't match."}, "dives": [["Embedding lookups are slower. When do you use them?", "Only when the prefix trie has few results, and cache the answers."]], "wrap": ["Watch: latency budget per keystroke."]}
- ]
-},
-"file-storage-sync": {
- "modern": [["Content-defined chunking", "Chunk boundaries based on content (rolling hash) so an insert doesn't shift every chunk."], ["Object storage tiers", "Cold files move automatically to cheaper storage classes."], ["Realtime collaboration", "Docs use CRDTs or operational transforms; plain files keep conflict copies."]],
- "extra": {"t": "Sync conflicts", "look": "Two devices edit offline. They want a clear, safe rule.", "rounds": [["Two laptops edit the same file offline. What happens on sync?", "Detect by version; keep both as a conflicted copy", ["Last writer silently wins", "Delete both", "Merge bytes automatically"]], ["How do you upload only what changed?", "Hash chunks and send only the new ones", ["Upload the whole file every time", "Upload diffs of every byte", "Email the file"]], ["How do other devices learn of a change?", "Push a notification, then they pull the changed metadata and chunks", ["Poll every second", "Wait for the user to refresh", "Download everything nightly"]]]},
- "scenarios": [
-  {"id": "photos", "name": "Photo backup", "blurb": "Like Google Photos: billions of images.", "lens": "Storage cost and thumbnails.", "add": {"nodes": [["th", "Thumbnailer", "picture", "svc", "s3"]], "edges": [["s3", "th", "new image"]]}, "blocks": {"th": "Makes small previews so browsing never loads full images."}, "dives": [["How do you keep storage costs sane?", "Dedupe by hash, compress, and tier old originals to cold storage."]], "wrap": ["Next: search by what's in the photo."]},
-  {"id": "enterprise", "name": "Enterprise drive", "blurb": "Shared drives with permissions and audits.", "lens": "Permissions and compliance.", "dives": [["How do you check permissions fast?", "Cache effective permissions per user and folder; invalidate on change."]], "wrap": ["Next: audit logs and data-loss prevention."]}
- ]
-},
-"ticket-booking": {
- "modern": [["Virtual waiting rooms", "Managed queue services (Queue-it, CDN waiting rooms) absorb launch spikes."], ["Bot protection", "Bot detection and verified-fan presales are now standard for hot events."], ["Short holds in Redis", "Seat holds with TTLs plus a DB constraint as the final guard."]],
- "extra": {"t": "Fairness", "look": "Hot events attract bots. They want fair access, not just throughput.", "rounds": [["Bots grab all seats in seconds. What helps?", "Bot detection, verified-fan presale codes and per-account limits", ["Faster servers", "Bigger database", "Lower prices"]], ["How do you decide who gets in first?", "A virtual queue ordered by arrival (or random for presale)", ["Whoever refreshes most", "Alphabetical", "VIPs only"]], ["A buyer's card fails at checkout. What happens to the seats?", "The hold is released when it expires or payment fails", ["Seats stay held forever", "Charge another card", "Give them free"]]]},
- "scenarios": [
-  {"id": "flash", "name": "Mega concert on-sale", "blurb": "2M fans, 60k seats, 10 a.m. Friday.", "lens": "Spike handling and fairness.", "dives": [["How many people do you let in at once?", "Only as many as the booking path can serve; the waiting room meters the rest."]], "wrap": ["Load test at 10x before the on-sale."]},
-  {"id": "cinema", "name": "Cinema chain", "blurb": "Thousands of small screens, steady traffic.", "lens": "Simplicity and many venues.", "dives": [["Do you need a waiting room here?", "Usually not: traffic is steady; a DB unique constraint and short holds are enough."]], "wrap": ["Keep it simple: one SQL DB per region."]}
- ]
-},
-"proximity-service": {
- "modern": [["Managed geo search", "Use geo queries in managed stores (PostGIS, Elasticsearch/OpenSearch geo, Redis GEO) before building your own index."], ["H3 or S2 cells", "Hexagonal or spherical cells give even neighbour searches worldwide."], ["Ranking", "Results ranked by distance, rating, open-now and personal taste."]],
- "extra": {"t": "Geo search", "look": "They want to hear how a point becomes a fast lookup.", "rounds": [["How do you find places within 2 km fast?", "Map the point to a cell and search that cell plus neighbours", ["Scan every place", "Sort the whole table by distance", "Ask the map provider each time"]], ["Downtown cells hold 10,000 places. What now?", "Use smaller cells there (quadtree or finer H3 level)", ["Show only 10", "Ignore dense areas", "Bigger cells"]], ["How fresh must the index be?", "New places can wait hours; open-now status is computed at query time", ["Rebuild every second", "Never update", "Only on deploys"]]]},
- "scenarios": [
-  {"id": "friends", "name": "Nearby friends", "blurb": "Live locations of friends who opted in.", "lens": "Moving points and privacy.", "add": {"nodes": [["loc", "Live Location (in memory)", "pin", "cache", "ls"]], "edges": [["ls", "loc", "friends' cells"]]}, "blocks": {"loc": "Friends' latest positions, kept in memory with short TTLs."}, "dives": [["How is this different from places?", "Points move constantly: keep them in memory, update every few seconds, and only for friends who opted in."]], "wrap": ["Privacy first: coarse location by default."]},
-  {"id": "delivery", "name": "Delivery radius", "blurb": "Which stores can deliver to this address?", "lens": "Polygons, not circles.", "dives": [["Delivery zones aren't circles. How do you check?", "Store zones as polygons and do point-in-polygon on candidates from a cell lookup."]], "wrap": ["Next: ETA per store."]}
- ]
-},
-"llm-chat-app": {
- "modern": [["Model routing", "Route each request to the cheapest model that can handle it, with fallback across providers."], ["Prompt caching", "Provider prompt caching cuts cost and latency for long, repeated system prompts."], ["Evals in CI", "Every prompt or model change runs an eval suite before release."], ["Tools and memory", "Chat apps call tools (search, code) and keep long-term memory."]],
- "extra": {"t": "Models & cost", "look": "Cost and latency decide AI products. They want routing, caching and limits.", "rounds": [["Most questions are easy. How do you keep cost down?", "Route easy prompts to a small model, hard ones to a large one", ["Always use the largest model", "Limit users to 5 messages", "Cache nothing"]], ["Your long system prompt costs a lot every turn. What helps?", "Prompt caching on the provider side", ["Shorter answers", "Remove the system prompt", "Use more GPUs"]], ["How do you stop one user running up a huge bill?", "Token-based rate limits and budgets per user", ["Request-count limits only", "Block heavy users", "Raise prices for everyone"]]]},
- "scenarios": [
-  {"id": "enterprise", "name": "Enterprise assistant", "blurb": "Employees chat over company data.", "lens": "Data access, privacy and audit.", "add": {"nodes": [["rag", "Company Knowledge (RAG)", "vector", "rag", "cs"]], "edges": [["cs", "rag", "retrieve"]]}, "blocks": {"rag": "Grounds answers in company documents the user is allowed to see."}, "dives": [["How do you stop it leaking documents someone can't access?", "Filter retrieval by the user's permissions (ACLs) before anything reaches the model."]], "wrap": ["Next: audit logs of every answer and source."]},
-  {"id": "consumer", "name": "Consumer app at scale", "blurb": "Millions of free users, tight margins.", "lens": "Unit economics.", "dives": [["How do you make free users affordable?", "Small models by default, caching, tight token limits, upgrade for heavy use."]], "wrap": ["Watch cost per daily active user every week."]}
- ]
-},
-"rag-pipeline": {
- "modern": [["Hybrid search + rerank", "BM25 plus vectors, then a cross-encoder reranker, is the 2026 default."], ["Contextual chunks", "Add document context to each chunk before embedding to improve recall."], ["Agentic retrieval", "For hard questions, an agent decides what to search and when to stop."], ["Evals", "Measure retrieval recall and answer faithfulness on a fixed question set."]],
- "extra": {"t": "Evals & safety", "look": "RAG fails quietly. They want measurement and guardrails.", "rounds": [["How do you know retrieval is good?", "Recall@k on a labelled question set", ["Ask the model if it's sure", "Count documents indexed", "Measure latency only"]], ["The answer sounds right but isn't in the documents. What do you do?", "Check faithfulness and answer 'not found' when context is missing", ["Trust the model", "Add more documents", "Raise temperature"]], ["A user shouldn't see HR documents. How do you enforce it?", "Filter retrieval by the user's permissions", ["Tell the model not to mention them", "Delete HR documents", "Hide the citations"]]]},
- "scenarios": [
-  {"id": "support", "name": "Support knowledge base", "blurb": "Answer customers from help articles.", "lens": "Accuracy and handoff.", "dives": [["What if the answer isn't in the help centre?", "Say so and hand off to a human with the conversation."]], "wrap": ["Track deflection rate and wrong-answer reports."]},
-  {"id": "legal", "name": "Legal / regulated docs", "blurb": "Contracts and policies where mistakes are costly.", "lens": "Citations and audit.", "dives": [["How do you make answers auditable?", "Quote exact passages with document and page, and log every answer with its sources."]], "wrap": ["Human review for high-risk answers."]}
- ]
-},
-"ai-agent-platform": {
- "modern": [["MCP for tools", "Tools are exposed through MCP servers so any agent can use them."], ["Durable execution", "Long tasks run on durable workflow engines (Temporal style) so they survive crashes."], ["Sandboxes", "Code and browser actions run in isolated sandboxes."], ["Tracing and evals", "Every step is traced (OpenTelemetry for LLMs) and task success is evaluated."]],
- "extra": {"t": "Safety & control", "look": "Agents act in the world. They want limits, approvals and recovery.", "rounds": [["An agent wants to delete a production table. What happens?", "Risky tools need human approval and least-privilege credentials", ["Let it run", "Ask the model if it's sure", "Log it afterwards"]], ["A task crashes at step 30 of 50. Now what?", "Resume from the last saved step; tools are idempotent", ["Start over", "Mark it done", "Ask the user to redo it"]], ["How do you stop runaway loops?", "Step, token and time budgets with a stop check", ["Trust the model", "Restart the server", "Use a bigger model"]]]},
- "scenarios": [
-  {"id": "ops", "name": "DevOps agent", "blurb": "An agent that fixes incidents.", "lens": "Blast radius and approvals.", "dives": [["What can the agent do without a human?", "Read-only diagnosis freely; any change needs approval or runs in a safe, reversible way."]], "wrap": ["Next: runbooks as tools."]},
-  {"id": "multi", "name": "Multi-agent team", "blurb": "Several specialist agents working together.", "lens": "Coordination and shared state.", "add": {"nodes": [["sup", "Supervisor Agent", "robotcrown", "agent", "ag"]], "edges": [["sup", "ag", "delegate"]]}, "blocks": {"sup": "Splits work and merges results from specialist agents."}, "dives": [["When is multi-agent worth it?", "When tasks split cleanly into parallel parts with separate context; otherwise one agent is simpler."]], "wrap": ["Watch: cost multiplies with each agent."]}
- ]
-},
-"coding-agent": {
- "modern": [["Agentic search over embeddings", "Coding agents mostly search with grep and file tools rather than vector indexes."], ["Sub-agents", "Parallel sub-agents explore in their own context windows."], ["Hooks and permissions", "Policies and hooks gate risky commands."], ["Background agents", "Agents run in cloud sandboxes and open pull requests on their own."]],
- "extra": {"t": "Verification", "look": "Code that compiles isn't done. They want tests and review in the loop.", "rounds": [["How does the agent know its change works?", "Run tests and the build before committing", ["Ask the user", "Trust the model", "Commit and see"]], ["The change touches 40 files. How do you keep it safe?", "Small commits, review the diff, and a pull request for human review", ["Push to main", "Skip tests", "One giant commit"]], ["The repo is huge. How does it find the right code?", "Search with grep and file tools, read only what matters", ["Load every file into context", "Guess file names", "Ask for the whole repo"]]]},
- "scenarios": [
-  {"id": "ci", "name": "Fix failing CI", "blurb": "An agent triggered by a red build.", "lens": "Automation and trust.", "dives": [["Can it push the fix itself?", "Open a pull request with the failing test now passing; a human merges."]], "wrap": ["Track how many agent PRs get merged."]},
-  {"id": "migrate", "name": "Large migration", "blurb": "Upgrade a framework across 2,000 files.", "lens": "Parallel work and consistency.", "dives": [["How do you split the work?", "A plan per module, parallel sub-agents, shared conventions, and tests per batch."]], "wrap": ["Ship in batches behind feature flags."]}
- ]
-},
-"deep-research-agent": {
- "modern": [["Parallel search agents", "A lead agent fans out to parallel searchers with separate contexts."], ["Citations checked", "A final pass verifies every claim against its source."], ["Budgets", "Explicit token, step and time budgets per run."]],
- "extra": {"t": "Trust", "look": "Research is only useful if it's true. They push on sources.", "rounds": [["How do you make sure claims are real?", "Every claim must cite a source, and a checker verifies them", ["Ask the model to be careful", "Use more agents", "Remove sources"]], ["Two sources disagree. What does the report do?", "Show both, with which is more reliable and why", ["Pick one silently", "Average them", "Drop the topic"]], ["How do you keep cost bounded?", "Budgets on steps, tokens and time per agent", ["Let it run until done", "Use one huge prompt", "Limit to one source"]]]},
- "scenarios": [
-  {"id": "market", "name": "Market research", "blurb": "Competitor and market sizing reports.", "lens": "Numbers and freshness.", "dives": [["How do you handle numbers from different years?", "Normalise to one year, cite each figure with its date, and flag estimates."]], "wrap": ["Next: scheduled refresh of reports."]},
-  {"id": "internal", "name": "Internal knowledge", "blurb": "Research across company docs and tickets.", "lens": "Permissions.", "dives": [["How do you keep it within what the user can see?", "Every search runs with the user's permissions."]], "wrap": ["Audit log of sources used."]}
- ]
-},
-"customer-support-agent": {
- "modern": [["Agent + tools", "Support agents act through tools (refunds, order lookup) with limits, not just answer FAQs."], ["Voice and chat in one", "The same agent logic serves chat, email and voice."], ["Continuous evals", "Conversations are scored automatically for resolution and tone."]],
- "extra": {"t": "Handoff", "look": "The best support AI knows when to stop. They test escalation.", "rounds": [["When should the AI hand off to a human?", "Low confidence, angry customer, or the customer asks", ["Never", "After 20 messages", "Only on weekends"]], ["What does the human see on handoff?", "Full conversation, actions taken and a summary", ["Nothing, they start fresh", "Only the last message", "The customer's email"]], ["A refund over $500 is requested. What happens?", "Above the tool's cap, it needs human approval", ["Refund automatically", "Refuse always", "Ask the model"]]]},
- "scenarios": [
-  {"id": "ecom", "name": "E-commerce", "blurb": "Orders, returns and delivery questions.", "lens": "Actions on orders.", "dives": [["Most tickets are 'where is my order'. How do you handle them?", "Answer directly from order and tracking tools without a human."]], "wrap": ["Next: proactive delay notices."]},
-  {"id": "bank", "name": "Banking", "blurb": "Regulated, sensitive data.", "lens": "Verification and compliance.", "dives": [["How do you verify the customer before acting?", "Authenticated session or step-up verification before any account action."]], "wrap": ["Log everything for compliance."]}
- ]
-},
-"realtime-voice-agent": {
- "modern": [["Speech-to-speech models", "Realtime models take audio in and out, cutting latency."], ["WebRTC everywhere", "WebRTC transport with server-side voice activity detection."], ["Telephony bridges", "SIP trunks connect phone calls to the same agent."]],
- "extra": {"t": "Latency", "look": "Voice feels broken above a second. They want a latency budget.", "rounds": [["Where does the 800 ms go?", "Split it: speech-to-text, model, text-to-speech, network, each streaming", ["All on the model", "All on the network", "It doesn't matter"]], ["A tool call takes 3 s. What does the caller hear?", "A short filler while the tool runs", ["Silence", "Hold music", "The call drops"]], ["The caller interrupts. What happens?", "Voice activity detection stops speech and listens", ["Keep talking", "Hang up", "Start over"]]]},
- "scenarios": [
-  {"id": "callcentre", "name": "Call centre", "blurb": "Thousands of concurrent phone calls.", "lens": "Concurrency and handoff to people.", "dives": [["How do you scale to 5,000 concurrent calls?", "Stateless media workers per call, autoscaled, with model capacity reserved for peak."]], "wrap": ["Next: warm transfer to human agents."]},
-  {"id": "companion", "name": "In-app voice assistant", "blurb": "Talk to an app on your phone.", "lens": "Device and network quality.", "dives": [["The network is poor. What helps?", "Adaptive audio codecs, on-device voice detection and short responses."]], "wrap": ["Next: on-device wake word."]}
- ]
-},
-"enterprise-ai-gateway": {
- "modern": [["One gateway for all models", "Teams call one gateway that routes to any provider and self-hosted models."], ["Policy as code", "Data and usage rules defined as code and enforced at the gateway."], ["Cost chargeback", "Token usage and cost metered per team in real time."]],
- "extra": {"t": "Governance", "look": "Enterprises buy control. They test policy, audit and cost.", "rounds": [["A team sends customer data to a model. How is it controlled?", "PII redaction and data policies enforced at the gateway", ["Trust the team", "Ban AI", "Review monthly"]], ["Finance asks who spent what. How do you answer?", "Per-team metering of tokens and cost", ["Divide the bill evenly", "Guess", "Ask each team"]], ["A provider has an outage. What happens?", "Route to a fallback provider automatically", ["Everything stops", "Wait it out", "Email users"]]]},
- "scenarios": [
-  {"id": "bank", "name": "Regulated bank", "blurb": "Strict data residency and audit.", "lens": "Residency and approvals.", "dives": [["Data must stay in the EU. How?", "Route only to EU-hosted models and self-hosted endpoints; block others by policy."]], "wrap": ["Next: model approval workflow."]},
-  {"id": "startup", "name": "Fast-moving startup", "blurb": "Many experiments, small team.", "lens": "Speed with guardrails.", "dives": [["How do you let teams try new models fast?", "Self-serve keys with budgets and default safety policies."]], "wrap": ["Keep the gateway thin and stateless."]}
- ]
-}
+ "_lenses": {
+  "Amazon": {
+   "cares": "Cost, ownership and what happens when a dependency fails. Name managed services and say how you'd operate them.",
+   "dives": [
+    [
+     "How would you cut the running cost of this in half?",
+     "Right-size with autoscaling, move cold data to cheaper storage tiers, cache hot reads, use spot or Graviton instances for workers, and drop over-provisioned replicas."
+    ],
+    [
+     "A dependency in one Availability Zone goes down. What happens?",
+     "Run every tier across 3 AZs behind a load balancer, keep services stateless, use timeouts, retries with jitter and circuit breakers, and fail over the database automatically."
+    ]
+   ]
+  },
+  "Google": {
+   "cares": "Huge scale, clean estimates and consistency trade-offs. Show the numbers drive the design.",
+   "dives": [
+    [
+     "Traffic grows 100x. What breaks first and how do you shard?",
+     "The single database and hot keys break first. Shard by a high-cardinality key with consistent hashing, add caches in front, and split read and write paths."
+    ],
+    [
+     "Strong or eventual consistency here, and why?",
+     "Strong only where users would notice (money, uniqueness, ownership); eventual everywhere else for latency and availability, with idempotent writes to make retries safe."
+    ]
+   ]
+  },
+  "Meta": {
+   "cares": "Product sense, fast iteration and fan-out to billions of users. Start from the user experience.",
+   "dives": [
+    [
+     "How would you roll out a change to this safely to 3 billion users?",
+     "Feature flags, a dark launch, then 1% to 10% to 100% with dashboards and automatic rollback on error or latency regressions."
+    ],
+    [
+     "Where does fan-out hurt, and how do you tame it?",
+     "Write fan-out explodes for huge audiences: switch to pull for big accounts, batch writes, and cache the merged result."
+    ]
+   ]
+  },
+  "Microsoft": {
+   "cares": "Enterprise needs: identity, multi-tenancy, compliance and reliability SLAs.",
+   "dives": [
+    [
+     "How do you isolate tenants?",
+     "Tenant id on every row and request, per-tenant quotas, and dedicated cells for the biggest customers; never share caches across tenants without the tenant in the key."
+    ],
+    [
+     "What SLA can you promise and how do you meet it?",
+     "99.9% needs multi-AZ and automated failover; 99.99% needs multi-region active-active, health checks and tested runbooks."
+    ]
+   ]
+  },
+  "Uber": {
+   "cares": "Realtime data, geography and staying up during spikes.",
+   "dives": [
+    [
+     "Demand spikes 10x at 6 pm in one city. What happens?",
+     "Partition by city or geo-cell so the spike stays local, autoscale that cell, shed low-priority work and protect the core write path."
+    ],
+    [
+     "How do you handle a region going dark mid-trip?",
+     "Replicate trip state across regions, let clients reconnect to the next region, and make every state change idempotent so retries are safe."
+    ]
+   ]
+  },
+  "Stripe": {
+   "cares": "Correctness above all: idempotency, exactly-once effects and an audit trail.",
+   "dives": [
+    [
+     "A request times out. Did it happen or not?",
+     "Every write carries an idempotency key; retry with the same key and the server returns the first result instead of acting twice."
+    ],
+    [
+     "How do you prove the numbers are right?",
+     "Append-only, double-entry records, daily reconciliation against the source of truth, and alerts on any mismatch."
+    ]
+   ]
+  },
+  "Apple": {
+   "cares": "Privacy, on-device work and a smooth experience on flaky networks.",
+   "dives": [
+    [
+     "What can run on the device instead of the server?",
+     "Caching, ranking and some ML can run on-device; send only what the server truly needs, encrypted, and sync when the network is good."
+    ],
+    [
+     "How do you keep user data private?",
+     "Collect the minimum, encrypt in transit and at rest, end-to-end where possible, and keep identifiers out of logs and analytics."
+    ]
+   ]
+  }
+ },
+ "url-shortener": {
+  "modern": [
+   [
+    "Edge redirects",
+    "Serve hot redirects from edge functions and an edge key-value cache (Cloudflare Workers KV, CloudFront Functions) so most clicks never reach your region."
+   ],
+   [
+    "Serverless key-value store",
+    "A managed KV store (DynamoDB, Bigtable) partitioned by code replaces a self-run cluster."
+   ],
+   [
+    "Streaming analytics",
+    "Click events go to a managed stream and land in a lakehouse (Iceberg) for analytics instead of nightly batch jobs."
+   ],
+   [
+    "Safety",
+    "Scan new URLs against threat-intel APIs before they go live; phishing abuse is the top real-world risk."
+   ]
+  ],
+  "extra": {
+   "t": "Abuse & safety",
+   "look": "Shorteners are a favourite for phishing. They want you to think about abuse before scale.",
+   "rounds": [
+    [
+     "How do you stop people shortening phishing links?",
+     "Check new URLs against Safe Browsing / threat-intel APIs and block known-bad domains",
+     [
+      "Ask users to promise they won't",
+      "Make codes longer",
+      "Only allow HTTPS links"
+     ]
+    ],
+    [
+     "Someone creates millions of links a minute. What do you do?",
+     "Rate limit creation per user and IP, require auth for bulk use",
+     [
+      "Add more database shards",
+      "Switch to 302 redirects",
+      "Cache the creation endpoint"
+     ]
+    ],
+    [
+     "A link turns malicious after creation. Now what?",
+     "Re-scan popular links, let users report, and show an interstitial warning page",
+     [
+      "Delete the user's account immediately",
+      "Change the code",
+      "Nothing, links are permanent"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "scale",
+    "name": "Big Tech scale",
+    "blurb": "Billions of clicks a day across every continent.",
+    "lens": "Global latency, multi-region and hot links.",
+    "reqN": [
+     "Redirect under 20 ms worldwide",
+     "Survive a full region outage"
+    ],
+    "est": [
+     "Reads: 1M/s at peak, mostly a few hot links",
+     "Edge cache hit rate target: 95%+"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "edge",
+       "Edge Cache (CDN KV)",
+       "globe",
+       "edge",
+       "u"
+      ],
+      [
+       "rep",
+       "Multi-region Replica",
+       "dbreplica",
+       "data",
+       "db"
+      ]
+     ],
+     "edges": [
+      [
+       "u",
+       "edge",
+       "hot links"
+      ],
+      [
+       "db",
+       "rep",
+       "replicate"
+      ]
+     ]
+    },
+    "blocks": {
+     "edge": "Hot redirects answered at the edge, close to the user.",
+     "rep": "Every region has a replica so redirects survive a region outage."
+    },
+    "dives": [
+     [
+      "One link goes viral: 1M clicks a second. What happens?",
+      "It's served from the edge cache and the in-region Redis; origin sees almost none of it. Pre-warm the edge for known campaigns."
+     ]
+    ],
+    "wrap": [
+     "Next: geo-routed DNS and per-region write ownership for custom aliases."
+    ]
+   },
+   {
+    "id": "mvp",
+    "name": "Startup MVP",
+    "blurb": "Ship in a week, a few thousand users, tiny budget.",
+    "lens": "Simplicity and cost: the smallest thing that works and can grow.",
+    "reqN": [
+     "Costs a few dollars a month",
+     "One person can run it"
+    ],
+    "est": [
+     "Writes: ~10/s at most; one Postgres handles it easily"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "pg",
+       "Managed Postgres",
+       "dbpg",
+       "data",
+       "api"
+      ]
+     ],
+     "edges": [
+      [
+       "api",
+       "pg",
+       "all data"
+      ]
+     ]
+    },
+    "blocks": {
+     "pg": "One managed Postgres holds links and clicks until scale demands more."
+    },
+    "dives": [
+     [
+      "Why not start with Kafka and a KV store?",
+      "You don't need them yet. One Postgres with an index on code serves thousands of redirects a second; add pieces when numbers say so."
+     ]
+    ],
+    "wrap": [
+     "First thing to add when traffic grows: Redis for hot codes."
+    ]
+   }
+  ]
+ },
+ "rate-limiter": {
+  "modern": [
+   [
+    "Edge and gateway limits",
+    "Most teams use the API gateway's built-in limiter (Envoy, Kong, API Gateway) or edge WAF rules before writing their own."
+   ],
+   [
+    "Token-aware limits for AI",
+    "AI APIs limit by tokens per minute and concurrent requests, not just request count."
+   ],
+   [
+    "Adaptive limits",
+    "Limits adjust to backend health (load shedding) instead of fixed numbers."
+   ]
+  ],
+  "extra": {
+   "t": "Fairness & tiers",
+   "look": "Real limiters protect paying customers first. Show you think in plans and priorities.",
+   "rounds": [
+    [
+     "Free and paid users share the API. How do limits differ?",
+     "Per-plan rules: higher limits and burst for paid tiers, separate buckets per API key",
+     [
+      "Same limit for everyone",
+      "Block free users at peak",
+      "Paid users have no limit"
+     ]
+    ],
+    [
+     "The backend is overloaded but no user is over limit. What now?",
+     "Load shedding: drop or queue low-priority traffic first",
+     [
+      "Raise all limits",
+      "Restart the backend",
+      "Return 500 for everyone"
+     ]
+    ],
+    [
+     "How do clients know when to retry?",
+     "429 with Retry-After and rate-limit headers",
+     [
+      "Return 200 with an error body",
+      "Close the connection",
+      "Return 404"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "ai",
+    "name": "AI API (tokens)",
+    "blurb": "Limit an LLM API where one request can cost 100x another.",
+    "lens": "Cost per request varies wildly, so count tokens, not calls.",
+    "reqF": [
+     "Limit tokens per minute and concurrent requests per key"
+    ],
+    "est": [
+     "A request can use 100 to 100,000 tokens: count after the response streams"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "tok",
+       "Token Meter",
+       "coins",
+       "llmops",
+       "r"
+      ]
+     ],
+     "edges": [
+      [
+       "gw",
+       "tok",
+       "tokens used"
+      ]
+     ]
+    },
+    "blocks": {
+     "tok": "Counts tokens per key as responses stream, and debits the bucket."
+    },
+    "dives": [
+     [
+      "You don't know the token count until the answer finishes. How do you limit?",
+      "Reserve an estimate up front, then settle the real count when the stream ends; cap concurrent requests too."
+     ]
+    ],
+    "wrap": [
+     "Next: per-model limits and priority queues for paying customers."
+    ]
+   },
+   {
+    "id": "global",
+    "name": "Global gateway",
+    "blurb": "Many regions, one limit per customer.",
+    "lens": "Accuracy across regions versus latency.",
+    "reqN": [
+     "Limit is global, not per region",
+     "No cross-region call on the hot path"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "sync",
+       "Async Count Sync",
+       "flow",
+       "msg",
+       "r"
+      ]
+     ],
+     "edges": [
+      [
+       "r",
+       "sync",
+       "share counts"
+      ]
+     ]
+    },
+    "blocks": {
+     "sync": "Regions keep local counters and share them every second, so limits are nearly global without a slow call."
+    },
+    "dives": [
+     [
+      "Strict global limits need a cross-region call. How do you avoid it?",
+      "Split the limit across regions by recent traffic and rebalance every few seconds; accept a small overshoot."
+     ]
+    ],
+    "wrap": [
+     "Trade-off accepted: up to ~5% overshoot for low latency."
+    ]
+   }
+  ]
+ },
+ "chat-system": {
+  "modern": [
+   [
+    "Managed realtime",
+    "Many teams use managed WebSocket or pub/sub layers (AWS AppSync, Ably, Pusher) or a WebSocket gateway instead of running their own fleet."
+   ],
+   [
+    "End-to-end encryption",
+    "Signal protocol style E2EE is expected for consumer chat; the server stores ciphertext."
+   ],
+   [
+    "Cheap storage tiers",
+    "Recent messages in a fast store, older history tiered to object storage."
+   ],
+   [
+    "AI features",
+    "Smart replies and summaries run as async consumers of the message stream."
+   ]
+  ],
+  "extra": {
+   "t": "Connections",
+   "look": "Chat is a connection problem first. They want to hear how you hold and route millions of sockets.",
+   "rounds": [
+    [
+     "How does a message find the server holding B's connection?",
+     "A registry (Redis) maps user id to chat server; route through the queue to that server",
+     [
+      "Broadcast to every server",
+      "B polls every second",
+      "Store it in the DB and hope"
+     ]
+    ],
+    [
+     "A chat server restarts with 50k connections. What happens?",
+     "Clients reconnect with backoff to another server and sync missed messages by last message id",
+     [
+      "Messages are lost",
+      "Users must log in again",
+      "Nothing, sockets survive restarts"
+     ]
+    ],
+    [
+     "How do you scale to 100M open sockets?",
+     "Many stateless connection servers (~50k-100k each) behind a load balancer with sticky routing",
+     [
+      "One very large server",
+      "Use HTTP polling only",
+      "Store sockets in the database"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "e2ee",
+    "name": "Private messenger (E2EE)",
+    "blurb": "Like Signal or WhatsApp: the server must not read messages.",
+    "lens": "Privacy: keys, devices and what the server can't see.",
+    "reqN": [
+     "Server never sees plaintext",
+     "Multi-device support"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "keys",
+       "Key Directory",
+       "key",
+       "ops",
+       "w1"
+      ]
+     ],
+     "edges": [
+      [
+       "w1",
+       "keys",
+       "public keys"
+      ]
+     ]
+    },
+    "blocks": {
+     "keys": "Stores each device's public keys so senders can encrypt for every device."
+    },
+    "dives": [
+     [
+      "How do group messages work with E2EE?",
+      "Sender keys: encrypt once with a group key shared to each member device; rotate it when someone leaves."
+     ]
+    ],
+    "wrap": [
+     "Trade-off: no server-side search or spam scanning of content."
+    ]
+   },
+   {
+    "id": "workplace",
+    "name": "Workplace chat",
+    "blurb": "Like Slack: channels, threads, search, enterprise customers.",
+    "lens": "Search, retention rules and multi-tenancy.",
+    "reqF": [
+     "Channels and threads",
+     "Search all history"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "idx",
+       "Search Index",
+       "search",
+       "data",
+       "db"
+      ]
+     ],
+     "edges": [
+      [
+       "k",
+       "idx",
+       "index"
+      ]
+     ]
+    },
+    "blocks": {
+     "idx": "Messages are indexed from the stream so search stays fresh."
+    },
+    "dives": [
+     [
+      "A customer needs 7-year retention and legal hold. How?",
+      "Per-tenant retention policies, legal-hold flags that block deletion, and tiered storage for old messages."
+     ]
+    ],
+    "wrap": [
+     "Next: per-tenant encryption keys for enterprise customers."
+    ]
+   }
+  ]
+ },
+ "news-feed": {
+  "modern": [
+   [
+    "ML ranking",
+    "Feeds are ranked by models in two stages (candidate retrieval, then ranking), not just by time."
+   ],
+   [
+    "Feature store",
+    "User and post features served from a low-latency feature store for ranking."
+   ],
+   [
+    "Event streaming",
+    "Posts and interactions flow through Kafka for fan-out, ranking signals and analytics."
+   ]
+  ],
+  "extra": {
+   "t": "Ranking",
+   "look": "Modern feeds are ranked. They want a simple, staged ranking story.",
+   "rounds": [
+    [
+     "How do you pick 20 posts from 10,000 candidates fast?",
+     "Two stages: cheap candidate retrieval, then a heavier ranking model on a few hundred",
+     [
+      "Score all 10,000 with the big model",
+      "Sort by time only",
+      "Pick randomly"
+     ]
+    ],
+    [
+     "What signals feed the ranking?",
+     "Engagement history, relationship strength, recency and content type",
+     [
+      "Post length only",
+      "Alphabetical order",
+      "Server load"
+     ]
+    ],
+    [
+     "How do you test a new ranking model?",
+     "A/B test on a small slice and watch engagement and quality metrics",
+     [
+      "Ship it to everyone",
+      "Ask users by email",
+      "Run it only in staging"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "celeb",
+    "name": "Celebrity scale",
+    "blurb": "Accounts with 100M followers post every hour.",
+    "lens": "Fan-out limits and hot keys.",
+    "dives": [
+     [
+      "A celebrity posts. Do you write to 100M feeds?",
+      "No: pull their posts at read time and merge with the precomputed feed."
+     ]
+    ],
+    "wrap": [
+     "Watch: hot partitions for celebrity posts; replicate them widely."
+    ]
+   },
+   {
+    "id": "realtime",
+    "name": "Realtime feed",
+    "blurb": "New posts appear live without refresh.",
+    "lens": "Push updates and connection cost.",
+    "add": {
+     "nodes": [
+      [
+       "ws",
+       "Live Updates (WebSocket)",
+       "ws",
+       "svc",
+       "feed"
+      ]
+     ],
+     "edges": [
+      [
+       "fo",
+       "ws",
+       "new post"
+      ]
+     ]
+    },
+    "blocks": {
+     "ws": "Pushes a 'new posts' signal to open clients instead of them polling."
+    },
+    "dives": [
+     [
+      "Push every new post to every open client?",
+      "Push a lightweight 'new posts available' hint; clients fetch when the user scrolls up."
+     ]
+    ],
+    "wrap": [
+     "Trade-off: connection cost versus freshness."
+    ]
+   }
+  ]
+ },
+ "video-streaming": {
+  "modern": [
+   [
+    "Per-title encoding",
+    "Encoding ladders tuned per video (AV1 where supported) cut bandwidth 30-50%."
+   ],
+   [
+    "Managed transcoding",
+    "Cloud media services (MediaConvert, Transcoder API) or GPU encoders instead of a self-run farm."
+   ],
+   [
+    "Multi-CDN",
+    "Large services steer traffic across several CDNs and their own edge caches (Open Connect style)."
+   ]
+  ],
+  "extra": {
+   "t": "Delivery",
+   "look": "Bytes are the cost. They want to hear how you get video close to viewers cheaply.",
+   "rounds": [
+    [
+     "Where should a popular video's bytes come from?",
+     "Edge caches near the viewer, pre-positioned before peak",
+     [
+      "The origin bucket",
+      "The upload service",
+      "The metadata DB"
+     ]
+    ],
+    [
+     "How do you cut bandwidth without hurting quality?",
+     "Per-title encoding and newer codecs like AV1 on supported devices",
+     [
+      "Lower every video to 480p",
+      "Disable seeking",
+      "Send one bitrate to everyone"
+     ]
+    ],
+    [
+     "Playback stutters on mobile. What helps?",
+     "Adaptive bitrate with short segments and a sensible starting quality",
+     [
+      "Bigger segments",
+      "Only highest quality",
+      "Download the whole file first"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "live",
+    "name": "Live streaming",
+    "blurb": "Like Twitch: millions watch a stream live.",
+    "lens": "Latency from camera to viewer.",
+    "reqN": [
+     "Glass-to-glass latency under 5 s"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "ing",
+       "Live Ingest (RTMP/SRT)",
+       "video",
+       "edge",
+       "up"
+      ]
+     ],
+     "edges": [
+      [
+       "cr",
+       "ing",
+       "live feed"
+      ],
+      [
+       "ing",
+       "tr",
+       "segments"
+      ]
+     ]
+    },
+    "blocks": {
+     "ing": "Takes the live feed and hands short segments to transcoders in real time."
+    },
+    "dives": [
+     [
+      "How do you get latency under 5 seconds?",
+      "Low-latency HLS or WebRTC, 1-2 s segments, and transcoding as the stream arrives."
+     ]
+    ],
+    "wrap": [
+     "Next: live chat and clips."
+    ]
+   },
+   {
+    "id": "short",
+    "name": "Short video",
+    "blurb": "Like TikTok: short clips, endless scroll.",
+    "lens": "Prefetching and recommendation, not long playback.",
+    "dives": [
+     [
+      "How do you make the next video start instantly?",
+      "Prefetch the first seconds of the next few recommended clips while the current one plays."
+     ]
+    ],
+    "wrap": [
+     "The recommender is the product: plan its feature pipeline early."
+    ]
+   }
+  ]
+ },
+ "ride-sharing": {
+  "modern": [
+   [
+    "H3 hexagons",
+    "Uber's H3 grid is the common choice for geo cells and supply-demand maps."
+   ],
+   [
+    "Cell-based architecture",
+    "Cities run in isolated cells so a failure or spike stays local."
+   ],
+   [
+    "Streaming ETA",
+    "ETA and pricing models consume live location streams (Kafka + Flink)."
+   ]
+  ],
+  "extra": {
+   "t": "Realtime geo",
+   "look": "Location data is huge and short-lived. They want memory, cells and streams.",
+   "rounds": [
+    [
+     "Where do live driver locations live?",
+     "In memory, indexed by geo cell (Redis GEO or H3)",
+     [
+      "A SQL table updated every 4 s",
+      "Object storage",
+      "The driver's phone only"
+     ]
+    ],
+    [
+     "How do you find drivers within 2 km?",
+     "Look up the rider's cell and its neighbours, then rank by ETA",
+     [
+      "Scan every driver",
+      "Ask drivers to bid",
+      "Sort by driver id"
+     ]
+    ],
+    [
+     "How does surge pricing get computed?",
+     "Stream supply and demand per cell and update prices every minute",
+     [
+      "Manually by ops",
+      "Once a day in batch",
+      "By the rider app"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "food",
+    "name": "Food delivery",
+    "blurb": "Like Uber Eats: restaurant, courier and customer.",
+    "lens": "Three-sided matching and prep time.",
+    "reqF": [
+     "Track order from restaurant to door"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "rest",
+       "Restaurant Service",
+       "service",
+       "svc",
+       "t"
+      ]
+     ],
+     "edges": [
+      [
+       "t",
+       "rest",
+       "order"
+      ]
+     ]
+    },
+    "blocks": {
+     "rest": "Restaurants accept orders and share prep time, which decides when to dispatch a courier."
+    },
+    "dives": [
+     [
+      "When do you send the courier?",
+      "Time dispatch so they arrive as food is ready: predicted prep time minus travel time."
+     ]
+    ],
+    "wrap": [
+     "Next: batching multiple orders per courier."
+    ]
+   },
+   {
+    "id": "scale",
+    "name": "Global, many cities",
+    "blurb": "Hundreds of cities, each with its own peaks.",
+    "lens": "Isolation by city and failover.",
+    "dives": [
+     [
+      "How do you stop one city's spike hurting others?",
+      "Partition by city or region into cells with their own capacity and failover."
+     ]
+    ],
+    "wrap": [
+     "Cells make failures local and deploys safer."
+    ]
+   }
+  ]
+ },
+ "notification-system": {
+  "modern": [
+   [
+    "Managed providers",
+    "Use managed delivery (SNS, Firebase, Twilio, SES) and focus on preferences and routing."
+   ],
+   [
+    "Event-driven triggers",
+    "Services publish events; the notification service subscribes, so senders don't call it directly."
+   ],
+   [
+    "Smart delivery",
+    "Batching, digests and send-time optimisation reduce noise and opt-outs."
+   ]
+  ],
+  "extra": {
+   "t": "Noise control",
+   "look": "Good notification systems send less. They want user trust, not volume.",
+   "rounds": [
+    [
+     "A user gets 30 likes in a minute. What do you send?",
+     "One grouped notification (digest), not 30",
+     [
+      "30 separate pushes",
+      "Nothing ever",
+      "An email per like"
+     ]
+    ],
+    [
+     "How do you respect time zones?",
+     "Hold non-urgent messages until the user's local quiet hours end",
+     [
+      "Send at midnight UTC",
+      "Ignore it",
+      "Ask users daily"
+     ]
+    ],
+    [
+     "How do you know a channel is working?",
+     "Track delivered and opened rates per channel and alert on drops",
+     [
+      "Assume providers never fail",
+      "Check once a month",
+      "Count API calls only"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "otp",
+    "name": "Security codes (OTP)",
+    "blurb": "Login codes that must arrive in seconds.",
+    "lens": "Speed and reliability over volume.",
+    "reqN": [
+     "Delivered in under 5 s",
+     "Never queued behind marketing messages"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "prio",
+       "Priority Queue",
+       "queue",
+       "msg",
+       "n"
+      ]
+     ],
+     "edges": [
+      [
+       "n",
+       "prio",
+       "urgent"
+      ]
+     ]
+    },
+    "blocks": {
+     "prio": "Urgent messages skip the bulk queues entirely."
+    },
+    "dives": [
+     [
+      "The SMS provider is slow. What now?",
+      "Fail over to a second provider after a short timeout and offer an app or email fallback."
+     ]
+    ],
+    "wrap": [
+     "Separate urgent from bulk end to end."
+    ]
+   },
+   {
+    "id": "mkt",
+    "name": "Marketing campaigns",
+    "blurb": "Send 50M messages for a sale tonight.",
+    "lens": "Throughput, provider limits and opt-outs.",
+    "dives": [
+     [
+      "How do you send 50M without getting blocked?",
+      "Throttle to provider limits, spread over time, honour opt-outs and warm up sending domains."
+     ]
+    ],
+    "wrap": [
+     "Next: send-time optimisation per user."
+    ]
+   }
+  ]
+ },
+ "web-crawler": {
+  "modern": [
+   [
+    "Headless rendering",
+    "Many pages need JavaScript: a pool of headless browsers renders the important ones."
+   ],
+   [
+    "Respect AI-crawl rules",
+    "Honour robots.txt including AI-bot rules and site licensing signals."
+   ],
+   [
+    "Lakehouse storage",
+    "Pages land in compressed columnar storage (WARC + Parquet) for search and AI training pipelines."
+   ]
+  ],
+  "extra": {
+   "t": "Politeness & rules",
+   "look": "Crawling is about being a good citizen. They test rules and rate limits.",
+   "rounds": [
+    [
+     "How do you avoid overloading a small website?",
+     "One queue per host with a delay between requests",
+     [
+      "Fetch everything in parallel",
+      "Use more IPs",
+      "Crawl only at night"
+     ]
+    ],
+    [
+     "A site's robots.txt disallows your bot. What do you do?",
+     "Respect it and skip those paths",
+     [
+      "Crawl anyway with a fake user agent",
+      "Email the owner",
+      "Crawl half of it"
+     ]
+    ],
+    [
+     "Pages need JavaScript to show content. What now?",
+     "Render a prioritised subset with headless browsers",
+     [
+      "Ignore those pages",
+      "Render every page",
+      "Ask sites for static copies"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "ai",
+    "name": "AI training data",
+    "blurb": "Collect web text for model training.",
+    "lens": "Quality, licensing and dedupe.",
+    "add": {
+     "nodes": [
+      [
+       "q",
+       "Quality + License Filter",
+       "funnel",
+       "llmops",
+       "pa"
+      ]
+     ],
+     "edges": [
+      [
+       "pa",
+       "q",
+       "text"
+      ]
+     ]
+    },
+    "blocks": {
+     "q": "Drops low-quality, duplicate and disallowed content before storage."
+    },
+    "dives": [
+     [
+      "How do you keep training data clean?",
+      "Dedupe near-duplicates, filter by quality scores and licence signals, and strip personal data."
+     ]
+    ],
+    "wrap": [
+     "Next: provenance tracking per document."
+    ]
+   },
+   {
+    "id": "monitor",
+    "name": "Price monitoring",
+    "blurb": "Re-check 10M product pages every hour.",
+    "lens": "Freshness and change detection.",
+    "dives": [
+     [
+      "How do you crawl only what changed?",
+      "Re-crawl by change rate: fast-changing pages often, stable ones rarely; use ETags and sitemaps."
+     ]
+    ],
+    "wrap": [
+     "Next: alerts when a tracked price drops."
+    ]
+   }
+  ]
+ },
+ "payment-system": {
+  "modern": [
+   [
+    "Orchestration across providers",
+    "Route payments across several PSPs for cost, approval rate and failover."
+   ],
+   [
+    "Event-sourced ledger",
+    "The ledger is an append-only event log; balances are projections."
+   ],
+   [
+    "Real-time fraud ML",
+    "Fraud scoring runs inline in milliseconds using streaming features."
+   ],
+   [
+    "Network tokens",
+    "Store network tokens instead of card numbers to cut PCI scope."
+   ]
+  ],
+  "extra": {
+   "t": "Correctness",
+   "look": "Money must never be lost or doubled. They push hard on failure cases.",
+   "rounds": [
+    [
+     "The provider times out. Did the charge happen?",
+     "Unknown: retry with the same idempotency key or query the provider before acting",
+     [
+      "Assume it failed and charge again",
+      "Assume it succeeded",
+      "Ask the customer"
+     ]
+    ],
+    [
+     "How do you keep the ledger correct?",
+     "Double-entry, append-only entries that always balance",
+     [
+      "Update one balance column",
+      "Delete wrong rows",
+      "Recalculate monthly"
+     ]
+    ],
+    [
+     "Your records and the provider's disagree. What now?",
+     "Daily reconciliation flags the mismatch for automatic or manual fix",
+     [
+      "Ignore small differences",
+      "Trust your DB",
+      "Refund everyone"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "wallet",
+    "name": "Digital wallet",
+    "blurb": "Users hold a balance and send money to each other.",
+    "lens": "Balances, transfers and consistency.",
+    "reqF": [
+     "Peer-to-peer transfers",
+     "Show balance instantly"
+    ],
+    "dives": [
+     [
+      "Two transfers spend the same balance at once. How do you stop it?",
+      "Atomic debit with a balance check in one transaction (or a per-account lock); the ledger rejects overdrafts."
+     ]
+    ],
+    "wrap": [
+     "Next: compliance checks (KYC, limits)."
+    ]
+   },
+   {
+    "id": "marketplace",
+    "name": "Marketplace payouts",
+    "blurb": "Like Uber or Airbnb: collect from buyers, pay sellers.",
+    "lens": "Splits, holds and payouts.",
+    "add": {
+     "nodes": [
+      [
+       "po",
+       "Payout Scheduler",
+       "clock",
+       "svc",
+       "led"
+      ]
+     ],
+     "edges": [
+      [
+       "led",
+       "po",
+       "seller balances"
+      ]
+     ]
+    },
+    "blocks": {
+     "po": "Pays sellers on a schedule from their ledger balance."
+    },
+    "dives": [
+     [
+      "When do sellers get paid?",
+      "After a hold period for refunds and disputes, from the ledger balance, in batches."
+     ]
+    ],
+    "wrap": [
+     "Next: currency conversion and tax reporting."
+    ]
+   }
+  ]
+ },
+ "search-autocomplete": {
+  "modern": [
+   [
+    "Hybrid suggestions",
+    "Combine prefix matches with semantic and personalised suggestions."
+   ],
+   [
+    "Edge caching",
+    "Popular prefixes cached at the edge for single-digit milliseconds."
+   ],
+   [
+    "Streaming trends",
+    "Trending queries updated in minutes from a stream, not hourly batch."
+   ]
+  ],
+  "extra": {
+   "t": "Freshness & quality",
+   "look": "Suggestions must be fast, fresh and safe.",
+   "rounds": [
+    [
+     "A news event makes a new query explode. How fast does it show?",
+     "Stream recent counts and blend them into suggestions within minutes",
+     [
+      "After tomorrow's batch",
+      "Never",
+      "When an engineer adds it"
+     ]
+    ],
+    [
+     "How do you stop offensive suggestions?",
+     "Filter with blocklists and classifiers before publishing the trie",
+     [
+      "Let users report only",
+      "Show everything",
+      "Disable autocomplete"
+     ]
+    ],
+    [
+     "How do you personalise without slowing down?",
+     "Merge a small per-user list with the global top-k at request time",
+     [
+      "Build a trie per user",
+      "Ask users to configure",
+      "Skip personalisation"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "ecom",
+    "name": "E-commerce search",
+    "blurb": "Suggest products and categories as you type.",
+    "lens": "Catalogue data and conversions.",
+    "dives": [
+     [
+      "What should rank first: popular queries or products in stock?",
+      "Blend popularity with conversion and stock; never suggest out-of-stock items first."
+     ]
+    ],
+    "wrap": [
+     "Next: spelling correction and synonyms."
+    ]
+   },
+   {
+    "id": "ai",
+    "name": "AI-assisted search",
+    "blurb": "Suggest full questions, not just words.",
+    "lens": "Semantic matches and cost.",
+    "add": {
+     "nodes": [
+      [
+       "emb",
+       "Semantic Suggestions",
+       "vector",
+       "rag",
+       "ac"
+      ]
+     ],
+     "edges": [
+      [
+       "ac",
+       "emb",
+       "fallback"
+      ]
+     ]
+    },
+    "blocks": {
+     "emb": "Finds suggestions by meaning when prefixes don't match."
+    },
+    "dives": [
+     [
+      "Embedding lookups are slower. When do you use them?",
+      "Only when the prefix trie has few results, and cache the answers."
+     ]
+    ],
+    "wrap": [
+     "Watch: latency budget per keystroke."
+    ]
+   }
+  ]
+ },
+ "file-storage-sync": {
+  "modern": [
+   [
+    "Content-defined chunking",
+    "Chunk boundaries based on content (rolling hash) so an insert doesn't shift every chunk."
+   ],
+   [
+    "Object storage tiers",
+    "Cold files move automatically to cheaper storage classes."
+   ],
+   [
+    "Realtime collaboration",
+    "Docs use CRDTs or operational transforms; plain files keep conflict copies."
+   ]
+  ],
+  "extra": {
+   "t": "Sync conflicts",
+   "look": "Two devices edit offline. They want a clear, safe rule.",
+   "rounds": [
+    [
+     "Two laptops edit the same file offline. What happens on sync?",
+     "Detect by version; keep both as a conflicted copy",
+     [
+      "Last writer silently wins",
+      "Delete both",
+      "Merge bytes automatically"
+     ]
+    ],
+    [
+     "How do you upload only what changed?",
+     "Hash chunks and send only the new ones",
+     [
+      "Upload the whole file every time",
+      "Upload diffs of every byte",
+      "Email the file"
+     ]
+    ],
+    [
+     "How do other devices learn of a change?",
+     "Push a notification, then they pull the changed metadata and chunks",
+     [
+      "Poll every second",
+      "Wait for the user to refresh",
+      "Download everything nightly"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "photos",
+    "name": "Photo backup",
+    "blurb": "Like Google Photos: billions of images.",
+    "lens": "Storage cost and thumbnails.",
+    "add": {
+     "nodes": [
+      [
+       "th",
+       "Thumbnailer",
+       "picture",
+       "svc",
+       "s3"
+      ]
+     ],
+     "edges": [
+      [
+       "s3",
+       "th",
+       "new image"
+      ]
+     ]
+    },
+    "blocks": {
+     "th": "Makes small previews so browsing never loads full images."
+    },
+    "dives": [
+     [
+      "How do you keep storage costs sane?",
+      "Dedupe by hash, compress, and tier old originals to cold storage."
+     ]
+    ],
+    "wrap": [
+     "Next: search by what's in the photo."
+    ]
+   },
+   {
+    "id": "enterprise",
+    "name": "Enterprise drive",
+    "blurb": "Shared drives with permissions and audits.",
+    "lens": "Permissions and compliance.",
+    "dives": [
+     [
+      "How do you check permissions fast?",
+      "Cache effective permissions per user and folder; invalidate on change."
+     ]
+    ],
+    "wrap": [
+     "Next: audit logs and data-loss prevention."
+    ]
+   }
+  ]
+ },
+ "ticket-booking": {
+  "modern": [
+   [
+    "Virtual waiting rooms",
+    "Managed queue services (Queue-it, CDN waiting rooms) absorb launch spikes."
+   ],
+   [
+    "Bot protection",
+    "Bot detection and verified-fan presales are now standard for hot events."
+   ],
+   [
+    "Short holds in Redis",
+    "Seat holds with TTLs plus a DB constraint as the final guard."
+   ]
+  ],
+  "extra": {
+   "t": "Fairness",
+   "look": "Hot events attract bots. They want fair access, not just throughput.",
+   "rounds": [
+    [
+     "Bots grab all seats in seconds. What helps?",
+     "Bot detection, verified-fan presale codes and per-account limits",
+     [
+      "Faster servers",
+      "Bigger database",
+      "Lower prices"
+     ]
+    ],
+    [
+     "How do you decide who gets in first?",
+     "A virtual queue ordered by arrival (or random for presale)",
+     [
+      "Whoever refreshes most",
+      "Alphabetical",
+      "VIPs only"
+     ]
+    ],
+    [
+     "A buyer's card fails at checkout. What happens to the seats?",
+     "The hold is released when it expires or payment fails",
+     [
+      "Seats stay held forever",
+      "Charge another card",
+      "Give them free"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "flash",
+    "name": "Mega concert on-sale",
+    "blurb": "2M fans, 60k seats, 10 a.m. Friday.",
+    "lens": "Spike handling and fairness.",
+    "dives": [
+     [
+      "How many people do you let in at once?",
+      "Only as many as the booking path can serve; the waiting room meters the rest."
+     ]
+    ],
+    "wrap": [
+     "Load test at 10x before the on-sale."
+    ]
+   },
+   {
+    "id": "cinema",
+    "name": "Cinema chain",
+    "blurb": "Thousands of small screens, steady traffic.",
+    "lens": "Simplicity and many venues.",
+    "dives": [
+     [
+      "Do you need a waiting room here?",
+      "Usually not: traffic is steady; a DB unique constraint and short holds are enough."
+     ]
+    ],
+    "wrap": [
+     "Keep it simple: one SQL DB per region."
+    ]
+   }
+  ]
+ },
+ "proximity-service": {
+  "modern": [
+   [
+    "Managed geo search",
+    "Use geo queries in managed stores (PostGIS, Elasticsearch/OpenSearch geo, Redis GEO) before building your own index."
+   ],
+   [
+    "H3 or S2 cells",
+    "Hexagonal or spherical cells give even neighbour searches worldwide."
+   ],
+   [
+    "Ranking",
+    "Results ranked by distance, rating, open-now and personal taste."
+   ]
+  ],
+  "extra": {
+   "t": "Geo search",
+   "look": "They want to hear how a point becomes a fast lookup.",
+   "rounds": [
+    [
+     "How do you find places within 2 km fast?",
+     "Map the point to a cell and search that cell plus neighbours",
+     [
+      "Scan every place",
+      "Sort the whole table by distance",
+      "Ask the map provider each time"
+     ]
+    ],
+    [
+     "Downtown cells hold 10,000 places. What now?",
+     "Use smaller cells there (quadtree or finer H3 level)",
+     [
+      "Show only 10",
+      "Ignore dense areas",
+      "Bigger cells"
+     ]
+    ],
+    [
+     "How fresh must the index be?",
+     "New places can wait hours; open-now status is computed at query time",
+     [
+      "Rebuild every second",
+      "Never update",
+      "Only on deploys"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "friends",
+    "name": "Nearby friends",
+    "blurb": "Live locations of friends who opted in.",
+    "lens": "Moving points and privacy.",
+    "add": {
+     "nodes": [
+      [
+       "loc",
+       "Live Location (in memory)",
+       "pin",
+       "cache",
+       "ls"
+      ]
+     ],
+     "edges": [
+      [
+       "ls",
+       "loc",
+       "friends' cells"
+      ]
+     ]
+    },
+    "blocks": {
+     "loc": "Friends' latest positions, kept in memory with short TTLs."
+    },
+    "dives": [
+     [
+      "How is this different from places?",
+      "Points move constantly: keep them in memory, update every few seconds, and only for friends who opted in."
+     ]
+    ],
+    "wrap": [
+     "Privacy first: coarse location by default."
+    ]
+   },
+   {
+    "id": "delivery",
+    "name": "Delivery radius",
+    "blurb": "Which stores can deliver to this address?",
+    "lens": "Polygons, not circles.",
+    "dives": [
+     [
+      "Delivery zones aren't circles. How do you check?",
+      "Store zones as polygons and do point-in-polygon on candidates from a cell lookup."
+     ]
+    ],
+    "wrap": [
+     "Next: ETA per store."
+    ]
+   }
+  ]
+ },
+ "llm-chat-app": {
+  "modern": [
+   [
+    "Model routing",
+    "Route each request to the cheapest model that can handle it, with fallback across providers."
+   ],
+   [
+    "Prompt caching",
+    "Provider prompt caching cuts cost and latency for long, repeated system prompts."
+   ],
+   [
+    "Evals in CI",
+    "Every prompt or model change runs an eval suite before release."
+   ],
+   [
+    "Tools and memory",
+    "Chat apps call tools (search, code) and keep long-term memory."
+   ]
+  ],
+  "extra": {
+   "t": "Models & cost",
+   "look": "Cost and latency decide AI products. They want routing, caching and limits.",
+   "rounds": [
+    [
+     "Most questions are easy. How do you keep cost down?",
+     "Route easy prompts to a small model, hard ones to a large one",
+     [
+      "Always use the largest model",
+      "Limit users to 5 messages",
+      "Cache nothing"
+     ]
+    ],
+    [
+     "Your long system prompt costs a lot every turn. What helps?",
+     "Prompt caching on the provider side",
+     [
+      "Shorter answers",
+      "Remove the system prompt",
+      "Use more GPUs"
+     ]
+    ],
+    [
+     "How do you stop one user running up a huge bill?",
+     "Token-based rate limits and budgets per user",
+     [
+      "Request-count limits only",
+      "Block heavy users",
+      "Raise prices for everyone"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "enterprise",
+    "name": "Enterprise assistant",
+    "blurb": "Employees chat over company data.",
+    "lens": "Data access, privacy and audit.",
+    "add": {
+     "nodes": [
+      [
+       "rag",
+       "Company Knowledge (RAG)",
+       "vector",
+       "rag",
+       "cs"
+      ]
+     ],
+     "edges": [
+      [
+       "cs",
+       "rag",
+       "retrieve"
+      ]
+     ]
+    },
+    "blocks": {
+     "rag": "Grounds answers in company documents the user is allowed to see."
+    },
+    "dives": [
+     [
+      "How do you stop it leaking documents someone can't access?",
+      "Filter retrieval by the user's permissions (ACLs) before anything reaches the model."
+     ]
+    ],
+    "wrap": [
+     "Next: audit logs of every answer and source."
+    ]
+   },
+   {
+    "id": "consumer",
+    "name": "Consumer app at scale",
+    "blurb": "Millions of free users, tight margins.",
+    "lens": "Unit economics.",
+    "dives": [
+     [
+      "How do you make free users affordable?",
+      "Small models by default, caching, tight token limits, upgrade for heavy use."
+     ]
+    ],
+    "wrap": [
+     "Watch cost per daily active user every week."
+    ]
+   }
+  ]
+ },
+ "rag-pipeline": {
+  "modern": [
+   [
+    "Hybrid search + rerank",
+    "BM25 plus vectors, then a cross-encoder reranker, is the 2026 default."
+   ],
+   [
+    "Contextual chunks",
+    "Add document context to each chunk before embedding to improve recall."
+   ],
+   [
+    "Agentic retrieval",
+    "For hard questions, an agent decides what to search and when to stop."
+   ],
+   [
+    "Evals",
+    "Measure retrieval recall and answer faithfulness on a fixed question set."
+   ]
+  ],
+  "extra": {
+   "t": "Evals & safety",
+   "look": "RAG fails quietly. They want measurement and guardrails.",
+   "rounds": [
+    [
+     "How do you know retrieval is good?",
+     "Recall@k on a labelled question set",
+     [
+      "Ask the model if it's sure",
+      "Count documents indexed",
+      "Measure latency only"
+     ]
+    ],
+    [
+     "The answer sounds right but isn't in the documents. What do you do?",
+     "Check faithfulness and answer 'not found' when context is missing",
+     [
+      "Trust the model",
+      "Add more documents",
+      "Raise temperature"
+     ]
+    ],
+    [
+     "A user shouldn't see HR documents. How do you enforce it?",
+     "Filter retrieval by the user's permissions",
+     [
+      "Tell the model not to mention them",
+      "Delete HR documents",
+      "Hide the citations"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "support",
+    "name": "Support knowledge base",
+    "blurb": "Answer customers from help articles.",
+    "lens": "Accuracy and handoff.",
+    "dives": [
+     [
+      "What if the answer isn't in the help centre?",
+      "Say so and hand off to a human with the conversation."
+     ]
+    ],
+    "wrap": [
+     "Track deflection rate and wrong-answer reports."
+    ]
+   },
+   {
+    "id": "legal",
+    "name": "Legal / regulated docs",
+    "blurb": "Contracts and policies where mistakes are costly.",
+    "lens": "Citations and audit.",
+    "dives": [
+     [
+      "How do you make answers auditable?",
+      "Quote exact passages with document and page, and log every answer with its sources."
+     ]
+    ],
+    "wrap": [
+     "Human review for high-risk answers."
+    ]
+   }
+  ]
+ },
+ "ai-agent-platform": {
+  "modern": [
+   [
+    "MCP for tools",
+    "Tools are exposed through MCP servers so any agent can use them."
+   ],
+   [
+    "Durable execution",
+    "Long tasks run on durable workflow engines (Temporal style) so they survive crashes."
+   ],
+   [
+    "Sandboxes",
+    "Code and browser actions run in isolated sandboxes."
+   ],
+   [
+    "Tracing and evals",
+    "Every step is traced (OpenTelemetry for LLMs) and task success is evaluated."
+   ]
+  ],
+  "extra": {
+   "t": "Safety & control",
+   "look": "Agents act in the world. They want limits, approvals and recovery.",
+   "rounds": [
+    [
+     "An agent wants to delete a production table. What happens?",
+     "Risky tools need human approval and least-privilege credentials",
+     [
+      "Let it run",
+      "Ask the model if it's sure",
+      "Log it afterwards"
+     ]
+    ],
+    [
+     "A task crashes at step 30 of 50. Now what?",
+     "Resume from the last saved step; tools are idempotent",
+     [
+      "Start over",
+      "Mark it done",
+      "Ask the user to redo it"
+     ]
+    ],
+    [
+     "How do you stop runaway loops?",
+     "Step, token and time budgets with a stop check",
+     [
+      "Trust the model",
+      "Restart the server",
+      "Use a bigger model"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "ops",
+    "name": "DevOps agent",
+    "blurb": "An agent that fixes incidents.",
+    "lens": "Blast radius and approvals.",
+    "dives": [
+     [
+      "What can the agent do without a human?",
+      "Read-only diagnosis freely; any change needs approval or runs in a safe, reversible way."
+     ]
+    ],
+    "wrap": [
+     "Next: runbooks as tools."
+    ]
+   },
+   {
+    "id": "multi",
+    "name": "Multi-agent team",
+    "blurb": "Several specialist agents working together.",
+    "lens": "Coordination and shared state.",
+    "add": {
+     "nodes": [
+      [
+       "sup",
+       "Supervisor Agent",
+       "robotcrown",
+       "agent",
+       "ag"
+      ]
+     ],
+     "edges": [
+      [
+       "sup",
+       "ag",
+       "delegate"
+      ]
+     ]
+    },
+    "blocks": {
+     "sup": "Splits work and merges results from specialist agents."
+    },
+    "dives": [
+     [
+      "When is multi-agent worth it?",
+      "When tasks split cleanly into parallel parts with separate context; otherwise one agent is simpler."
+     ]
+    ],
+    "wrap": [
+     "Watch: cost multiplies with each agent."
+    ]
+   }
+  ]
+ },
+ "coding-agent": {
+  "modern": [
+   [
+    "Agentic search over embeddings",
+    "Coding agents mostly search with grep and file tools rather than vector indexes."
+   ],
+   [
+    "Sub-agents",
+    "Parallel sub-agents explore in their own context windows."
+   ],
+   [
+    "Hooks and permissions",
+    "Policies and hooks gate risky commands."
+   ],
+   [
+    "Background agents",
+    "Agents run in cloud sandboxes and open pull requests on their own."
+   ]
+  ],
+  "extra": {
+   "t": "Verification",
+   "look": "Code that compiles isn't done. They want tests and review in the loop.",
+   "rounds": [
+    [
+     "How does the agent know its change works?",
+     "Run tests and the build before committing",
+     [
+      "Ask the user",
+      "Trust the model",
+      "Commit and see"
+     ]
+    ],
+    [
+     "The change touches 40 files. How do you keep it safe?",
+     "Small commits, review the diff, and a pull request for human review",
+     [
+      "Push to main",
+      "Skip tests",
+      "One giant commit"
+     ]
+    ],
+    [
+     "The repo is huge. How does it find the right code?",
+     "Search with grep and file tools, read only what matters",
+     [
+      "Load every file into context",
+      "Guess file names",
+      "Ask for the whole repo"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "ci",
+    "name": "Fix failing CI",
+    "blurb": "An agent triggered by a red build.",
+    "lens": "Automation and trust.",
+    "dives": [
+     [
+      "Can it push the fix itself?",
+      "Open a pull request with the failing test now passing; a human merges."
+     ]
+    ],
+    "wrap": [
+     "Track how many agent PRs get merged."
+    ]
+   },
+   {
+    "id": "migrate",
+    "name": "Large migration",
+    "blurb": "Upgrade a framework across 2,000 files.",
+    "lens": "Parallel work and consistency.",
+    "dives": [
+     [
+      "How do you split the work?",
+      "A plan per module, parallel sub-agents, shared conventions, and tests per batch."
+     ]
+    ],
+    "wrap": [
+     "Ship in batches behind feature flags."
+    ]
+   }
+  ]
+ },
+ "deep-research-agent": {
+  "modern": [
+   [
+    "Parallel search agents",
+    "A lead agent fans out to parallel searchers with separate contexts."
+   ],
+   [
+    "Citations checked",
+    "A final pass verifies every claim against its source."
+   ],
+   [
+    "Budgets",
+    "Explicit token, step and time budgets per run."
+   ]
+  ],
+  "extra": {
+   "t": "Trust",
+   "look": "Research is only useful if it's true. They push on sources.",
+   "rounds": [
+    [
+     "How do you make sure claims are real?",
+     "Every claim must cite a source, and a checker verifies them",
+     [
+      "Ask the model to be careful",
+      "Use more agents",
+      "Remove sources"
+     ]
+    ],
+    [
+     "Two sources disagree. What does the report do?",
+     "Show both, with which is more reliable and why",
+     [
+      "Pick one silently",
+      "Average them",
+      "Drop the topic"
+     ]
+    ],
+    [
+     "How do you keep cost bounded?",
+     "Budgets on steps, tokens and time per agent",
+     [
+      "Let it run until done",
+      "Use one huge prompt",
+      "Limit to one source"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "market",
+    "name": "Market research",
+    "blurb": "Competitor and market sizing reports.",
+    "lens": "Numbers and freshness.",
+    "dives": [
+     [
+      "How do you handle numbers from different years?",
+      "Normalise to one year, cite each figure with its date, and flag estimates."
+     ]
+    ],
+    "wrap": [
+     "Next: scheduled refresh of reports."
+    ]
+   },
+   {
+    "id": "internal",
+    "name": "Internal knowledge",
+    "blurb": "Research across company docs and tickets.",
+    "lens": "Permissions.",
+    "dives": [
+     [
+      "How do you keep it within what the user can see?",
+      "Every search runs with the user's permissions."
+     ]
+    ],
+    "wrap": [
+     "Audit log of sources used."
+    ]
+   }
+  ]
+ },
+ "customer-support-agent": {
+  "modern": [
+   [
+    "Agent + tools",
+    "Support agents act through tools (refunds, order lookup) with limits, not just answer FAQs."
+   ],
+   [
+    "Voice and chat in one",
+    "The same agent logic serves chat, email and voice."
+   ],
+   [
+    "Continuous evals",
+    "Conversations are scored automatically for resolution and tone."
+   ]
+  ],
+  "extra": {
+   "t": "Handoff",
+   "look": "The best support AI knows when to stop. They test escalation.",
+   "rounds": [
+    [
+     "When should the AI hand off to a human?",
+     "Low confidence, angry customer, or the customer asks",
+     [
+      "Never",
+      "After 20 messages",
+      "Only on weekends"
+     ]
+    ],
+    [
+     "What does the human see on handoff?",
+     "Full conversation, actions taken and a summary",
+     [
+      "Nothing, they start fresh",
+      "Only the last message",
+      "The customer's email"
+     ]
+    ],
+    [
+     "A refund over $500 is requested. What happens?",
+     "Above the tool's cap, it needs human approval",
+     [
+      "Refund automatically",
+      "Refuse always",
+      "Ask the model"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "ecom",
+    "name": "E-commerce",
+    "blurb": "Orders, returns and delivery questions.",
+    "lens": "Actions on orders.",
+    "dives": [
+     [
+      "Most tickets are 'where is my order'. How do you handle them?",
+      "Answer directly from order and tracking tools without a human."
+     ]
+    ],
+    "wrap": [
+     "Next: proactive delay notices."
+    ]
+   },
+   {
+    "id": "bank",
+    "name": "Banking",
+    "blurb": "Regulated, sensitive data.",
+    "lens": "Verification and compliance.",
+    "dives": [
+     [
+      "How do you verify the customer before acting?",
+      "Authenticated session or step-up verification before any account action."
+     ]
+    ],
+    "wrap": [
+     "Log everything for compliance."
+    ]
+   }
+  ]
+ },
+ "realtime-voice-agent": {
+  "modern": [
+   [
+    "Speech-to-speech models",
+    "Realtime models take audio in and out, cutting latency."
+   ],
+   [
+    "WebRTC everywhere",
+    "WebRTC transport with server-side voice activity detection."
+   ],
+   [
+    "Telephony bridges",
+    "SIP trunks connect phone calls to the same agent."
+   ]
+  ],
+  "extra": {
+   "t": "Latency",
+   "look": "Voice feels broken above a second. They want a latency budget.",
+   "rounds": [
+    [
+     "Where does the 800 ms go?",
+     "Split it: speech-to-text, model, text-to-speech, network, each streaming",
+     [
+      "All on the model",
+      "All on the network",
+      "It doesn't matter"
+     ]
+    ],
+    [
+     "A tool call takes 3 s. What does the caller hear?",
+     "A short filler while the tool runs",
+     [
+      "Silence",
+      "Hold music",
+      "The call drops"
+     ]
+    ],
+    [
+     "The caller interrupts. What happens?",
+     "Voice activity detection stops speech and listens",
+     [
+      "Keep talking",
+      "Hang up",
+      "Start over"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "callcentre",
+    "name": "Call centre",
+    "blurb": "Thousands of concurrent phone calls.",
+    "lens": "Concurrency and handoff to people.",
+    "dives": [
+     [
+      "How do you scale to 5,000 concurrent calls?",
+      "Stateless media workers per call, autoscaled, with model capacity reserved for peak."
+     ]
+    ],
+    "wrap": [
+     "Next: warm transfer to human agents."
+    ]
+   },
+   {
+    "id": "companion",
+    "name": "In-app voice assistant",
+    "blurb": "Talk to an app on your phone.",
+    "lens": "Device and network quality.",
+    "dives": [
+     [
+      "The network is poor. What helps?",
+      "Adaptive audio codecs, on-device voice detection and short responses."
+     ]
+    ],
+    "wrap": [
+     "Next: on-device wake word."
+    ]
+   }
+  ]
+ },
+ "enterprise-ai-gateway": {
+  "modern": [
+   [
+    "One gateway for all models",
+    "Teams call one gateway that routes to any provider and self-hosted models."
+   ],
+   [
+    "Policy as code",
+    "Data and usage rules defined as code and enforced at the gateway."
+   ],
+   [
+    "Cost chargeback",
+    "Token usage and cost metered per team in real time."
+   ]
+  ],
+  "extra": {
+   "t": "Governance",
+   "look": "Enterprises buy control. They test policy, audit and cost.",
+   "rounds": [
+    [
+     "A team sends customer data to a model. How is it controlled?",
+     "PII redaction and data policies enforced at the gateway",
+     [
+      "Trust the team",
+      "Ban AI",
+      "Review monthly"
+     ]
+    ],
+    [
+     "Finance asks who spent what. How do you answer?",
+     "Per-team metering of tokens and cost",
+     [
+      "Divide the bill evenly",
+      "Guess",
+      "Ask each team"
+     ]
+    ],
+    [
+     "A provider has an outage. What happens?",
+     "Route to a fallback provider automatically",
+     [
+      "Everything stops",
+      "Wait it out",
+      "Email users"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "bank",
+    "name": "Regulated bank",
+    "blurb": "Strict data residency and audit.",
+    "lens": "Residency and approvals.",
+    "dives": [
+     [
+      "Data must stay in the EU. How?",
+      "Route only to EU-hosted models and self-hosted endpoints; block others by policy."
+     ]
+    ],
+    "wrap": [
+     "Next: model approval workflow."
+    ]
+   },
+   {
+    "id": "startup",
+    "name": "Fast-moving startup",
+    "blurb": "Many experiments, small team.",
+    "lens": "Speed with guardrails.",
+    "dives": [
+     [
+      "How do you let teams try new models fast?",
+      "Self-serve keys with budgets and default safety policies."
+     ]
+    ],
+    "wrap": [
+     "Keep the gateway thin and stateless."
+    ]
+   }
+  ]
+ },
+ "ai-visibility-tracker": {
+  "modern": [
+   [
+    "Agent over the data",
+    "An analytics agent with fixed metric tools and an MCP server lets marketers and their own agents ask 'why did we drop?' instead of reading charts."
+   ],
+   [
+    "First-party grounding data",
+    "Bing Webmaster AI performance topics and AI referral traffic in GA4 add real demand signals next to sampled answers."
+   ],
+   [
+    "Batch APIs for parsing",
+    "Parsing is not latency-critical: provider batch APIs (about half price) plus a small model keep cost per answer low."
+   ],
+   [
+    "Shopping and ads in answers",
+    "AI answers now include product carousels, checkout and ads, so trackers parse products and prices, not just brand mentions."
+   ]
+  ],
+  "extra": {
+   "t": "Measurement first",
+   "look": "A search CTO wants to hear how you know the numbers are right before you scale them.",
+   "rounds": [
+    [
+     "The same prompt gives a different answer 30 seconds later. What do you report?",
+     "A rate over N runs with a confidence interval",
+     [
+      "The latest answer",
+      "The best answer of the day",
+      "The first answer of the day"
+     ]
+    ],
+    [
+     "You improve the parser. What lets you fix last month's numbers?",
+     "Raw answers kept in object storage, then re-parse",
+     [
+      "Ask the engines again for last month",
+      "Adjust the old numbers by a fixed factor",
+      "Nothing - history is frozen"
+     ]
+    ],
+    [
+     "Two tenants track the exact same prompt, engine and region today. What do you do?",
+     "Run it once and share the raw answer",
+     [
+      "Run it twice for fairness",
+      "Pick one tenant at random",
+      "Charge both twice"
+     ]
+    ]
+   ]
+  }
+ },
+ "noise-aware-visibility-score": {
+  "modern": [
+   [
+    "Wilson or Bayesian intervals",
+    "Small samples near 0% or 100% need intervals that stay inside 0-100% - Wilson or a Beta posterior."
+   ],
+   [
+    "Sequential testing",
+    "Stop sampling early when the answer is already clear, keep sampling when the interval straddles the alert threshold."
+   ],
+   [
+    "Control prompts",
+    "A fixed set of brand-neutral prompts detects engine-wide shifts so they are not blamed on a brand."
+   ]
+  ],
+  "extra": {
+   "t": "Statistics without fear",
+   "look": "They want honest numbers explained in one plain sentence.",
+   "rounds": [
+    [
+     "7 mentions in 10 runs. Best way to say it?",
+     "About 70%, likely between 40% and 89%",
+     [
+      "Exactly 70%",
+      "70% plus or minus 7%",
+      "Visible"
+     ]
+    ],
+    [
+     "Visibility drops from 60% to 50% with 10 runs each. Alert?",
+     "No - the intervals overlap heavily, collect more runs",
+     [
+      "Yes, a 10 point drop is big",
+      "Yes, always alert on any drop",
+      "Delete the prompt"
+     ]
+    ],
+    [
+     "How do you halve the width of an interval?",
+     "About 4x the runs",
+     [
+      "2x the runs",
+      "Ask a bigger model",
+      "Round the numbers"
+     ]
+    ]
+   ]
+  }
+ },
+ "ai-answer-engine": {
+  "modern": [
+   [
+    "Agentic search",
+    "Engines plan several searches, judge if they have enough, and search again - fan-out within one answer."
+   ],
+   [
+    "Learned sparse + dense",
+    "Learned sparse models (SPLADE, ELSER) sit next to BM25 and vectors in hybrid retrieval."
+   ],
+   [
+    "Late interaction",
+    "ColBERT-style token-level matching catches compound queries that one vector per page averages away."
+   ],
+   [
+    "Cheap vector storage",
+    "Object-storage-backed vector indexes make the database a commodity; retrieval quality is the product."
+   ]
+  ],
+  "extra": {
+   "t": "Retrieval depth",
+   "look": "Expect follow-ups on BM25, hybrid fusion and rerankers from a long-time Elasticsearch engineer.",
+   "rounds": [
+    [
+     "A user asks for a CRM that integrates with Bitbucket AND Slack. Which retriever most often misses it?",
+     "A single dense vector per page",
+     [
+      "BM25",
+      "Late interaction",
+      "Hybrid BM25 + vectors"
+     ]
+    ],
+    [
+     "Why fuse with RRF instead of adding scores?",
+     "BM25 and cosine scores live on different scales; ranks don't",
+     [
+      "RRF is more accurate always",
+      "It removes the need for a reranker",
+      "Scores are secret"
+     ]
+    ],
+    [
+     "Where do you spend the expensive cross-encoder?",
+     "Only on the top ~100 candidates",
+     [
+      "On every document in the index",
+      "Before retrieval",
+      "Only on the final answer"
+     ]
+    ]
+   ]
+  }
+ },
+ "analytics-agent-mcp": {
+  "modern": [
+   [
+    "Code mode",
+    "Let the agent write a small script that calls many tools at once - fewer turns, fewer tokens."
+   ],
+   [
+    "Skills",
+    "Package playbooks as skills loaded on demand, so the context holds only what this task needs."
+   ],
+   [
+    "MCP for customers",
+    "The same typed tools exposed over MCP with OAuth scopes turn the product into a platform."
+   ]
+  ],
+  "extra": {
+   "t": "Safe agents",
+   "look": "They care about tenant isolation, evidence and evals for every agent answer.",
+   "rounds": [
+    [
+     "Who chooses the tenant id in a tool call?",
+     "The server, from the authenticated session",
+     [
+      "The model",
+      "The user types it",
+      "A guardrail prompt"
+     ]
+    ],
+    [
+     "A cited web page says 'ignore previous instructions'. What happens?",
+     "Nothing - retrieved text is data, never instructions",
+     [
+      "The agent follows it",
+      "The agent asks the user",
+      "The page is cited twice"
+     ]
+    ],
+    [
+     "How do you know a new model made the agent better?",
+     "Re-run the eval set of real questions and compare",
+     [
+      "Ask the model",
+      "Count tokens",
+      "Check latency only"
+     ]
+    ]
+   ]
+  }
+ }
 }
