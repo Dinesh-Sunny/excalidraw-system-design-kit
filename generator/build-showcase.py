@@ -10,7 +10,7 @@ for it,r in zip(lib,rep):
     items_pages.append({'id':it['id'],'name':it['name'],'section':r['section'],'img':f"t/{it['id']}.webp",'full':f"f/{it['id']}.webp"})
     items_art.append({'id':it['id'],'name':it['name'],'section':r['section'],'img':thumbs[it['name']]})
 N=len(items_pages)
-tpl=open('showcase2.tpl.html').read()
+tpl=open('showcase2.tpl.html').read().replace('/*__LEARN_TOOLS__*/',open('learn-tools.js').read())
 VERSION='1.5.0'
 REPO='https://github.com/Dinesh-Sunny/excalidraw-system-design-kit'
 THEMEBTN='<button class="ibtn" id="theme" type="button" aria-label="Switch theme"><svg class="i-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 12.5A6.5 6.5 0 0 1 7.5 4a6.5 6.5 0 1 0 8.5 8.5z"/></svg><svg class="i-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.6M10 15.9v1.6M2.5 10h1.6M15.9 10h1.6M4.7 4.7l1.1 1.1M14.2 14.2l1.1 1.1M4.7 15.3l1.1-1.1M14.2 5.8l1.1-1.1"/></svg></button>'

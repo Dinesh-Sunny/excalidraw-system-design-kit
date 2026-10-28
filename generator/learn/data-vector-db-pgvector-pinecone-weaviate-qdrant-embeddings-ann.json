@@ -1,0 +1,327 @@
+{
+ "family": "data",
+ "reviewed": "Oct 2026",
+ "what": "A vector database stores embeddings - lists of numbers that capture meaning - and finds the stored items closest in meaning to a query, not just exact word matches.",
+ "like": "Like a librarian who knows which books feel alike, so asking for 'sad space movies' still finds 'lonely astronaut stories'.",
+ "why": [
+  "Powers semantic search, RAG for chatbots and recommendations",
+  "Finds similar items in milliseconds even across millions of vectors",
+  "Combines with metadata filters and keyword search for precise results"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "doc",
+    "t": "Your content|docs · products · images",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "rag",
+    "i": "doc"
+   },
+   {
+    "id": "emb",
+    "t": "Embedding model|text → numbers",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "store",
+    "t": "Vectors + metadata|one row per chunk",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "vector"
+   },
+   {
+    "id": "idx",
+    "t": "ANN index|HNSW graph · IVF",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "partition"
+   },
+   {
+    "id": "filter",
+    "t": "Filters|tenant · date · type",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "eye"
+   },
+   {
+    "id": "query",
+    "t": "Query|embedded the same way",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "topk",
+    "t": "Top k matches|closest by distance",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "rag",
+    "i": "chart"
+   },
+   {
+    "id": "rerank",
+    "t": "Rerank|optional, more precise",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   }
+  ],
+  "edges": [
+   [
+    "doc",
+    "emb",
+    "chunk"
+   ],
+   [
+    "emb",
+    "store",
+    "vectors"
+   ],
+   [
+    "store",
+    "idx",
+    "build"
+   ],
+   [
+    "query",
+    "idx",
+    "search"
+   ],
+   [
+    "idx",
+    "filter",
+    ""
+   ],
+   [
+    "idx",
+    "topk",
+    "nearest"
+   ],
+   [
+    "topk",
+    "rerank",
+    ""
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Turn content into vectors",
+    "d": "Split content into chunks and run each through an embedding model. Similar meanings end up as nearby points.",
+    "hl": [
+     "doc",
+     "emb",
+     "store"
+    ]
+   },
+   {
+    "t": "Build an index",
+    "d": "Comparing a query with every vector is slow at scale, so the database builds an approximate nearest neighbour (ANN) index such as an HNSW graph.",
+    "hl": [
+     "store",
+     "idx"
+    ]
+   },
+   {
+    "t": "Embed the query",
+    "d": "The question goes through the same embedding model, so it lands in the same space as the content.",
+    "hl": [
+     "query",
+     "idx"
+    ]
+   },
+   {
+    "t": "Walk to the neighbours",
+    "d": "The search hops through the graph towards closer and closer points, checking only a small part of the data.",
+    "hl": [
+     "idx",
+     "topk"
+    ]
+   },
+   {
+    "t": "Filter, then rerank",
+    "d": "Metadata filters keep results inside the right tenant or date, and an optional reranker orders the final few by relevance.",
+    "hl": [
+     "filter",
+     "topk",
+     "rerank"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "16 · 64 · 40",
+   "l": "pgvector HNSW defaults: m, ef_construction, ef_search",
+   "s": "https://github.com/pgvector/pgvector"
+  },
+  {
+   "v": "2,000",
+   "l": "dimensions pgvector can index for the vector type",
+   "s": "https://github.com/pgvector/pgvector"
+  },
+  {
+   "v": "16,000",
+   "l": "dimensions the pgvector vector type can store",
+   "s": "https://github.com/pgvector/pgvector"
+  },
+  {
+   "v": "1",
+   "l": "default ivfflat.probes - raise it for better recall",
+   "s": "https://github.com/pgvector/pgvector"
+  }
+ ],
+ "tool": "vector",
+ "choices": [
+  {
+   "t": "HNSW or IVF",
+   "d": "HNSW gives better speed for the same recall but builds slower and uses more memory; IVF builds fast with less memory but searches less efficiently."
+  },
+  {
+   "t": "Search breadth (ef_search, probes)",
+   "d": "Looking at more candidates raises recall (finding the true nearest) and costs time. Tune it on real queries."
+  },
+  {
+   "t": "Distance measure",
+   "d": "Use what your embedding model was trained for - usually cosine; also L2 or inner product. pgvector writes them as <=>, <-> and <#>."
+  },
+  {
+   "t": "Hybrid with keywords",
+   "d": "Mix vector results with keyword (BM25) results so exact names, codes and rare words are found too."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "data-search-index-elasticsearch-elasticsearch-opensearch-inverted-index-full-text",
+   "why": "Exact keyword and full-text search, filters and facets"
+  },
+  {
+   "slug": "data-postgresql-postgres-sql-relational",
+   "why": "pgvector keeps vectors next to your rows in one database"
+  },
+  {
+   "slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation",
+   "why": "Blends vector and keyword search into one ranked list"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Results changed after adding an index",
+   "d": "Approximate indexes trade a little recall for speed, so some true neighbours can be missed.",
+   "see": "Fewer or different matches than an exact search on the same query",
+   "fix": "Raise ef_search or probes; measure recall against exact search on a sample"
+  },
+  {
+   "t": "Filters return too few results",
+   "d": "Filtering after the approximate search can drop most candidates.",
+   "see": "Asking for 10 results and getting 2",
+   "fix": "Search more candidates, use iterative or filtered index scans, or partition by tenant"
+  },
+  {
+   "t": "New embedding model, old vectors",
+   "d": "Vectors from different models live in different spaces and cannot be compared.",
+   "see": "Relevance suddenly drops after a model upgrade",
+   "fix": "Re-embed everything into a new index, then switch over in one step"
+  },
+  {
+   "t": "Exact names are missed",
+   "d": "Embeddings capture meaning, so rare codes and product names can rank low.",
+   "see": "Searching an order number or SKU finds nothing useful",
+   "fix": "Add keyword search and merge both result lists (hybrid search)"
+  }
+ ],
+ "say": [
+  "Documents are chunked and embedded once; queries use the same model so both live in one vector space.",
+  "I use an HNSW index for fast approximate search, and tune ef_search until recall on a test set is good enough.",
+  "Every vector carries tenant and date metadata, and I filter on it so one customer never sees another's data.",
+  "For names and codes I add keyword search and merge the two lists, then rerank the top results."
+ ],
+ "followups": [
+  {
+   "q": "How do you know the search is good enough?",
+   "a": "Build a small set of real queries with known good answers, then measure recall@k against an exact search and track it as you tune ef_search or change models."
+  },
+  {
+   "q": "How do you upgrade the embedding model?",
+   "a": "Embed all content with the new model into a fresh index alongside the old one, test it, then switch traffic over at once - mixed vectors are not comparable."
+  },
+  {
+   "q": "Why not just compare against every vector?",
+   "a": "Exact search reads everything, which is fine for small sets but too slow at millions of vectors. ANN indexes check a small part of the data and still find almost all true neighbours."
+  }
+ ],
+ "check": [
+  {
+   "q": "Which index gives better search speed for the same recall in pgvector?",
+   "a": "HNSW",
+   "d": [
+    "IVFFlat",
+    "B-tree",
+    "Hash index"
+   ],
+   "why": "HNSW wins on speed versus recall, at the cost of slower builds and more memory."
+  },
+  {
+   "q": "After adding an approximate index, results differ slightly. Why?",
+   "a": "It trades a little recall for speed",
+   "d": [
+    "The data got corrupted",
+    "The embedding model changed",
+    "Cosine distance stopped working"
+   ],
+   "why": "Approximate indexes skip most of the data, so they can occasionally miss a true neighbour."
+  },
+  {
+   "q": "You switched to a new embedding model. What must you do?",
+   "a": "Re-embed all content with the new model",
+   "d": [
+    "Nothing, vectors are universal",
+    "Only re-embed new documents",
+    "Lower ef_search"
+   ],
+   "why": "Different models produce different spaces, so old and new vectors cannot be compared."
+  },
+  {
+   "q": "Searches for exact product codes find nothing. Best fix?",
+   "a": "Add keyword search alongside vectors",
+   "d": [
+    "Use a bigger index",
+    "Use L2 instead of cosine",
+    "Remove all metadata"
+   ],
+   "why": "Hybrid search catches exact terms that meaning-based vectors may rank low."
+  }
+ ],
+ "sources": [
+  {
+   "t": "pgvector README",
+   "u": "https://github.com/pgvector/pgvector"
+  }
+ ]
+}

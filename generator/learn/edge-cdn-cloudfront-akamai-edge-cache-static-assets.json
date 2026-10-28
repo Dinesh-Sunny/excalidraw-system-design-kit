@@ -1,0 +1,334 @@
+{
+ "family": "edge",
+ "reviewed": "Oct 2026",
+ "what": "A CDN keeps copies of your files on servers spread around the world, so people download them from somewhere close instead of from your own server every time.",
+ "like": "Like a chain of corner shops stocking the same bread, so nobody has to drive to the bakery across town.",
+ "why": [
+  "Pages and media load faster because the copy is near the user",
+  "Most requests never reach your origin, so it carries far less load and bandwidth",
+  "Absorbs traffic spikes and keeps serving while the origin is busy"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "user",
+    "t": "Browser|asks for app.js",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "dns",
+    "t": "Routing|nearest edge",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "globe"
+   },
+   {
+    "id": "edge",
+    "t": "Edge server|cache near the user",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "cache"
+   },
+   {
+    "id": "key",
+    "t": "Cache key|URL + chosen headers",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "hash"
+   },
+   {
+    "id": "ttl",
+    "t": "Freshness|max-age · s-maxage",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "clock"
+   },
+   {
+    "id": "shield",
+    "t": "Regional cache|shields the origin",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "replica"
+   },
+   {
+    "id": "origin",
+    "t": "Origin|your server or bucket",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "purge",
+    "t": "Purge|invalidate on deploy",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "evict"
+   }
+  ],
+  "edges": [
+   [
+    "user",
+    "dns",
+    "which edge?"
+   ],
+   [
+    "user",
+    "edge",
+    "GET"
+   ],
+   [
+    "edge",
+    "key",
+    ""
+   ],
+   [
+    "key",
+    "ttl",
+    "fresh?"
+   ],
+   [
+    "edge",
+    "shield",
+    "miss"
+   ],
+   [
+    "shield",
+    "origin",
+    "miss"
+   ],
+   [
+    "purge",
+    "ttl",
+    "drop copy"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Routed to a close edge",
+    "d": "The request goes to a nearby edge server instead of your origin, so the round trip is short.",
+    "hl": [
+     "user",
+     "dns",
+     "edge"
+    ]
+   },
+   {
+    "t": "Look up the cache key",
+    "d": "The edge builds a key from the URL (and any headers you choose) and checks whether it already holds that file.",
+    "hl": [
+     "edge",
+     "key"
+    ]
+   },
+   {
+    "t": "Still fresh? Serve it",
+    "d": "If the copy is younger than its time to live (TTL), the edge answers straight away. That is a cache hit.",
+    "hl": [
+     "key",
+     "ttl"
+    ]
+   },
+   {
+    "t": "Miss: fetch once",
+    "d": "On a miss the edge asks a regional cache or your origin, stores the answer, then serves everyone nearby from that copy.",
+    "hl": [
+     "edge",
+     "shield",
+     "origin"
+    ]
+   },
+   {
+    "t": "Change the file",
+    "d": "When you deploy, purge the old copy or use a new file name (app.v2.js), so users get the new version right away.",
+    "hl": [
+     "purge",
+     "ttl"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "24 h",
+   "l": "CloudFront's default TTL when you opt out of a cache policy",
+   "s": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html"
+  },
+  {
+   "v": "1,000",
+   "l": "free invalidation paths per month on CloudFront",
+   "s": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PayingForInvalidation.html"
+  },
+  {
+   "v": "s-maxage",
+   "l": "wins over max-age for shared caches like a CDN",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control"
+  }
+ ],
+ "tool": "cdn",
+ "choices": [
+  {
+   "t": "How long to cache (TTL)",
+   "d": "Long TTLs for files that never change (with a version in the name), short TTLs for pages that update. Use s-maxage to give the CDN a different time from browsers."
+  },
+  {
+   "t": "What goes in the cache key",
+   "d": "Only what really changes the answer. Adding cookies or every header splits the cache into tiny pieces and the hit ratio drops."
+  },
+  {
+   "t": "Purge or version",
+   "d": "Purging works for urgent fixes; versioned file names (app.3f2a.js) make deploys instant and need no purge at all."
+  },
+  {
+   "t": "Serve stale while refreshing",
+   "d": "stale-while-revalidate lets the edge answer with the old copy while it fetches the new one in the background, so nobody waits."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "cache-redis-cache-in-memory-kv-sorted-set-pubsub",
+   "why": "Cache data your app computes, not whole files near users"
+  },
+  {
+   "slug": "data-object-storage-s3-s3-blob-gcs-files-images-video",
+   "why": "The origin that stores the files the CDN serves"
+  },
+  {
+   "slug": "edge-load-balancer-lb-elb-alb-nlb-l4-l7-round-robin",
+   "why": "Spreads dynamic traffic across servers in one region"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Users see an old file",
+   "d": "A long TTL keeps serving the previous version after a deploy.",
+   "see": "Bug reports for something already fixed; old version in the response headers",
+   "fix": "Versioned file names for assets, purge for pages, shorter TTL for HTML"
+  },
+  {
+   "t": "Low hit ratio",
+   "d": "The cache key includes things that vary per user, so almost every request is unique.",
+   "see": "Hit ratio far below what you expect and origin traffic barely drops",
+   "fix": "Strip cookies and unused query strings from the key; cache per user only when needed"
+  },
+  {
+   "t": "Private data cached",
+   "d": "A personalised page is stored in the shared cache and shown to someone else.",
+   "see": "Users reporting someone else's name or cart",
+   "fix": "Send Cache-Control: private or no-store on personal responses"
+  },
+  {
+   "t": "Origin swamped after a purge",
+   "d": "Purging everything at once sends all requests to the origin together.",
+   "see": "Origin CPU and errors spike right after a purge",
+   "fix": "Purge only changed paths, use a regional shield, serve stale while refreshing"
+  }
+ ],
+ "say": [
+  "Static assets go behind a CDN with long TTLs and versioned file names, so deploys never wait for caches to expire.",
+  "I set s-maxage for the CDN and a shorter max-age for browsers, so I can purge the edge and still control freshness.",
+  "Personal responses are marked private, so the shared cache never stores them.",
+  "A regional shield in front of the origin means a cache miss in fifty cities becomes one request to us."
+ ],
+ "followups": [
+  {
+   "q": "How do you make sure users get a new version right after a deploy?",
+   "a": "Put a content hash in asset file names so every deploy creates new URLs, cache them for a long time, and keep the HTML on a short TTL or purge it on deploy."
+  },
+  {
+   "q": "Can a CDN help dynamic, per-user pages?",
+   "a": "Yes, partly: it still terminates connections close to the user and keeps warm connections to the origin, and you can cache the shared parts while marking personal parts private."
+  },
+  {
+   "q": "What is a good cache key?",
+   "a": "The URL plus only the headers or query parameters that change the response. Everything else should be stripped so similar requests share one cached copy."
+  }
+ ],
+ "check": [
+  {
+   "q": "Which header gives a CDN its own cache time, separate from browsers?",
+   "a": "s-maxage",
+   "d": [
+    "no-store",
+    "private",
+    "immutable"
+   ],
+   "why": "s-maxage applies to shared caches like a CDN and overrides max-age there."
+  },
+  {
+   "q": "You changed app.js but users still get the old one. The cleanest long-term fix?",
+   "a": "Put a version or hash in the file name",
+   "d": [
+    "Set the TTL to zero for everything",
+    "Restart the origin server",
+    "Turn the CDN off during deploys"
+   ],
+   "why": "A new name is a new URL, so caches fetch it fresh while old files stay cached safely."
+  },
+  {
+   "q": "A logged-in dashboard should never sit in the shared cache. What do you send?",
+   "a": "Cache-Control: private",
+   "d": [
+    "Cache-Control: public",
+    "Cache-Control: s-maxage=600",
+    "Cache-Control: immutable"
+   ],
+   "why": "private means only the user's own browser may store it."
+  },
+  {
+   "q": "Your hit ratio is very low. A likely cause?",
+   "a": "Cookies or extra headers are part of the cache key",
+   "d": [
+    "The TTL is too long",
+    "There are too many edge locations",
+    "The files are too small"
+   ],
+   "why": "Every distinct key is a separate cached copy, so per-user values make most requests unique."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: Cache-Control",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control"
+  },
+  {
+   "t": "AWS CloudFront: how long content stays in the cache",
+   "u": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html"
+  },
+  {
+   "t": "AWS CloudFront: paying for invalidation",
+   "u": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PayingForInvalidation.html"
+  },
+  {
+   "t": "Cloudflare: what is a CDN?",
+   "u": "https://www.cloudflare.com/learning/cdn/what-is-a-cdn/"
+  }
+ ]
+}
