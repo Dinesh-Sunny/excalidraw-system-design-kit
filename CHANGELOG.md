@@ -3,6 +3,8 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Learn inside the block preview (pilot: Redis). Open Redis and read from simple to deep: what it is with a friendly sticky-note analogy, how it works inside (6 steps you can tap or play, lit up on a diagram), numbers worth knowing (with sources), a hands-on cache playground (request keys, watch hits, misses and LRU or LFU evictions, play a busy minute), choices you'll make, what to use instead, when it breaks and how you'd notice, its job in real interview designs, lines to say in the interview with the follow-ups they ask next, and a gentle check-yourself. The picture on the left follows what you read; a section bar keeps your place.
+- In real systems, for every block: what it usually comes after and talks to (a small map you can tap), and its job in each interview design that uses it, with a link to practise that design.
 - Practice start card: the setup screen is now one card with a sentence - "Practise the Classic version with any interviewer, at my pace" - where each highlighted word is a choice. Defaults are ready, so it is one tap to start. No more lists of labels, counts and step chips.
 - Practice step bar: when the steps don't fit, they fold into the current step name plus a row of step dots (tap any dot to jump), so the canvas never gets pushed off screen at laptop widths.
 - Layout check across every page at 320 to 1440 px, light and dark: header fits at 768 px, the board bar fits small phones, menus open as a bottom sheet on phones, the scorecard reads well before you answer anything, and the design camera no longer shows half of the title while you build.

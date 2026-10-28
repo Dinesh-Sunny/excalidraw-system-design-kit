@@ -51,8 +51,28 @@ if os.path.exists('out/practice.json'):
             if b: USES.setdefault(b.replace('sdk-',''),[])
             if b and m['slug'] not in USES[b.replace('sdk-','')]: USES[b.replace('sdk-','')].append(m['slug'])
 PRACTICE=json.dumps({'q':PQ,'u':USES},separators=(',',':'),ensure_ascii=False)
+# learning layer: hand-written deep dives (learn/<slug>.json) + "In real systems" for every block, built from the practice designs
+import glob as _g
+LEARN={'L':{},'R':{}}
+for f in sorted(_g.glob('learn/*.json')): LEARN['L'][os.path.basename(f)[:-5]]=json.load(open(f))
+if os.path.exists('out/practice.json'):
+    _pc=json.load(open('practice.data.json')); _R={}
+    for m in json.load(open('out/practice.json')):
+        kk={n['id']:(kitfind(n['title']) or '').replace('sdk-','') for n in m['nodes']}
+        for n in m['nodes']:
+            k=kk[n['id']]
+            if not k: continue
+            r=_R.setdefault(k,{'roles':[],'up':{},'down':{}})
+            if not any(x[0]==m['slug'] for x in r['roles']): r['roles'].append([m['slug'],n['title'],_pc[m['slug']]['blocks'].get(n['id'],'')])
+        for e in m.get('edges',[]):
+            a,b=kk.get(e[0]),kk.get(e[1])
+            if a and b and a!=b:
+                _R[a]['down'][b]=_R[a]['down'].get(b,0)+1; _R[b]['up'][a]=_R[b]['up'].get(a,0)+1
+    for k,r in _R.items():
+        LEARN['R'][k]={'roles':r['roles'],'up':sorted(r['up'],key=lambda x:-r['up'][x])[:4],'down':sorted(r['down'],key=lambda x:-r['down'][x])[:4]}
+LEARNJ=json.dumps(LEARN,separators=(',',':'),ensure_ascii=False)
 NEWS='Copy any block into Excalidraw, Figma or Docs, plus 12 starter packs'
-def fill(items): return tpl.replace('__NAV__',NAV('','blocks','__SPURL__',True)).replace('__FOOT__',FOOT('','__SPURL__')).replace('__PRACTICE__',PRACTICE).replace('__NEWS__',NEWS).replace('__ITEMS__',json.dumps(items,separators=(',',':'))).replace('__SECTIONS__',json.dumps(secs)).replace('__VERSION__',VERSION).replace('__SIZE__',f"{os.path.getsize('out/System Design Kit.excalidrawlib')/1e6:.1f} MB").replace('__N__',str(len(items)))
+def fill(items): return tpl.replace('__NAV__',NAV('','blocks','__SPURL__',True)).replace('__FOOT__',FOOT('','__SPURL__')).replace('__PRACTICE__',PRACTICE).replace('__LEARN__',LEARNJ).replace('__NEWS__',NEWS).replace('__ITEMS__',json.dumps(items,separators=(',',':'))).replace('__SECTIONS__',json.dumps(secs)).replace('__VERSION__',VERSION).replace('__SIZE__',f"{os.path.getsize('out/System Design Kit.excalidrawlib')/1e6:.1f} MB").replace('__N__',str(len(items)))
 art=fill(items_art).replace('__DATA__','https://dinesh-sunny.github.io/excalidraw-system-design-kit/'); open(f'{SP}/sd-kit-showcase.html','w').write(art)
 pg=fill(items_pages).replace('__DATA__','')
 pg=pg.replace('<title>System Design Kit</title>',f'<title>System Design Kit for Excalidraw</title>\n<meta name="description" content="{N} searchable Excalidraw blocks for system design interviews and agentic AI: building blocks, agents, RAG, UI screens and 21 full designs. Free, MIT.">\n<meta property="og:title" content="System Design Kit for Excalidraw">\n<meta property="og:description" content="Draw systems by typing. {N} Excalidraw blocks for system design and AI agents.">\n<meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="theme-color" content="#3f6c9f">\n<script type="application/ld+json">'+json.dumps({"@context":"https://schema.org","@type":"SoftwareApplication","name":"System Design Kit for Excalidraw","applicationCategory":"DesignApplication","operatingSystem":"Web","url":"https://dinesh-sunny.github.io/excalidraw-system-design-kit/","description":f"{N} Excalidraw blocks for system design interviews and agentic AI architecture.","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":True,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dinesh Sunny","url":"https://github.com/Dinesh-Sunny"},"softwareVersion":VERSION,"codeRepository":"https://github.com/Dinesh-Sunny/excalidraw-system-design-kit"})+'</script>',1)

@@ -1,0 +1,94 @@
+{
+ "family": "cache",
+ "reviewed": "Oct 2026",
+ "what": "Redis keeps data in memory, so reads and writes come back in well under a millisecond. Apps use it as a cache, a counter, a lock, a queue or a leaderboard.",
+ "like": "Like a sticky note on your monitor: far quicker than opening the filing cabinet (your database), but small - so you choose what goes on it.",
+ "why": [
+  "Takes read load off the database and cuts response time",
+  "Ready-made data types: strings, hashes, lists, sets, sorted sets, streams and geo",
+  "Atomic counters and keys that expire on their own (TTL) - great for rate limits, sessions and locks"
+ ],
+ "inside": {
+  "w": 640, "h": 430,
+  "nodes": [
+   {"id": "app", "t": "Your service", "x": 20, "y": 30, "w": 150, "h": 64, "c": "svc"},
+   {"id": "slots", "t": "Cluster router|16,384 hash slots", "x": 20, "y": 190, "w": 150, "h": 74, "c": "edge"},
+   {"id": "loop", "t": "Event loop|one command at a time", "x": 245, "y": 30, "w": 170, "h": 74, "c": "redis"},
+   {"id": "mem", "t": "Data in RAM|strings · hashes · sorted sets", "x": 245, "y": 175, "w": 170, "h": 86, "c": "redis"},
+   {"id": "evict", "t": "Eviction|when memory is full", "x": 245, "y": 335, "w": 170, "h": 70, "c": "warn"},
+   {"id": "rep", "t": "Replica|async copy", "x": 470, "y": 30, "w": 150, "h": 74, "c": "redis2"},
+   {"id": "aof", "t": "AOF log|every write", "x": 470, "y": 180, "w": 150, "h": 70, "c": "disk"},
+   {"id": "rdb", "t": "RDB snapshot|point in time", "x": 470, "y": 335, "w": 150, "h": 70, "c": "disk"}
+  ],
+  "edges": [
+   ["app", "loop", "GET user:42"],
+   ["app", "slots", "which node?"],
+   ["loop", "mem", ""],
+   ["mem", "evict", "full?"],
+   ["loop", "rep", "async"],
+   ["loop", "aof", "append"],
+   ["mem", "rdb", "snapshot"]
+  ],
+  "steps": [
+   {"t": "A command arrives", "d": "Your service sends a short command like GET user:42 over a TCP connection. Many services share one Redis.", "hl": ["app", "loop"]},
+   {"t": "One command at a time", "d": "Commands run one after another on a single main thread, so each one is atomic - no locks needed. Extra threads can handle network I/O.", "hl": ["loop"]},
+   {"t": "Answered from memory", "d": "The value comes straight from RAM in about 0.1-0.2 ms. A key can carry a TTL and disappear on its own.", "hl": ["mem"]},
+   {"t": "Full? Make room", "d": "With maxmemory set, Redis evicts keys by your policy - for example allkeys-lru (least recently used) or allkeys-lfu (least frequently used).", "hl": ["mem", "evict"]},
+   {"t": "Saved to disk", "d": "AOF appends every write and syncs once a second by default, so a crash loses about a second. RDB snapshots make backups and restarts quick.", "hl": ["aof", "rdb"]},
+   {"t": "Copied and spread out", "d": "Replicas copy writes in the background and take over if the primary fails. Cluster splits keys over 16,384 hash slots: CRC16(key) mod 16384 picks the node.", "hl": ["rep", "slots"]}
+  ]
+ },
+ "numbers": [
+  {"v": "~0.15 ms", "l": "typical GET or SET (p50) in redis-benchmark", "s": "https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/"},
+  {"v": "100k+ /s", "l": "ops per instance without pipelining; millions with it", "s": "https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/"},
+  {"v": "~1 s", "l": "of writes a crash can lose with AOF everysec, the default", "s": "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/"},
+  {"v": "16,384", "l": "hash slots shared out across a Redis Cluster", "s": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/"},
+  {"v": "512 MB", "l": "largest single string value", "s": "https://redis.io/docs/latest/develop/data-types/strings/"}
+ ],
+ "tool": "cache",
+ "choices": [
+  {"t": "Memory cap and eviction", "d": "Set maxmemory. For a pure cache pick allkeys-lru or allkeys-lfu; noeviction turns writes into errors once full."},
+  {"t": "TTL on keys", "d": "Expire anything you can rebuild. Add a little random jitter so lots of keys don't expire in the same second."},
+  {"t": "Persistence", "d": "Cache only: switch it off. Data you want back after a restart: AOF every second plus RDB snapshots."},
+  {"t": "One node or a cluster", "d": "A primary plus a replica is simplest. Move to Cluster when data or traffic outgrows one machine; multi-key commands then need keys in one slot, using {hash tags}."}
+ ],
+ "instead": [
+  {"slug": "cache-memcached-cache-in-memory-kv", "why": "Plain key-value cache, multithreaded, no data types or persistence"},
+  {"slug": "cache-local-cache-in-process-lru-app-cache", "why": "Inside your app process: fastest, but every server keeps its own copy"},
+  {"slug": "data-key-value-dynamodb-dynamodb-kv-nosql", "why": "A durable key-value database for data that must never be lost"},
+  {"slug": "msg-kafka-event-log-stream-topic-partitions", "why": "A durable, replayable event log when Redis Streams are not enough"}
+ ],
+ "breaks": [
+  {"t": "Cache stampede", "d": "A hot key expires and thousands of requests rebuild it at once.", "see": "Database CPU and p99 latency jump right after an expiry", "fix": "Let one request rebuild while others wait, refresh early, add TTL jitter"},
+  {"t": "Hot key", "d": "One key gets most of the traffic, so one node maxes out.", "see": "One shard at 100% CPU while the others are calm", "fix": "A small local cache in front, or copies of the key (key:1 ... key:N)"},
+  {"t": "Memory full", "d": "More data than maxmemory allows.", "see": "evicted_keys climbing, or out-of-memory errors with noeviction", "fix": "The right policy, TTLs, smaller values, more memory or more shards"},
+  {"t": "Failover drops recent writes", "d": "Replication is async, so a new primary can miss the last writes.", "see": "A replica promoted and the newest keys missing", "fix": "Keep the database as the source of truth; use WAIT for writes that matter"},
+  {"t": "One slow command blocks everyone", "d": "A big command holds the single thread.", "see": "Latency spikes for every client; SLOWLOG shows KEYS * or a huge range", "fix": "SCAN instead of KEYS, smaller ranges, heavy work kept off Redis"}
+ ],
+ "say": [
+  "I'll put Redis in front of the database with cache-aside: read Redis first, and on a miss read the database and set the key with a TTL.",
+  "On writes I update the database first, then delete the cache key, so the next read loads fresh data.",
+  "Redis runs one command at a time, so INCR plus EXPIRE gives me an atomic counter per user for rate limiting.",
+  "If Redis is unavailable we fall back to the database behind a circuit breaker - slower for a moment, still working."
+ ],
+ "followups": [
+  {"q": "How do you keep the cache and the database in sync?", "a": "Write to the database, then delete the key rather than updating it. Short TTLs act as a safety net. For stricter needs, invalidate from the database change stream (CDC)."},
+  {"q": "What happens when a Redis node dies?", "a": "A replica is promoted by Sentinel or Cluster. Replication is async, so the last moment of writes can be lost - fine for a cache, and the reason the database stays the source of truth."},
+  {"q": "How would you hold 1 TB in cache?", "a": "Redis Cluster: keys spread over 16,384 hash slots across many primaries, each with a replica. Clients route with CRC16(key) mod 16384, and {hash tags} keep related keys together."},
+  {"q": "Why is Redis so fast on one thread?", "a": "Data lives in memory, commands are tiny and one thread avoids lock overhead. The network is usually the limit, so pipelining helps more than extra CPU."}
+ ],
+ "today": "Redis 8 (May 2025) is open source again, with AGPLv3 as one of its licences. Valkey, the Linux Foundation fork from 2024, speaks the same commands and is offered by many clouds - the ideas on this page apply to both.",
+ "check": [
+  {"q": "Your cache is full and you want the popular keys to stay. Which policy?", "a": "allkeys-lfu", "d": ["noeviction", "volatile-ttl", "allkeys-random"], "why": "LFU keeps the keys that are used often. noeviction would start rejecting writes instead."},
+  {"q": "With AOF syncing every second (the default), what can a crash lose?", "a": "About the last second of writes", "d": ["Nothing at all", "The last few minutes", "Everything since the last restart"], "why": "everysec syncs once a second. RDB on its own could lose minutes, so many setups use both."},
+  {"q": "A popular key expires and the database suddenly spikes. What is that called?", "a": "A cache stampede", "d": ["A hot partition", "Replication lag", "A split brain"], "why": "Many requests miss at once and all rebuild the same value. Letting one request rebuild calms it."},
+  {"q": "Why can INCR count requests safely without a lock?", "a": "Commands run one at a time, so INCR is atomic", "d": ["Redis locks the key on disk", "The client retries until it wins", "Replicas vote on each increment"], "why": "The single command thread means two INCRs never interleave."}
+ ],
+ "sources": [
+  {"t": "Redis docs: key eviction", "u": "https://redis.io/docs/latest/develop/reference/eviction/"},
+  {"t": "Redis docs: persistence", "u": "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/"},
+  {"t": "Redis docs: scaling with Cluster", "u": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/"},
+  {"t": "Redis docs: benchmarks", "u": "https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/"},
+  {"t": "InfoQ: Redis 8 adds AGPLv3", "u": "https://www.infoq.com/news/2025/05/redis-agpl-license"}
+ ]
+}
