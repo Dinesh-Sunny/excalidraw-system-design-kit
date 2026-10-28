@@ -3,6 +3,7 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Lesson diagrams speak the kit's visual language: the same 12 category colours and legend names as the Colour legend block, an icon on every box, and the In real systems map is drawn with the real kit blocks (tap one to open it).
 - Search everything with Cmd/Ctrl + K (or the Search button in the header once you scroll): blocks, designs, practice questions, starter packs and sections in one panel, grouped with thumbnails. Understands short forms (lb, db, k8s, mq, s3), forgives small typos (kafak), highlights matches, and takes filters: in:cache, level:hard, company:meta, type:practice, is:saved. Recent searches, recently viewed and popular picks before you type. Keyboard: arrows to move, Enter to open, Cmd/Ctrl + Enter copies to Excalidraw, Shift + Enter saves, Tab switches scope. Full screen on phones.
 - Header: Sponsor is the main button; Get the kit sits beside it. The logo glides to the top of the page and resets search and filters.
 - Practice cards are now the same cards as Blocks: same size, grid, title, details line, row heading and hover buttons (Copy, View in blocks, Save).

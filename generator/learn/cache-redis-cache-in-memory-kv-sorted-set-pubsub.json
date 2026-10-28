@@ -16,55 +16,61 @@
     "id": "app",
     "t": "Your service",
     "x": 0,
-    "y": 30,
+    "y": 20,
     "w": 150,
-    "h": 64,
-    "c": "svc"
+    "h": 86,
+    "c": "svc",
+    "i": "service"
    },
    {
     "id": "slots",
     "t": "Cluster router|16,384 hash slots",
     "x": 0,
-    "y": 190,
+    "y": 180,
     "w": 150,
-    "h": 74,
-    "c": "edge"
+    "h": 86,
+    "c": "data",
+    "i": "hash"
    },
    {
     "id": "loop",
     "t": "Event loop|one command at a time",
     "x": 265,
-    "y": 30,
+    "y": 20,
     "w": 170,
-    "h": 74,
-    "c": "redis"
+    "h": 86,
+    "c": "cache",
+    "i": "loop"
    },
    {
     "id": "mem",
     "t": "Data in RAM|strings · hashes · sorted sets",
     "x": 265,
-    "y": 175,
+    "y": 180,
     "w": 170,
     "h": 86,
-    "c": "redis"
+    "c": "cache",
+    "i": "memory"
    },
    {
     "id": "evict",
     "t": "Eviction|when memory is full",
     "x": 265,
-    "y": 335,
+    "y": 340,
     "w": 170,
-    "h": 70,
-    "c": "warn"
+    "h": 86,
+    "c": "cache",
+    "i": "evict"
    },
    {
     "id": "rep",
     "t": "Replica|async copy",
     "x": 550,
-    "y": 30,
+    "y": 20,
     "w": 150,
-    "h": 74,
-    "c": "redis2"
+    "h": 86,
+    "c": "data",
+    "i": "replica"
    },
    {
     "id": "aof",
@@ -72,17 +78,19 @@
     "x": 550,
     "y": 180,
     "w": 150,
-    "h": 70,
-    "c": "disk"
+    "h": 86,
+    "c": "data",
+    "i": "log"
    },
    {
     "id": "rdb",
     "t": "RDB snapshot|point in time",
     "x": 550,
-    "y": 335,
+    "y": 340,
     "w": 150,
-    "h": 70,
-    "c": "disk"
+    "h": 86,
+    "c": "data",
+    "i": "snapshot"
    }
   ],
   "edges": [
