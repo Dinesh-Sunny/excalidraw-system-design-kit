@@ -2127,5 +2127,101 @@
    "Risk: hidden differences in prompts or regions - log every input.",
    "Next: delete the old pipeline and its data per retention rules."
   ]
+ },
+ "ai-voice-tutor": {
+  "level": "Hard",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Learner talks to the tutor and can interrupt it at any time",
+   "Tutor explains on a live canvas (2D, 3D, formulas, concept maps) while it speaks",
+   "Learner answers by voice or by tapping an option (\"the second one\")",
+   "Tutor remembers goals, mistakes and what worked across sessions",
+   "Weak topics come back at the right time (spaced repetition)",
+   "A goal turns into a personal course; progress is shown with evidence"
+  ],
+  "reqN": [
+   "Learner stops speaking to first tutor word: p95 under ~1.2 s",
+   "Grading must agree with itself: same answer, same score",
+   "Cost per 20-minute session under about $1",
+   "Learner data private and deletable, memories included (UK GDPR)",
+   "Sessions survive a dropped connection or a crash and resume"
+  ],
+  "est": [
+   "Latency budget: end of turn + final transcript ~300 ms, router ~100 ms, small model first token ~300 ms, first TTS audio ~200 ms, network ~80 ms",
+   "Speech-to-text at ~$0.45 per hour = ~$0.15 per 20-min session; billed per open stream, so close idle sessions",
+   "10k concurrent sessions = 10k rooms + 10k agent jobs; agents are stateless workers, state lives in checkpoints",
+   "A turn every ~10 s = ~1k turns/s at 10k sessions; route each with a cheap classifier, not a big model",
+   "Memory: ~200 facts per learner x 1 KB + one embedding each - fits one Postgres with pgvector for a long time"
+  ],
+  "api": [
+   "POST /session -> {roomToken} (short-lived, room scoped)",
+   "WebRTC room: audio both ways + data channel for taps and canvas events",
+   "Agent tool calls: draw(shape), show3d(scene), offerOptions(cards), gradeAnswer(rubric), saveMemory(fact)",
+   "GET /learner/:id/progress (also exposed read-only to MCP clients)"
+  ],
+  "data": [
+   "sessions, turns and events (append-only: every utterance, tap, canvas action, score)",
+   "graph checkpoints per thread (resume, rewind, branch)",
+   "learner memories: namespace = learner id, value + embedding",
+   "mastery per skill + FSRS review cards (due date, stability, difficulty)",
+   "course plan, rubrics, eval cases and their results"
+  ],
+  "blocks": {
+   "l": "Start from the learner: voice in, taps in, a live board and the tutor's voice out. No typing needed.",
+   "sfu": "A WebRTC SFU (LiveKit) carries audio both ways plus a data channel. It handles echo, packet loss and reconnects so you don't.",
+   "vad": "Voice activity and turn detection decide when the learner has finished - and stop the tutor the moment they start talking (barge-in).",
+   "stt": "Streaming speech-to-text gives partial words fast and a final transcript at end of turn.",
+   "rt": "A small, fast classifier picks the next step (teach, hint, quiz, off-topic) and which model to use - typed answers with a confidence score.",
+   "tutor": "The tutor agent is a graph: explicit steps and edges, checkpointed every step, so it can resume after a crash and is easy to test.",
+   "llm": "Model per job: a fast model for voice turns, a stronger one to teach, the strongest to plan courses. Fallback to a second provider.",
+   "tts": "Text-to-speech streams sentence by sentence and returns word timings - so on an interruption the agent knows exactly what was heard.",
+   "gui": "Generative UI: the model never writes raw HTML. It emits typed, schema-checked actions that place known components on the canvas.",
+   "sync": "Realtime sync keeps the canvas identical on every device (one room per session) and stores its history for replay.",
+   "mem": "The learner model holds mastery per skill with evidence, plus long-term memories searchable by meaning.",
+   "sr": "Spaced repetition (FSRS) schedules each weak item for the moment it is about to be forgotten.",
+   "plan": "A planner agent with sub-agents (research, questions, visuals) turns a goal into a course in the background.",
+   "obs": "Tracing and evals: every turn traced with cost and latency; offline suites and consistency tests gate each change."
+  },
+  "dives": [
+   [
+    "Walk me through the latency budget.",
+    "Measure from the learner's last word to the tutor's first audio. Turn detection + final transcript ~300 ms, router ~100 ms, small-model first token ~300 ms, first TTS audio ~200 ms, network ~80 ms = about 1 s. Stream every stage, flush TTS per sentence, run the agent next to the room, and keep big models off the hot path."
+   ],
+   [
+    "The learner interrupts mid-sentence. What happens?",
+    "The SFU keeps listening while the tutor talks. Voice activity fires, the agent cancels TTS and the LLM stream, and uses word timings to cut its own message history at the last word actually played - so it never assumes the learner heard the rest."
+   ],
+   [
+    "How do you stop the model writing broken or unsafe UI?",
+    "A fixed component catalog with Zod schemas. The model calls draw/show3d/offerOptions tools; each action is validated before it reaches the canvas. Generated mini-simulations run in a sandboxed iframe with no network."
+   ],
+   [
+    "How does the tutor remember the learner without leaking data?",
+    "Two layers: per-session state in graph checkpoints, long-term facts in a store namespaced by learner id with embeddings for search by meaning. Every query is scoped by the session's identity, never by model output, and delete removes memories, checkpoints, recordings and events in one workflow."
+   ],
+   [
+    "How do you grade consistently?",
+    "Split the rubric into atomic questions (one per criterion) and answer them with a classifier that returns stable probabilities, then let a larger model write the explanation with evidence links. Test it: same answer in many wordings and repeated runs must get the same score."
+   ],
+   [
+    "Why spaced repetition, and how does the scheduler work?",
+    "Without review, people forget most of a lesson within days. FSRS models each item's stability and difficulty from past reviews and sets the next due date for a target recall; the Coach agent turns due items into a short nudge."
+   ],
+   [
+    "What autonomy does each agent get?",
+    "Read, Draft, Act. Reading the learner's own data and drawing on their canvas = Act. Publishing a lesson, emailing someone, sharing a report = Draft, waits for a person. Background agents may only Read or Draft. Identity always comes from the session."
+   ],
+   [
+    "How do you know a prompt change made it better, not worse?",
+    "Eval cases per behaviour (routing accuracy, option-pick accuracy, grading agreement, refusal cases) run in CI and block a drop; sampled live sessions get online evaluators; disagreements go to a human review queue that feeds new cases back in."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: the voice hot path - keep it on small models, colocate agent and room, measure p95 per stage.",
+   "Risk: confident wrong explanations - cite sources, check claims, and make grading auditable with evidence.",
+   "Cost: speech and big-model calls dominate - route most turns to small models and cache the system prompt.",
+   "Next: kids mode behind a policy profile, uploads (search over the learner's own notes), an MCP server for learner progress."
+  ]
  }
 }

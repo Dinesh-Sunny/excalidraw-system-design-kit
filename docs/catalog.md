@@ -130,6 +130,9 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Email / SMS** - ses sendgrid twilio sms email
 - **Chat Service** - messaging realtime
 - **WebSocket Server** - realtime bidirectional socket connection gateway
+- **WebRTC SFU (LiveKit)** - selective forwarding unit media server rooms webrtc livekit realtime audio video
+- **Realtime Sync (CRDT)** - collaborative canvas multiplayer yjs tldraw durable object presence
+- **Spaced Repetition** - fsrs review scheduler due cards forgetting curve learning
 - **Search Service** - query full text lookup
 - **Payment Service** - stripe psp billing checkout
 - **Location Service** - geo geohash quadtree maps gps
@@ -163,6 +166,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Search Index (Elasticsearch)** - elasticsearch opensearch inverted index full text
 - **Object Storage (S3)** - s3 blob gcs files images video
 - **Data Warehouse** - snowflake bigquery redshift olap analytics
+- **Learner Model** - mastery skills evidence knowledge tracing learner profile
 - **Data Lake** - s3 parquet raw data hdfs
 - **Lakehouse (Iceberg)** - iceberg delta lake table format parquet
 - **OLAP DB (ClickHouse)** - clickhouse druid pinot realtime analytics columnar
@@ -206,6 +210,8 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Multimodal Model** - vision image understanding vlm ai
 - **Speech-to-Text** - stt asr whisper transcription voice ai
 - **Text-to-Speech** - tts voice synthesis elevenlabs ai
+- **Turn Detector (VAD)** - voice activity detection end of turn barge-in interruption ai
+- **Generative UI** - typed ui actions component catalog canvas artifacts ai
 - **Image / Video Gen** - diffusion image generation video generation ai
 - **Embedding Model** - embeddings encoder vectors ai
 - **Reranker** - rerank cross encoder relevance ai
@@ -463,6 +469,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Deep Research Agent** - multi agent web research report
 - **Customer Support Agent** - ai helpdesk escalation
 - **Realtime Voice Agent** - phone call speech ai
+- **AI Voice Tutor** - canvas voice learning agent tutor education
 - **Enterprise AI Gateway** - llm platform governance
 - **AI Visibility Tracker** - aeo geo ai search brand tracking searchable profound
 - **Noise-aware Visibility Score** - repeated runs confidence interval share of voice

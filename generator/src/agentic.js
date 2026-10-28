@@ -55,6 +55,15 @@ export const AI_TEMPLATES = [
       ["tts", "Text-to-Speech\n(streaming)", "tts", "ai", 2.8, 2], ["vad", "Turn Detection\n(VAD)", "gauge", "ai", 1.4, -0.4], ["t", "Tools\n(booking, CRM)", "wrench", "agent", 5.6, 1]],
     edges: [["c", "rtc", "audio", B], ["rtc", "stt", "audio frames"], ["stt", "ag", "partial text"], ["ag", "tts", "text stream"], ["tts", "rtc", "audio"], ["rtc", "vad", "barge-in", D], ["ag", "t"]],
     notes: "Key decisions\n- Stream STT > LLM > TTS, no waiting\n- Detect turns and interruptions\n- Short replies, fillers while tools run\n- Speech-to-speech model = fewer hops\n- Log audio + transcripts for evals" } },
+  { name: "AI Voice Tutor - canvas voice learning agent tutor education", spec: {
+    title: "AI Voice Tutor", sub: "Talks, listens and draws to teach · speech to first word under ~1 s",
+    nodes: [["l", "Learner\n(voice + taps)", "waveform", "client", 0, 1], ["vad", "Turn Detector\n(VAD)", "vad", "ai", 0, 0], ["stt", "Speech-to-Text\n(streaming)", "stt", "ai", 1.4, 0], ["sfu", "WebRTC SFU\n(LiveKit)", "sfu", "edge", 1.4, 1],
+      ["tts", "Text-to-Speech\n(word timings)", "tts", "ai", 1.4, 2, 170], ["rt", "Router\n(small model)", "chip", "ai", 2.8, 0], ["tutor", "Tutor Agent\n(graph)", "agentsvc", "agent", 2.8, 1], ["gui", "Generative UI\n(typed actions)", "genui", "ai", 2.8, 2, 170],
+      ["sync", "Realtime Sync\n(canvas CRDT)", "crdt", "svc", 2.8, 3, 170], ["mem", "Learner Model\n+ Memory", "learner", "data", 4.2, 0], ["llm", "LLM\n(model per job)", "sparkle", "ai", 4.2, 1], ["sr", "Spaced\nRepetition", "fsrs", "svc", 4.2, 2],
+      ["plan", "Planner\n(sub-agents)", "checklist", "agent", 5.6, 0], ["obs", "Tracing\n+ Evals", "spans", "llmops", 5.6, 2]],
+    edges: [["l", "sfu", "audio", B], ["sfu", "vad", "barge-in", D], ["sfu", "stt", "audio"], ["stt", "tutor", "final text"], ["tutor", "rt", "route"], ["tutor", "llm", "reply"], ["tutor", "tts", "sentences"], ["tts", "sfu", "audio"],
+      ["tutor", "gui", "canvas actions"], ["gui", "sync"], ["sync", "l", "live board", { via: [[K, 3 + 1 / 3]] }], ["tutor", "mem", "recall, save", { dot: true }], ["sr", "tutor", "due reviews", D], ["plan", "mem", "course"], ["llm", "obs", "traces, cost", D]],
+    notes: "Key decisions\n- Stream every stage; budget the second\n- Word-timed barge-in: keep only what was heard\n- Small model routes, big model teaches\n- Canvas changes only through typed actions\n- Memory + spaced repetition bring learners back\n- Evals gate every prompt or model change" } },
   { name: "Enterprise AI Gateway - llm platform governance", spec: {
     title: "Enterprise AI Gateway", sub: "One front door for every team's LLM calls",
     nodes: [["apps", "Internal Apps\n& Agents", "users", "client", 0, 1], ["gw", "AI Gateway\n(auth, quotas)", "lb", "ai", 1.5, 1], ["sc", "Semantic Cache", "cache", "cache", 1.5, -0.3], ["g", "Guardrails\n+ PII Redaction", "shield", "llmops", 1.5, 2.3],

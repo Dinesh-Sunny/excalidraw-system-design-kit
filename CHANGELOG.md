@@ -3,6 +3,9 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- AI Voice Tutor: a new full design (voice, live canvas, router, learner model, spaced repetition, planner, evals) with a practice question at interview depth - latency budget, barge-in, generative UI, memory, consistent grading, Read/Draft/Act - and three scenarios: Atlassian onboarding tutor, exam prep at scale and kids mode.
+- 6 new blocks, each with its own icon and a sourced lesson: WebRTC SFU (LiveKit), Turn Detector (VAD), Realtime Sync (CRDT), Generative UI, Spaced Repetition (FSRS) and Learner Model.
+- New Atlassian interviewer lens for every practice question: permissions, Read -> Draft -> Act autonomy, event-triggered adoption, model per stage and the 12-week Discover, Build, Adopt, Value rollout.
 - Four more lessons: Monitoring, Alerting (SLO burn rates), Distributed Lock and Feature Flags.
 - Four more lessons: Human Approval, PII Redaction, Stream Processor (Flink) and Data Warehouse.
 - Six more lessons: Token & Cost Metering, AI Gateway / Model Router, Citations, Context Builder, Dead Letter Queue and Workflow Engine.

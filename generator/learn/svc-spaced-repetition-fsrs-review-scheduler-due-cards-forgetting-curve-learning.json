@@ -1,0 +1,242 @@
+{
+ "family": "scheduling",
+ "reviewed": "Oct 2026",
+ "what": "A spaced repetition scheduler decides when each item should come back for review: just before you would forget it. FSRS is the modern open algorithm - it models each item's difficulty, stability and current recall probability, and sets the next review for a target recall.",
+ "like": "Like watering plants that each dry out at their own pace: you water each one just before it wilts, not all of them every day.",
+ "why": [
+  "Long-term memory needs review, but reviewing everything daily wastes time",
+  "Each item gets its own schedule, based on how the learner actually answered",
+  "Due reviews give the Coach agent a real reason to nudge"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "ans",
+    "t": "Learner answers|Again, Hard, Good, Easy",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "grade",
+    "t": "Grade|from rubric score",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "llmops",
+    "i": "shield"
+   },
+   {
+    "id": "fsrs",
+    "t": "FSRS update|difficulty + stability",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "loop"
+   },
+   {
+    "id": "card",
+    "t": "Review card|D, S, due date",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "due",
+    "t": "Due queue|items due today",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "clock"
+   },
+   {
+    "id": "coach",
+    "t": "Coach agent|nudge + short session",
+    "x": 0,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "agent",
+    "i": "agent"
+   }
+  ],
+  "edges": [
+   [
+    "ans",
+    "grade",
+    "answer"
+   ],
+   [
+    "grade",
+    "fsrs",
+    "rating"
+   ],
+   [
+    "fsrs",
+    "card",
+    "next due"
+   ],
+   [
+    "card",
+    "due",
+    "daily"
+   ],
+   [
+    "due",
+    "coach",
+    "due items"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Turn an answer into a rating",
+    "d": "Each review ends in one of four ratings: Again, Hard, Good or Easy. In a tutor, the Assessor's rubric score maps to the rating.",
+    "hl": [
+     "ans",
+     "grade"
+    ]
+   },
+   {
+    "t": "Update the memory model",
+    "d": "FSRS updates difficulty (1 to 10) and stability - the interval at which recall probability falls to 90%.",
+    "hl": [
+     "fsrs"
+    ]
+   },
+   {
+    "t": "Schedule the next review",
+    "d": "Solve the forgetting curve for the moment recall drops to your desired retention, and store that due date on the card.",
+    "hl": [
+     "card"
+    ]
+   },
+   {
+    "t": "Collect what's due",
+    "d": "A daily job gathers due cards per learner into a short review set.",
+    "hl": [
+     "due"
+    ]
+   },
+   {
+    "t": "Bring the learner back",
+    "d": "The Coach agent turns due items into a nudge and a 5-minute session; answers feed back into FSRS.",
+    "hl": [
+     "coach"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "90%",
+   "l": "recall probability at t = S - FSRS's definition of stability",
+   "s": "https://github.com/open-spaced-repetition/awesome-fsrs/wiki/The-Algorithm"
+  },
+  {
+   "v": "21",
+   "l": "parameters in FSRS-6 (FSRS-5 used 19)",
+   "s": "https://github.com/open-spaced-repetition/awesome-fsrs/wiki/The-Algorithm"
+  },
+  {
+   "v": "1-10",
+   "l": "range of the difficulty variable D",
+   "s": "https://github.com/open-spaced-repetition/awesome-fsrs/wiki/The-Algorithm"
+  },
+  {
+   "v": "4",
+   "l": "ratings: Again, Hard, Good, Easy",
+   "s": "https://github.com/open-spaced-repetition/awesome-fsrs/wiki/The-Algorithm"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "FSRS or SM-2",
+   "d": "SM-2 is simple fixed multipliers; FSRS learns from review history and needs fewer reviews for the same retention."
+  },
+  {
+   "t": "Desired retention",
+   "d": "Higher retention means more reviews; pick it per goal (exam next week vs lifelong skill)."
+  },
+  {
+   "t": "What counts as an item",
+   "d": "One small, testable fact or skill per card; big topics never get a clean rating."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "svc-scheduler-cron-cron-job-batch-scheduled-timer",
+   "why": "A plain cron for fixed schedules, not per-item adaptive ones"
+  },
+  {
+   "slug": "svc-notification-service-push-apns-fcm-alerts",
+   "why": "Delivers the nudge; FSRS decides when it's worth sending"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Review pile-up",
+   "d": "A learner skips a week and 300 items are due.",
+   "see": "Huge due counts, learners give up",
+   "fix": "Cap daily reviews, prioritise lowest recall, spread the backlog"
+  },
+  {
+   "t": "Ratings don't mean anything",
+   "d": "Every answer graded Good by a lenient judge.",
+   "see": "Intervals grow but quiz scores fall",
+   "fix": "Consistent rubric grading; calibrate the rating map"
+  }
+ ],
+ "say": [
+  "Every skill becomes review cards scheduled by FSRS: the Assessor's score maps to Again, Hard, Good or Easy, and FSRS sets the next due date for our target retention.",
+  "A daily job collects due cards and the Coach agent turns them into a short nudge session - that's the event trigger that brings learners back."
+ ],
+ "followups": [
+  {
+   "q": "Why not review everything weekly?",
+   "a": "Easy items waste time and hard ones are forgotten between weeks; per-item scheduling spends review time where forgetting is happening."
+  }
+ ],
+ "today": "FSRS is the default scheduler in Anki and has open implementations such as ts-fsrs for TypeScript.",
+ "check": [
+  {
+   "q": "In FSRS, what is stability?",
+   "a": "The interval at which recall probability falls to 90%",
+   "d": [
+    "How hard the item is",
+    "The number of reviews done",
+    "The learner's total study time"
+   ],
+   "why": "Stability is defined by R = 90% at t = S."
+  },
+  {
+   "q": "A learner returns after a week with 300 due items. Best move?",
+   "a": "Cap today's reviews and do the lowest-recall items first",
+   "d": [
+    "Show all 300 now",
+    "Reset all cards",
+    "Skip reviews forever"
+   ],
+   "why": "Spreading the backlog keeps learners engaged."
+  }
+ ],
+ "sources": [
+  {
+   "t": "FSRS: the algorithm (open-spaced-repetition wiki)",
+   "u": "https://github.com/open-spaced-repetition/awesome-fsrs/wiki/The-Algorithm"
+  }
+ ]
+}

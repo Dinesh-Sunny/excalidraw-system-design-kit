@@ -1,0 +1,273 @@
+{
+ "family": "service",
+ "reviewed": "Oct 2026",
+ "what": "Realtime sync keeps one shared document - a canvas, a doc, a board - identical on every device while several people (or an AI agent) edit it. A server room holds the authoritative copy and relays changes; CRDT libraries let edits merge without conflicts.",
+ "like": "Like a shared whiteboard in a classroom where everyone's marker strokes appear on every copy instantly, and nobody's stroke wipes out anyone else's.",
+ "why": [
+  "Learner, tutor agent and other devices see the same board at the same moment",
+  "History is kept, so a session can be replayed step by step",
+  "Reconnects resume without losing edits"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "c1",
+    "t": "Learner's browser|local copy",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "ag",
+    "t": "Tutor agent|writes typed actions",
+    "x": 0,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "agent",
+    "i": "agent"
+   },
+   {
+    "id": "room",
+    "t": "Room (one per doc)|authoritative copy",
+    "x": 265,
+    "y": 100,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "db",
+    "t": "Room storage|SQLite snapshots",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "assets",
+    "t": "Asset store|images, videos (R2)",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "bucket"
+   },
+   {
+    "id": "c2",
+    "t": "Second device|same board",
+    "x": 265,
+    "y": 300,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   }
+  ],
+  "edges": [
+   [
+    "c1",
+    "room",
+    "changes"
+   ],
+   [
+    "ag",
+    "room",
+    "actions"
+   ],
+   [
+    "room",
+    "db",
+    "persist"
+   ],
+   [
+    "room",
+    "assets",
+    "large files"
+   ],
+   [
+    "room",
+    "c2",
+    "broadcast"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "One room per document",
+    "d": "Every canvas gets exactly one server room. tldraw.com runs each room in its own Cloudflare Durable Object, which also gives it a WebSocket server.",
+    "hl": [
+     "room"
+    ]
+   },
+   {
+    "t": "Clients edit locally",
+    "d": "Each browser applies edits to its local copy instantly, then sends them to the room over a WebSocket.",
+    "hl": [
+     "c1",
+     "room"
+    ]
+   },
+   {
+    "t": "The agent is just another editor",
+    "d": "The tutor agent's typed canvas actions go through the same room, so its shapes appear on every device like a person's would.",
+    "hl": [
+     "ag",
+     "room"
+    ]
+   },
+   {
+    "t": "Persist and store assets",
+    "d": "The room saves snapshots (SQLite in production) and sends big binaries such as images to an asset store like R2.",
+    "hl": [
+     "db",
+     "assets"
+    ]
+   },
+   {
+    "t": "Broadcast and resume",
+    "d": "The room relays each change to every other client; a client that reconnects resumes from the room's state.",
+    "hl": [
+     "room",
+     "c2"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "1",
+   "l": "TLSocketRoom per document, as tldraw requires",
+   "s": "https://tldraw.dev/docs/sync"
+  },
+  {
+   "v": "~5 s",
+   "l": "idle time after which a hibernating Cloudflare room snapshots sessions",
+   "s": "https://tldraw.dev/docs/sync"
+  },
+  {
+   "v": "20 s",
+   "l": "default clientTimeout on non-hibernating servers",
+   "s": "https://tldraw.dev/docs/sync"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Server-authoritative or pure CRDT",
+   "d": "A server room (tldraw sync) keeps one source of truth and simple permissions; pure CRDTs (Yjs) also merge peer-to-peer and offline, at the cost of harder access control."
+  },
+  {
+   "t": "Where rooms live",
+   "d": "Durable Objects give one addressable instance per room with storage attached; on Node you run one room per document yourself."
+  },
+  {
+   "t": "What you must add",
+   "d": "tldraw's docs say auth, authorisation, rate limits and upload size limits are yours to add."
+  },
+  {
+   "t": "Schema versions",
+   "d": "Client and server register the same custom shapes with migrations, so old and new clients can share a room."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "svc-websocket-server-realtime-bidirectional-socket-connection-gateway",
+   "why": "A plain socket server for broadcasts if there is no shared document to merge"
+  },
+  {
+   "slug": "svc-chat-service-messaging-realtime",
+   "why": "For ordered messages rather than a shared editable state"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Two rooms for one document",
+   "d": "Load balancing sends clients of the same canvas to different servers.",
+   "see": "Edits appear on some devices and not others",
+   "fix": "Route by room id to exactly one instance (Durable Object per room)"
+  },
+  {
+   "t": "Anyone can join any room",
+   "d": "The template has no auth by default.",
+   "see": "Unknown sessions in room logs",
+   "fix": "Check a signed token for the room before accepting the socket"
+  },
+  {
+   "t": "Old client breaks the room",
+   "d": "Shape schema changed without migrations.",
+   "see": "Validation errors on connect",
+   "fix": "Shape migrations; ask old clients to refresh"
+  }
+ ],
+ "say": [
+  "Each session's canvas is one sync room - a Durable Object - holding the authoritative copy, persisting to SQLite and relaying changes over WebSockets.",
+  "The tutor agent writes to the same room through typed actions, so its drawings appear on every device and land in the history for replay.",
+  "I add a token check on join and rate limits, which the template leaves to me."
+ ],
+ "followups": [
+  {
+   "q": "Why not let the agent write straight to the database?",
+   "a": "Clients only see changes that go through the room; writing around it breaks sync and history. The agent is just another editor of the room."
+  },
+  {
+   "q": "How do you replay a lesson?",
+   "a": "Room history plus the event log and audio timestamps let you scrub the canvas in step with the transcript."
+  }
+ ],
+ "today": "Canvas SDKs now ship sync on serverless rooms: tldraw sync runs each room in a Cloudflare Durable Object with SQLite storage, and its agent starter kit streams AI edits through the same room.",
+ "check": [
+  {
+   "q": "How many server rooms should hold one tldraw document?",
+   "a": "Exactly one",
+   "d": [
+    "One per user",
+    "One per region",
+    "As many as the load balancer picks"
+   ],
+   "why": "One authoritative room per document keeps everyone in sync."
+  },
+  {
+   "q": "Where do large images on the canvas go?",
+   "a": "An asset store such as R2",
+   "d": [
+    "Inside every sync message",
+    "In the browser only",
+    "In the LLM context"
+   ],
+   "why": "Big binaries go to asset storage; the room syncs references."
+  },
+  {
+   "q": "The tutor agent wants to draw. Best path?",
+   "a": "Typed actions through the same sync room",
+   "d": [
+    "Write directly to the database",
+    "Email the shapes",
+    "Draw only on the learner's screen locally"
+   ],
+   "why": "Going through the room keeps every device and the history consistent."
+  }
+ ],
+ "sources": [
+  {
+   "t": "tldraw docs: sync",
+   "u": "https://tldraw.dev/docs/sync"
+  },
+  {
+   "t": "tldraw docs: AI integrations",
+   "u": "https://tldraw.dev/docs/ai"
+  },
+  {
+   "t": "tldraw: agent starter kit",
+   "u": "https://tldraw.dev/starter-kits/agent"
+  }
+ ]
+}

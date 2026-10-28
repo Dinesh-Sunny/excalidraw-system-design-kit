@@ -1,0 +1,304 @@
+{
+ "family": "service",
+ "reviewed": "Oct 2026",
+ "what": "A WebRTC SFU (selective forwarding unit) is a media server that receives each participant's audio or video track once and forwards it, unchanged, to whoever subscribes. LiveKit is an open-source SFU; voice AI agents join its rooms as ordinary participants.",
+ "like": "Like a post-room sorter: every letter comes in once, and the sorter copies it into the right pigeonholes without opening or rewriting it.",
+ "why": [
+  "Each person uploads one copy of their media, however many listen",
+  "The server never decodes media, so it stays cheap and adds little delay",
+  "An AI agent becomes just another participant: it hears the learner and talks back in the same room"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "pub",
+    "t": "Learner|publishes mic track",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "sfu",
+    "t": "SFU node|forwards packets as-is",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "router"
+   },
+   {
+    "id": "agent",
+    "t": "Voice agent|joins as participant",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "agent",
+    "i": "agent"
+   },
+   {
+    "id": "bwe",
+    "t": "Bandwidth estimate|per subscriber",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "chart"
+   },
+   {
+    "id": "data",
+    "t": "Data channel|taps, canvas events, RPC",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "queue"
+   },
+   {
+    "id": "redis",
+    "t": "Redis|routes room to one node",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "cache"
+   },
+   {
+    "id": "tts",
+    "t": "Agent audio|published back",
+    "x": 0,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   }
+  ],
+  "edges": [
+   [
+    "pub",
+    "sfu",
+    "audio track"
+   ],
+   [
+    "sfu",
+    "agent",
+    "forward"
+   ],
+   [
+    "agent",
+    "tts",
+    "speak"
+   ],
+   [
+    "tts",
+    "sfu",
+    ""
+   ],
+   [
+    "sfu",
+    "bwe",
+    "measure"
+   ],
+   [
+    "agent",
+    "data",
+    "events"
+   ],
+   [
+    "sfu",
+    "redis",
+    "multi-node"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Join a room",
+    "d": "The learner's browser and the voice agent both join the same room with a short-lived token. Each is a participant with an identity.",
+    "hl": [
+     "pub",
+     "agent"
+    ]
+   },
+   {
+    "t": "Publish once",
+    "d": "The learner publishes one microphone track. The SFU forwards those packets to every subscriber without decoding or re-encoding them.",
+    "hl": [
+     "pub",
+     "sfu"
+    ]
+   },
+   {
+    "t": "Agent subscribes and speaks",
+    "d": "The agent subscribes to the learner's audio, runs speech-to-text, the model and text-to-speech, then publishes its own audio track back into the room.",
+    "hl": [
+     "agent",
+     "tts"
+    ]
+   },
+   {
+    "t": "Adapt to the network",
+    "d": "The server and SDKs measure each subscriber's downstream bandwidth and adjust resolution or bitrate automatically.",
+    "hl": [
+     "bwe"
+    ]
+   },
+   {
+    "t": "Side channel for app events",
+    "d": "Taps, option picks and canvas events travel on the data channel next to the audio, so voice and UI stay in one session.",
+    "hl": [
+     "data"
+    ]
+   },
+   {
+    "t": "Scale out",
+    "d": "One node needs nothing else; many nodes share Redis so every client in a room lands on the same node.",
+    "hl": [
+     "redis",
+     "sfu"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "2-3",
+   "l": "peers where plain peer-to-peer WebRTC still works well",
+   "s": "https://docs.livekit.io/reference/internals/livekit-sfu"
+  },
+  {
+   "v": "1 to 100",
+   "l": "nodes LiveKit says the SFU runs on with identical configuration",
+   "s": "https://docs.livekit.io/reference/internals/livekit-sfu"
+  },
+  {
+   "v": "600-900 ms",
+   "l": "typical voice agent end-to-end latency with well-tuned streaming providers",
+   "s": "https://www.assemblyai.com/blog/voice-agent-architecture"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "SFU, MCU or peer-to-peer",
+   "d": "Peer-to-peer for 2-3 people, an MCU when every viewer must get one mixed stream, an SFU when you want per-track control and cheap scaling - the usual choice for AI agents."
+  },
+  {
+   "t": "Managed or self-hosted",
+   "d": "LiveKit Cloud runs the SFU, TURN and agent hosting for you; self-hosting gives control but you operate Redis, TURN and upgrades."
+  },
+  {
+   "t": "Where the agent runs",
+   "d": "Close to the SFU region: every extra network hop adds to the voice latency budget."
+  },
+  {
+   "t": "Tokens",
+   "d": "Mint short-lived, room-scoped tokens on your server; the API key never reaches the browser."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "svc-websocket-server-realtime-bidirectional-socket-connection-gateway",
+   "why": "Fine for text and events, but raw audio over WebSockets lacks jitter buffers, echo cancellation and NAT traversal"
+  },
+  {
+   "slug": "svc-media-service-upload-transcode-image-video",
+   "why": "For recorded media you upload and transcode, not live two-way audio"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Agent far from the room",
+   "d": "The agent runs in another region from the SFU.",
+   "see": "Every turn is slower by a round trip; p95 latency drifts up",
+   "fix": "Deploy agents in the SFU's region"
+  },
+  {
+   "t": "Corporate firewall blocks UDP",
+   "d": "WebRTC can't reach the server on UDP.",
+   "see": "Some learners can't connect or audio drops",
+   "fix": "TURN over TLS on port 443 as a fallback"
+  },
+  {
+   "t": "Echo loop",
+   "d": "The tutor's own voice comes back through the learner's speakers into the mic.",
+   "see": "The agent interrupts itself",
+   "fix": "Browser echo cancellation on, headphones hint, noise suppression"
+  }
+ ],
+ "say": [
+  "I put a WebRTC SFU between the learner and the agent - LiveKit - so audio is forwarded once with jitter buffers, echo cancellation and NAT traversal handled.",
+  "The agent joins the room as a participant and runs in the same region, so the network part of the latency budget stays small.",
+  "App events like taps and canvas updates ride the data channel in the same session."
+ ],
+ "followups": [
+  {
+   "q": "Why not stream audio over a WebSocket?",
+   "a": "It works for demos, but you lose WebRTC's jitter buffer, packet-loss concealment, echo cancellation and NAT traversal, which matter on real networks."
+  },
+  {
+   "q": "How does it scale?",
+   "a": "Each room lives on one node; more rooms means more nodes sharing Redis for routing. Agents are separate stateless workers dispatched per room."
+  }
+ ],
+ "today": "Voice-agent frameworks such as LiveKit Agents treat the AI as a room participant, and LiveKit ships Agents UI components (control bar, audio visualizers, live transcript) installed through a shadcn registry.",
+ "check": [
+  {
+   "q": "What does an SFU do with a participant's audio?",
+   "a": "Forwards it unchanged to each subscriber",
+   "d": [
+    "Mixes all streams into one",
+    "Transcribes it to text",
+    "Stores it and plays it later"
+   ],
+   "why": "An SFU routes packets without decoding them; mixing is what an MCU does."
+  },
+  {
+   "q": "How does an AI voice agent usually connect to a LiveKit room?",
+   "a": "It joins as a participant",
+   "d": [
+    "Through a webhook after the call",
+    "By reading recordings",
+    "Through the browser's console"
+   ],
+   "why": "Agents subscribe to the learner's track and publish their own audio like any participant."
+  },
+  {
+   "q": "Learners behind strict firewalls can't connect. First fix?",
+   "a": "TURN relay over TLS on port 443",
+   "d": [
+    "A bigger server",
+    "Switch to MP3 files",
+    "Lower the model temperature"
+   ],
+   "why": "TURN relays media when direct UDP is blocked."
+  }
+ ],
+ "sources": [
+  {
+   "t": "LiveKit docs: LiveKit SFU",
+   "u": "https://docs.livekit.io/reference/internals/livekit-sfu"
+  },
+  {
+   "t": "LiveKit docs: rooms, participants and tracks",
+   "u": "https://docs.livekit.io/intro/basics/rooms-participants-tracks/"
+  },
+  {
+   "t": "AssemblyAI: voice agent architecture",
+   "u": "https://www.assemblyai.com/blog/voice-agent-architecture"
+  },
+  {
+   "t": "LiveKit docs: Agents UI",
+   "u": "https://docs.livekit.io/frontends/agents-ui.md"
+  }
+ ]
+}

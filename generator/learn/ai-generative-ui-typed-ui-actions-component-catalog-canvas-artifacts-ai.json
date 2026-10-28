@@ -1,0 +1,264 @@
+{
+ "family": "ai",
+ "reviewed": "Oct 2026",
+ "what": "Generative UI means the model builds the interface on the fly - but safely: it chooses from a catalog of known components and fills their props through typed, schema-checked actions, instead of writing raw HTML or code into your page.",
+ "like": "Like a teacher with a box of magnetic shapes, labels and diagrams for the whiteboard: endless combinations, but every piece is one you made and tested.",
+ "why": [
+  "The tutor can show a graph, a 3D model or a concept map exactly when it helps",
+  "Every action is validated, so bad output can't break or attack the page",
+  "Actions stream one by one, so the board builds up while the tutor speaks"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "llm",
+    "t": "Model|calls tools",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "schema",
+    "t": "Action schemas|Zod per action",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "shield"
+   },
+   {
+    "id": "cat",
+    "t": "Component catalog|graph, 3D, formula, cards",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "doc"
+   },
+   {
+    "id": "san",
+    "t": "Sanitise|fix ids, coordinates",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "tool"
+   },
+   {
+    "id": "apply",
+    "t": "Apply to canvas|as each completes",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "sb",
+    "t": "Sandboxed frame|for generated sims",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "lock"
+   },
+   {
+    "id": "ev",
+    "t": "Event log|every action recorded",
+    "x": 550,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "log"
+   }
+  ],
+  "edges": [
+   [
+    "llm",
+    "schema",
+    "action"
+   ],
+   [
+    "schema",
+    "cat",
+    "props"
+   ],
+   [
+    "schema",
+    "san",
+    "valid"
+   ],
+   [
+    "san",
+    "apply",
+    ""
+   ],
+   [
+    "apply",
+    "ev",
+    "record"
+   ],
+   [
+    "schema",
+    "sb",
+    "custom code"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "The model calls actions",
+    "d": "Instead of text, the model emits tool calls like draw, showGraph or offerOptions with arguments.",
+    "hl": [
+     "llm"
+    ]
+   },
+   {
+    "t": "Validate against a schema",
+    "d": "Each action type has a Zod schema; anything that doesn't parse is rejected and the model is asked again.",
+    "hl": [
+     "schema"
+    ]
+   },
+   {
+    "t": "Only known components",
+    "d": "Props fill components from your catalog (3D scene, graph, formula, concept map, option cards), so the look stays on-brand and accessible.",
+    "hl": [
+     "cat"
+    ]
+   },
+   {
+    "t": "Sanitise and apply",
+    "d": "A sanitiser fixes unknown ids and normalises coordinates; tldraw's agent kit applies each action as soon as it finishes streaming.",
+    "hl": [
+     "san",
+     "apply"
+    ]
+   },
+   {
+    "t": "Untrusted code stays boxed",
+    "d": "When a mini-simulation must be generated, it runs in a sandboxed iframe with no network, never in the page itself.",
+    "hl": [
+     "sb"
+    ]
+   },
+   {
+    "t": "Record everything",
+    "d": "Every applied action lands in the event log for replay, grading evidence and evals.",
+    "hl": [
+     "ev"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "4",
+   "l": "tldraw starter kits: Agent, Chat, Branching chat, Workflow",
+   "s": "https://tldraw.dev/docs/ai"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Catalog or free-form code",
+   "d": "A catalog is safe, testable and consistent; free-form code is flexible but must be sandboxed and is hard to evaluate. Use code only for the rare simulation."
+  },
+  {
+   "t": "Granularity of actions",
+   "d": "Small actions (create, update, move) stream nicely and are easy to validate; huge 'render this page' actions arrive late and fail as a whole."
+  },
+  {
+   "t": "What the model sees",
+   "d": "tldraw's agent gets a screenshot, simplified shape data, the selection and recent actions - enough context without the full document."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "agent-tools-function-calling-tool-use-api-ai-agentic",
+   "why": "The same mechanism without a UI: actions that call APIs"
+  },
+  {
+   "slug": "agent-code-sandbox-code-execution-e2b-container-isolated-ai-agentic",
+   "why": "When the model must run real code, isolate it completely"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Model invents a component",
+   "d": "It calls a shape the catalog doesn't have.",
+   "see": "Validation errors in traces",
+   "fix": "Schemas list allowed types; the error goes back to the model to retry"
+  },
+  {
+   "t": "Board jumps around",
+   "d": "Actions overwrite each other's coordinates.",
+   "see": "Shapes overlap or move after placement",
+   "fix": "Layout rules in the sanitiser; anchor new shapes to existing ones"
+  },
+  {
+   "t": "Injected HTML",
+   "d": "Raw HTML from the model rendered in the page.",
+   "see": "Script in the DOM from model output",
+   "fix": "Never render raw HTML; generated code only in a sandboxed iframe"
+  }
+ ],
+ "say": [
+  "The tutor never writes HTML: it emits typed canvas actions validated by schemas, placing components from our catalog.",
+  "Actions stream and apply one by one, so the board builds while the tutor talks, and every action lands in the event log.",
+  "Generated simulations, the one exception, run in a sandboxed iframe with no network."
+ ],
+ "followups": [
+  {
+   "q": "How do you evaluate generative UI?",
+   "a": "Schema-validity rate, layout checks (overlap, off-screen), and rubric scores from screenshots, run on a fixed set of lesson prompts."
+  },
+  {
+   "q": "Why not let the model write React?",
+   "a": "It's slow to stream, hard to validate, and a security risk in your page. A catalog gives 90% of the value safely."
+  }
+ ],
+ "today": "Canvas SDKs ship agent kits built on this pattern: tldraw's agent starter kit validates each action with a schema, sanitises it, and applies it as it streams.",
+ "check": [
+  {
+   "q": "The safest way for an AI tutor to draw on the canvas?",
+   "a": "Typed actions on a fixed component catalog, validated by schemas",
+   "d": [
+    "Model writes raw HTML into the page",
+    "Model edits the DOM with JavaScript",
+    "Model sends screenshots"
+   ],
+   "why": "Schemas and a catalog keep output safe, consistent and testable."
+  },
+  {
+   "q": "Where should generated simulation code run?",
+   "a": "In a sandboxed iframe with no network",
+   "d": [
+    "Directly in the page",
+    "On the database server",
+    "In the learner's terminal"
+   ],
+   "why": "Isolation stops generated code touching the app or data."
+  }
+ ],
+ "sources": [
+  {
+   "t": "tldraw docs: AI integrations",
+   "u": "https://tldraw.dev/docs/ai"
+  },
+  {
+   "t": "tldraw: agent starter kit",
+   "u": "https://tldraw.dev/starter-kits/agent"
+  }
+ ]
+}

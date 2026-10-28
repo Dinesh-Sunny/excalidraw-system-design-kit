@@ -1,0 +1,297 @@
+{
+ "family": "ai",
+ "reviewed": "Oct 2026",
+ "what": "A turn detector decides when the speaker has finished so the agent can reply, and notices when they start talking again so the agent stops (barge-in). It combines voice activity detection (is anyone speaking?) with an end-of-turn signal from the transcript or a small model.",
+ "like": "Like a good teacher who waits for a pupil to finish the sentence - and stops mid-word the moment the pupil puts a hand up.",
+ "why": [
+  "Reply too early and you cut the learner off; too late and the tutor feels slow",
+  "Barge-in makes voice feel natural instead of walkie-talkie",
+  "It is often the biggest single slice of the voice latency budget"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "mic",
+    "t": "Learner audio|20 ms frames",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "vad",
+    "t": "Voice activity|speech or silence",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "eye"
+   },
+   {
+    "id": "stt",
+    "t": "Streaming STT|partials + final",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "eot",
+    "t": "End of turn|silence + punctuation",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "clock"
+   },
+   {
+    "id": "agent",
+    "t": "Agent|reply starts",
+    "x": 550,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "agent",
+    "i": "agent"
+   },
+   {
+    "id": "bi",
+    "t": "Barge-in|stop TTS + LLM",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "shield"
+   },
+   {
+    "id": "cut",
+    "t": "Trim history|to words heard",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "agent",
+    "i": "log"
+   }
+  ],
+  "edges": [
+   [
+    "mic",
+    "vad",
+    "frames"
+   ],
+   [
+    "vad",
+    "stt",
+    "speech"
+   ],
+   [
+    "stt",
+    "eot",
+    "partials"
+   ],
+   [
+    "eot",
+    "agent",
+    "turn done"
+   ],
+   [
+    "vad",
+    "bi",
+    "speech while tutor talks"
+   ],
+   [
+    "bi",
+    "cut",
+    "word timings"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Detect speech",
+    "d": "Voice activity detection marks each short audio frame as speech or silence, cheaply and on every frame.",
+    "hl": [
+     "mic",
+     "vad"
+    ]
+   },
+   {
+    "t": "Stream the words",
+    "d": "Speech-to-text streams partial words while the learner talks and a final transcript at the end of the turn.",
+    "hl": [
+     "stt"
+    ]
+   },
+   {
+    "t": "Decide the turn is over",
+    "d": "End of turn fires after a short silence once the words look finished - AssemblyAI's model waits for terminal punctuation after a silence between a minimum and maximum threshold.",
+    "hl": [
+     "eot",
+     "agent"
+    ]
+   },
+   {
+    "t": "Notice an interruption",
+    "d": "While the tutor is speaking, new speech from the learner triggers barge-in: stop text-to-speech and cancel the model stream at once.",
+    "hl": [
+     "vad",
+     "bi"
+    ]
+   },
+   {
+    "t": "Remember only what was heard",
+    "d": "Word timings from text-to-speech tell the agent the last word actually played; history is trimmed there so the tutor never assumes the learner heard the rest.",
+    "hl": [
+     "bi",
+     "cut"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "100 ms",
+   "l": "AssemblyAI default minimum turn silence (Universal-3.5 Pro streaming)",
+   "s": "https://www.assemblyai.com/docs/voice-agents/best-practices"
+  },
+  {
+   "v": "1000 ms",
+   "l": "AssemblyAI default maximum turn silence",
+   "s": "https://www.assemblyai.com/docs/voice-agents/best-practices"
+  },
+  {
+   "v": "500-700 ms",
+   "l": "delay beyond which a reply starts to feel unnatural",
+   "s": "https://www.assemblyai.com/blog/voice-agent-architecture"
+  },
+  {
+   "v": "2.0 s",
+   "l": "LiveKit default transcript_timeout for manual turn control",
+   "s": "https://docs.livekit.io/agents/build/turns/"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Silence timer or model",
+   "d": "A fixed silence timer is simple but cuts people off mid-thought; a turn model or punctuation-aware endpointing waits through 'um' and reading out numbers."
+  },
+  {
+   "t": "Where it runs",
+   "d": "VAD runs on every frame next to the audio (in the agent or browser); end of turn can come from the STT provider so you don't run a second model."
+  },
+  {
+   "t": "Backchannels",
+   "d": "Ignore short 'mhm' and 'yeah' so they don't stop the tutor; require a minimum speech duration before counting an interruption."
+  },
+  {
+   "t": "Latency vs patience",
+   "d": "Lower silence thresholds feel snappy but interrupt slow speakers; tune per audience (children and second-language speakers need longer)."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "ai-speech-to-text-stt-asr-whisper-transcription-voice-ai",
+   "why": "Many streaming STT models now return end-of-turn flags themselves"
+  },
+  {
+   "slug": "client-voice-ai-realtime-voice-assistant-speech-ai-client-clients-llm",
+   "why": "Push-to-talk avoids turn detection entirely, at the cost of naturalness"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Cuts the learner off",
+   "d": "Silence threshold too short for someone thinking aloud.",
+   "see": "Learners repeat themselves; many very short turns",
+   "fix": "Longer max silence, punctuation-aware endpointing, per-learner tuning"
+  },
+  {
+   "t": "Tutor talks over the learner",
+   "d": "Barge-in not wired to cancel TTS and the LLM stream.",
+   "see": "Overlapping audio in recordings",
+   "fix": "Cancel both streams on speech start"
+  },
+  {
+   "t": "Tutor stops on every 'mhm'",
+   "d": "Any sound counts as an interruption.",
+   "see": "Choppy replies that never finish",
+   "fix": "Minimum interruption duration and backchannel filtering"
+  }
+ ],
+ "say": [
+  "I measure from the learner's last word to the tutor's first audio, and turn detection is the first slice of that budget.",
+  "I use punctuation-aware end of turn from the STT plus VAD for barge-in, and filter backchannels so 'mhm' doesn't stop the tutor.",
+  "On an interruption I cancel TTS and the model, then trim the conversation to the words that were actually heard using TTS word timings."
+ ],
+ "followups": [
+  {
+   "q": "Why not just wait 2 seconds of silence?",
+   "a": "Two seconds feels broken in conversation; delays above roughly half a second already feel unnatural. Smart endpointing waits only when the sentence looks unfinished."
+  },
+  {
+   "q": "How do you test it?",
+   "a": "Recorded sessions replayed through the pipeline, counting false cut-offs and missed interruptions per hour, compared on every change."
+  }
+ ],
+ "today": "Streaming STT models now ship their own end-of-turn detection, and agent frameworks like LiveKit Agents expose adaptive interruption handling with tunable endpointing delays.",
+ "check": [
+  {
+   "q": "The learner says 'my number is 0 7 9...' and pauses. What should a good turn detector do?",
+   "a": "Keep listening until the number looks finished",
+   "d": [
+    "Reply after any pause",
+    "Hang up",
+    "Switch to text"
+   ],
+   "why": "Punctuation-aware endpointing holds the turn open through pauses in numbers and lists."
+  },
+  {
+   "q": "The learner interrupts. What must the agent do with its history?",
+   "a": "Keep only the words actually played",
+   "d": [
+    "Keep the full reply",
+    "Delete the whole turn",
+    "Repeat the reply from the start"
+   ],
+   "why": "Word timings show what was heard; the rest never reached the learner."
+  },
+  {
+   "q": "The tutor stops every time the learner says 'mhm'. Fix?",
+   "a": "Minimum interruption duration and backchannel filtering",
+   "d": [
+    "Turn off barge-in",
+    "Use a bigger LLM",
+    "Raise TTS volume"
+   ],
+   "why": "Short acknowledgements are not interruptions."
+  }
+ ],
+ "sources": [
+  {
+   "t": "AssemblyAI: voice agent best practices",
+   "u": "https://www.assemblyai.com/docs/voice-agents/best-practices"
+  },
+  {
+   "t": "AssemblyAI: voice agent architecture",
+   "u": "https://www.assemblyai.com/blog/voice-agent-architecture"
+  },
+  {
+   "t": "LiveKit docs: turns",
+   "u": "https://docs.livekit.io/agents/build/turns/"
+  },
+  {
+   "t": "AssemblyAI: TTS latency guide",
+   "u": "https://www.assemblyai.com/docs/tts/getting-started/optimizing-accuracy-and-latency"
+  }
+ ]
+}

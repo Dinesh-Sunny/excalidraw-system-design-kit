@@ -90,6 +90,31 @@
      "Collect the minimum, encrypt in transit and at rest, end-to-end where possible, and keep identifiers out of logs and analytics."
     ]
    ]
+  },
+  "Atlassian": {
+   "cares": "Governance as architecture and adoption, not demos. Say what the agent can see, which permissions it inherits, what it may do on its own (Read, Draft, Act), and how you'll prove business value after launch.",
+   "dives": [
+    [
+     "What can this agent see, and whose permissions does it use?",
+     "Only what the signed-in user can see: permissions travel with the data and are checked at retrieval time and again before the answer (Rovo checks twice). No identity mapping means no access - fail closed. Never take identity from model output."
+    ],
+    [
+     "Which actions may it take on its own?",
+     "Use the Read -> Draft -> Act ladder: start read-only, then drafts a person approves, and only then automatic actions for low-risk, reversible steps - every action logged with who approved it."
+    ],
+    [
+     "Nobody uses the agent after launch. What do you change?",
+     "Trigger it from real events (a new hire, a Sev-1, a due review) instead of waiting for prompts - Atlassian reports event-triggered agents are 12x more likely to stick - embed it where people already work, and measure outcomes, not output."
+    ],
+    [
+     "How would you choose models for each step?",
+     "Model per stage for quality, latency and cost - a small model to classify and route, a stronger one where reasoning earns its cost - behind one gateway with fallbacks, as in Atlassian's Hybrid LLM write-up."
+    ],
+    [
+     "How do you roll this out at a customer in 12 weeks?",
+     "Discover (map workflows, systems and permissions), Build (agents and integrations with governance from day one), Adopt (rollout, training, event triggers), Value (measure impact) - and leave the customer's own engineers able to run it."
+    ]
+   ]
   }
  },
  "url-shortener": {
@@ -2777,5 +2802,141 @@
     ]
    ]
   }
+ },
+ "ai-voice-tutor": {
+  "modern": [
+   [
+    "Cascaded voice is back in favour",
+    "Streaming speech-to-text, a model, then streaming text-to-speech gives more control and debuggability than one speech-to-speech model; frameworks like LiveKit Agents handle turns and barge-in."
+   ],
+   [
+    "Word-timed interruptions",
+    "TTS returns word timings, so after a barge-in the agent keeps only the words the learner actually heard."
+   ],
+   [
+    "Generative UI from typed actions",
+    "Agents place known components through schema-checked actions instead of writing HTML; canvas kits (tldraw's agent starter) stream each action as it completes."
+   ],
+   [
+    "Model per job + fast classifiers",
+    "A small classifier routes and grades with stable, confidence-scored answers; big models only where they earn it."
+   ],
+   [
+    "Agents with memory and skills",
+    "Deep-agent harnesses add planning, sub-agents, skills loaded on demand and a long-term memory store."
+   ],
+   [
+    "Evals as the release gate",
+    "Consistency tests, online evaluators and human review queues decide what ships."
+   ]
+  ],
+  "extra": {
+   "t": "The voice hot path",
+   "look": "They want a latency budget, an interruption story and a clear line between what runs live and what runs in the background.",
+   "rounds": [
+    [
+     "Where should the expensive planning model run?",
+     "In a background workflow, never on the live voice turn",
+     [
+      "On every voice turn",
+      "In the browser",
+      "Inside the speech-to-text step"
+     ]
+    ],
+    [
+     "The learner interrupts. What must the agent remember?",
+     "Only the words that were actually played before the interruption",
+     [
+      "The full reply it generated",
+      "Nothing - start a new turn blank",
+      "The last full paragraph"
+     ]
+    ],
+    [
+     "How should the tutor change the canvas?",
+     "Typed, schema-checked actions on a known component catalog",
+     [
+      "Model writes raw HTML into the page",
+      "Model edits the database directly",
+      "Screenshots of a drawing"
+     ]
+    ],
+    [
+     "Grading drifts run to run. First fix?",
+     "Split the rubric into one question per criterion and score each with a stable classifier, then test consistency",
+     [
+      "Raise the temperature",
+      "Use a longer prompt",
+      "Ask the model to be consistent"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "atlassian",
+    "name": "Atlassian onboarding tutor",
+    "blurb": "Teach a new hire a team's own systems inside Jira and Confluence.",
+    "lens": "Permissions, grounding and adoption inside a customer's Atlassian site.",
+    "reqF": [
+     "Answer from the team's Confluence and Jira with citations",
+     "Start automatically on a new-hire event"
+    ],
+    "reqN": [
+     "Never show a page the learner can't open",
+     "Writes to Jira only as drafts a person approves"
+    ],
+    "dives": [
+     [
+      "How do you ground lessons in the customer's knowledge?",
+      "A Forge app with a Rovo agent; context from the Teamwork Graph with the user's own permissions (asUser), cited back to the real pages."
+     ],
+     [
+      "How do you prove value after 12 weeks?",
+      "Time-to-first-ticket for new hires, questions deflected from senior engineers, and review pass rates - measured against a baseline from Discover."
+     ]
+    ],
+    "wrap": [
+     "Next: event triggers for every new joiner, and a shared course library per team."
+    ]
+   },
+   {
+    "id": "exam",
+    "name": "Exam prep at scale",
+    "blurb": "100k learners revising before the same exam date.",
+    "lens": "Peak load, cost per learner and fair grading.",
+    "est": [
+     "Peak: 100k concurrent in the final week = 100k rooms; pre-warm agent workers and reserve model capacity"
+    ],
+    "dives": [
+     [
+      "The night before the exam traffic spikes 20x. What protects you?",
+      "Autoscaled stateless agent workers, per-learner quotas, a kill switch, small models on the hot path and cached system prompts."
+     ]
+    ],
+    "wrap": [
+     "Next: exam-board aligned rubrics and teacher dashboards."
+    ]
+   },
+   {
+    "id": "kids",
+    "name": "Kids mode",
+    "blurb": "Children aged 8-12 learning maths.",
+    "lens": "Safety, privacy and parental control.",
+    "reqN": [
+     "No recording by default; parent consent first",
+     "Stricter guardrails and topic allow-list"
+    ],
+    "dives": [
+     [
+      "What changes for children?",
+      "A policy profile turns off recordings and long-term memory by default, tightens guardrails, adds parental consent and reports, and a DPIA is done before launch."
+     ]
+    ],
+    "wrap": [
+     "Next: teacher-assigned courses and classroom view."
+    ]
+   }
+  ]
  }
 }

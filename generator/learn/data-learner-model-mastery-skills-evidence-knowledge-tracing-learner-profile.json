@@ -1,0 +1,247 @@
+{
+ "family": "data",
+ "reviewed": "Oct 2026",
+ "what": "A learner model is what the tutor knows about one learner: mastery per skill (estimated from their answers), the evidence behind each estimate, and long-term memories like goals, mistakes and what explanations worked.",
+ "like": "Like a good teacher's notebook about each pupil: what they've got, where they slip, and which explanation finally clicked.",
+ "why": [
+  "Lets the tutor pick the next step instead of following a fixed script",
+  "Evidence links make every score explainable to the learner",
+  "Memories make the tutor feel like it knows you across sessions"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "ans",
+    "t": "Answer event|correct or not",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "kt",
+    "t": "Knowledge tracing|update mastery",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "chart"
+   },
+   {
+    "id": "m",
+    "t": "Mastery table|skill, p(known), evidence",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "mk",
+    "t": "Memory keeper|after each session",
+    "x": 0,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "agent",
+    "i": "agent"
+   },
+   {
+    "id": "store",
+    "t": "Memory store|namespace = learner",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "memory"
+   },
+   {
+    "id": "vec",
+    "t": "Embeddings|search by meaning",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "vector"
+   },
+   {
+    "id": "tut",
+    "t": "Tutor|reads before each turn",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "agent",
+    "i": "agent"
+   }
+  ],
+  "edges": [
+   [
+    "ans",
+    "kt",
+    "outcome"
+   ],
+   [
+    "kt",
+    "m",
+    "p(known)"
+   ],
+   [
+    "mk",
+    "store",
+    "facts"
+   ],
+   [
+    "store",
+    "vec",
+    "index"
+   ],
+   [
+    "m",
+    "tut",
+    "weak skills"
+   ],
+   [
+    "store",
+    "tut",
+    "recall"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Every answer is evidence",
+    "d": "Each graded answer becomes an event linked to a skill and the transcript moment.",
+    "hl": [
+     "ans"
+    ]
+   },
+   {
+    "t": "Estimate mastery",
+    "d": "Knowledge tracing updates the chance the learner knows the skill. Bayesian knowledge tracing uses four parameters: prior, learn, slip and guess.",
+    "hl": [
+     "kt",
+     "m"
+    ]
+   },
+   {
+    "t": "Save what matters",
+    "d": "After the session a memory keeper writes durable facts - goals, recurring mistakes, preferred explanations - into a store namespaced by learner.",
+    "hl": [
+     "mk",
+     "store"
+    ]
+   },
+   {
+    "t": "Make it searchable",
+    "d": "Memories get embeddings so the tutor can recall by meaning ('they struggled with fractions').",
+    "hl": [
+     "vec"
+    ]
+   },
+   {
+    "t": "Use it every turn",
+    "d": "Before replying, the tutor reads weak skills and relevant memories - a few short facts, not the whole history.",
+    "hl": [
+     "tut"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "4",
+   "l": "Bayesian knowledge tracing parameters: prior, learn, slip, guess",
+   "s": "https://en.wikipedia.org/wiki/Bayesian_knowledge_tracing"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Model of mastery",
+   "d": "BKT is simple and explainable; deep or model-based tracing can be more accurate but harder to explain to learners."
+  },
+  {
+   "t": "Where memory lives",
+   "d": "In the same Postgres as the app (with pgvector): one backup, one delete path. A separate memory service only at real scale."
+  },
+  {
+   "t": "What gets saved",
+   "d": "Durable, useful facts only; learners can see and delete them."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "agent-long-term-memory-persistent-memory-vector-kv-user-profile-ai-agentic",
+   "why": "Generic agent memory without mastery estimates"
+  },
+  {
+   "slug": "rag-knowledge-graph-graphrag-entities-relations-neo4j-ai-retrieval-augmented-generation",
+   "why": "When skills and prerequisites form a graph you need to traverse"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Creepy recall",
+   "d": "The tutor brings up personal details out of context.",
+   "see": "Learner feedback, memory deletions",
+   "fix": "Save only learning-relevant facts; show and let learners delete memories"
+  },
+  {
+   "t": "Mastery never moves",
+   "d": "Grading is noisy so estimates bounce.",
+   "see": "Skills flip between mastered and not",
+   "fix": "Consistent grading, more evidence per skill, smoothing"
+  }
+ ],
+ "say": [
+  "I keep a learner model: mastery per skill from knowledge tracing, each score linked to the answers that justify it.",
+  "Long-term memories sit in a store namespaced by learner id with embeddings, in the same Postgres, so delete-my-data removes them in one step."
+ ],
+ "followups": [
+  {
+   "q": "How do you keep it private?",
+   "a": "Every read and write is scoped by the session's identity, memories are visible to the learner, and deletion is one workflow across all stores."
+  }
+ ],
+ "today": "Agent frameworks ship long-term memory stores with namespaces and semantic search (for example LangGraph stores with Postgres), so the learner model is mostly tables plus a store.",
+ "check": [
+  {
+   "q": "Which four parameters does Bayesian knowledge tracing use?",
+   "a": "Prior, learn, slip and guess",
+   "d": [
+    "Speed, accuracy, time, cost",
+    "Recall, stability, difficulty, rating",
+    "Precision, recall, F1, AUC"
+   ],
+   "why": "BKT models mastery as a hidden state updated with those four."
+  },
+  {
+   "q": "Where should learner memories live for easy deletion?",
+   "a": "A store namespaced by learner id in the main database",
+   "d": [
+    "Inside the system prompt",
+    "In browser cookies",
+    "Scattered across log files"
+   ],
+   "why": "One namespace and one database make delete-my-data reliable."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Bayesian knowledge tracing",
+   "u": "https://en.wikipedia.org/wiki/Bayesian_knowledge_tracing"
+  },
+  {
+   "t": "LangGraph docs: stores",
+   "u": "https://docs.langchain.com/oss/javascript/langgraph/stores.md"
+  }
+ ]
+}
