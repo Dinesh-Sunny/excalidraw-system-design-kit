@@ -1,0 +1,92 @@
+{
+ "family": "service",
+ "reviewed": "Oct 2026",
+ "what": "An idempotency store remembers which requests or jobs already ran, keyed by a unique idempotency key. When a retry or duplicate arrives, it returns the saved result instead of doing the work twice.",
+ "like": "Like a cloakroom ticket: show the same ticket twice and you get the same coat back, not a second coat.",
+ "why": [
+  "Networks and queues retry, so the same request often arrives more than once",
+  "Stops double charges, double emails and double-counted results",
+  "Lets clients retry freely after a timeout without fear"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "client", "t": "Client or worker|sends key with request", "x": 0, "y": 20, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "queue", "t": "Queue|at-least-once delivery", "x": 0, "y": 180, "w": 150, "h": 86, "c": "msg", "i": "queue"},
+   {"id": "svc", "t": "Your service|checks key first", "x": 265, "y": 20, "w": 170, "h": 86, "c": "svc", "i": "service"},
+   {"id": "lock", "t": "In-progress lock|status = running", "x": 265, "y": 180, "w": 170, "h": 86, "c": "svc", "i": "lock"},
+   {"id": "store", "t": "Idempotency store|key -> saved result", "x": 550, "y": 20, "w": 150, "h": 86, "c": "data", "i": "db"},
+   {"id": "work", "t": "Real work|charge, count, write", "x": 550, "y": 180, "w": 150, "h": 86, "c": "data", "i": "tool"},
+   {"id": "ttl", "t": "TTL cleanup|drop old keys", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "clock"}
+  ],
+  "edges": [
+   ["client", "svc", "key + body"],
+   ["queue", "svc", "redelivery"],
+   ["svc", "store", "seen key?"],
+   ["svc", "lock", "claim key"],
+   ["lock", "work", "run once"],
+   ["work", "store", "save result"],
+   ["store", "ttl", "expire"]
+  ],
+  "steps": [
+   {"t": "Request carries a key", "d": "The client makes a unique key (often a random UUID) and sends it with the request, for example in an Idempotency-Key header. A retry reuses the same key.", "hl": ["client", "svc"]},
+   {"t": "Duplicates are normal", "d": "Queues deliver at least once, so a crash or timeout can hand the same job over again. The service treats every arrival as maybe a repeat.", "hl": ["queue", "svc"]},
+   {"t": "Look up the key", "d": "The service checks the store. Key found with a finished result? Return that saved result straight away, without doing the work again.", "hl": ["svc", "store"]},
+   {"t": "Claim it atomically", "d": "New key: insert a row with status running under a unique constraint. Only one insert can win, so two copies arriving together cannot both start.", "hl": ["svc", "lock", "store"]},
+   {"t": "Do the work, save", "d": "Run the real action, then store the response next to the key and mark it done. Ideally the work and the key commit in one transaction.", "hl": ["lock", "work", "store"]},
+   {"t": "Expire old keys", "d": "Keys are kept for a retention window, then removed by a TTL job so the store does not grow forever.", "hl": ["store", "ttl"]}
+  ]
+ },
+ "numbers": [
+  {"v": "24 h", "l": "Stripe may prune idempotency keys once at least this old", "s": "https://docs.stripe.com/api/idempotent_requests.md"},
+  {"v": "255", "l": "max characters in a Stripe idempotency key", "s": "https://docs.stripe.com/api/idempotent_requests.md"},
+  {"v": "5", "l": "max in-flight requests for Kafka's idempotent producer", "s": "https://docs.axonops.com/data-platforms/kafka/application-development/producers/idempotence"},
+  {"v": "3.0", "l": "Kafka version where producer idempotence became on by default", "s": "https://docs.axonops.com/data-platforms/kafka/application-development/producers/idempotence"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Random key or natural key", "d": "Client-made UUIDs suit API calls. For jobs, build a natural key from the business facts, like project + prompt + engine + day + run, so any retry produces the same key."},
+  {"t": "Where to store keys", "d": "Same database as the data lets key and work commit together. Redis SET with NX and a TTL is fast but can lose keys on failover."},
+  {"t": "Retention window (TTL)", "d": "Keep keys longer than your longest retry period, including queue redelivery and manual replays. Stripe uses about 24 hours."},
+  {"t": "What a retry returns", "d": "Return the saved response, even a saved error, so the client sees one consistent answer. Reject a reused key whose body differs."},
+  {"t": "In-progress handling", "d": "If the key is still running, answer 409 or ask the caller to retry later. Give the lock a timeout so a crashed worker does not block it forever."}
+ ],
+ "instead": [
+  {"slug": "data-postgresql-postgres-sql-relational", "why": "A unique constraint plus upsert can be the whole idempotency store"},
+  {"slug": "cache-redis-cache-in-memory-kv-sorted-set-pubsub", "why": "SET NX with TTL for quick, short-lived dedupe"},
+  {"slug": "msg-kafka-event-log-stream-topic-partitions", "why": "Idempotent producer and transactions dedupe inside the log itself"},
+  {"slug": "msg-dead-letter-queue-dlq-retry-failed-messages", "why": "Parks jobs that keep failing so retries stop piling up"}
+ ],
+ "breaks": [
+  {"t": "Check-then-act race", "d": "Two copies both read 'no key' and both run the work.", "see": "Duplicate rows or double charges that arrived within milliseconds", "fix": "Claim the key with an atomic insert under a unique constraint, not a read first"},
+  {"t": "Key expired too early", "d": "A late retry or replay arrives after the TTL, so the work runs again.", "see": "Duplicates that line up with old redeliveries or backfills", "fix": "Retention longer than the max retry window, or a natural key stored with the data"},
+  {"t": "Stuck in progress", "d": "A worker crashes after claiming the key, so every retry sees running.", "see": "Keys stuck in running status, jobs never completing", "fix": "Lock timeout or lease, then let a retry reclaim it"},
+  {"t": "Key saved, work lost", "d": "The key and the real write are stored separately and only one commits.", "see": "Saved success with no matching data, or data with no key", "fix": "Commit key and work in one transaction, or make the write itself an upsert"},
+  {"t": "Same key, different body", "d": "A client bug reuses a key for a new request.", "see": "Users get an old answer for a new request", "fix": "Store a hash of the body and reject mismatches"}
+ ],
+ "say": [
+  "Delivery is at-least-once, so I assume every job can arrive twice and make the handler idempotent.",
+  "Each AI-engine check gets a natural key of project, prompt, engine, day and run number, and the result row has a unique constraint on it, so I write with INSERT ... ON CONFLICT DO NOTHING.",
+  "A retried job then becomes a no-op instead of counting a citation twice, which keeps visibility scores honest.",
+  "True exactly-once is really effectively-once: at-least-once delivery plus idempotent processing."
+ ],
+ "followups": [
+  {"q": "Is exactly-once delivery possible?", "a": "Across a network, not as pure delivery. Systems give effectively-once: retry until acknowledged, then dedupe. Kafka does this with producer IDs and sequence numbers per partition, plus transactions for writes across partitions."},
+  {"q": "Where does the in-progress state live?", "a": "In the same row as the key: status running, done or failed, plus a lock expiry. A retry seeing running waits or gets a 409; one seeing done gets the saved result."},
+  {"q": "Random UUID or natural key?", "a": "UUIDs work when the client keeps the key across its own retries. For scheduled jobs a natural key is better, because a rerun from scratch still builds the same key."},
+  {"q": "How do you clean up keys?", "a": "Give each key a created time and delete or expire rows older than the retention window, with a TTL index or a periodic job. Keep it longer than any retry path."}
+ ],
+ "today": "Kafka producers have been idempotent by default since Kafka 3.0, using a producer ID and per-partition sequence numbers so brokers drop duplicate batches.",
+ "check": [
+  {"q": "Your queue promises at-least-once delivery. What must the consumer assume?", "a": "Any message may arrive more than once", "d": ["Each message arrives exactly once", "Messages never arrive late", "Duplicates only happen on deploys"], "why": "At-least-once means retries until acknowledged, so repeats are expected."},
+  {"q": "Two copies of a job arrive at the same moment. What stops both running?", "a": "An atomic insert of the key under a unique constraint", "d": ["Reading the key first, then writing", "A longer TTL", "Logging both requests"], "why": "Only one insert can win the constraint; read-then-write leaves a gap both can slip through."},
+  {"q": "Which key best dedupes a daily AI-engine visibility check?", "a": "project + prompt + engine + day + run", "d": ["A new random UUID per attempt", "The worker's hostname", "The current timestamp"], "why": "A natural key is rebuilt the same way on every retry, so duplicates collide."},
+  {"q": "A Stripe retry reuses a key whose first try returned a 500. What comes back?", "a": "The same saved 500 response", "d": ["A fresh attempt", "An empty 200", "A 404 not found"], "why": "Stripe saves the first result for the key, errors included, once the endpoint started running."}
+ ],
+ "sources": [
+  {"t": "Stripe API: idempotent requests", "u": "https://docs.stripe.com/api/idempotent_requests.md"},
+  {"t": "AxonOps: Kafka idempotent producer", "u": "https://docs.axonops.com/data-platforms/kafka/application-development/producers/idempotence"},
+  {"t": "PostgreSQL docs: INSERT ... ON CONFLICT", "u": "https://www.postgresql.org/docs/19/sql-insert.html"}
+ ]
+}

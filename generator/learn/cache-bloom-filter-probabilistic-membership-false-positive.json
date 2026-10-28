@@ -1,0 +1,92 @@
+{
+ "family": "cache",
+ "reviewed": "Oct 2026",
+ "what": "A Bloom filter is a tiny bit array that answers 'have I seen this?' with either 'definitely not' or 'probably yes'. It lets you skip expensive work for items that are surely absent.",
+ "like": "Like a bouncer with a rough guest list: anyone not on it is surely turned away, but now and then a lookalike gets waved through.",
+ "why": [
+  "Uses about 10 bits per item, far less than storing the items",
+  "Never says 'no' for something that is there - no false negatives",
+  "Cheap check in front of a slow disk read, network call or crawl"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "item", "t": "Item|a URL or row key", "x": 0, "y": 20, "w": 150, "h": 86, "c": "client", "i": "doc"},
+   {"id": "hash", "t": "k hash functions|k positions per item", "x": 265, "y": 20, "w": 170, "h": 86, "c": "cache", "i": "hash"},
+   {"id": "bits", "t": "Bit array|m bits, in memory", "x": 265, "y": 180, "w": 170, "h": 86, "c": "cache", "i": "memory"},
+   {"id": "no", "t": "Any bit 0|definitely not there", "x": 0, "y": 340, "w": 150, "h": 86, "c": "svc", "i": "shield"},
+   {"id": "maybe", "t": "All bits 1|probably there", "x": 265, "y": 340, "w": 170, "h": 86, "c": "svc", "i": "eye"},
+   {"id": "slow", "t": "Expensive check|disk, SSTable, fetch", "x": 550, "y": 340, "w": 150, "h": 86, "c": "data", "i": "db"},
+   {"id": "redis", "t": "RedisBloom|BF.RESERVE / BF.ADD", "x": 550, "y": 20, "w": 150, "h": 86, "c": "cache", "i": "cache"}
+  ],
+  "edges": [
+   ["item", "hash", ""],
+   ["hash", "bits", "set or test"],
+   ["redis", "hash", "as a service"],
+   ["bits", "no", "a 0 found"],
+   ["bits", "maybe", "all 1s"],
+   ["maybe", "slow", "confirm"]
+  ],
+  "steps": [
+   {"t": "Hash the item", "d": "Run the item through k hash functions. Each one points to a position in a bit array of m bits.", "hl": ["item", "hash"]},
+   {"t": "Add: set bits", "d": "To add an item, switch those k bits to 1. The item itself is not stored, which is why the filter is so small.", "hl": ["hash", "bits"]},
+   {"t": "Query: any zero?", "d": "To test an item, check its k bits. If any bit is 0, the item was never added - a sure no.", "hl": ["bits", "no"]},
+   {"t": "All ones: maybe", "d": "If every bit is 1, it is probably there, but other items may have set those bits. That is a false positive.", "hl": ["bits", "maybe"]},
+   {"t": "Confirm the maybes", "d": "Only 'maybe' answers go on to the real, costly check, like reading an SSTable from disk or fetching a page.", "hl": ["maybe", "slow"]},
+   {"t": "Or use Redis", "d": "RedisBloom gives you BF.RESERVE with a target error rate and capacity, then BF.ADD and BF.EXISTS from any service.", "hl": ["redis", "hash"]}
+  ]
+ },
+ "numbers": [
+  {"v": "9.585", "l": "bits per item for a 1% false positive rate", "s": "https://redis.io/docs/latest/commands/bf.reserve/"},
+  {"v": "7", "l": "hash functions that are optimal for a 1% error rate", "s": "https://redis.io/docs/latest/commands/bf.reserve/"},
+  {"v": "~4.8 bits", "l": "extra per item cuts the false positive rate tenfold", "s": "https://en.wikipedia.org/wiki/Bloom_filter"},
+  {"v": "0.01", "l": "Cassandra's default bloom_filter_fp_chance (0.1 for leveled compaction)", "s": "https://cassandra.apache.org/doc/4.0/cassandra/operating/bloom_filters.html"},
+  {"v": "~30%", "l": "less memory with RocksDB's Ribbon filter, for more CPU", "s": "https://rocksdb.org/blog/2021/12/29/ribbon-filter.html"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Target false positive rate", "d": "Lower rates cost more bits: about 9.6 bits per item at 1%, about 14.4 at 0.1%. Pick by how expensive a wasted 'maybe' check is."},
+  {"t": "Expected capacity", "d": "Size for the number of items you will add. Overfill a fixed filter and the false positive rate climbs fast."},
+  {"t": "Number of hashes (k)", "d": "The best k is about -ln(error rate) / ln 2, so 7 for 1%. Libraries usually work this out from your error rate."},
+  {"t": "Scaling or fixed", "d": "RedisBloom adds sub-filters when full (expansion 2 by default). NONSCALING uses a bit less memory but errors once capacity is reached."},
+  {"t": "Need deletes?", "d": "A plain Bloom filter cannot remove items. Use a counting Bloom filter or a cuckoo filter, or rebuild the filter on a schedule."}
+ ],
+ "instead": [
+  {"slug": "cache-redis-cache-in-memory-kv-sorted-set-pubsub", "why": "A plain Redis set gives exact answers when memory is not tight"},
+  {"slug": "cache-cache-in-memory-read-through-cache-aside", "why": "Caches the actual values, not just whether a key exists"},
+  {"slug": "data-key-value-dynamodb-dynamodb-kv-nosql", "why": "Exact, durable membership lookups by key at any size"},
+  {"slug": "data-wide-column-cassandra-cassandra-scylla-hbase-nosql", "why": "Uses Bloom filters inside each SSTable for you"}
+ ],
+ "breaks": [
+  {"t": "Filter overfilled", "d": "More items than planned push most bits to 1.", "see": "False positive rate far above target; slow path hit far more often", "fix": "Size for real capacity, use a scaling filter, or rebuild bigger"},
+  {"t": "Deleted items still 'maybe'", "d": "Bits cannot be cleared without affecting other items.", "see": "Removed URLs or keys still pass the filter", "fix": "Counting Bloom or cuckoo filter, or a periodic rebuild"},
+  {"t": "Treating maybe as yes", "d": "Code skips the real check on a 'maybe'.", "see": "Some new URLs are never crawled; some items wrongly marked seen", "fix": "Always confirm a maybe when a wrong yes matters"},
+  {"t": "Filter lost on restart", "d": "An in-memory filter disappears with the process.", "see": "Burst of slow-path work after a deploy", "fix": "Persist or rebuild it on startup, or keep it in Redis"}
+ ],
+ "say": [
+  "For the crawler's seen-URL check I'll put a Bloom filter in front of the URL store: 'definitely not seen' means crawl, 'maybe' means check the store.",
+  "At a 1% false positive rate that is about 9.6 bits per URL with 7 hashes, so a billion URLs fit in roughly 1.2 GB.",
+  "It never gives a false negative, so we never skip a page we truly haven't crawled; a false positive just costs one extra lookup.",
+  "Cassandra and RocksDB use the same trick per SSTable, so a point read skips files that cannot hold the key."
+ ],
+ "followups": [
+  {"q": "Why no false negatives?", "a": "Adding an item sets all its k bits to 1, and bits are never cleared. So any added item will always find all its bits set. Only other items can accidentally set them, which gives false positives."},
+  {"q": "How do you size one?", "a": "Bits per item is about -ln(p) / (ln 2)^2 and the best k is about -ln(p) / ln 2. For p = 1% that is about 9.6 bits and 7 hashes per item."},
+  {"q": "How do LSM-tree databases use them?", "a": "Each SSTable gets a Bloom filter in memory. A read checks the filter first and only opens files that might hold the key, saving disk reads for missing keys."},
+  {"q": "What if you need deletes?", "a": "Use a counting Bloom filter, which keeps small counters instead of bits, or a cuckoo filter, which supports deletes and has better memory locality."}
+ ],
+ "today": "RocksDB also offers Ribbon filters, a Bloom alternative that saves about 30% of filter memory at the cost of 3-4x more CPU to build.",
+ "check": [
+  {"q": "The filter says 'definitely not'. How sure is that?", "a": "Completely sure - it was never added", "d": ["About 99% sure", "Sure only if the filter is small", "It depends on the number of hashes"], "why": "A 0 bit means the item never set it, so Bloom filters have no false negatives."},
+  {"q": "About how many bits per item for a 1% false positive rate?", "a": "About 9.6", "d": ["About 1", "About 32", "About 128"], "why": "-ln(0.01) / (ln 2)^2 is about 9.585 bits per item."},
+  {"q": "You must remove items often. What fits best?", "a": "A cuckoo or counting Bloom filter", "d": ["A bigger plain Bloom filter", "More hash functions", "A lower error rate"], "why": "A plain Bloom filter cannot clear bits safely; these variants support deletes."},
+  {"q": "Why do Cassandra reads use Bloom filters?", "a": "To skip SSTables that cannot hold the key", "d": ["To compress rows", "To sort partitions", "To replicate writes"], "why": "Checking a small in-memory filter avoids opening files on disk for absent keys."}
+ ],
+ "sources": [
+  {"t": "Redis docs: BF.RESERVE", "u": "https://redis.io/docs/latest/commands/bf.reserve/"},
+  {"t": "Wikipedia: Bloom filter", "u": "https://en.wikipedia.org/wiki/Bloom_filter"},
+  {"t": "Cassandra 4.0 docs: Bloom filters", "u": "https://cassandra.apache.org/doc/4.0/cassandra/operating/bloom_filters.html"},
+  {"t": "RocksDB blog: Ribbon filter", "u": "https://rocksdb.org/blog/2021/12/29/ribbon-filter.html"}
+ ]
+}
