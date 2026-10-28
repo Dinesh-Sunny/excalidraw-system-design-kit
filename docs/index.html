@@ -119,7 +119,7 @@ body.filtering .hero .wrap { padding-bottom: 28px }
 .win video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #fff; object-fit: cover }
 
 /* rail */
-.rail { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
+.rail { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--ground); border-bottom: 1px solid var(--hairline) }
 .rail .wrap { display: flex; gap: 28px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; padding-top: 12px }
 .rail .wrap::-webkit-scrollbar { display: none }
 .rail .wrap.fr { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent) }
@@ -143,6 +143,7 @@ main .wrap > *, .row { min-width: 0 }
 .row h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 0 0 14px; font: 400 30px/1.1 var(--font-serif) }
 .row h2 .n { font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
 .row h2 .more { margin-left: auto; font: 500 13px/1 var(--font-sans); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; color: var(--ink) }
+#rows > .row { content-visibility: auto; contain-intrinsic-size: auto 360px }
 .track { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 20px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding: 6px 0 10px; margin-top: -6px; scrollbar-width: thin }
 .track > * { scroll-snap-align: start }
 @media (min-width: 900px) { .track { grid-auto-columns: calc((100% - 60px) / 4) } }
@@ -152,7 +153,7 @@ main .wrap > *, .row { min-width: 0 }
 .qa { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; opacity: 0; transform: translateY(-2px); transition: opacity .15s, transform .15s }
 .card:hover .qa, .card:focus-within .qa { opacity: 1; transform: none }
 @media (hover: none) { .qa { opacity: 1; transform: none } }
-.qa button { height: 30px; min-width: 30px; padding: 0 9px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink) }
+.qa button { height: 30px; min-width: 30px; padding: 0 9px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink) }
 .qa button:hover { background: var(--surface); box-shadow: var(--shadow-float) }
 .qa svg { width: 14px; height: 14px }
 .qa .saved { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
@@ -253,7 +254,7 @@ body.has-board footer .wrap { padding-bottom: 96px }
 .step.s1 { background: linear-gradient(180deg, var(--atmo-sky-mid), var(--atmo-haze)) }
 .step.s2 { background: linear-gradient(180deg, var(--atmo-lav-1), var(--atmo-lav-2)) }
 .step.s3 { background: linear-gradient(180deg, var(--atmo-dusk-1), var(--atmo-dusk-2)) }
-.step .k { justify-self: start; height: 28px; padding: 0 12px; border-radius: 9999px; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); display: inline-flex; align-items: center; font: 500 12px/1 var(--font-mono) }
+.step .k { justify-self: start; height: 28px; padding: 0 12px; border-radius: 9999px; background: var(--surface); display: inline-flex; align-items: center; font: 500 12px/1 var(--font-mono) }
 .step b { font: 400 28px/1.1 var(--font-serif); font-weight: 400; color: #141414 }
 .step span { display: block; font: 400 13px/18px var(--font-sans); color: rgba(20,20,20,.72); margin-top: 6px }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .step b { color: var(--ink) } :root:not([data-theme="light"]) .step span { color: var(--ink-muted) } }
@@ -436,6 +437,15 @@ html.mo .rv.in { opacity: 1; transform: none }
   .ct { font-size: 14px; line-height: 18px }
 }
 @media (max-width: 420px) { .mark .long { display: none } .mark .short { display: inline } .nav .wrap { gap: 6px } .nav .pill.primary { padding: 0 11px } .star, .spon { padding: 0 9px } .ibtn { width: 34px; height: 34px } .star .cnt { display: none } }
+.nav .wrap { position: relative }
+.hs { display: none; align-items: center; gap: 8px; height: 40px; width: min(360px, 30vw); padding: 0 8px 0 14px; margin-left: 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); animation: rise .25s ease-out }
+body.hs-on .hs { display: flex } .hs:focus-within { border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
+.hs svg { width: 16px; height: 16px; flex: none; color: var(--ink-muted) } .hs input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: 400 14px/1 var(--font-sans); color: var(--ink) } .hs input::-webkit-search-cancel-button { display: none }
+.hs kbd { font: 400 11px/1 var(--font-mono); color: var(--ink-muted); border: 1px solid var(--hairline); border-radius: 6px; padding: 3px 5px } .hsx { display: none; width: 28px; height: 28px; border: 0; border-radius: 50%; background: none; cursor: pointer; font: 400 18px/1 var(--font-sans); color: var(--ink-muted) }
+.hsb { display: none } .hsb svg { width: 17px; height: 17px }
+@media (max-width: 420px) { body.hs-on .nav .wrap { gap: 4px } body.hs-on .nav .ibtn { width: 32px; height: 32px } }
+@media (max-width: 360px) { body.hs-on .nav #theme { display: none } }
+@media (max-width: 1179px) { body.hs-on .hs { display: none } body.hs-on .hsb { display: grid } .nav.srch .hs { display: flex; position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); width: auto; margin: 0; z-index: 3; box-shadow: var(--shadow-float); animation: none } .nav.srch .hs kbd { display: none } .nav.srch .wrap > :not(.hs) { visibility: hidden } .nav.srch .hsx { display: grid; place-items: center } }
 .sw { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk); margin-left: 4px; flex: none }
 .sw a { height: 32px; padding: 0 12px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); text-decoration: none; transition: background .15s, color .15s; white-space: nowrap }
 .sw a svg { width: 15px; height: 15px; flex: none }
@@ -538,13 +548,15 @@ a.card .open { cursor: pointer }
 <header class="nav gut"><div class="wrap">
   <a class="mark" href="#top" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>
   <nav class="sw" aria-label="Site"><a href="./" aria-current="page"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="5.5" height="5.5" rx="1.2"/><rect x="11" y="3.5" width="5.5" height="5.5" rx="1.2"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1.2"/><rect x="11" y="11" width="5.5" height="5.5" rx="1.2"/></svg><span>Blocks</span></a><a href="practice/"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r=".8" fill="currentColor"/></svg><span>Practice</span></a></nav>
+  <form class="hs" id="hs" role="search" data-home="./"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m16.5 16.5-3.5-3.5"/></svg><input id="hq" type="search" placeholder="Search 292 blocks" autocomplete="off" aria-label="Search 292 blocks"><kbd aria-hidden="true">/</kbd><button type="button" class="hsx" id="hsx" aria-label="Close search">×</button></form>
   <span class="sp"></span>
+  <button class="ibtn hsb" id="hsb" type="button" aria-label="Search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m16.5 16.5-3.5-3.5"/></svg></button>
   <button class="ibtn" id="theme" type="button" aria-label="Switch theme"><svg class="i-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 12.5A6.5 6.5 0 0 1 7.5 4a6.5 6.5 0 1 0 8.5 8.5z"/></svg><svg class="i-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.6M10 15.9v1.6M2.5 10h1.6M15.9 10h1.6M4.7 4.7l1.1 1.1M14.2 14.2l1.1 1.1M4.7 15.3l1.1-1.1M14.2 5.8l1.1-1.1"/></svg></button>
   <a class="pill ghost spon" href="sponsor/" aria-label="Sponsor this kit"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg><span class="lbl">Sponsor</span></a>
   <a class="pill ghost star" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener" aria-label="Star on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg><span class="lbl">Star</span><span class="cnt" id="stars" hidden></span></a>
   <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest" data-kit>Get the kit</a>
 </div></header>
-<script>/* shared header: theme switch and the live star count, the same on every page */(()=>{const t=document.getElementById("theme");if(t)t.onclick=()=>{const d=document.documentElement,n=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=n;try{localStorage.setItem("sdk-theme",n)}catch(e){}};const show=n=>{const s=document.getElementById("stars");if(s&&n>0){s.textContent=n>=1000?(n/1000).toFixed(1)+"k":n;s.hidden=false}};let c=null;try{c=JSON.parse(sessionStorage.getItem("sdk-stars")||"null")}catch(e){}if(c&&Date.now()-c.t<36e5)show(c.n);else fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r=>r.ok?r.json():null).then(j=>{if(j){show(j.stargazers_count);try{sessionStorage.setItem("sdk-stars",JSON.stringify({t:Date.now(),n:j.stargazers_count}))}catch(e){}}}).catch(()=>{})})();</script>
+<script>/* shared header: theme switch and the live star count, the same on every page */(()=>{const t=document.getElementById("theme");if(t)t.onclick=()=>{const d=document.documentElement,n=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=n;try{localStorage.setItem("sdk-theme",n)}catch(e){}};const show=n=>{const s=document.getElementById("stars");if(s&&n>0){s.textContent=n>=1000?(n/1000).toFixed(1)+"k":n;s.hidden=false}};let c=null;try{c=JSON.parse(sessionStorage.getItem("sdk-stars")||"null")}catch(e){}/* header search: shows once the page search scrolls away; pages listen for sdk-hsearch, others send you to the blocks */const hs=document.getElementById("hs"),hq=document.getElementById("hq"),nv=hs.closest(".nav"),sb=()=>document.querySelector(".hero .sbox");const vis=on=>{if(!on&&(document.activeElement===hq||hq.value))return;document.body.classList.toggle("hs-on",on)};const watch=()=>{const box=sb();if(box&&"IntersectionObserver"in window)new IntersectionObserver(e=>vis(!e[0].isIntersecting),{rootMargin:"-64px 0px 0px 0px"}).observe(box);else vis(true)};document.readyState==="loading"?document.addEventListener("DOMContentLoaded",watch):watch();const send=sub=>{const v=hq.value;if(window.__sdkSearch)dispatchEvent(new CustomEvent("sdk-hsearch",{detail:{v,sub}}));else if(sub&&v.trim())location.href=hs.dataset.home+"?q="+encodeURIComponent(v.trim())};hq.addEventListener("input",()=>send(false));hs.addEventListener("submit",e=>{e.preventDefault();send(true);hq.blur();nv.classList.remove("srch")});document.getElementById("hsb").onclick=()=>{nv.classList.add("srch");hq.focus()};document.getElementById("hsx").onclick=()=>{nv.classList.remove("srch");hq.value="";send(false)};hq.addEventListener("blur",()=>{if(!hq.value){const box=sb();if(box){const r=box.getBoundingClientRect();if(r.bottom>64&&r.top<innerHeight)document.body.classList.remove("hs-on")}}});hq.addEventListener("keydown",e=>{if(e.key==="Escape"){nv.classList.remove("srch");hq.blur()}});document.addEventListener("keydown",e=>{if(e.key==="/"&&document.body.classList.contains("hs-on")&&!e.target.closest("input,textarea,select")&&!document.querySelector("dialog[open]")){e.preventDefault();e.stopImmediatePropagation();if(getComputedStyle(hs).display==="none")nv.classList.add("srch");hq.focus()}},true);if(c&&Date.now()-c.t<36e5)show(c.n);else fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r=>r.ok?r.json():null).then(j=>{if(j){show(j.stargazers_count);try{sessionStorage.setItem("sdk-stars",JSON.stringify({t:Date.now(),n:j.stargazers_count}))}catch(e){}}}).catch(()=>{})})();</script>
 
 <section class="hero gut" id="top"><div class="wrap">
   <h1>Draw systems by <i>typing</i>.</h1>
@@ -766,7 +778,7 @@ function trackRow(title, list, opts = {}) {
   if (opts.packs) t.innerHTML = list.map(packHTML).join(""); else if (opts.raw) t.innerHTML = opts.raw; else fill(t, list);
   sec.append(t); sec._track = t;
   const upd = () => { const a = sec.querySelectorAll(".nav-arrows .arr"); a[0].disabled = t.scrollLeft < 4; a[1].disabled = t.scrollLeft + t.clientWidth > t.scrollWidth - 4; sec.querySelector(".nav-arrows").style.visibility = t.scrollWidth > t.clientWidth + 4 ? "" : "hidden"; };
-  t.addEventListener("scroll", upd, { passive: true }); requestAnimationFrame(upd); addEventListener("resize", upd);
+  t.addEventListener("scroll", upd, { passive: true }); requestAnimationFrame(upd); addEventListener("resize", upd); sec.addEventListener("contentvisibilityautostatechange", upd); // rows off screen are skipped until they come into view
   return sec;
 }
 const words = t => t.toLowerCase().split(/\s+/).filter(Boolean);
@@ -842,6 +854,10 @@ rows.addEventListener("click", e => {
 rows.addEventListener("pointerover", e => { const c = e.target.closest(".card"); if (c && c._item && !c._pf) { c._pf = 1; els(c._item).catch(() => {}); } }, { passive: true });
 let typing; q.addEventListener("input", () => { clearTimeout(typing); typing = setTimeout(() => { if (q.value.trim()) cat = "all"; draw(false); }, 120); });
 $("#sf").addEventListener("submit", e => { e.preventDefault(); cat = "all"; draw(true); });
+/* the header search (shown once this search scrolls away) drives the same results */
+window.__sdkSearch = true;
+addEventListener("sdk-hsearch", e => { const v = e.detail.v; q.value = v; cat = "all"; draw(!!v.trim() || e.detail.sub); });
+try { const u = new URLSearchParams(location.search).get("q"); if (u) { q.value = u; requestAnimationFrame(() => draw(true)); } } catch (e) {}
 document.addEventListener("keydown", e => { if (e.key === "/" && document.activeElement !== q && !document.querySelector("dialog[open]")) { e.preventDefault(); q.focus(); } });
 
 /* ---- elements, layout, clipboard ---- */

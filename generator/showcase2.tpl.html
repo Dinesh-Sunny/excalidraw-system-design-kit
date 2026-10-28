@@ -111,7 +111,7 @@ body.filtering .hero .wrap { padding-bottom: 28px }
 .win video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #fff; object-fit: cover }
 
 /* rail */
-.rail { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--hairline) }
+.rail { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 15; background: var(--ground); border-bottom: 1px solid var(--hairline) }
 .rail .wrap { display: flex; gap: 28px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; padding-top: 12px }
 .rail .wrap::-webkit-scrollbar { display: none }
 .rail .wrap.fr { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent) }
@@ -135,6 +135,7 @@ main .wrap > *, .row { min-width: 0 }
 .row h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 0 0 14px; font: 400 30px/1.1 var(--font-serif) }
 .row h2 .n { font: 400 12px/1 var(--font-mono); color: var(--ink-muted) }
 .row h2 .more { margin-left: auto; font: 500 13px/1 var(--font-sans); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; color: var(--ink) }
+#rows > .row { content-visibility: auto; contain-intrinsic-size: auto 360px }
 .track { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 20px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding: 6px 0 10px; margin-top: -6px; scrollbar-width: thin }
 .track > * { scroll-snap-align: start }
 @media (min-width: 900px) { .track { grid-auto-columns: calc((100% - 60px) / 4) } }
@@ -144,7 +145,7 @@ main .wrap > *, .row { min-width: 0 }
 .qa { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; opacity: 0; transform: translateY(-2px); transition: opacity .15s, transform .15s }
 .card:hover .qa, .card:focus-within .qa { opacity: 1; transform: none }
 @media (hover: none) { .qa { opacity: 1; transform: none } }
-.qa button { height: 30px; min-width: 30px; padding: 0 9px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink) }
+.qa button { height: 30px; min-width: 30px; padding: 0 9px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink) }
 .qa button:hover { background: var(--surface); box-shadow: var(--shadow-float) }
 .qa svg { width: 14px; height: 14px }
 .qa .saved { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
@@ -245,7 +246,7 @@ body.has-board footer .wrap { padding-bottom: 96px }
 .step.s1 { background: linear-gradient(180deg, var(--atmo-sky-mid), var(--atmo-haze)) }
 .step.s2 { background: linear-gradient(180deg, var(--atmo-lav-1), var(--atmo-lav-2)) }
 .step.s3 { background: linear-gradient(180deg, var(--atmo-dusk-1), var(--atmo-dusk-2)) }
-.step .k { justify-self: start; height: 28px; padding: 0 12px; border-radius: 9999px; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); display: inline-flex; align-items: center; font: 500 12px/1 var(--font-mono) }
+.step .k { justify-self: start; height: 28px; padding: 0 12px; border-radius: 9999px; background: var(--surface); display: inline-flex; align-items: center; font: 500 12px/1 var(--font-mono) }
 .step b { font: 400 28px/1.1 var(--font-serif); font-weight: 400; color: #141414 }
 .step span { display: block; font: 400 13px/18px var(--font-sans); color: rgba(20,20,20,.72); margin-top: 6px }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .step b { color: var(--ink) } :root:not([data-theme="light"]) .step span { color: var(--ink-muted) } }
@@ -428,6 +429,15 @@ html.mo .rv.in { opacity: 1; transform: none }
   .ct { font-size: 14px; line-height: 18px }
 }
 @media (max-width: 420px) { .mark .long { display: none } .mark .short { display: inline } .nav .wrap { gap: 6px } .nav .pill.primary { padding: 0 11px } .star, .spon { padding: 0 9px } .ibtn { width: 34px; height: 34px } .star .cnt { display: none } }
+.nav .wrap { position: relative }
+.hs { display: none; align-items: center; gap: 8px; height: 40px; width: min(360px, 30vw); padding: 0 8px 0 14px; margin-left: 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); animation: rise .25s ease-out }
+body.hs-on .hs { display: flex } .hs:focus-within { border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
+.hs svg { width: 16px; height: 16px; flex: none; color: var(--ink-muted) } .hs input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: 400 14px/1 var(--font-sans); color: var(--ink) } .hs input::-webkit-search-cancel-button { display: none }
+.hs kbd { font: 400 11px/1 var(--font-mono); color: var(--ink-muted); border: 1px solid var(--hairline); border-radius: 6px; padding: 3px 5px } .hsx { display: none; width: 28px; height: 28px; border: 0; border-radius: 50%; background: none; cursor: pointer; font: 400 18px/1 var(--font-sans); color: var(--ink-muted) }
+.hsb { display: none } .hsb svg { width: 17px; height: 17px }
+@media (max-width: 420px) { body.hs-on .nav .wrap { gap: 4px } body.hs-on .nav .ibtn { width: 32px; height: 32px } }
+@media (max-width: 360px) { body.hs-on .nav #theme { display: none } }
+@media (max-width: 1179px) { body.hs-on .hs { display: none } body.hs-on .hsb { display: grid } .nav.srch .hs { display: flex; position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); width: auto; margin: 0; z-index: 3; box-shadow: var(--shadow-float); animation: none } .nav.srch .hs kbd { display: none } .nav.srch .wrap > :not(.hs) { visibility: hidden } .nav.srch .hsx { display: grid; place-items: center } }
 .sw { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk); margin-left: 4px; flex: none }
 .sw a { height: 32px; padding: 0 12px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); text-decoration: none; transition: background .15s, color .15s; white-space: nowrap }
 .sw a svg { width: 15px; height: 15px; flex: none }
@@ -748,7 +758,7 @@ function trackRow(title, list, opts = {}) {
   if (opts.packs) t.innerHTML = list.map(packHTML).join(""); else if (opts.raw) t.innerHTML = opts.raw; else fill(t, list);
   sec.append(t); sec._track = t;
   const upd = () => { const a = sec.querySelectorAll(".nav-arrows .arr"); a[0].disabled = t.scrollLeft < 4; a[1].disabled = t.scrollLeft + t.clientWidth > t.scrollWidth - 4; sec.querySelector(".nav-arrows").style.visibility = t.scrollWidth > t.clientWidth + 4 ? "" : "hidden"; };
-  t.addEventListener("scroll", upd, { passive: true }); requestAnimationFrame(upd); addEventListener("resize", upd);
+  t.addEventListener("scroll", upd, { passive: true }); requestAnimationFrame(upd); addEventListener("resize", upd); sec.addEventListener("contentvisibilityautostatechange", upd); // rows off screen are skipped until they come into view
   return sec;
 }
 const words = t => t.toLowerCase().split(/\s+/).filter(Boolean);
@@ -824,6 +834,10 @@ rows.addEventListener("click", e => {
 rows.addEventListener("pointerover", e => { const c = e.target.closest(".card"); if (c && c._item && !c._pf) { c._pf = 1; els(c._item).catch(() => {}); } }, { passive: true });
 let typing; q.addEventListener("input", () => { clearTimeout(typing); typing = setTimeout(() => { if (q.value.trim()) cat = "all"; draw(false); }, 120); });
 $("#sf").addEventListener("submit", e => { e.preventDefault(); cat = "all"; draw(true); });
+/* the header search (shown once this search scrolls away) drives the same results */
+window.__sdkSearch = true;
+addEventListener("sdk-hsearch", e => { const v = e.detail.v; q.value = v; cat = "all"; draw(!!v.trim() || e.detail.sub); });
+try { const u = new URLSearchParams(location.search).get("q"); if (u) { q.value = u; requestAnimationFrame(() => draw(true)); } } catch (e) {}
 document.addEventListener("keydown", e => { if (e.key === "/" && document.activeElement !== q && !document.querySelector("dialog[open]")) { e.preventDefault(); q.focus(); } });
 
 /* ---- elements, layout, clipboard ---- */

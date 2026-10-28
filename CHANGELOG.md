@@ -3,6 +3,8 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Faster scrolling: the small buttons on every card and the category bar no longer use a live blur (there were 481 blurred elements redrawn on every scroll step), and rows that are off screen are skipped until they come into view.
+- Search in the header: once the page search scrolls away, a compact search appears in the header on Blocks, Practice and the sponsor pages (a search icon that opens a full-width bar on smaller screens; press / anywhere). On Blocks and Practice it filters right there; from the sponsor pages it takes you to the block results.
 - Fix: opening a block now always shows that block's picture. Blocks without a full lesson were swapping the picture for their "In real systems" map right after opening, which looked like a different design. The picture only follows the reading inside a full lesson (Redis today), and there the label on the diagram is a "show the block" button.
 - Smooth scrolling: the block rows, category bar and section bar scroll sideways only, so scrolling the page over a row no longer gets caught (each row could scroll 12 px up and down because of the hover lift). Rows snap gently instead of forcefully. In the block preview, scrolling over the picture now scrolls the reading column; pinch or Ctrl + scroll zooms, and once zoomed in, scrolling moves around the picture. On phones a finger on the picture scrolls the page.
 - Block preview, calmer top: one Copy to Excalidraw button, Practise for designs, and a More menu holding Copy image, Copy SVG, the downloads and the library name (a bottom sheet on phones).
