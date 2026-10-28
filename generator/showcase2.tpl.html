@@ -355,8 +355,10 @@ html.mo .rv.in { opacity: 1; transform: none }
 #ssave[aria-pressed="true"] svg { fill: currentColor }
 .sh-img img { width: 100%; height: 100%; object-fit: contain }
 .sh-body { padding: 18px 20px 20px; display: grid; gap: 14px }
-.sh-top { display: flex; align-items: start; gap: 12px }
-.sh-top h3 { margin: 0; font: 400 30px/1.1 var(--font-serif); flex: 1 }
+.sh-top { display: flex; align-items: flex-start; gap: 12px }
+.sh-tt { gap: 8px !important } .scat { justify-self: start; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; border-radius: 9999px; border: 0; background: var(--surface-sunk); cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink-muted); transition: color .15s, background .15s } .scat:hover { color: var(--ink) } .scat svg { width: 14px; height: 14px }
+.stools { display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk); flex: none } .stools .ibtn, .stools .x { width: 34px; height: 34px; border: 0; background: none } .stools .ibtn:hover, .stools .x:hover { background: var(--surface) } .tsep { width: 1px; height: 18px; background: var(--hairline); margin: 0 2px }
+.sh-top h3 { margin: 0; font: 400 36px/1.02 var(--font-serif); letter-spacing: -.01em; flex: 1 }
 .x { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; display: grid; place-items: center; flex: none }
 .x svg { width: 14px; height: 14px }
 .name { display: flex; gap: 8px; align-items: center; background: var(--surface-sunk); border-radius: 9999px; padding: 6px 6px 6px 16px; min-width: 0 }
@@ -411,7 +413,7 @@ html.mo .rv.in { opacity: 1; transform: none }
 .kit-foot { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
 
 @media (max-width: 640px) {
-  .nav .gh-label, .star .lbl, .spon .lbl { display: none }
+  .nav .gh-label, .star .lbl { display: none }
   .spon, .star { padding: 0 11px }
   .mark { font-size: 22px }
   .nav .pill { height: 36px; padding: 0 12px; font-size: 13px }
@@ -430,28 +432,52 @@ html.mo .rv.in { opacity: 1; transform: none }
 }
 @media (max-width: 420px) { .mark .long { display: none } .mark .short { display: inline } .nav .wrap { gap: 6px } .nav .pill.primary { padding: 0 11px } .star, .spon { padding: 0 9px } .ibtn { width: 34px; height: 34px } .star .cnt { display: none } }
 .nav .wrap { position: relative }
-.hs { display: none; align-items: center; gap: 8px; height: 40px; width: min(360px, 30vw); padding: 0 8px 0 14px; margin-left: 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); animation: rise .25s ease-out }
-body.hs-on .hs { display: flex } .hs:focus-within { border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
-.hs svg { width: 16px; height: 16px; flex: none; color: var(--ink-muted) } .hs input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: 400 14px/1 var(--font-sans); color: var(--ink) } .hs input::-webkit-search-cancel-button { display: none }
-.hs kbd { font: 400 11px/1 var(--font-mono); color: var(--ink-muted); border: 1px solid var(--hairline); border-radius: 6px; padding: 3px 5px } .hsx { display: none; width: 28px; height: 28px; border: 0; border-radius: 50%; background: none; cursor: pointer; font: 400 18px/1 var(--font-sans); color: var(--ink-muted) }
-.hsb { display: none } .hsb svg { width: 17px; height: 17px }
-@media (max-width: 420px) { body.hs-on .nav .wrap { gap: 4px } body.hs-on .nav .ibtn { width: 32px; height: 32px } }
-@media (max-width: 360px) { body.hs-on .nav #theme { display: none } }
-@media (max-width: 1179px) { body.hs-on .hs { display: none } body.hs-on .hsb { display: grid } .nav.srch .hs { display: flex; position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); width: auto; margin: 0; z-index: 3; box-shadow: var(--shadow-float); animation: none } .nav.srch .hs kbd { display: none } .nav.srch .wrap > :not(.hs) { visibility: hidden } .nav.srch .hsx { display: grid; place-items: center } }
+.hsk { display: none; align-items: center; gap: 8px; height: 40px; padding: 0 8px 0 13px; margin-left: 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; font: 400 14px/1 var(--font-sans); color: var(--ink-muted); animation: rise .25s ease-out; transition: border-color .15s, color .15s }
+.hsk:hover { border-color: var(--slate); color: var(--ink) } .hsk svg { width: 16px; height: 16px } .hsk kbd { font: 500 11px/1 var(--font-mono); color: var(--ink-muted); background: var(--surface-sunk); border-radius: 6px; padding: 4px 6px; margin-left: 18px }
+body.hs-on .hsk { display: inline-flex }
+@media (max-width: 1179px) { .hsk { width: 40px; height: 40px; padding: 0; justify-content: center; margin-left: 0 } .hsk span, .hsk kbd { display: none } .nav .sp + .hsk { margin-left: 0 } }
+@media (max-width: 420px) { .hsk { width: 34px; height: 34px } }
+/* the search panel (Cmd/Ctrl + K), same on every page */
+dialog.cmdk { width: min(720px, calc(100vw - 32px)); max-height: min(640px, calc(100dvh - 96px)); margin: 72px auto auto; padding: 0; display: none; flex-direction: column; overflow: hidden }
+dialog.cmdk[open] { display: flex; animation: rise .2s ease-out } dialog.cmdk::backdrop { background: rgba(15,16,18,.42) }
+.ck-in { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--hairline) } .ck-in svg { width: 20px; height: 20px; color: var(--ink-muted); flex: none }
+.ck-in input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: 400 19px/26px var(--font-sans); color: var(--ink) } .ck-in input::-webkit-search-cancel-button { display: none }
+.ck-x { height: 28px; padding: 0 9px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--surface-sunk); cursor: pointer; font: 500 11px/1 var(--font-mono); color: var(--ink-muted) }
+.ck-sc { display: flex; gap: 4px; padding: 8px 14px; border-bottom: 1px solid var(--hairline); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; flex: none } .ck-sc::-webkit-scrollbar { display: none }
+.ck-sc button { flex: none; height: 30px; padding: 0 12px; border: 0; border-radius: 9999px; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); display: inline-flex; align-items: center; gap: 6px }
+.ck-sc button[aria-selected="true"] { background: var(--sketch-soft); color: var(--sketch) } .ck-sc i { font: 400 11px/1 var(--font-mono); font-style: normal; opacity: .75 } .ck-sc i:empty { display: none }
+.ck-f { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px 0 } .ck-f[hidden] { display: none } .ck-f .chip { height: 28px; font-size: 12px; background: var(--sketch-soft); color: var(--sketch); border-color: transparent }
+.ck-l { overflow: auto; overscroll-behavior: contain; padding: 6px 8px 10px; flex: 1; min-height: 120px }
+.ck-g { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 10px 6px } .ck-g > span { font: 500 11px/16px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em } .ck-g > span i { font-style: normal; opacity: .7; margin-left: 4px }
+.ck-g .chips { display: flex; flex-wrap: wrap; gap: 6px; width: 100% } .ck-g .chip { height: 30px; font: 400 13px/1 var(--font-mono) }
+.ck-more { border: 0; background: none; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--sketch) }
+.ck-r { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 10px; cursor: pointer }
+.ck-r.on { background: var(--surface-sunk) } .ck-r img, .ck-ic { width: 56px; height: 38px; border-radius: 7px; border: 1px solid var(--hairline); background: var(--thumb); object-fit: contain; display: grid; place-items: center; font: 500 15px/1 var(--font-mono); color: var(--ink-muted) }
+.ck-t { min-width: 0; display: grid; gap: 2px } .ck-t b { font: 500 15px/20px var(--font-sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis } .ck-t small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px }
+.ck-t mark { background: none; color: var(--sketch); font-weight: 600 } .ck-t .lvd { display: inline-block; width: 6px; height: 6px; border-radius: 50% }
+.lvd.Easy { background: #2f9e44 } .lvd.Medium { background: #e67700 } .lvd.Hard { background: #e03131 }
+.ck-a { display: flex; gap: 6px; opacity: 0; transition: opacity .12s } .ck-r.on .ck-a, .ck-r:hover .ck-a { opacity: 1 } .ck-a button { height: 28px; padding: 0 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink) } .ck-a button:hover { border-color: var(--slate) } .ck-a button.on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+.ck-go { font: 500 12px/1 var(--font-sans); color: var(--ink-muted); opacity: 0 } .ck-r.on .ck-go { opacity: 1 }
+.ck-e { padding: 34px 16px; text-align: center; color: var(--ink-muted); font: 400 14px/22px var(--font-sans) } .ck-e b { display: block; font: 400 26px/1.1 var(--font-serif); color: var(--ink); margin-bottom: 6px } .ck-e code { font: 400 13px var(--font-mono); background: var(--surface-sunk); padding: 1px 5px; border-radius: 5px }
+.ck-ft { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 16px; border-top: 1px solid var(--hairline); font: 400 12px/18px var(--font-sans); color: var(--ink-muted); flex: none } .ck-ft kbd { font: 500 10px/1 var(--font-mono); border: 1px solid var(--hairline); border-radius: 5px; padding: 2px 5px; margin-right: 3px; background: var(--surface) } .ck-ft code { font: 400 11px var(--font-mono); background: var(--surface-sunk); padding: 1px 5px; border-radius: 5px } .ck-tip { margin-left: auto }
+@media (max-width: 640px) { dialog.cmdk { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0 } .ck-ft { display: none } .ck-a { opacity: 1 } .ck-r { grid-template-columns: 48px minmax(0, 1fr) auto } .ck-r img, .ck-ic { width: 48px; height: 34px } .ck-a button[data-act="save"] { display: none } }
+@media (hover: none) { .ck-a { opacity: 1 } }
 .sw { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk); margin-left: 4px; flex: none }
 .sw a { height: 32px; padding: 0 12px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); text-decoration: none; transition: background .15s, color .15s; white-space: nowrap }
 .sw a svg { width: 15px; height: 15px; flex: none }
 .sw a:hover { color: var(--ink) }
 .sw a[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12) }
-.nav .spon[aria-current="page"] { background: var(--surface) }
+.nav .spon[aria-current="page"] { box-shadow: 0 0 0 3px var(--sketch-soft) }
 footer .fnav a, footer .help a { color: inherit }
-@media (max-width: 900px) { .sw a svg { display: none } .sw a { padding: 0 11px } .nav .star .lbl, .nav .spon .lbl { display: none } .nav .star, .nav .spon { padding: 0 11px } }
+@media (max-width: 900px) { .sw a svg { display: none } .sw a { padding: 0 11px } .nav .star .lbl { display: none } .nav .star { padding: 0 11px } }
 .mlist { max-width: calc(100vw - 24px) }
 @media (max-width: 420px) { .tray [data-board="dl"] { display: none } }
 @media (max-width: 560px) { .open-acts .mlist { position: fixed; left: 12px; right: 12px; top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-width: none } }
 @media (max-width: 360px) { .tray { gap: 4px; padding: 6px 6px 6px 10px } .tray .pill { padding: 0 9px } #trayn { font-size: 12px } }
 @media (max-width: 560px) { .nav .star { display: none } }
-@media (max-width: 420px) { .nav .spon { display: none } .sw { margin-left: 0 } .sw a { height: 30px; padding: 0 9px; font-size: 12px } }
+@media (max-width: 420px) { body.hs-on .nav .spon .lbl { display: none } }
+@media (max-width: 360px) { .nav .spon .lbl { display: none } }
+@media (max-width: 420px) { .nav .getk { display: none } .nav .spon { padding: 0 12px } .sw { margin-left: 0 } .sw a { height: 30px; padding: 0 9px; font-size: 12px } }
 @media (max-width: 360px) { .nav .wrap { gap: 4px } .mark { font-size: 19px } .sw a { padding: 0 7px; font-size: 11.5px } .nav .pill.primary { padding: 0 9px; font-size: 12px } .ibtn { width: 32px; height: 32px } }
 /* practice inside the blocks site */
 .qa .prac2 { background: var(--sketch-soft); color: var(--sketch); border-color: transparent }
@@ -480,10 +506,11 @@ a.card .open { cursor: pointer }
 .stg[hidden] { display: none }
 .stg svg { width: 100%; height: 100%; max-height: 72dvh }
 .stg .vt { cursor: pointer; position: absolute; left: 14px; top: 12px; font: 500 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.92); border: 1px solid #e3e4e8; padding: 6px 9px; border-radius: 9999px; letter-spacing: .04em; text-transform: uppercase }
-.sheet.learn.v-other .zc, .sheet.learn.v-other .zhint, .sheet.learn.v-other .sh-pos, .sheet.learn.v-other .arr { visibility: hidden }
+.sheet.learn.v-other .sh-img > .zc, .sheet.learn.v-other .zhint, .sheet.learn.v-other .sh-pos, .sheet.learn.v-other .arr { visibility: hidden }
+.stz { width: 100%; height: 100%; display: grid; place-items: center; transform-origin: 0 0 } .stg.zoomed { cursor: grab } .stg.zoomed:active { cursor: grabbing } .szc { z-index: 4 }
 .ib-n rect { transition: stroke-width .25s, filter .25s, opacity .25s } .ib-n text { font-family: var(--font-hand); fill: #1e1e1e } .ib-n .t2 { font-family: var(--font-sans); fill: #495057 }
 .stg.has-hl .ib-n:not(.on) { opacity: .35 } .ib-n.on rect { stroke-width: 3.5; filter: drop-shadow(0 6px 14px rgba(105,101,219,.28)) }
-.ib-e { stroke: #868e96; stroke-width: 1.6; fill: none } .ib-e.on { stroke: #6965db; stroke-width: 2.4 } .ib-l { font: 400 12px var(--font-hand); fill: #495057 }
+.ib-e { stroke: #868e96; stroke-width: 1.6; fill: none } .ib-e.on { stroke: #6965db; stroke-width: 2.4 } .ib-l { font: 400 13px var(--font-hand); fill: #495057; paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round }
 .cm-n { cursor: pointer } .cm-n:hover rect { stroke: #6965db }
 .lnav { position: sticky; top: -18px; z-index: 4; overflow-y: hidden; min-height: 51px; align-items: center; box-shadow: 0 8px 12px -10px rgba(0,0,0,.12); margin: -6px -20px 0; padding: 10px 20px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; background: var(--surface); border-bottom: 1px solid var(--hairline) }
 .lnav::-webkit-scrollbar { display: none } .lnav[hidden] { display: none }
@@ -499,7 +526,8 @@ a.card .open { cursor: pointer }
 .lsteps button:hover { background: var(--surface-sunk) } .lsteps button.on { background: var(--sketch-soft); border-color: transparent }
 .lsteps .k { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-sunk); font: 500 12px/1 var(--font-mono); color: var(--ink-muted) } .lsteps button.on .k { background: var(--sketch); color: #fff }
 .lsteps strong { display: block; font: 500 15px/21px var(--font-sans) } .lsteps span span { display: block; font: 400 14px/21px var(--font-sans); color: var(--ink-muted); margin-top: 2px }
-.lrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.lrow { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center } .pill.sm { height: 36px; padding: 0 16px; font-size: 13px } .pill.sm svg { width: 13px; height: 13px } .lhint { font: 400 13px/1 var(--font-sans); color: var(--ink-muted) }
+.tlink { border: 0; background: none; padding: 0 4px; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); text-decoration: underline; text-underline-offset: 3px } .tlink:hover { color: var(--ink) }
 .nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px }
 .num { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-sunk); text-decoration: none; color: var(--ink) } .num b { font: 400 26px/1.05 var(--font-serif) } .num span { font: 400 12px/17px var(--font-sans); color: var(--ink-muted) } .num:hover span { color: var(--ink) }
 .knobs { display: grid; gap: 0; border-top: 1px solid var(--hairline) } .knob { display: grid; gap: 3px; padding: 11px 0; border-bottom: 1px solid var(--hairline) } .knob b { font: 500 15px/21px var(--font-sans) } .knob span { font: 400 14px/21px var(--font-sans); color: var(--ink-muted) }
@@ -602,7 +630,7 @@ __FOOT__
   <div class="sh-grid">
   <div class="sh-img" id="szoom"><img id="si" alt="" draggable="false"><div class="zc" role="group" aria-label="Zoom"><button type="button" data-z="-1" aria-label="Zoom out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9"/></svg></button><button type="button" data-z="0" class="zp" id="zpct" aria-label="Fit to view">100%</button><button type="button" data-z="1" aria-label="Zoom in"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9M8 3.5v9"/></svg></button><span class="zs"></span><button type="button" data-z="fs" aria-label="Full screen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button></div><span class="sh-pos" id="spos"></span><div class="stg" id="stg" hidden></div><button class="arr sh-prev" id="sprev" type="button" aria-label="Previous block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg></button><button class="arr sh-next" id="snext" type="button" aria-label="Next block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2l5 5-5 5"/></svg></button></div>
   <div class="sh-body">
-    <div class="sh-top"><div class="sh-tt"><span class="sub" id="scat"></span><h3 id="st" tabindex="-1" autofocus></h3></div><button class="ibtn" id="ssave" type="button" aria-label="Save to your board" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/></svg></button><button class="ibtn" id="sshare" type="button" aria-label="Share this block"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5M5 9.5H4v7.5h12V9.5h-1"/></svg></button><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
+    <div class="sh-top"><div class="sh-tt"><button class="scat" id="scat" type="button" title="See every block in this section"></button><h3 id="st" tabindex="-1" autofocus></h3></div><div class="stools"><button class="ibtn" id="ssave" type="button" aria-label="Save to your board" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/></svg></button><button class="ibtn" id="sshare" type="button" aria-label="Share this block"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5M5 9.5H4v7.5h12V9.5h-1"/></svg></button><span class="tsep"></span><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div></div>
     <div class="sacts">
       <button class="pill primary" type="button" data-copy="exc" title="Then paste on any Excalidraw canvas, Excalidraw+ or Obsidian"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M13 7V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13H7"/></svg><span class="cl">Copy to Excalidraw</span></button>
       <a class="pill ghost" id="sprac" href="#" hidden></a>
@@ -836,6 +864,7 @@ let typing; q.addEventListener("input", () => { clearTimeout(typing); typing = s
 $("#sf").addEventListener("submit", e => { e.preventDefault(); cat = "all"; draw(true); });
 /* the header search (shown once this search scrolls away) drives the same results */
 window.__sdkSearch = true;
+addEventListener("sdk-home", () => { if (sheet.open) sheet.close(); q.value = ""; cat = "all"; draw(false); });
 addEventListener("sdk-hsearch", e => { const v = e.detail.v; q.value = v; cat = "all"; draw(!!v.trim() || e.detail.sub); });
 try { const u = new URLSearchParams(location.search).get("q"); if (u) { q.value = u; requestAnimationFrame(() => draw(true)); } } catch (e) {}
 document.addEventListener("keydown", e => { if (e.key === "/" && document.activeElement !== q && !document.querySelector("dialog[open]")) { e.preventDefault(); q.focus(); } });
@@ -928,7 +957,7 @@ let cur = null, ctx = [], openedAt = "";
 function open(i, list) {
   cur = i; ctx = list && list.length ? list : items.filter(x => x.cat === i.cat);
   const img = $("#si"); img.classList.add("ld"); img.onload = () => img.classList.remove("ld"); zoomReset(false); img.dataset.hi = ""; img.src = i.full || i.img;
-  $("#st").textContent = i.title; $("#sn").textContent = i.name.split(" - ")[0]; $("#scat").textContent = (LABEL[i.cat] || i.cat) + " · sd:" + i.cat + "/";
+  $("#st").textContent = i.title; $("#sn").textContent = i.name.split(" - ")[0]; $("#scat").innerHTML = (ICON[i.cat] ? I(ICON[i.cat]) : "") + esc(LABEL[i.cat] || i.cat); $("#scat").dataset.cat = i.cat;
   const k = ctx.indexOf(i); $("#spos").textContent = ctx.length > 1 && k > -1 ? `${k + 1} / ${ctx.length}` : "";
   $("#sprev").hidden = $("#snext").hidden = ctx.length < 2;
   $("#ssave").setAttribute("aria-pressed", inBoard(i));
@@ -961,6 +990,7 @@ sheet.addEventListener("click", e => {
   const d = e.target.closest("[data-dl]"); if (d && cur) return download(d.dataset.dl, [cur], slug(cur));
   const f = e.target.closest("[data-fb]"); if (f && cur) return feedback(f.dataset.fb, cur, f);
   const p = e.target.closest("[data-pack]"); if (p) { sheet.close(); return go("pack:" + p.dataset.pack); }
+  const sc = e.target.closest("#scat"); if (sc) { const c = sc.dataset.cat; sheet.close(); return go(c); }
   const card = e.target.closest(".card"); if (card && card._item) { const qa = e.target.closest(".qa button"); if (qa) return; open(card._item, ctx); }
 });
 sheet.addEventListener("keydown", e => {
@@ -992,6 +1022,8 @@ const zUp = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; zw.c
 zw.addEventListener("pointerup", zUp); zw.addEventListener("pointercancel", zUp);
 zw.addEventListener("wheel", e => {
   const k = e.deltaMode ? 16 : 1, onStage = !$("#stg").hidden;
+  if (onStage && e.ctrlKey) { e.preventDefault(); szTo(SZ.k * Math.exp(-e.deltaY * k * 0.005), e.clientX, e.clientY); return; }
+  if (onStage && SZ.k > 1.01) { e.preventDefault(); SZ.x -= e.deltaX * k; SZ.y -= e.deltaY * k; szApply(false); return; }
   if (e.ctrlKey && !onStage) { e.preventDefault(); zTo(Z.k * Math.exp(-e.deltaY * k * 0.005), e.clientX, e.clientY); return; } // trackpad pinch or Ctrl + scroll zooms
   if (Z.k > 1.01 && !onStage) { e.preventDefault(); Z.x -= e.deltaX * k; Z.y -= e.deltaY * k; zClamp(); zApply(false); return; } // zoomed in: scroll moves around the picture
   if (matchMedia("(min-width: 900px)").matches) { e.preventDefault(); sheet.querySelector(".sh-body").scrollBy({ top: e.deltaY * k, left: 0 }); } // otherwise scroll the reading column
@@ -1033,7 +1065,7 @@ function boxEdge(a, b) { // point on the border of box a, towards box b
 function diagramSVG(W, H, nodes, edges, hl, opts = {}) {
   const by = Object.fromEntries(nodes.map(n => [n.id, n])), on = new Set(hl || []);
   const es = edges.map(([a, b, l]) => { const A = by[a], B = by[b]; if (!A || !B) return ""; const [x1, y1] = boxEdge(A, B), [x2, y2] = boxEdge(B, A), act = on.has(a) && on.has(b);
-    return `<line class="ib-e${act ? " on" : ""}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#ah${act ? "on" : ""})"/>${l ? `<text class="ib-l" x="${(x1 + x2) / 2 + 6}" y="${(y1 + y2) / 2 - 6}">${ex(l)}</text>` : ""}`; }).join("");
+    return `<line class="ib-e${act ? " on" : ""}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#ah${act ? "on" : ""})"/>${l ? (Math.abs(x2 - x1) < 4 ? `<text class="ib-l" text-anchor="start" x="${x1 + 8}" y="${(y1 + y2) / 2 + 4}">${ex(l)}</text>` : `<text class="ib-l" text-anchor="middle" x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 8}">${ex(l)}</text>`) : ""}`; }).join("");
   const ns = nodes.map(n => { const [f, s] = LC[n.c] || LC.base, [l1, l2] = String(n.t).split("|");
     return `<g class="ib-n${on.has(n.id) ? " on" : ""}${n.open ? " cm-n" : ""}"${n.open ? ` data-open="${n.open}"` : ""}><rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="14" fill="${f}" stroke="${s}" stroke-width="2"/><text x="${n.x + n.w / 2}" y="${n.y + n.h / 2 + (l2 ? -4 : 6)}" text-anchor="middle" font-size="${n.big ? 22 : 18}">${ex(l1)}</text>${l2 ? `<text class="t2" x="${n.x + n.w / 2}" y="${n.y + n.h / 2 + 16}" text-anchor="middle" font-size="11.5">${ex(l2)}</text>` : ""}${n.open ? `<title>Open ${ex(l1)}</title>` : ""}</g>`; }).join("");
   const mk = id => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="${id === "ahon" ? "#6965db" : "#868e96"}"/></marker>`;
@@ -1051,19 +1083,28 @@ function setView(v, hl) {
   const stg = $("#stg"), s = LST.slug, L = LEARN.L[s], R = LEARN.R[s]; if (!stg) return;
   if (!L) v = "block"; // the picture only follows the reading inside a full lesson; every other block always shows itself
   if (v === LST.view && JSON.stringify(hl || []) === JSON.stringify(LST.hl)) return;
-  LST.view = v; LST.hl = hl || [];
+  const same = v === LST.view; LST.view = v; LST.hl = hl || []; if (!same) SZ = { k: 1, x: 0, y: 0 };
   sheet.classList.toggle("v-other", v !== "block");
-  if (v === "inside" && L && L.inside) { const I = L.inside; stg.hidden = false; stg.classList.toggle("has-hl", !!LST.hl.length); stg.innerHTML = `<button type="button" class="vt" data-vback>Inside · show the block</button>` + diagramSVG(I.w, I.h, I.nodes, I.edges, LST.hl, { label: "Inside " + cur.title }); }
-  else if (v === "real" && R && ((R.up || []).length || (R.down || []).length)) { stg.hidden = false; stg.classList.remove("has-hl"); stg.innerHTML = `<button type="button" class="vt" data-vback>In real systems · show the block</button>` + realMap(s, R); }
+  if (v === "inside" && L && L.inside) { const I = L.inside; stg.hidden = false; stg.classList.toggle("has-hl", !!LST.hl.length); stg.innerHTML = `<button type="button" class="vt" data-vback>Inside · show the block</button><div class="stz">` + diagramSVG(I.w, I.h, I.nodes, I.edges, LST.hl, { label: "Inside " + cur.title }) + `</div>` + STZC; szApply(); }
+  else if (v === "real" && R && ((R.up || []).length || (R.down || []).length)) { stg.hidden = false; stg.classList.remove("has-hl"); stg.innerHTML = `<button type="button" class="vt" data-vback>In real systems · show the block</button><div class="stz">` + realMap(s, R) + `</div>` + STZC; szApply(); }
   else { stg.hidden = true; sheet.classList.remove("v-other"); }
 }
+let SZ = { k: 1, x: 0, y: 0 }; const STZC = `<div class="zc szc" role="group" aria-label="Zoom"><button type="button" data-sz="-1" aria-label="Zoom out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9"/></svg></button><button type="button" data-sz="0" class="zp" aria-label="Fit to view">100%</button><button type="button" data-sz="1" aria-label="Zoom in"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9M8 3.5v9"/></svg></button><span class="zs"></span><button type="button" data-sz="fs" aria-label="Full screen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button></div>`;
+function szApply(anim) { const z = $("#stg .stz"); if (!z) return; z.style.transition = anim ? "transform .25s cubic-bezier(.2,.8,.2,1)" : "none"; z.style.transform = SZ.k === 1 ? "" : `translate(${SZ.x}px, ${SZ.y}px) scale(${SZ.k})`; const pz = $("#stg .zp"); if (pz) pz.textContent = Math.round(SZ.k * 100) + "%"; $("#stg").classList.toggle("zoomed", SZ.k > 1.01); }
+function szTo(k, cx, cy, anim) { const st = $("#stg"), z = st && st.querySelector(".stz"); if (!z) return; k = Math.max(1, Math.min(6, k)); const r = st.getBoundingClientRect(); if (cx === undefined) { cx = r.left + r.width / 2; cy = r.top + r.height / 2; } const px = (cx - r.left - SZ.x) / SZ.k, py = (cy - r.top - SZ.y) / SZ.k; SZ.k = k; if (k === 1) { SZ.x = 0; SZ.y = 0; } else { SZ.x = cx - r.left - px * k; SZ.y = cy - r.top - py * k; } szApply(anim); }
+$("#stg").addEventListener("click", e => { const b = e.target.closest("[data-sz]"); if (!b) return; e.stopPropagation(); const z = b.dataset.sz;
+  if (z === "1") szTo(SZ.k * 1.4, undefined, undefined, true); else if (z === "-1") szTo(SZ.k / 1.4, undefined, undefined, true); else if (z === "0") szTo(1, undefined, undefined, true);
+  else { const w = $("#szoom"); if (document.fullscreenElement) document.exitFullscreen(); else if (w.requestFullscreen) w.requestFullscreen().catch(() => {}); } });
+let sdrag = null; $("#stg").addEventListener("pointerdown", e => { if (SZ.k <= 1.01 || e.target.closest("button, [data-open]")) return; sdrag = { x: e.clientX - SZ.x, y: e.clientY - SZ.y }; $("#stg").setPointerCapture(e.pointerId); });
+$("#stg").addEventListener("pointermove", e => { if (!sdrag) return; SZ.x = e.clientX - sdrag.x; SZ.y = e.clientY - sdrag.y; szApply(false); });
+$("#stg").addEventListener("pointerup", () => { sdrag = null; });
 function stepOn(k) { const L = LEARN.L[LST.slug]; if (!L) return; document.querySelectorAll(".lsteps button").forEach((b, i) => b.classList.toggle("on", i === k)); setView("inside", k < 0 ? [] : L.inside.steps[k].hl); }
 function seeded2(a, seed) { return a.map((x, i) => [x, (Math.sin(seed * 7.1 + i * 3.3) + 1) / 2]).sort((p, q) => p[1] - q[1]).map(x => x[0]); }
 function learnHTML(i) {
   const s = slug(i), L = LEARN.L[s], R = LEARN.R[s], S = [];
   if (L) {
     S.push(["basics", "Basics", "block", `<p class="lw">${ex(L.what)}</p><div class="note1">${ex(L.like)}</div><ul class="lwhy">${L.why.map(x => `<li>${ex(x)}</li>`).join("")}</ul>`]);
-    if (L.inside) S.push(["inside", "Inside", "inside", `<ol class="lsteps">${L.inside.steps.map((x, k) => `<li><button type="button" data-lstep="${k}"><span class="k">${k + 1}</span><span><strong>${ex(x.t)}</strong><span>${ex(x.d)}</span></span></button></li>`).join("")}</ol><div class="lrow"><button class="chip" type="button" data-lplay>Play a request through it</button></div>${(L.numbers || []).length ? `<h5>Numbers worth knowing</h5><div class="nums">${L.numbers.map(n => `<a class="num" href="${ex(n.s)}" target="_blank" rel="noopener"><b>${ex(n.v)}</b><span>${ex(n.l)}</span></a>`).join("")}</div>` : ""}`]);
+    if (L.inside) S.push(["inside", "Inside", "inside", `<div class="lrow"><button class="pill primary sm" type="button" data-lplay><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 3v10l8.5-5z"/></svg>Play a request through it</button><span class="lhint">or tap any step</span></div><ol class="lsteps">${L.inside.steps.map((x, k) => `<li><button type="button" data-lstep="${k}"><span class="k">${k + 1}</span><span><strong>${ex(x.t)}</strong><span>${ex(x.d)}</span></span></button></li>`).join("")}</ol>${(L.numbers || []).length ? `<h5>Numbers worth knowing</h5><div class="nums">${L.numbers.map(n => `<div class="num"><b>${ex(n.v)}</b><span>${ex(n.l)}</span></div>`).join("")}</div>` : ""}`]);
     if (L.tool && TOOLS[L.tool]) S.push(["try", "Try it", "block", `<div id="ltool"></div>`]);
     S.push(["choices", "Trade-offs", "inside", `${(L.choices || []).length ? `<div class="knobs">${L.choices.map(c => `<div class="knob"><b>${ex(c.t)}</b><span>${ex(c.d)}</span></div>`).join("")}</div>` : ""}${(L.instead || []).filter(x => BYSLUG.has(x.slug)).length ? `<h5>Or use instead</h5><div class="alts">${L.instead.filter(x => BYSLUG.has(x.slug)).map(x => { const b = BYSLUG.get(x.slug); return `<button type="button" class="alt" data-open="${x.slug}"><img alt="" loading="lazy" src="${b.img}"><span><b>${ex(b.title)}</b><small>${ex(x.why)}</small></span><i>→</i></button>`; }).join("")}</div>` : ""}${(L.breaks || []).length ? `<h5>When it breaks</h5><div class="brk">${L.breaks.map(b => `<div class="bk"><b>${ex(b.t)}</b><p>${ex(b.d)}</p><dl><dt>Notice</dt><dd>${ex(b.see)}</dd><dt>Fix</dt><dd>${ex(b.fix)}</dd></dl></div>`).join("")}</div>` : ""}`]);
   }
@@ -1073,7 +1114,7 @@ function learnHTML(i) {
     S.push(["real", "Real systems", "real", `${up.length || dn.length ? `<p class="conn">${up.length ? `Usually comes after ${up.join(", ")}.` : ""} ${dn.length ? `Usually talks to ${dn.join(", ")}.` : ""}</p>` : ""}${R.roles.length ? `<h5>Its job in ${R.roles.length} interview design${R.roles.length > 1 ? "s" : ""}</h5><div class="roles">${R.roles.filter(r => PQ[r[0]]).map(r => `<a class="role" href="practice/#q=${r[0]}"><b>${ex(PQ[r[0]][0])}<small>${ex(r[1])}</small></b><span>${ex(r[2])}</span><i>Practise</i></a>`).join("")}</div>` : ""}`]);
   }
   if (L) {
-    S.push(["interview", "Interview", "block", `${(L.say || []).length ? `<h5>Say it like this</h5><div class="says">${L.say.map(x => `<p class="say1">${ex(x)}</p>`).join("")}</div>` : ""}${(L.followups || []).length ? `<h5>They may ask next</h5><div>${L.followups.map(f => `<details class="fu"><summary>${ex(f.q)}</summary><p>${ex(f.a)}</p></details>`).join("")}</div>` : ""}${L.today ? `<p class="today"><b>Today: </b>${ex(L.today)}</p>` : ""}`]);
+    S.push(["interview", "Interview", "block", `${(L.say || []).length ? `<h5>Say it like this</h5><div class="says">${L.say.map(x => `<p class="say1">${ex(x)}</p>`).join("")}</div>` : ""}${(L.followups || []).length ? `<h5>They may ask next</h5><div>${L.followups.map(f => `<details class="fu"><summary>${ex(f.q)}</summary><p>${ex(f.a)}</p></details>`).join("")}</div>` : ""}${L.today ? `<p class="today"><b>Good to know: </b>${ex(L.today)}</p>` : ""}`]);
     if ((L.check || []).length) S.push(["check", "Check", "block", L.check.map((c, k) => `<div class="ck" data-ck="${k}"><p>${ex(c.q)}</p><div class="o">${seeded2([c.a, ...c.d], k + s.length).map(o => `<button type="button" data-ans="${ex(o)}">${ex(o)}</button>`).join("")}</div></div>`).join("") + `${(L.sources || []).length ? `<details class="srcs"><summary>Sources · reviewed ${ex(L.reviewed || "")}</summary>${L.sources.map(x => `<a href="${ex(x.u)}" target="_blank" rel="noopener">${ex(x.t)}</a>`).join("")}</details>` : ""}`]);
   }
   return S;
@@ -1122,11 +1163,12 @@ const TOOLS = {
   cache(el) { // a 4-slot cache in front of a slow database: request keys, watch hits, misses and evictions
     const KEYS = ["home", "feed", "cart", "profile", "deals", "help"], CAP = 4, st = { pol: "lru", slots: [], t: 0, hit: 0, miss: 0, ms: 0, run: null };
     el.innerHTML = `<div class="tool1"><div class="th"><span>A cache with room for 4 keys, in front of a 5 ms database</span><span class="tseg" role="group" aria-label="Eviction"><button type="button" data-pol="lru" class="on" title="Evict the least recently used key">LRU</button><button type="button" data-pol="lfu" title="Evict the least frequently used key">LFU</button></span></div>
+      <div class="lrow"><button class="pill primary sm" type="button" data-busy><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 3v10l8.5-5z"/></svg>Play a busy minute</button><span class="lhint">or request keys yourself</span><button class="tlink" type="button" data-reset>Reset</button></div>
       <div class="keys2">${KEYS.map(k => `<button type="button" data-key="${k}">GET ${k}</button>`).join("")}</div>
       <div class="slots">${Array.from({ length: CAP }, () => `<div class="slot"></div>`).join("")}</div>
       <p class="tlog" aria-live="polite">Tap a key to request it. The first request for each key is a miss.</p>
       <div class="tstat"><div><b data-s="hr">-</b><span>hit rate</span></div><div><b data-s="ms">0 ms</b><span>time with the cache</span></div><div><b data-s="no">0 ms</b><span>time without it</span></div></div>
-      <div class="lrow"><button class="chip" type="button" data-busy>Play a busy minute</button><button class="chip" type="button" data-reset>Reset</button></div></div>`;
+</div>`;
     const paint = (k, kind) => { el.querySelectorAll(".slot").forEach((d, i) => { const x = st.slots[i]; d.className = "slot" + (x ? " full" : "") + (x && x.k === k ? " " + kind : ""); d.innerHTML = x ? `${x.k}<small>${st.pol === "lru" ? (st.t - x.at === 0 ? "just now" : (st.t - x.at) + " ago") : x.n + (x.n > 1 ? " uses" : " use")}</small>` : ""; });
       const n = st.hit + st.miss; el.querySelector('[data-s="hr"]').textContent = n ? Math.round(st.hit / n * 100) + "%" : "-"; el.querySelector('[data-s="ms"]').textContent = st.ms.toFixed(1) + " ms"; el.querySelector('[data-s="no"]').textContent = n * 5 + " ms"; };
     const get = k => { st.t++; const x = st.slots.find(s => s.k === k), log = el.querySelector(".tlog");

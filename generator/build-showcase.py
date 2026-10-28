@@ -23,26 +23,24 @@ def NAV(pre, active, spurl, kit_dialog=False, ph='Search blocks'):
     """one header for every page: Blocks | Practice switch, theme, Sponsor, Star, Get the kit"""
     cur=lambda k:' aria-current="page"' if k==active else ''
     home=pre or './'
-    get=f'<a class="pill primary" href="{REPO}/releases/latest" data-kit>Get the kit</a>' if kit_dialog else f'<a class="pill primary" href="{pre}#get">Get the kit</a>'
+    get=f'<a class="pill ghost getk" href="{REPO}/releases/latest" data-kit>Get the kit</a>' if kit_dialog else f'<a class="pill ghost getk" href="{pre}#get">Get the kit</a>'
     return (f'<header class="nav gut"><div class="wrap">\n'
-      f'  <a class="mark" href="{"#top" if active=="blocks" else home}" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>\n'
+      f'  <a class="mark" href="{home}" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>\n'
       f'  <nav class="sw" aria-label="Site"><a href="{home}"{cur("blocks")}>{IBLK}<span>Blocks</span></a><a href="{pre}practice/"{cur("practice")}>{IPRC}<span>Practice</span></a></nav>\n'
-      f'  <form class="hs" id="hs" role="search" data-home="{home}">{SRCH}<input id="hq" type="search" placeholder="{ph}" autocomplete="off" aria-label="{ph}"><kbd aria-hidden="true">/</kbd><button type="button" class="hsx" id="hsx" aria-label="Close search">×</button></form>\n'
-      f'  <span class="sp"></span>\n  <button class="ibtn hsb" id="hsb" type="button" aria-label="Search">{SRCH}</button>\n  {THEMEBTN}\n'
-      f'  <a class="pill ghost spon" href="{spurl}" aria-label="Sponsor this kit"{cur("sponsor")}>{HEART}<span class="lbl">Sponsor</span></a>\n'
+      f'  <span class="sp"></span>\n  <button class="hsk" id="hsk" type="button" data-cmdk aria-label="Search the kit">{SRCH}<span>Search</span><kbd aria-hidden="true">⌘K</kbd></button>\n  {THEMEBTN}\n'
       f'  <a class="pill ghost star" href="{REPO}" target="_blank" rel="noopener" aria-label="Star on GitHub">{GHSVG}<span class="lbl">Star</span><span class="cnt" id="stars" hidden></span></a>\n'
-      f'  {get}\n</div></header>\n'
+      f'  {get}\n'
+      f'  <a class="pill primary spon" href="{spurl}" aria-label="Sponsor this kit"{cur("sponsor")}>{HEART}<span class="lbl">Sponsor</span></a>\n</div></header>\n'
       '<script>/* shared header: theme switch and the live star count, the same on every page */(()=>{const t=document.getElementById("theme");if(t)t.onclick=()=>{const d=document.documentElement,n=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=n;try{localStorage.setItem("sdk-theme",n)}catch(e){}};'
       'const show=n=>{const s=document.getElementById("stars");if(s&&n>0){s.textContent=n>=1000?(n/1000).toFixed(1)+"k":n;s.hidden=false}};let c=null;try{c=JSON.parse(sessionStorage.getItem("sdk-stars")||"null")}catch(e){}'
-      '/* header search: shows once the page search scrolls away; pages listen for sdk-hsearch, others send you to the blocks */'
-      'const hs=document.getElementById("hs"),hq=document.getElementById("hq"),nv=hs.closest(".nav"),sb=()=>document.querySelector(".hero .sbox");'
-      'const vis=on=>{if(!on&&(document.activeElement===hq||hq.value))return;document.body.classList.toggle("hs-on",on)};const watch=()=>{const box=sb();if(box&&"IntersectionObserver"in window)new IntersectionObserver(e=>vis(!e[0].isIntersecting),{rootMargin:"-64px 0px 0px 0px"}).observe(box);else vis(true)};document.readyState==="loading"?document.addEventListener("DOMContentLoaded",watch):watch();'
-      'const send=sub=>{const v=hq.value;if(window.__sdkSearch)dispatchEvent(new CustomEvent("sdk-hsearch",{detail:{v,sub}}));else if(sub&&v.trim())location.href=hs.dataset.home+"?q="+encodeURIComponent(v.trim())};'
-      'hq.addEventListener("input",()=>send(false));hs.addEventListener("submit",e=>{e.preventDefault();send(true);hq.blur();nv.classList.remove("srch")});'
-      'document.getElementById("hsb").onclick=()=>{nv.classList.add("srch");hq.focus()};document.getElementById("hsx").onclick=()=>{nv.classList.remove("srch");hq.value="";send(false)};hq.addEventListener("blur",()=>{if(!hq.value){const box=sb();if(box){const r=box.getBoundingClientRect();if(r.bottom>64&&r.top<innerHeight)document.body.classList.remove("hs-on")}}});'
-      'hq.addEventListener("keydown",e=>{if(e.key==="Escape"){nv.classList.remove("srch");hq.blur()}});'
-      'document.addEventListener("keydown",e=>{if(e.key==="/"&&document.body.classList.contains("hs-on")&&!e.target.closest("input,textarea,select")&&!document.querySelector("dialog[open]")){e.preventDefault();e.stopImmediatePropagation();if(getComputedStyle(hs).display==="none")nv.classList.add("srch");hq.focus()}},true);'
-      'if(c&&Date.now()-c.t<36e5)show(c.n);else fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r=>r.ok?r.json():null).then(j=>{if(j){show(j.stargazers_count);try{sessionStorage.setItem("sdk-stars",JSON.stringify({t:Date.now(),n:j.stargazers_count}))}catch(e){}}}).catch(()=>{})})();</script>')
+      '/* the Search button shows once the page search scrolls away (always on pages without one) */'
+      'const nv=document.querySelector(".nav"),hq={value:""},sb=()=>document.querySelector(".hero .sbox");const vis=on=>document.body.classList.toggle("hs-on",on);'
+      'const watch=()=>{const box=sb();if(box&&"IntersectionObserver"in window)new IntersectionObserver(e=>vis(!e[0].isIntersecting),{rootMargin:"-64px 0px 0px 0px"}).observe(box);else vis(true)};document.readyState==="loading"?document.addEventListener("DOMContentLoaded",watch):watch();'
+      'const k=document.querySelector("#hsk kbd");if(k&&!/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent))k.textContent="Ctrl K";'
+      '/* logo: on the page it belongs to, glide to the very top and reset; elsewhere it is a normal link */'
+      'document.querySelector(".nav .mark").addEventListener("click",e=>{const a=e.currentTarget,u=new URL(a.href,location.href);if(u.pathname!==location.pathname||e.metaKey||e.ctrlKey)return;e.preventDefault();dispatchEvent(new CustomEvent("sdk-home"));history.replaceState(null,"",location.pathname);scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})});'
+      'if(c&&Date.now()-c.t<36e5)show(c.n);else fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r=>r.ok?r.json():null).then(j=>{if(j){show(j.stargazers_count);try{sessionStorage.setItem("sdk-stars",JSON.stringify({t:Date.now(),n:j.stargazers_count}))}catch(e){}}}).catch(()=>{})})();</script>\n'
+      f'<script src="{pre}search.js" defer></script>')
 def FOOT(pre, spurl, mail='Help'):
     """one footer for every page"""
     home=pre or './'
@@ -84,6 +82,33 @@ if os.path.exists('out/practice.json'):
     for k,r in _R.items():
         LEARN['R'][k]={'roles':r['roles'],'up':sorted(r['up'],key=lambda x:-r['up'][x])[:4],'down':sorted(r['down'],key=lambda x:-r['down'][x])[:4]}
 LEARNJ=json.dumps(LEARN,separators=(',',':'),ensure_ascii=False)
+# one search for every page: blocks, designs, practice questions, starter packs, sections
+_t=open('showcase2.tpl.html').read()
+_lab=dict(re.findall(r'(\w+): "([^"]+)"', _t[_t.index('const LABEL = {'):_t.index('};',_t.index('const LABEL = {'))]))
+_packs=[]
+for m in re.finditer(r'\{ id: "([^"]+)", title: "([^"]+)", desc: "([^"]+)", keys: \[([^\]]*)\] \}', _t):
+    keys=re.findall(r'"([^"]+)"',m.group(4)); first=None
+    for k in keys:
+        c,ti=k.split('/',1)
+        for it in lib:
+            mm=re.match(r'^sd:([a-z]+)/\s(.*)$',it['name'])
+            if mm and mm.group(1)==c and mm.group(2).split(' - ')[0]==ti: first=first or it['id']; break
+    _packs.append({'id':m.group(1),'t':m.group(2),'d':m.group(3),'n':len(keys),'img':first})
+_blocks=[];_count={}
+for it in lib:
+    mm=re.match(r'^sd:([a-z]+)/\s(.*)$',it['name'])
+    if not mm or ' SECTION - ' in it['name']: continue
+    c=mm.group(1); rest=mm.group(2); ti=rest.split(' - ')[0]; tags=rest.split(' - ',1)[1] if ' - ' in rest else ''
+    _count[c]=_count.get(c,0)+1; _blocks.append({'id':it['id'],'t':ti,'c':c,'k':tags})
+_pq=[]
+if os.path.exists('out/practice.json'):
+    _pcd=json.load(open('practice.data.json'))
+    for m in json.load(open('out/practice.json')):
+        if m['slug'] not in PQ: continue
+        _pq.append({'s':m['slug'],'t':m['title'],'l':_pcd[m['slug']]['level'],'co':_pcd[m['slug']]['companies'],'tr':_pcd[m['slug']]['track'],'n':' '.join(n['title'] for n in m['nodes']),'kit':PQ[m['slug']][2]})
+os.makedirs('out/pages',exist_ok=True)
+json.dump({'b':_blocks,'p':_pq,'k':_packs,'cats':{k:v for k,v in _lab.items()},'count':_count},open('out/pages/search-index.json','w'),separators=(',',':'),ensure_ascii=False)
+shutil.copy('search.js','out/pages/search.js')
 NEWS='Copy any block into Excalidraw, Figma or Docs, plus 12 starter packs'
 def fill(items): return tpl.replace('__NAV__',NAV('','blocks','__SPURL__',True,ph=f'Search {N} blocks')).replace('__FOOT__',FOOT('','__SPURL__')).replace('__PRACTICE__',PRACTICE).replace('__LEARN__',LEARNJ).replace('__NEWS__',NEWS).replace('__ITEMS__',json.dumps(items,separators=(',',':'))).replace('__SECTIONS__',json.dumps(secs)).replace('__VERSION__',VERSION).replace('__SIZE__',f"{os.path.getsize('out/System Design Kit.excalidrawlib')/1e6:.1f} MB").replace('__N__',str(len(items)))
 art=fill(items_art).replace('__DATA__','https://dinesh-sunny.github.io/excalidraw-system-design-kit/'); open(f'{SP}/sd-kit-showcase.html','w').write(art)

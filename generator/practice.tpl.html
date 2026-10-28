@@ -15,14 +15,6 @@ __BASECSS__
 .seg2 button { height: 32px; padding: 0 14px; border: 0; border-radius: 9999px; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
 .seg2 button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12) }
 .sel { height: 38px; padding: 0 34px 0 14px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center / 12px; appearance: none; font: 500 13px/1 var(--font-sans); color: var(--ink); cursor: pointer }
-.qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px 18px }
-.q { display: grid; gap: 10px; border: 0; padding: 0; background: none; text-align: left; cursor: pointer; color: inherit; min-width: 0 }
-.q .th { position: relative; aspect-ratio: 3 / 2; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--thumb); overflow: hidden; transition: box-shadow .2s, transform .2s }
-.q .th img { width: 100%; height: 100%; object-fit: contain; padding: 8px }
-.q:hover .th { box-shadow: var(--shadow-float); transform: translateY(-3px) }
-.q .badge { position: absolute; left: 10px; top: 10px; font: 500 11px/1 var(--font-mono); padding: 5px 8px; border-radius: 9999px; background: var(--pill); color: var(--on-ink) }
-.q .tt { font: 500 16px/21px var(--font-sans) }
-.q .mm { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); margin-top: -4px }
 .lv { font: 500 11px/1 var(--font-mono); padding: 4px 8px; border-radius: 9999px; border: 1px solid var(--hairline) }
 .lv.Easy { color: #2f9e44; border-color: #b2f2bb } .lv.Medium { color: #e67700; border-color: #ffd8a8 } .lv.Hard { color: #e03131; border-color: #ffc9c9 }
 .src { text-align: center; font: 400 12px/18px var(--font-sans); color: var(--ink-muted) } .src a { color: inherit }
@@ -186,7 +178,7 @@ body.run > header.nav, body.run > footer { display: none }
 .code { display: grid; gap: 0; border-radius: 12px; background: #1e1e1e; padding: 16px 18px; color: #e9ecef } .code .cl { font: 400 14px/26px var(--font-mono); border-bottom: 1px dashed #343a40; padding: 4px 0; outline-offset: 4px } .code .cl:last-child { border-bottom: 0 } .code .bghost { color: #868e96; border-color: #343a40 }
 .tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px }
 .tbl { border-radius: 10px; border: 2px solid #2f9e44; background: var(--surface); overflow: hidden } .tbl b { display: block; padding: 8px 12px; background: #b2f2bb; color: #1e1e1e; font: 400 19px/1.2 var(--font-hand) } .tbl span { display: block; padding: 10px 12px; font: 400 13px/20px var(--font-mono) }
-.qa { display: grid; gap: 6px; padding: 14px 16px; border-radius: 10px; background: var(--surface); border-left: 3px solid var(--sketch) } .qa b { font: 400 20px/1.25 var(--font-serif) } .qa span { font: 400 15px/22px var(--font-sans); color: var(--ink-muted) }
+.qab { display: grid; gap: 6px; padding: 14px 16px; border-radius: 10px; background: var(--surface); border-left: 3px solid var(--sketch) } .qab b { font: 400 20px/1.25 var(--font-serif) } .qab span { font: 400 15px/22px var(--font-sans); color: var(--ink-muted) }
 .qz .calc { margin-bottom: 4px }
 .opt2 > span:last-child { min-width: 0 } .opt2.mono > span:last-child { font: 400 13px/18px var(--font-mono) }
 .opts2.long .opt2 { font: 400 14px/20px var(--font-sans); align-items: flex-start; padding: 12px 14px } .opts2.long .opt2 .k { margin-top: 1px }
@@ -225,7 +217,7 @@ body.run > header.nav, body.run > footer { display: none }
 .tg.sc { background: var(--sketch-soft); color: var(--sketch) } .tg.ln { background: #fff4e6; color: #d9480f } .tg.yr { background: #d3f9d8; color: #2b8a3e; margin: 0 4px 0 0 }
 .note .tg { font-family: var(--font-mono) }
 .lensl { display: grid; gap: 4px } .lensl p { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted) } .lensl .tg { margin: 0 6px 0 0 }
-.qa.mod { border-left-color: #2f9e44 }
+.qab.mod { border-left-color: #2f9e44 }
 .chipb { height: 30px; padding: 0 12px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface-sunk); cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink); white-space: nowrap; flex: none }
 .chipb:hover { border-color: var(--slate) }
 @media (max-width: 760px) { .chipb { display: none } }
@@ -238,6 +230,8 @@ body.run > header.nav, body.run > footer { display: none }
 .hero .filters .sel, .hero .filters .seg2 { height: 38px } .hero .filters .seg2 button { height: 32px }
 .hero .try.dice { display: inline-flex; align-items: center; gap: 6px; border-style: dashed } .hero .try.dice svg { width: 15px; height: 15px }
 .hero .wrap { padding-bottom: 8px }
+#qgrid .card .open { cursor: pointer } #qgrid .cm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis } #qgrid .card { animation: rise .35s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0ms) } #qgrid .cm .lv { margin-right: 4px }
+@media (prefers-reduced-motion: reduce) { #qgrid .card { animation: none } }
 /* workspace never grows wider than the screen */
 .ws { grid-template-columns: minmax(0, 1fr) } .top { min-width: 0 } .top > * { min-width: 0 }
 .tabs { overflow: hidden }
@@ -259,15 +253,11 @@ body.run > header.nav, body.run > footer { display: none }
 /* blocks-site features inside practice */
 .dice { height: 38px; padding: 0 14px; border-radius: 9999px; border: 1px dashed var(--hairline); background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink) } .dice svg { width: 15px; height: 15px }
 .ufil { display: flex; justify-content: center } .ufil .chip { height: 34px }
-.qw { position: relative; min-width: 0; animation: rise .35s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0ms) }
-.qw:hover .qa, .qw:focus-within .qa { opacity: 1; transform: none }
-.qw .qa { top: 8px; right: 8px }
 .fbl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px } .fbl a, .fbl button { height: 28px; padding: 0 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink); text-decoration: none } .fbl svg { width: 13px; height: 13px } .fbl .on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
 .rmenu { position: relative; flex: none } .rmenu > summary { list-style: none } .rmenu > summary::-webkit-details-marker { display: none } .rmenu .mlist { right: 0; left: auto; top: 44px; bottom: auto; min-width: 230px; z-index: 30 }
 @media (max-width: 560px) { .rmenu .mlist { position: fixed; left: 12px; right: 12px; top: 62px; min-width: 0 } }
 .fbrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 400 13px/1 var(--font-sans); color: var(--ink-muted) } .fbrow .chip { height: 30px; font-size: 12px } .fbrow .chip.on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) } .fbrow svg { width: 14px; height: 14px }
 .toast button { margin-left: 10px; border: 0; background: none; color: inherit; font: 600 14px/1 var(--font-sans); text-decoration: underline; cursor: pointer } .toast.act { pointer-events: auto }
-@media (prefers-reduced-motion: reduce) { .qw { animation: none } }
 </style>
 </head><body>
 __NAV__
@@ -286,7 +276,7 @@ __NAV__
   <div class="ufil" id="ufil" hidden></div>
 </div></section>
 <main class="gut pmain"><div class="wrap">
-  <div class="qgrid" id="qgrid"></div>
+  <section class="row"><h2 id="qh">Questions <span class="n"></span></h2><div class="grid" id="qgrid"></div></section>
   <p class="src">Company names come from public candidate reports. Every design is also in the <a href="../#tpl">blocks library</a>. <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a question</a></p>
 </div></main>
 </div>
@@ -354,9 +344,13 @@ function drawPick() {
   const hay = d => (d.title + " " + d.companies.join(" ") + " " + d.track + " " + d.nodes.map(n => n.title).join(" ")).toLowerCase();
   const list = D.filter(d => (fTrack === "all" || d.track === fTrack) && (!lv || d.level === lv) && (!co || d.companies.includes(co)) && w.every(x => hay(d).includes(x)) && (!USES || usesBlock(d, USES.k)));
   $("#ufil").hidden = !USES; if (USES) $("#ufil").innerHTML = `<button class="chip" type="button" id="ufx">Questions that use ${esc(USES.t)} <span aria-hidden="true">×</span></button>`;
-  $("#qgrid").innerHTML = list.map((d, i) => { const g = prog(d.slug), badge = g ? (g.done ? `Done · ${g.score}%` : "In progress") : ""; return `<div class="qw" style="--d:${Math.min(i, 8) * 40}ms"><button class="q" type="button" data-q="${d.slug}"><div class="th"><img loading="lazy" alt="" src="../${d.thumb}">${badge ? `<span class="badge">${badge}</span>` : ""}</div><div class="tt">${esc(d.title)}</div><div class="mm"><span class="lv ${d.level}">${d.level}</span>${d.companies.length ? `<span>${esc(d.companies.slice(0, 3).join(", "))}${d.companies.length > 3 ? ` +${d.companies.length - 3}` : ""}</span>` : `<span>${d.track === "AI" ? "AI design" : "Classic"}</span>`}</div></button><div class="qa"><button type="button" data-pc="${d.kitId}" title="Copy the design to Excalidraw">${COPYI}<span class="lb">Copy</span></button><button type="button" data-ps="${d.kit}" class="${onBoard(d.kit) ? "saved" : ""}" title="Save the design to your board" aria-pressed="${onBoard(d.kit)}">${SAVEI}</button></div></div>`; }).join("") || `<p class="src">Nothing matches. Try another word or filter.</p>`;
+  const filtering = !!(w.length || lv || co || fTrack !== "all" || USES);
+  $("#qh").innerHTML = `${filtering ? "Results" : "Questions"} <span class="n">${list.length}</span>`;
+  const VIEWI = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10s2.8-5.5 7.5-5.5 7.5 5.5 7.5 5.5-2.8 5.5-7.5 5.5S2.5 10 2.5 10z"/><circle cx="10" cy="10" r="2.3"/></svg>';
+  $("#qgrid").innerHTML = list.map((d, i) => { const g = prog(d.slug), badge = g ? (g.done ? `Done ${g.score}%` : "In progress") : ""; return `<div class="card" data-q="${d.slug}" style="--d:${Math.min(i, 8) * 40}ms"><button class="open" type="button" data-q="${d.slug}"><div class="ph"><img loading="lazy" decoding="async" width="480" height="320" alt="" src="../${d.thumb}">${badge ? `<span class="pbadge">${badge}</span>` : ""}</div><div class="ct">${esc(d.title)}</div><div class="cm"><span class="lv ${d.level}">${d.level}</span> ${d.companies.length ? esc(d.companies.slice(0, 3).join(", ")) + (d.companies.length > 3 ? ` +${d.companies.length - 3}` : "") : d.track === "AI" ? "AI design" : "Classic"}</div></button><div class="qa"><button type="button" data-pc="${d.kitId}" title="Copy the design to Excalidraw">${COPYI}<span class="lb">Copy</span></button><button type="button" data-pv="${d.kit}" title="View the design in the blocks">${VIEWI}<span class="lb">View</span></button><button type="button" data-ps="${d.kit}" class="${onBoard(d.kit) ? "saved" : ""}" title="Save the design to your board" aria-pressed="${onBoard(d.kit)}">${SAVEI}</button></div></div>`; }).join("") || `<div class="empty" style="grid-column:1/-1"><b>Nothing yet</b>Try a shorter word, or clear the filters.<div class="chips" style="justify-content:center;margin-top:14px"><button class="chip" type="button" data-clear>Clear filters</button></div></div>`;
 }
 $("#pq").addEventListener("input", drawPick);
+addEventListener("sdk-home", () => { $("#pq").value = ""; USES = null; fTrack = "all"; $("#fLevel").value = ""; $("#fCo").value = ""; [...$("#fTrack").children].forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === "all"))); if (Q) { Q = null; route(); } else drawPick(); });
 window.__sdkSearch = true; addEventListener("sdk-hsearch", e => { if (Q) return; $("#pq").value = e.detail.v; drawPick(); $("#qgrid").scrollIntoView({ block: "start", behavior: "auto" }); scrollBy(0, -84); }); $("#psf").addEventListener("submit", e => { e.preventDefault(); drawPick(); $("#qgrid").scrollIntoView({ behavior: "smooth", block: "start" }); });
 $("#plead").textContent = `${D.length} real questions, answered the way the interview runs.`;
 $("#pRand").onclick = () => { const pool = D.filter(d => !(prog(d.slug) || {}).done), d = (pool.length ? pool : D)[Math.floor(Math.random() * (pool.length || D.length))]; ev("practice-surprise"); location.hash = "q=" + d.slug; };
@@ -366,6 +360,8 @@ $("#fTrack").addEventListener("click", e => { const b = e.target.closest("button
 $("#fLevel").onchange = drawPick; $("#fCo").onchange = drawPick;
 $("#qgrid").addEventListener("click", e => {
   const c = e.target.closest("[data-pc]"); if (c) { copyKit(c.dataset.pc, "the design"); return; }
+  const v = e.target.closest("[data-pv]"); if (v) { location.href = "../#i=" + v.dataset.pv; return; }
+  if (e.target.closest("[data-clear]")) { dispatchEvent(new CustomEvent("sdk-home")); return; }
   const s = e.target.closest("[data-ps]"); if (s) { const on = boardToggle(s.dataset.ps, "Design saved"); s.classList.toggle("saved", on); s.setAttribute("aria-pressed", on); return; }
   const b = e.target.closest("[data-q]"); if (b) location.hash = "q=" + b.dataset.q; });
 
@@ -578,9 +574,9 @@ function boardHTML(k, R, n) {
   if (k === "est") return `<div class="bh">Your estimates</div><div class="ests">${done.map((r, i) => `<div class="estc${fresh(i)}">${esc(r.info || r.full || r.a)}${tg({ a: r.info || r.full || r.a })}</div>`).join("") || `<div class="bghost">Each estimate lands here</div>`}</div>`;
   if (k === "api") return `<div class="bh">API</div><div class="code">${done.map((r, i) => `<div class="cl${fresh(i)}">${esc(r.a)}</div>`).join("") || `<div class="bghost">Endpoints land here</div>`}</div>`;
   if (k === "data") return `<div class="bh">Data model</div><div class="tables">${done.map((r, i) => { const [h, ...rest] = r.a.split(":"); return `<div class="tbl${fresh(i)}"><b>${esc(rest.length ? h : r.a)}</b>${rest.length ? `<span>${esc(rest.join(":"))}</span>` : ""}</div>`; }).join("") || `<div class="bghost">Tables land here</div>`}</div>`;
-  if (k === "modern") return `<div class="bh">2026 upgrades</div>${done.map((r, i) => `<div class="qa mod${fresh(i)}"><b><em class="tg yr">2026</em> ${esc(r.title)}</b><span>${esc(r.a)}</span></div>`).join("")}`;
-  if (k === "extra") return `<div class="bh">${esc(Q.v2.extra.t)}</div>${done.map((r, i) => `<div class="qa${fresh(i)}"><b>${esc(r.q)}</b><span>${esc(r.a)}</span></div>`).join("")}`;
-  if (k === "deep") return `<div class="bh">Answers you can give</div>${done.map((r, i) => `<div class="qa${fresh(i)}"><b>${esc(r.q)} ${tg(r)}</b><span>${esc(r.a)}</span></div>`).join("") || `<div class="bghost">Each strong answer lands here</div>`}`;
+  if (k === "modern") return `<div class="bh">2026 upgrades</div>${done.map((r, i) => `<div class="qab mod${fresh(i)}"><b><em class="tg yr">2026</em> ${esc(r.title)}</b><span>${esc(r.a)}</span></div>`).join("")}`;
+  if (k === "extra") return `<div class="bh">${esc(Q.v2.extra.t)}</div>${done.map((r, i) => `<div class="qab${fresh(i)}"><b>${esc(r.q)}</b><span>${esc(r.a)}</span></div>`).join("")}`;
+  if (k === "deep") return `<div class="bh">Answers you can give</div>${done.map((r, i) => `<div class="qab${fresh(i)}"><b>${esc(r.q)} ${tg(r)}</b><span>${esc(r.a)}</span></div>`).join("") || `<div class="bghost">Each strong answer lands here</div>`}`;
   return `<div class="bh">Bottlenecks and next steps</div><div class="bcols one">${done.map((r, i) => `<div class="note w${fresh(i)}">${esc(r.a)}${tg(r)}</div>`).join("") || `<div class="bghost">They land here</div>`}</div>`;
 }
 function lensLine() { const b = []; if (Q.scen) b.push(`<span class="tg sc">${esc(Q.scen.name)}</span> ${esc(Q.scen.lens)}`); if (Q.lensInfo) b.push(`<span class="tg ln">${esc(Q.su.lens)}</span> ${esc(Q.lensInfo.cares)}`); return b.length ? `<div class="lensl">${b.map(x => `<p>${x}</p>`).join("")}</div>` : ""; }
