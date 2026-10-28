@@ -1,0 +1,93 @@
+{
+ "family": "coordination",
+ "reviewed": "Oct 2026",
+ "what": "A distributed lock lets many servers agree that only one of them does a job at a time. It is usually a lease: a lock that expires on its own after a TTL.",
+ "like": "Like a meeting room booking that expires: you hold the room for 30 minutes, and if you vanish, the booking ends so others can use it.",
+ "why": [
+  "Stops two servers doing the same job twice, like sending today's emails",
+  "Protects a shared resource that cannot handle two writers at once",
+  "Leases free the lock on their own if the holder crashes"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "a", "t": "Scheduler A|wants the lock", "x": 0, "y": 20, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "b", "t": "Scheduler B|also wants it", "x": 0, "y": 340, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "lock", "t": "Lock service|Redis, etcd or ZooKeeper", "x": 265, "y": 20, "w": 170, "h": 86, "c": "data", "i": "lock"},
+   {"id": "lease", "t": "Lease + TTL|expires if not renewed", "x": 265, "y": 180, "w": 170, "h": 86, "c": "data", "i": "clock"},
+   {"id": "token", "t": "Fencing token|33, 34, 35 ...", "x": 265, "y": 340, "w": 170, "h": 86, "c": "data", "i": "hash"},
+   {"id": "store", "t": "Job queue / DB|rejects old tokens", "x": 550, "y": 180, "w": 150, "h": 86, "c": "data", "i": "db"},
+   {"id": "mon", "t": "Monitoring|lock waits, expiries", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ops", "i": "eye"}
+  ],
+  "edges": [
+   ["a", "lock", "acquire"],
+   ["b", "token", "waits"],
+   ["lock", "lease", "TTL"],
+   ["lease", "token", "issue"],
+   ["token", "store", "write + 34"],
+   ["lock", "mon", "metrics"]
+  ],
+  "steps": [
+   {"t": "Ask for the lock", "d": "Scheduler A asks the lock service for a named lock, such as jobs:2026-10-28. In Redis this is SET key random-value NX PX 30000 - set only if absent, expire in 30 s.", "hl": ["a", "lock"]},
+   {"t": "Get a lease", "d": "The lock lives only for its TTL. The holder renews it (keep-alive) while working. If it crashes, the lease runs out and the lock frees itself.", "hl": ["lock", "lease"]},
+   {"t": "Get a fencing token", "d": "Each grant comes with a number that only goes up, like 33 then 34. In etcd or ZooKeeper the key's revision or zxid can play this part.", "hl": ["lease", "token"]},
+   {"t": "Write with the token", "d": "The holder sends its token with every write. The store remembers the highest token it has seen and rejects anything older.", "hl": ["token", "store"]},
+   {"t": "Others wait or skip", "d": "Scheduler B tries, sees the lock is taken and either waits with a random delay or skips this run, because A already has it covered.", "hl": ["b", "token"]},
+   {"t": "Release safely", "d": "A deletes the key only if it still holds its own random value, so it never removes a lock that someone else now owns.", "hl": ["a", "lock", "mon"]}
+  ]
+ },
+ "numbers": [
+  {"v": "30,000 ms", "l": "example lock TTL in SET key value NX PX 30000", "s": "https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/index.html.md"},
+  {"v": "5 / 3", "l": "Redlock example: 5 independent Redis masters, lock needs at least 3", "s": "https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/index.html.md"},
+  {"v": "5-50 ms", "l": "per-node timeout Redlock suggests for a 10 s lock", "s": "https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/index.html.md"},
+  {"v": "64-bit", "l": "key space for Postgres advisory lock ids", "s": "https://www.netguru.com/codestories/advisory-locks"}
+ ],
+ "tool": "quorum",
+ "choices": [
+  {"t": "Efficiency or correctness", "d": "If a double run only wastes work, one Redis key is enough. If a double run corrupts data, use a consensus store plus fencing tokens."},
+  {"t": "Lease length (TTL)", "d": "Long enough for the job plus renewals, short enough that a crash does not block others for long. Renew well before expiry."},
+  {"t": "Where the lock lives", "d": "Redis for speed, etcd or ZooKeeper for consensus-backed safety, Postgres advisory locks when the work is already in that database."},
+  {"t": "Wait, retry or skip", "d": "Try-lock and skip suits schedulers. Blocking waits suit short critical sections. Retry with random jitter so contenders do not collide again."},
+  {"t": "Lock or idempotency", "d": "Often better: make the work safe to repeat with a unique key or upsert, so a double run does no harm and no lock is needed."}
+ ],
+ "instead": [
+  {"slug": "data-postgresql-postgres-sql-relational", "why": "Advisory locks or a unique constraint in the database you already run"},
+  {"slug": "msg-message-queue-mq-async-buffer-decouple", "why": "A queue hands each job to one consumer, so no lock needed"},
+  {"slug": "cache-redis-cache-in-memory-kv-sorted-set-pubsub", "why": "SET NX PX for cheap, best-effort efficiency locks"},
+  {"slug": "data-key-value-dynamodb-dynamodb-kv-nosql", "why": "Conditional writes give one-winner semantics without a separate lock service"}
+ ],
+ "breaks": [
+  {"t": "Pause outlives the lease", "d": "A long GC pause or slow network lets the lease expire; another node takes the lock while the first still thinks it holds it.", "see": "Two writers in the logs for the same lock window", "fix": "Fencing tokens checked by the store, plus lease renewal"},
+  {"t": "Failover loses the lock", "d": "Redis replication is async, so a promoted replica may not know the lock exists.", "see": "Lock granted twice right after a failover", "fix": "Consensus store (etcd, ZooKeeper) for correctness locks, or fencing"},
+  {"t": "Wrong client releases", "d": "A plain DEL removes a lock that another client now holds.", "see": "Overlapping jobs after a slow run", "fix": "Store a random value and delete only if it still matches (DELEX IFEQ or a Lua script)"},
+  {"t": "Clock jumps", "d": "Redis TTLs use wall-clock time, so a big clock change can end a lock early.", "see": "Locks expiring sooner than their TTL", "fix": "Run NTP carefully, avoid manual clock changes, rely on fencing"},
+  {"t": "Lock never frees", "d": "A lock with no TTL, or a session lock left on a pooled connection.", "see": "Jobs stuck waiting; one lock held for hours", "fix": "Always use a TTL or transaction-scoped locks; alert on long holds"}
+ ],
+ "say": [
+  "Only one scheduler instance should enqueue today's jobs, so each instance tries a lease lock named after the date and the losers simply skip.",
+  "The lock is a lease with a TTL that the holder renews, so a crashed holder frees it automatically.",
+  "Because a paused process can outlive its lease, every write carries a fencing token and the job table rejects older tokens.",
+  "Better still, enqueuing is idempotent with a unique key per job and day, so even a double run creates no duplicates."
+ ],
+ "followups": [
+  {"q": "Is Redlock safe?", "a": "It is debated. Kleppmann argues it relies on bounded clocks and pauses and offers no fencing tokens, so it should not be used for correctness. Antirez replied with a counterpoint. For correctness, many teams pick etcd or ZooKeeper plus fencing."},
+  {"q": "What is a fencing token?", "a": "A number that rises with each lock grant. The holder sends it with each write and the storage rejects any write with a smaller token than one it has already seen, so a stale holder cannot do damage."},
+  {"q": "How does etcd do locks?", "a": "A lock is tied to a lease. The lock key exists while the lease lives; if the lease expires or is revoked, the lock is released and the next waiter is woken."},
+  {"q": "When would you avoid a lock?", "a": "When the work can be idempotent: a unique constraint, an upsert or a conditional write gives the same safety with no lock service and no lease timing to reason about."}
+ ],
+ "today": "Redis 8.4 added DELEX with an IFEQ option, so a lock can be released safely in one command instead of a Lua script.",
+ "check": [
+  {"q": "A paused process wakes after its lease expired and writes. What stops the damage?", "a": "A fencing token checked by the storage", "d": ["A longer TTL", "A second Redis replica", "Retrying the write"], "why": "The store sees a token older than one it already accepted and rejects the write."},
+  {"q": "Why does SET use a random value for a lock?", "a": "So you only delete the lock if it is still yours", "d": ["To make the key expire faster", "To spread keys across shards", "To encrypt the lock"], "why": "Checking the value before deleting stops you removing a lock someone else now holds."},
+  {"q": "With Redlock on 5 Redis masters, how many must grant the lock?", "a": "At least 3", "d": ["All 5", "Just 1", "At least 2"], "why": "A majority (N/2+1) is needed, so two clients cannot both win."},
+  {"q": "Two scheduler copies might both enqueue today's jobs. Simplest safe design?", "a": "Idempotent enqueue with a unique key per job and day", "d": ["Run only one server forever", "Add a sleep before enqueuing", "Use a bigger database"], "why": "If a repeat run cannot create duplicates, a lock becomes an optimisation, not a must."}
+ ],
+ "sources": [
+  {"t": "Redis docs: distributed locks with Redis (Redlock)", "u": "https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/index.html.md"},
+  {"t": "Martin Kleppmann: How to do distributed locking", "u": "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html"},
+  {"t": "etcd docs: concurrency API (Lock)", "u": "https://etcd.io/docs/v3.4/dev-guide/api_concurrency_reference_v3/"},
+  {"t": "etcd docs: how to create a lease", "u": "https://etcd.io/docs/v3.6/tutorials/how-to-create-lease/"},
+  {"t": "Netguru: Postgres advisory locks guide", "u": "https://www.netguru.com/codestories/advisory-locks"}
+ ]
+}

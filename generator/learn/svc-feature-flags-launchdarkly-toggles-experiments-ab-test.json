@@ -1,0 +1,354 @@
+{
+ "family": "release",
+ "reviewed": "Oct 2026",
+ "what": "A feature flag is a switch in your code that you flip at runtime, without a deploy. It decides who sees new behaviour: nobody, some tenants, a percentage, or everyone.",
+ "like": "Like a dimmer switch on new lighting: wired in already, you turn it up slowly, and snap it off if something flickers.",
+ "why": [
+  "Separates deploying code from releasing it to users",
+  "Lets you roll out gradually and turn off fast (kill switch)",
+  "Runs A/B experiments on real traffic"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "ui",
+    "t": "Flag dashboard|rules, targets, %",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "chart"
+   },
+   {
+    "id": "cfg",
+    "t": "Flag service|stores the rules",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "db"
+   },
+   {
+    "id": "sdk",
+    "t": "SDK in your app|rules kept in memory",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "memory"
+   },
+   {
+    "id": "app",
+    "t": "Request|tenant + user id",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "hash",
+    "t": "Bucketing|hash(user id) to %",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "hash"
+   },
+   {
+    "id": "new",
+    "t": "New pipeline|flag on",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "old",
+    "t": "Old pipeline|flag off",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "met",
+    "t": "Metrics|errors per variant",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   }
+  ],
+  "edges": [
+   [
+    "ui",
+    "cfg",
+    "edit rule"
+   ],
+   [
+    "cfg",
+    "sdk",
+    "stream"
+   ],
+   [
+    "app",
+    "sdk",
+    "evaluate"
+   ],
+   [
+    "sdk",
+    "hash",
+    "% rule"
+   ],
+   [
+    "sdk",
+    "new",
+    "on"
+   ],
+   [
+    "hash",
+    "old",
+    "off"
+   ],
+   [
+    "new",
+    "met",
+    "events"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Write a rule",
+    "d": "In the dashboard you set a rule, for example: tenants Acme and Globex get the new pipeline, plus 10% of everyone else.",
+    "hl": [
+     "ui",
+     "cfg"
+    ]
+   },
+   {
+    "t": "Rules stream to SDKs",
+    "d": "The flag service pushes rule changes to every connected SDK. The SDK keeps the rules in an in-memory cache, so checks are local and fast.",
+    "hl": [
+     "cfg",
+     "sdk"
+    ]
+   },
+   {
+    "t": "Evaluate per request",
+    "d": "Your code asks: is new-pipeline on for this context (tenant, user)? Targeted tenants match first; no network call is needed.",
+    "hl": [
+     "app",
+     "sdk"
+    ]
+   },
+   {
+    "t": "Consistent bucketing",
+    "d": "For a percentage, the SDK hashes the user or tenant key into a bucket. The same key always lands in the same bucket, so users do not flip-flop.",
+    "hl": [
+     "sdk",
+     "hash"
+    ]
+   },
+   {
+    "t": "Route the work",
+    "d": "On sends the request to the new pipeline, off keeps the old one. Moving a tenant across is just a rule change.",
+    "hl": [
+     "new",
+     "old"
+    ]
+   },
+   {
+    "t": "Watch and decide",
+    "d": "Compare errors and latency per variant. Healthy: raise the percentage. Problems: flip the kill switch and everyone is back on the old path.",
+    "hl": [
+     "met",
+     "ui"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "4",
+   "l": "toggle kinds: release, experiment, ops, permission",
+   "s": "https://martinfowler.com/bliki/FeatureFlag.html"
+  },
+  {
+   "v": "100,000",
+   "l": "buckets LaunchDarkly hashes contexts into for percentage rollouts",
+   "s": "https://launchdarkly.com/docs/home/releases/percentage-rollouts"
+  },
+  {
+   "v": "0.125%",
+   "l": "rollout steps can use up to three decimal places",
+   "s": "https://launchdarkly.com/docs/home/releases/percentage-rollouts"
+  },
+  {
+   "v": "Dec 2023",
+   "l": "OpenFeature accepted as a CNCF incubating project",
+   "s": "https://sdtimes.com/feature-flags/openfeature-feature-flagging-api-becomes-a-cncf-incubating-project/"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Flag type and lifetime",
+   "d": "Release flags live days to weeks and then get deleted. Experiment flags last one test. Ops kill switches and permission flags can stay long-term, on purpose."
+  },
+  {
+   "t": "Targeting unit",
+   "d": "Bucket by tenant for B2B cutovers, so a whole company moves together. Bucket by user for consumer features and experiments."
+  },
+  {
+   "t": "Rollout steps",
+   "d": "For example 1%, 10%, 50%, 100%, pausing at each step to watch error rate and latency per variant."
+  },
+  {
+   "t": "Local or remote evaluation",
+   "d": "Server SDKs evaluate in memory from streamed rules: fast and still working if the flag service is down. Client-side SDKs get pre-evaluated values to keep rules private."
+  },
+  {
+   "t": "Vendor or OpenFeature",
+   "d": "Code against the OpenFeature API and plug in a provider (LaunchDarkly, Flagsmith, your own), so switching vendors does not touch every call site."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "edge-load-balancer-lb-elb-alb-nlb-l4-l7-round-robin",
+   "why": "Canary by traffic weight between two deployments, no code switch"
+  },
+  {
+   "slug": "edge-api-gateway-auth-routing-throttling-bff-kong",
+   "why": "Route whole tenants to a new backend at the gateway"
+  },
+  {
+   "slug": "llmops-offline-evals-eval-dataset-benchmark-regression-ai-observability",
+   "why": "Test a ranking change offline before any live traffic sees it"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Flag debt",
+   "d": "Old release flags stay in the code and nobody knows what they do.",
+   "see": "Hundreds of flags, many at 100% for months",
+   "fix": "Owner and expiry date per flag; delete code and config once fully rolled out"
+  },
+  {
+   "t": "Users flip between variants",
+   "d": "Bucketing uses a random number or a changing key.",
+   "see": "Same user sees old then new UI; muddy experiment results",
+   "fix": "Hash a stable key (user or tenant id)"
+  },
+  {
+   "t": "Untested combinations",
+   "d": "Many flags interact in ways no one tried.",
+   "see": "Bug appears only with two flags on together",
+   "fix": "Few flags, few toggle points; test next-release flags on and all flags on"
+  },
+  {
+   "t": "Flag service unreachable",
+   "d": "The SDK cannot fetch rules at startup.",
+   "see": "SDK init timeouts in logs",
+   "fix": "Safe default values in code, cached rules, local evaluation"
+  }
+ ],
+ "say": [
+  "We cut tenants over from the old pipeline to the new one with a feature flag targeted by tenant id, starting with internal and friendly tenants.",
+  "Server SDKs keep the rules in memory, so each check is a local lookup and the flag service is not on the request path.",
+  "For percentage steps I bucket by a hash of the tenant id, so a tenant stays on the same side, and I watch error rate and latency per variant.",
+  "Once every tenant is migrated, we delete the flag and the old code path so we do not build up flag debt."
+ ],
+ "followups": [
+  {
+   "q": "How does a percentage rollout stay consistent?",
+   "a": "The SDK hashes a stable key, such as the user or tenant id, into a fixed bucket. Raising the percentage only adds buckets, so people already on stay on."
+  },
+  {
+   "q": "Release flag vs experiment flag?",
+   "a": "A release flag hides unfinished work and goes away once launched. An experiment flag splits users into variants to measure an outcome, like click-through or answer quality, and ends when the test is decided."
+  },
+  {
+   "q": "What is OpenFeature?",
+   "a": "A vendor-neutral, CNCF-hosted API for evaluating flags. Your code calls one standard API, and a provider plugs in the actual flag vendor or an in-house system."
+  },
+  {
+   "q": "How would you test a new reranker this way?",
+   "a": "Put it behind an experiment flag, bucket queries or users by hash, and compare online metrics per variant after offline evals look good. Roll forward or flip back instantly."
+  }
+ ],
+ "today": "OpenFeature, a vendor-neutral flag API, has been a CNCF incubating project since December 2023, so flag calls can stay the same if you switch vendors.",
+ "check": [
+  {
+   "q": "You need to turn off a misbehaving feature in seconds, without a deploy. Which flag type?",
+   "a": "An ops kill switch",
+   "d": [
+    "A release branch",
+    "A database migration",
+    "A permission flag"
+   ],
+   "why": "Ops toggles exist so operators can change behaviour at runtime instantly."
+  },
+  {
+   "q": "How should a 10% rollout pick users?",
+   "a": "Hash a stable user or tenant id into buckets",
+   "d": [
+    "Random number on every request",
+    "First 10% of requests each minute",
+    "Users whose name starts with A-C"
+   ],
+   "why": "Hashing a stable key gives each person the same answer every time."
+  },
+  {
+   "q": "Why do server SDKs evaluate flags in memory?",
+   "a": "Fast checks with no network call per request",
+   "d": [
+    "To save disk space",
+    "Because rules are secret from the server",
+    "To avoid needing a flag service at all"
+   ],
+   "why": "Rules stream in once and each check is a local lookup."
+  },
+  {
+   "q": "A release flag has been at 100% for six months. What now?",
+   "a": "Remove the flag and the old code path",
+   "d": [
+    "Leave it in case",
+    "Set it to 99%",
+    "Turn it into an experiment"
+   ],
+   "why": "Retiring release flags avoids flag debt and untested paths."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Martin Fowler: Feature Flag",
+   "u": "https://martinfowler.com/bliki/FeatureFlag.html"
+  },
+  {
+   "t": "LaunchDarkly docs: percentage rollouts",
+   "u": "https://launchdarkly.com/docs/home/releases/percentage-rollouts"
+  },
+  {
+   "t": "LaunchDarkly docs: architecture",
+   "u": "https://launchdarkly.com/docs/home/getting-started/architecture.md"
+  },
+  {
+   "t": "SD Times: OpenFeature becomes a CNCF incubating project",
+   "u": "https://sdtimes.com/feature-flags/openfeature-feature-flagging-api-becomes-a-cncf-incubating-project/"
+  }
+ ]
+}

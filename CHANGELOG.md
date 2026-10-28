@@ -3,6 +3,7 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Four more lessons: Monitoring, Alerting (SLO burn rates), Distributed Lock and Feature Flags.
 - Four more lessons: Human Approval, PII Redaction, Stream Processor (Flink) and Data Warehouse.
 - Six more lessons: Token & Cost Metering, AI Gateway / Model Router, Citations, Context Builder, Dead Letter Queue and Workflow Engine.
 - Six more lessons: Idempotency Store, Bloom Filter, Agent Skills, Tools (function calling), Prompt Cache and Batch Inference.
