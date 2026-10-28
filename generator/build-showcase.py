@@ -1,5 +1,5 @@
 import json,re,sys,os,shutil
-SP='/tmp/claude-0/-home-claude/aca6983d-08d7-5f43-8750-93c63e7f3c11/scratchpad'
+SP=os.environ.get('SDK_SP','/tmp')
 lib=json.load(open('out/System Design Kit.excalidrawlib'))['libraryItems']
 rep=json.load(open('out/report.json'))
 thumbs={t['name']:t['img'] for t in json.load(open('out/thumbs.json'))}
@@ -11,11 +11,51 @@ for it,r in zip(lib,rep):
     items_art.append({'id':it['id'],'name':it['name'],'section':r['section'],'img':thumbs[it['name']]})
 N=len(items_pages)
 tpl=open('showcase2.tpl.html').read()
+VERSION='1.5.0'
+REPO='https://github.com/Dinesh-Sunny/excalidraw-system-design-kit'
+THEMEBTN='<button class="ibtn" id="theme" type="button" aria-label="Switch theme"><svg class="i-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 12.5A6.5 6.5 0 0 1 7.5 4a6.5 6.5 0 1 0 8.5 8.5z"/></svg><svg class="i-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.6M10 15.9v1.6M2.5 10h1.6M15.9 10h1.6M4.7 4.7l1.1 1.1M14.2 14.2l1.1 1.1M4.7 15.3l1.1-1.1M14.2 5.8l1.1-1.1"/></svg></button>'
+GHSVG='<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>'
+HEART='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg>'
+IBLK='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="5.5" height="5.5" rx="1.2"/><rect x="11" y="3.5" width="5.5" height="5.5" rx="1.2"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1.2"/><rect x="11" y="11" width="5.5" height="5.5" rx="1.2"/></svg>'
+IPRC='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r=".8" fill="currentColor"/></svg>'
+def NAV(pre, active, spurl, kit_dialog=False):
+    """one header for every page: Blocks | Practice switch, theme, Sponsor, Star, Get the kit"""
+    cur=lambda k:' aria-current="page"' if k==active else ''
+    home=pre or './'
+    get=f'<a class="pill primary" href="{REPO}/releases/latest" data-kit>Get the kit</a>' if kit_dialog else f'<a class="pill primary" href="{pre}#get">Get the kit</a>'
+    return (f'<header class="nav gut"><div class="wrap">\n'
+      f'  <a class="mark" href="{"#top" if active=="blocks" else home}" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>\n'
+      f'  <nav class="sw" aria-label="Site"><a href="{home}"{cur("blocks")}>{IBLK}<span>Blocks</span></a><a href="{pre}practice/"{cur("practice")}>{IPRC}<span>Practice</span></a></nav>\n'
+      f'  <span class="sp"></span>\n  {THEMEBTN}\n'
+      f'  <a class="pill ghost spon" href="{spurl}" aria-label="Sponsor this kit"{cur("sponsor")}>{HEART}<span class="lbl">Sponsor</span></a>\n'
+      f'  <a class="pill ghost star" href="{REPO}" target="_blank" rel="noopener" aria-label="Star on GitHub">{GHSVG}<span class="lbl">Star</span><span class="cnt" id="stars" hidden></span></a>\n'
+      f'  {get}\n</div></header>')
+def FOOT(pre, spurl, mail='Help'):
+    """one footer for every page"""
+    home=pre or './'
+    return (f'<footer class="gut"><div class="wrap"><span><a href="{REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v{VERSION}</a> · MIT · free, no sign-up</span>'
+      f'<span class="help">Happy to help: <a data-mail="{mail}" href="#contact">Email</a> · <a href="{REPO}/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="{REPO}/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span>'
+      f'<span class="fnav"><a href="{home}">Blocks</a> · <a href="{pre}practice/">Practice</a> · <a href="{REPO}/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="{spurl}">Sponsor</a></span></div></footer>')
+# practice questions, and which questions use each block (both ways between Blocks and Practice)
+from kitmap import find as kitfind
+PQ={};USES={}
+if os.path.exists('out/practice.json'):
+    _lv={'Easy':0,'Medium':1,'Hard':2}; _pc=json.load(open('practice.data.json'))
+    _by={it['name']:it['id'] for it in lib}
+    for m in json.load(open('out/practice.json')):
+        kid=_by.get('sd:tpl/ '+m['name']);
+        if not kid: continue
+        PQ[m['slug']]=[m['title'],_pc[m['slug']]['level'],kid.replace('sdk-','')]
+        for n in m['nodes']:
+            b=kitfind(n['title'])
+            if b: USES.setdefault(b.replace('sdk-',''),[])
+            if b and m['slug'] not in USES[b.replace('sdk-','')]: USES[b.replace('sdk-','')].append(m['slug'])
+PRACTICE=json.dumps({'q':PQ,'u':USES},separators=(',',':'),ensure_ascii=False)
 NEWS='Copy any block into Excalidraw, Figma or Docs, plus 12 starter packs'
-def fill(items): return tpl.replace('__NEWS__',NEWS).replace('__ITEMS__',json.dumps(items,separators=(',',':'))).replace('__SECTIONS__',json.dumps(secs)).replace('__VERSION__','1.5.0').replace('__SIZE__',f"{os.path.getsize('out/System Design Kit.excalidrawlib')/1e6:.1f} MB").replace('__N__',str(len(items)))
+def fill(items): return tpl.replace('__NAV__',NAV('','blocks','__SPURL__',True)).replace('__FOOT__',FOOT('','__SPURL__')).replace('__PRACTICE__',PRACTICE).replace('__NEWS__',NEWS).replace('__ITEMS__',json.dumps(items,separators=(',',':'))).replace('__SECTIONS__',json.dumps(secs)).replace('__VERSION__',VERSION).replace('__SIZE__',f"{os.path.getsize('out/System Design Kit.excalidrawlib')/1e6:.1f} MB").replace('__N__',str(len(items)))
 art=fill(items_art).replace('__DATA__','https://dinesh-sunny.github.io/excalidraw-system-design-kit/'); open(f'{SP}/sd-kit-showcase.html','w').write(art)
 pg=fill(items_pages).replace('__DATA__','')
-pg=pg.replace('<title>System Design Kit</title>',f'<title>System Design Kit for Excalidraw</title>\n<meta name="description" content="{N} searchable Excalidraw blocks for system design interviews and agentic AI: building blocks, agents, RAG, UI screens and 21 full designs. Free, MIT.">\n<meta property="og:title" content="System Design Kit for Excalidraw">\n<meta property="og:description" content="Draw systems by typing. {N} Excalidraw blocks for system design and AI agents.">\n<meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="theme-color" content="#3f6c9f">\n<script type="application/ld+json">'+json.dumps({"@context":"https://schema.org","@type":"SoftwareApplication","name":"System Design Kit for Excalidraw","applicationCategory":"DesignApplication","operatingSystem":"Web","url":"https://dinesh-sunny.github.io/excalidraw-system-design-kit/","description":f"{N} Excalidraw blocks for system design interviews and agentic AI architecture.","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":True,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dinesh Sunny","url":"https://github.com/Dinesh-Sunny"},"softwareVersion":"1.5.0","codeRepository":"https://github.com/Dinesh-Sunny/excalidraw-system-design-kit"})+'</script>',1)
+pg=pg.replace('<title>System Design Kit</title>',f'<title>System Design Kit for Excalidraw</title>\n<meta name="description" content="{N} searchable Excalidraw blocks for system design interviews and agentic AI: building blocks, agents, RAG, UI screens and 21 full designs. Free, MIT.">\n<meta property="og:title" content="System Design Kit for Excalidraw">\n<meta property="og:description" content="Draw systems by typing. {N} Excalidraw blocks for system design and AI agents.">\n<meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="theme-color" content="#3f6c9f">\n<script type="application/ld+json">'+json.dumps({"@context":"https://schema.org","@type":"SoftwareApplication","name":"System Design Kit for Excalidraw","applicationCategory":"DesignApplication","operatingSystem":"Web","url":"https://dinesh-sunny.github.io/excalidraw-system-design-kit/","description":f"{N} Excalidraw blocks for system design interviews and agentic AI architecture.","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":True,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dinesh Sunny","url":"https://github.com/Dinesh-Sunny"},"softwareVersion":VERSION,"codeRepository":"https://github.com/Dinesh-Sunny/excalidraw-system-design-kit"})+'</script>',1)
 pg=pg.replace('<meta name="claude:viewport-fit-sides" content="cover">\n','',1)
 pg='<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'+pg.replace('</style>\n','</style>\n</head><body>\n',1)+'\n</body></html>\n'
 open('out/pages/index.html','w').write(pg)
@@ -44,10 +84,9 @@ for path,spurl in ((f'{SP}/sd-kit-showcase.html',PAGES+'sponsor/'),('out/pages/i
 src=open('showcase2.tpl.html').read()
 base=src[src.index('<style>')+7:src.index('</style>')].replace('url(fonts/','url(../fonts/')
 headinit=src[:src.index('<style>')].split('\n',2)[2].replace('href="fonts/','href="../fonts/')  # drop <title> + claude meta lines
-a=src.index('<button class="ibtn" id="theme"'); themebtn=src[a:src.index('</button>',a)+9]
-a=src.index('<svg viewBox="0 0 16 16" fill="currentColor"'); ghsvg=src[a:src.index('</svg>',a)+6]
-a=src.index('<a class="pill ghost spon"'); a=src.index('<svg',a); heart=src[a:src.index('</svg>',a)+6]
+themebtn=THEMEBTN; ghsvg=GHSVG; heart=HEART
 sp=open('sponsor.tpl.html').read()
+sp=sp.replace('__NAV__',NAV('../','sponsor','./')).replace('__FOOT__',FOOT('../','./','Sponsorship'))
 for k,v in (('__BASECSS__',base),('__HEADINIT__',headinit),('__THEMEBTN__',themebtn),('__GH__',ghsvg),('__HEART__',heart.replace("'","\\'")),('__SPONSOR__',SPJ),('__SPJSON__','../sponsors.json'),('__N__',str(N))): sp=sp.replace(k,v)
 json.dump({'sponsors':SPN['sponsors']},open('out/pages/sponsors.json','w'),indent=1,ensure_ascii=False)
 os.makedirs('out/pages/sponsor',exist_ok=True); open('out/pages/sponsor/index.html','w').write(sp)
@@ -56,7 +95,7 @@ print('sponsor page',len(sp)//1024,'KB')
 # ---- thank-you + stats pages (share the site CSS) ----
 ptpl=open('page.tpl.html').read()
 for slug,title,robots,body,js in (('thanks','Thank you - System Design Kit','noindex','thanks.body.html','thanks.js'),('stats','Sponsor stats - System Design Kit','index','stats.body.html','stats.js'),('terms','Sponsor terms - System Design Kit','index','terms.body.html',None)):
-    t=ptpl.replace('__BASECSS__',base.replace('url(../fonts/','url(../../fonts/')).replace('__HEADINIT__',headinit.replace('href="../fonts/','href="../../fonts/')).replace('__THEMEBTN__',themebtn).replace('__SPONSOR__',SPJ).replace('__TITLE__',title).replace('__ROBOTS__',robots).replace('__BODY__',open(body).read()).replace('__SCRIPT__',open(js).read() if js else '')
+    t=ptpl.replace('__NAV__',NAV('../../','sponsor','../')).replace('__FOOT__',FOOT('../../','../','Sponsorship')).replace('__BASECSS__',base.replace('url(../fonts/','url(../../fonts/')).replace('__HEADINIT__',headinit.replace('href="../fonts/','href="../../fonts/')).replace('__THEMEBTN__',themebtn).replace('__SPONSOR__',SPJ).replace('__TITLE__',title).replace('__ROBOTS__',robots).replace('__BODY__',open(body).read()).replace('__SCRIPT__',open(js).read() if js else '')
     os.makedirs(f'out/pages/sponsor/{slug}',exist_ok=True); open(f'out/pages/sponsor/{slug}/index.html','w').write(t)
 if not os.path.exists('out/pages/love.json'): json.dump([],open('out/pages/love.json','w'))
 if not os.path.exists('out/pages/stats.json'): json.dump({'sponsors':{}},open('out/pages/stats.json','w'))
@@ -71,10 +110,11 @@ if os.path.exists('out/practice.json'):
     for m in PM:
         kid=byname.get('sd:tpl/ '+m['name'])
         c=PC[m['slug']]
-        P.append({'slug':m['slug'],'title':m['title'],'edges':m.get('edges',[]),'boxes':m.get('boxes',{}),'size':m.get('size'),'level':c['level'],'track':c['track'],'companies':c['companies'],'nodes':[{'id':n['id'],'title':n['title']} for n in m['nodes']],
-                  'c':{k:c[k] for k in ('reqF','reqN','est','api','data','blocks','dives','wrap')},'v2':V2.get(m['slug'],{}),'variants':m.get('variants',{}),'kitId':kid,'kit':kid.replace('sdk-',''),'thumb':f"t/{kid}.webp"})
+        P.append({'slug':m['slug'],'title':m['title'],'edges':m.get('edges',[]),'boxes':m.get('boxes',{}),'size':m.get('size'),'level':c['level'],'track':c['track'],'companies':c['companies'],'nodes':[{'id':n['id'],'title':n['title'],'k':(kitfind(n['title']) or '').replace('sdk-','')} for n in m['nodes']],
+                  'c':{k:c[k] for k in ('reqF','reqN','est','api','data','blocks','dives','wrap')},'v2':V2.get(m['slug'],{}),'variants':{vk:{**vv,'nodes':[{**n,'k':(kitfind(n['title']) or '').replace('sdk-','')} for n in vv.get('nodes',[])]} for vk,vv in m.get('variants',{}).items()},'kitId':kid,'kit':kid.replace('sdk-',''),'thumb':f"t/{kid}.webp"})
     P.sort(key=lambda d:(d['track']!='Classic',order[d['level']]))
     t=open('practice.tpl.html').read()
+    t=t.replace('__NAV__',NAV('../','practice','../sponsor/')).replace('__FOOT__',FOOT('../','../sponsor/','Practice'))
     for k,v in (('__HEADINIT__',headinit),('__BASECSS__',base),('__THEMEBTN__',themebtn),('__SPONSOR__',SPJ),('__PDATA__',json.dumps(P,separators=(',',':'),ensure_ascii=False)),('__LENSES__',json.dumps(V2['_lenses'],separators=(',',':'),ensure_ascii=False))): t=t.replace(k,v)
     os.makedirs('out/pages/practice',exist_ok=True); open('out/pages/practice/index.html','w').write(t)
     print('practice page',len(t)//1024,'KB',len(P),'questions')

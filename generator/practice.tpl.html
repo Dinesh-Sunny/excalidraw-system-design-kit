@@ -237,26 +237,37 @@ body.run > header.nav, body.run > footer { display: none }
 .zc2 button { height: 30px; min-width: 30px; padding: 0 8px; border: 0; border-radius: 7px; background: none; cursor: pointer; font: 500 14px/1 var(--font-sans); color: #141414 } .zc2 button:hover { background: #f1f3f5 }
 .dz { position: relative }
 @media (max-width: 999px) { .zc2 { bottom: auto; top: 10px; left: 10px } }
+/* blocks-site features inside practice */
+.pq { height: 44px; width: min(420px, 100%); padding: 0 16px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); font: 400 15px/1 var(--font-sans); color: var(--ink) }
+.pq:focus { outline: 0; border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
+.fwrap { display: grid; gap: 12px; justify-items: center }
+.dice { height: 38px; padding: 0 14px; border-radius: 9999px; border: 1px dashed var(--hairline); background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink) } .dice svg { width: 15px; height: 15px }
+.ufil { display: flex; justify-content: center } .ufil .chip { height: 34px }
+.qw { position: relative; min-width: 0; animation: rise .35s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0ms) }
+.qw:hover .qa, .qw:focus-within .qa { opacity: 1; transform: none }
+.qw .qa { top: 8px; right: 8px }
+.fbl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px } .fbl a, .fbl button { height: 28px; padding: 0 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink); text-decoration: none } .fbl svg { width: 13px; height: 13px } .fbl .on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+.rmenu { position: relative; flex: none } .rmenu > summary { list-style: none } .rmenu > summary::-webkit-details-marker { display: none } .rmenu .mlist { right: 0; left: auto; top: 44px; bottom: auto; min-width: 230px; z-index: 30 }
+.fbrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 400 13px/1 var(--font-sans); color: var(--ink-muted) } .fbrow .chip { height: 30px; font-size: 12px } .fbrow .chip.on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) } .fbrow svg { width: 14px; height: 14px }
+.toast button { margin-left: 10px; border: 0; background: none; color: inherit; font: 600 14px/1 var(--font-sans); text-decoration: underline; cursor: pointer } .toast.act { pointer-events: auto }
+@media (prefers-reduced-motion: reduce) { .qw { animation: none } }
 </style>
 </head><body>
-<header class="nav gut"><div class="wrap">
-  <a class="mark" href="../" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>
-  <span class="sp"></span>
-  __THEMEBTN__
-  <a class="pill ghost" href="../">All blocks</a>
-</div></header>
+__NAV__
 
 <div id="vPick">
 <main class="px gut"><div class="wrap">
   <h1 class="ph1">Practise the interview, <i>step by step</i>.</h1>
   <p class="plead">Pick a question and answer it the way the interview runs: requirements, estimates, API, data, the design block by block, deep dives, wrap-up.</p>
+  <div class="fwrap"><input class="pq" id="pq" type="search" placeholder="Search questions, companies or blocks" autocomplete="off" aria-label="Search practice questions"><div class="ufil" id="ufil" hidden></div></div>
   <div class="filters">
     <div class="seg2" id="fTrack"><button type="button" data-v="all" aria-pressed="true">All</button><button type="button" data-v="Classic" aria-pressed="false">Classic</button><button type="button" data-v="AI" aria-pressed="false">AI</button></div>
     <select class="sel" id="fLevel" aria-label="Level"><option value="">Any level</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
     <select class="sel" id="fCo" aria-label="Company"><option value="">Any company</option></select>
+    <button class="dice" type="button" id="pRand"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="3"/><circle cx="7.3" cy="7.3" r=".9" fill="currentColor"/><circle cx="12.7" cy="12.7" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/></svg>Surprise me</button>
   </div>
   <div class="qgrid" id="qgrid"></div>
-  <p class="src">Company names come from public candidate reports. <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a question</a></p>
+  <p class="src">Company names come from public candidate reports. Every design is also in the <a href="../#tpl">blocks library</a>. <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a question</a></p>
 </div></main>
 </div>
 
@@ -265,6 +276,7 @@ body.run > header.nav, body.run > footer { display: none }
     <button class="ib" type="button" id="bBack" aria-label="All questions" title="All questions"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg></button>
     <h2 id="rTitle"></h2><button class="chipb" type="button" id="rSetup" title="Change scenario, interviewer or mode"></button>
     <nav class="tabs" id="rTabs" aria-label="Steps"></nav>
+    <details class="menu rmenu" id="rMenu"><summary class="ib" aria-label="More actions" title="More actions"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="13" cy="8" r="1.4"/></svg></summary><div class="mlist"><button type="button" data-x="copy">Copy design to Excalidraw</button><button type="button" data-x="save" id="mSave">Save design to my board</button><a id="mKit" href="../">Open the design in the blocks</a><button type="button" data-x="share">Share this question</button><button type="button" data-x="png">Copy design as image</button><button type="button" data-x="dl">Download .excalidraw</button><button type="button" data-x="suggest">Suggest a change</button></div></details>
     <button class="timer" type="button" id="rTimer" title="45-minute interview timer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.5V9l1.8 1.2M6.5 2h3"/></svg><span id="rClock">45:00</span></button>
   </div>
   <div class="main" id="stage"></div>
@@ -272,7 +284,7 @@ body.run > header.nav, body.run > footer { display: none }
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<footer class="gut"><div class="wrap"><span>MIT · free · no sign-up</span><span class="help">Happy to help: <a data-mail="Practice" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span><a href="../">Back to the kit</a></span></div></footer>
+__FOOT__
 
 <script>
 const SP = __SPONSOR__;
@@ -282,7 +294,16 @@ const $ = s => document.querySelector(s);
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 $("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
 const MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
-const toast = $("#toast"); function say(t) { toast.textContent = t; toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), 2400); }
+const toast = $("#toast"); function say(t, act, fn) { toast.textContent = t; toast.classList.toggle("act", !!act); if (act) { const b = document.createElement("button"); b.type = "button"; b.textContent = act; b.onclick = () => { fn(); toast.classList.remove("on"); }; toast.append(b); } toast.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove("on"), act ? 5000 : 2400); }
+const REPO = "https://github.com/Dinesh-Sunny/excalidraw-system-design-kit";
+/* shared with the blocks site: board, recently viewed, progress */
+const LS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "[]"); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return []; } };
+const onBoard = s => LS("sdk-board").includes(s);
+function boardToggle(s, label) { const b = LS("sdk-board"), on = b.includes(s); LS("sdk-board", on ? b.filter(x => x !== s) : [...b, s]); say(on ? "Removed from your board" : `${label || "Saved"} to your board`, on ? "" : "View board", () => { location.href = "../#board"; }); ev((on ? "unsave/" : "save/") + s); return !on; }
+function recentAdd(s) { LS("sdk-recent", [s, ...LS("sdk-recent").filter(x => x !== s)].slice(0, 12)); }
+function prog(qs) { const p = store.get(), r = Object.entries(p).filter(([k]) => k === qs || k.startsWith(qs + "~")).map(x => x[1]); if (!r.length) return null; const done = r.filter(x => x.done); return { done: done.length > 0, score: done.length ? Math.max(...done.map(x => x.score || 0)) : null }; }
+async function copyKit(id, label) { try { const p = fetch(`../e/${id}.json`).then(r => r.json()).then(els => new Blob([JSON.stringify({ type: "excalidraw/clipboard", elements: els, files: {} })], { type: "text/plain" })); if (window.ClipboardItem && navigator.clipboard.write) await navigator.clipboard.write([new ClipboardItem({ "text/plain": p })]); else await navigator.clipboard.writeText(await (await p).text()); say(`Copied${label ? " " + label : ""}. Paste in Excalidraw with ${MAC ? "⌘" : "Ctrl"} V`); ev("copy-excalidraw/" + id.replace(/^sdk-/, "")); } catch (e) { say("Copy didn't go through. Try the download"); } }
+fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r => r.ok ? r.json() : null).then(j => { const s = $("#stars"); if (s && j && j.stargazers_count >= 25) { s.textContent = j.stargazers_count; s.hidden = false; } }).catch(() => {});
 const GC = SP.goatcounter; if (GC) { const s = document.createElement("script"); s.async = true; s.src = "https://gc.zgo.at/count.js"; s.dataset.goatcounter = `https://${GC}.goatcounter.com/count`; document.head.append(s); }
 const ev = p => { try { if (window.goatcounter && goatcounter.count) goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} };
 const store = { get() { try { return JSON.parse(localStorage.getItem("sdk-practice") || "{}"); } catch (e) { return {}; } }, set(v) { try { localStorage.setItem("sdk-practice", JSON.stringify(v)); } catch (e) {} } };
@@ -305,14 +326,26 @@ const LAST = () => STEPS.length - 1;
 const cos = [...new Set(D.flatMap(d => d.companies))].sort();
 $("#fCo").insertAdjacentHTML("beforeend", cos.map(c => `<option>${esc(c)}</option>`).join(""));
 let fTrack = "all";
+let USES = null; // practice/#uses=<block slug>: the questions that use one block (linked from the blocks site)
+const SAVEI = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/></svg>', COPYI = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M13 7V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13H7"/></svg>';
+const usesBlock = (d, k) => d.nodes.some(n => n.k === k) || Object.values(d.variants || {}).some(v => (v.nodes || []).some(n => n.k === k));
 function drawPick() {
-  const lv = $("#fLevel").value, co = $("#fCo").value, p = store.get();
-  const list = D.filter(d => (fTrack === "all" || d.track === fTrack) && (!lv || d.level === lv) && (!co || d.companies.includes(co)));
-  $("#qgrid").innerHTML = list.map(d => { const st = p[d.slug]; const badge = st && st.done ? "Done" : st ? "In progress" : ""; return `<button class="q" type="button" data-q="${d.slug}"><div class="th"><img loading="lazy" alt="" src="../${d.thumb}">${badge ? `<span class="badge">${badge}</span>` : ""}</div><div class="tt">${esc(d.title)}</div><div class="mm"><span class="lv ${d.level}">${d.level}</span>${d.companies.length ? `<span>${esc(d.companies.slice(0, 3).join(", "))}${d.companies.length > 3 ? ` +${d.companies.length - 3}` : ""}</span>` : `<span>${d.track === "AI" ? "AI design" : "Classic"}</span>`}</div></button>`; }).join("") || `<p class="src">Nothing matches. Try another filter.</p>`;
+  const lv = $("#fLevel").value, co = $("#fCo").value, w = $("#pq").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const hay = d => (d.title + " " + d.companies.join(" ") + " " + d.track + " " + d.nodes.map(n => n.title).join(" ")).toLowerCase();
+  const list = D.filter(d => (fTrack === "all" || d.track === fTrack) && (!lv || d.level === lv) && (!co || d.companies.includes(co)) && w.every(x => hay(d).includes(x)) && (!USES || usesBlock(d, USES.k)));
+  $("#ufil").hidden = !USES; if (USES) $("#ufil").innerHTML = `<button class="chip" type="button" id="ufx">Questions that use ${esc(USES.t)} <span aria-hidden="true">×</span></button>`;
+  $("#qgrid").innerHTML = list.map((d, i) => { const g = prog(d.slug), badge = g ? (g.done ? `Done · ${g.score}%` : "In progress") : ""; return `<div class="qw" style="--d:${Math.min(i, 8) * 40}ms"><button class="q" type="button" data-q="${d.slug}"><div class="th"><img loading="lazy" alt="" src="../${d.thumb}">${badge ? `<span class="badge">${badge}</span>` : ""}</div><div class="tt">${esc(d.title)}</div><div class="mm"><span class="lv ${d.level}">${d.level}</span>${d.companies.length ? `<span>${esc(d.companies.slice(0, 3).join(", "))}${d.companies.length > 3 ? ` +${d.companies.length - 3}` : ""}</span>` : `<span>${d.track === "AI" ? "AI design" : "Classic"}</span>`}</div></button><div class="qa"><button type="button" data-pc="${d.kitId}" title="Copy the design to Excalidraw">${COPYI}<span class="lb">Copy</span></button><button type="button" data-ps="${d.kit}" class="${onBoard(d.kit) ? "saved" : ""}" title="Save the design to your board" aria-pressed="${onBoard(d.kit)}">${SAVEI}</button></div></div>`; }).join("") || `<p class="src">Nothing matches. Try another word or filter.</p>`;
 }
+$("#pq").addEventListener("input", drawPick);
+$("#pRand").onclick = () => { const pool = D.filter(d => !(prog(d.slug) || {}).done), d = (pool.length ? pool : D)[Math.floor(Math.random() * (pool.length || D.length))]; ev("practice-surprise"); location.hash = "q=" + d.slug; };
+$("#ufil").addEventListener("click", e => { if (e.target.closest("#ufx")) { USES = null; history.replaceState(null, "", location.pathname); drawPick(); } });
+document.addEventListener("keydown", e => { if (e.key === "/" && !Q && document.activeElement !== $("#pq")) { e.preventDefault(); $("#pq").focus(); } });
 $("#fTrack").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; fTrack = b.dataset.v; [...$("#fTrack").children].forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawPick(); });
 $("#fLevel").onchange = drawPick; $("#fCo").onchange = drawPick;
-$("#qgrid").addEventListener("click", e => { const b = e.target.closest("[data-q]"); if (b) location.hash = "q=" + b.dataset.q; });
+$("#qgrid").addEventListener("click", e => {
+  const c = e.target.closest("[data-pc]"); if (c) { copyKit(c.dataset.pc, "the design"); return; }
+  const s = e.target.closest("[data-ps]"); if (s) { const on = boardToggle(s.dataset.ps, "Design saved"); s.classList.toggle("saved", on); s.setAttribute("aria-pressed", on); return; }
+  const b = e.target.closest("[data-q]"); if (b) location.hash = "q=" + b.dataset.q; });
 
 /* ---------- workspace: a practice tool per step, hints, compare, self-rating, scorecard ---------- */
 let Q = null, step = 0, blk = 1, dv = 0, open_ = false, finished = false, pick = null;
@@ -334,13 +367,14 @@ function effective(d, su) { // merge the chosen scenario and interviewer lens in
 let setupMode = false;
 function route() {
   const h = new URLSearchParams(location.hash.slice(1)), q = BY[h.get("q")];
+  if (h.get("uses")) { const k = h.get("uses"); USES = { k, t: h.get("t") || (D.flatMap(d => d.nodes).find(n => n.k === k) || {}).title || "this block" }; }
   if (!q) { Q = null; document.body.classList.remove("run"); $("#vRun").hidden = true; $("#vPick").hidden = false; stopClock(); drawPick(); document.title = "Practice system design interviews - System Design Kit"; return; }
   const su = SETUP.get(q.slug); setupMode = !su || h.get("s") === "setup";
   if (!Q || Q.slug !== q.slug || (su && Q.rid !== effective(q, su).rid) || (su && Q.su.lens !== su.lens)) { $("#stage").innerHTML = ""; tries = new Set(); last = null; cam = null; qtries = new Set(); qlast = null; Q = effective(q, su || { sc: "classic", lens: "", mode: "learn" }); STEPS = buildSteps(Q); const st = store.get()[Q.rid] || {}; step = st.done ? 0 : Math.min(st.step || 0, LAST()); blk = st.blk || 1; dv = 0; resetClock(); ev("practice-start/" + q.slug); }
   if (h.get("s") && h.get("s") !== "done" && h.get("s") !== "setup") step = Math.max(0, Math.min(LAST(), +h.get("s") - 1));
   open_ = false; finished = h.get("s") === "done"; pick = null;
   document.body.classList.add("run"); $("#vPick").hidden = true; $("#vRun").hidden = false;
-  $("#rTitle").textContent = q.title; document.title = q.title + " - Practice";
+  $("#rTitle").textContent = q.title; document.title = q.title + " - Practice"; recentAdd(q.kit); $("#mKit").href = "../#i=" + q.kit; $("#mSave").textContent = onBoard(q.kit) ? "Remove design from my board" : "Save design to my board"; $("#rMenu").open = false;
   $("#rSetup").textContent = setupMode ? "" : [Q.scen ? Q.scen.name : "Classic", Q.su.lens || ""].filter(Boolean).join(" · "); $("#rSetup").hidden = setupMode;
   render();
 }
@@ -417,7 +451,8 @@ function renderDesign() {
 function renderMove() {
   const n = Q.nodes.length, mv = $("#mv"), picks = rec().picks || {};
   const dots = Q.nodes.map((x, i) => `<i class="${i < blk ? (picks[i] === false ? "hp" : "ok") : i === blk ? "now" : ""}"></i>`).join("");
-  const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span></div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") : "Tap any block on the canvas to see why it's there."}</span></div>`;
+  const fbl = last && last.k ? `<span class="fbl"><a href="../#i=${last.k}">Open in blocks</a><button type="button" data-savek="${last.k}" class="${onBoard(last.k) ? "on" : ""}">${SAVEI}${onBoard(last.k) ? "Saved" : "Save block"}</button><button type="button" data-copyk="${last.k}">${COPYI}Copy</button></span>` : "";
+  const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span>${last.ok ? fbl : ""}</div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") : "Tap any block on the canvas to see why it's there."}</span></div>`;
   if (blk >= n) {
     const first = Object.values(picks).filter(v => v === true).length, total = n - 1;
     mv.innerHTML = `<div class="mh"><span class="gl">Design complete</span><div class="dots">${dots}</div></div>${fb}<p class="big2">${first} of ${total} <small>right first time</small></p>${rateHTML("hld")}`;
@@ -432,13 +467,13 @@ function pickBlock(t) {
   const next = Q.nodes[blk];
   if (t === next.title) {
     sub("picks", { [blk]: tries.size === 0 }); ev("practice-pick/" + (tries.size ? "retry" : "ok"));
-    last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "" }; tries = new Set(); blk++; put({ blk }); renderDesign();
+    last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "", k: next.k }; tries = new Set(); blk++; put({ blk }); renderDesign();
   } else {
     tries.add(t); last = { ok: false, text: nudge(t) }; ev("practice-pick/no");
     renderMove(); const b = [...document.querySelectorAll(".opt2")].find(x => x.dataset.pick === t); if (b) b.classList.add("shake");
   }
 }
-function revealNext() { const next = Q.nodes[blk]; sub("picks", { [blk]: false }); last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "" }; tries = new Set(); blk++; put({ blk }); renderDesign(); }
+function revealNext() { const next = Q.nodes[blk]; sub("picks", { [blk]: false }); last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "", k: next.k }; tries = new Set(); blk++; put({ blk }); renderDesign(); }
 /* canvas camera: fit the blocks placed so far, glide between steps */
 function camFor(k) {
   const [W, H] = Q.size, bx = Q.nodes.slice(0, k).map(x => Q.boxes[x.id]).filter(Boolean);
@@ -618,7 +653,8 @@ function renderScore() {
   $("#stage").innerHTML = `<div class="col"><span class="dvn">Scorecard</span><h3 class="qn">${pct}% <small>overall, from first-try answers and your ratings</small></h3>
     <div class="scard">${STEPS.map((x, i) => `<button type="button" class="srow" data-step="${i}"><span>${x.t}</span>${bar(sc[i])}<em>${sc[i] === null ? "not rated" : sc[i] >= 1.5 ? "Strong" : sc[i] >= 0.5 ? "Partly" : "Review"}</em></button>`).join("")}</div>
     <p class="look">${weak.length ? `Practise ${weak.map(i => STEPS[i].t.toLowerCase()).join(", ")} again, then redraw the whole design from memory tomorrow.` : "Strong across the board. Redraw it from memory tomorrow to lock it in."}</p>
-    <div class="row">${weak.length ? `<button class="pill primary" type="button" data-step="${weak[0]}">Practise ${STEPS[weak[0]].t.toLowerCase()}</button>` : ""}<button class="pill ghost" type="button" data-x="copy">Copy design to Excalidraw</button><a class="pill ghost" href="../#i=${Q.kit}">Open in the kit</a><button class="pill ghost" type="button" data-x="restart">Start again</button></div></div>`;
+    <div class="row">${weak.length ? `<button class="pill primary" type="button" data-step="${weak[0]}">Practise ${STEPS[weak[0]].t.toLowerCase()}</button>` : ""}<button class="pill ghost" type="button" data-x="copy">Copy design to Excalidraw</button><button class="pill ghost" type="button" data-x="save">${onBoard(Q.kit) ? "Saved to your board" : "Save to your board"}</button><a class="pill ghost" href="../#i=${Q.kit}">Open in the blocks</a></div>
+    <div class="fbrow"><span>Helpful?</span><button class="chip" type="button" data-fb="love"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg>Yes</button><button class="chip" type="button" data-fb="suggest">Suggest a change</button><span class="sp" style="flex:1"></span><button class="link" type="button" data-x="restart">Start again</button></div></div>`;
   put({ done: true, score: pct });
   buttons(`Next: ${esc(nxt.title)}`); $("#bMain").dataset.next = nxt.slug;
 }
@@ -660,7 +696,10 @@ $("#vRun").addEventListener("click", e => {
   const qp = e.target.closest("[data-qp]"); if (qp) { quizPick(+qp.dataset.qp); return; }
   const pk = e.target.closest("[data-pick]"); if (pk) { pickBlock(pk.dataset.pick); return; }
   const zz = e.target.closest("[data-z]"); if (zz && $("#cv svg") && cam) { const svg = $("#cv svg"); if (zz.dataset.z === "fit") { glide(svg, camFor(blk)); return; } const f = zz.dataset.z === "in" ? 0.75 : 1.33, [x, y, w, h] = cam; glide(svg, [x + w * (1 - f) / 2, y + h * (1 - f) / 2, w * f, h * f]); return; }
-  const hn = e.target.closest("[data-node]"); if (hn) { const x = Q.nodes.find(y => y.id === hn.dataset.node); last = { ok: true, title: x.title, text: Q.c.blocks[x.id] || "" }; renderMove(); return; }
+  const hn = e.target.closest("[data-node]"); if (hn) { const x = Q.nodes.find(y => y.id === hn.dataset.node); last = { ok: true, title: x.title, text: Q.c.blocks[x.id] || "", k: x.k }; renderMove(); return; }
+  const sk = e.target.closest("[data-savek]"); if (sk) { boardToggle(sk.dataset.savek, "Block saved"); renderMove(); return; }
+  const ck = e.target.closest("[data-copyk]"); if (ck) { copyKit("sdk-" + ck.dataset.copyk, "the block"); return; }
+  const fbk = e.target.closest("[data-fb]"); if (fbk) { if (fbk.dataset.fb === "love") { fbk.classList.add("on"); say("Thank you! Glad it helps"); ev("fb-love/practice-" + Q.slug); } else suggest(); return; }
   const rt = e.target.closest("[data-rate]"); if (rt) { const [k, v] = rt.dataset.rate.split(":"); sub("rate", { [k]: v }); rt.parentNode.querySelectorAll("button").forEach(b => b.className = b === rt ? "on " + v : ""); tabs(); return; }
   const del = e.target.closest("[data-del]"); if (del) { const [key, g, i] = del.dataset.del.split(":"), m = (rec().mine || {})[key] || {}; (m[g] || []).splice(+i, 1); sub("mine", { [key]: m }); render(); return; }
   const ad = e.target.closest("[data-apidel]"); if (ad) { const rows = (rec().mine || {}).api || []; rows.splice(+ad.dataset.apidel, 1); sub("mine", { api: rows }); render(); return; }
@@ -670,10 +709,21 @@ $("#vRun").addEventListener("click", e => {
     if (a === "apiadd") { sub("mine", { api: [...((rec().mine || {}).api || [{ m: "POST", p: "", r: "" }]), { m: "GET", p: "", r: "" }] }); render(); }
     if (a === "entadd") { sub("mine", { data: [...((rec().mine || {}).data || [{ n: "", f: "", s: "SQL", k: "" }]), { n: "", f: "", s: "SQL", k: "" }] }); render(); }
     if (a === "copy") copyDesign();
+    if (a === "save") { const on = boardToggle(Q.kit, "Design saved"); $("#mSave").textContent = on ? "Remove design from my board" : "Save design to my board"; if (finished) render(); }
+    if (a === "share") shareQ();
+    if (a === "png") copyPng();
+    if (a === "dl") downloadDesign();
+    if (a === "suggest") suggest();
+    if (x.closest("#rMenu")) $("#rMenu").open = false;
     if (a === "restart") { const p = store.get(); delete p[Q.rid]; store.set(p); blk = 1; resetClock(); setStep(0); }
     return; }
   const t = e.target.closest("[data-step]"); if (t) { if (finished) finished = false; setStep(+t.dataset.step); }
 });
+function shareQ() { const url = location.origin + location.pathname + "#q=" + Q.slug, t = Q.title + " - practise it step by step"; ev("share/practice-" + Q.slug); if (navigator.share && matchMedia("(hover: none)").matches) { navigator.share({ title: t, url }).catch(() => {}); return; } navigator.clipboard.writeText(url).then(() => say("Link copied"), () => say(url)); }
+function suggest() { const u = new URL(REPO + "/issues/new"); u.searchParams.set("template", "1-block-feedback.yml"); u.searchParams.set("title", `[Practice] ${Q.title}`); u.searchParams.set("block", "sd:tpl/ " + Q.title); u.searchParams.set("link", location.href); ev("fb/suggest/practice-" + Q.slug); window.open(u.toString(), "_blank", "noopener"); }
+async function copyPng() { try { const blob = fetch(`../s/${Q.kitId}.svg`).then(r => r.text()).then(t => new Promise((res, rej) => { const img = new Image(), url = URL.createObjectURL(new Blob([t], { type: "image/svg+xml" })); img.onload = () => { const c = document.createElement("canvas"); c.width = img.naturalWidth * 2; c.height = img.naturalHeight * 2; const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); c.toBlob(b => b ? res(b) : rej(), "image/png"); }; img.onerror = rej; img.src = url; })); await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]); say("Image copied. Paste it anywhere"); ev("copy-png/" + Q.kit); } catch (e) { say("Copy didn't go through. Try the download"); } }
+async function downloadDesign() { try { const els = await fetch(`../e/${Q.kitId}.json`).then(r => r.json()); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify({ type: "excalidraw", version: 2, source: location.origin + location.pathname, elements: els, appState: { viewBackgroundColor: "#ffffff", gridSize: 20 }, files: {} })], { type: "application/json" })); a.download = Q.slug + ".excalidraw"; document.body.append(a); a.click(); a.remove(); say("Downloaded " + Q.slug + ".excalidraw"); ev("download-excalidraw/" + Q.kit); } catch (e) { say("Download didn't go through. Try again"); } }
+document.addEventListener("click", e => { const m = $("#rMenu"); if (m && m.open && !m.contains(e.target)) m.open = false; });
 async function copyDesign() {
   try {
     const p = fetch(`../e/${Q.kitId}.json`).then(r => r.json()).then(els => new Blob([JSON.stringify({ type: "excalidraw/clipboard", elements: els, files: {} })], { type: "text/plain" }));

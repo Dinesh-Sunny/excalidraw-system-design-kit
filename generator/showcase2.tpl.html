@@ -322,7 +322,7 @@ dialog[open]::backdrop { animation: fade .2s ease-out }
 .cop.main small { color: inherit; opacity: .7 }
 .cop.done b::after { content: "  Copied"; font-weight: 400; opacity: .7 }
 .prac-l { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: var(--r-md); background: var(--sketch-soft); color: var(--sketch); text-decoration: none; font: 500 14px/20px var(--font-sans) }
-.prac-l:hover { filter: brightness(.97) }
+.prac-l:hover { filter: brightness(.97) } .prac-l small { font: 400 13px/20px var(--font-sans); opacity: .85 } .prac-l[hidden], .uses[hidden] { display: none }
 .dls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
 .dls .chip { height: 30px; font: 500 12px/1 var(--font-mono) }
 .rel { display: grid; gap: 10px; min-width: 0 }
@@ -410,8 +410,7 @@ html.mo .rv.in { opacity: 1; transform: none }
 .kit-foot { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
 
 @media (max-width: 640px) {
-  .nav .gh-label, .star .lbl, .spon .lbl, .prac .lbl { display: none }
-  .prac { padding: 0 11px }
+  .nav .gh-label, .star .lbl, .spon .lbl { display: none }
   .spon, .star { padding: 0 11px }
   .mark { font-size: 22px }
   .nav .pill { height: 36px; padding: 0 12px; font-size: 13px }
@@ -429,18 +428,31 @@ html.mo .rv.in { opacity: 1; transform: none }
   .ct { font-size: 14px; line-height: 18px }
 }
 @media (max-width: 420px) { .mark .long { display: none } .mark .short { display: inline } .nav .wrap { gap: 6px } .nav .pill.primary { padding: 0 11px } .star, .spon { padding: 0 9px } .ibtn { width: 34px; height: 34px } .star .cnt { display: none } }
+.sw { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk); margin-left: 4px; flex: none }
+.sw a { height: 32px; padding: 0 12px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); text-decoration: none; transition: background .15s, color .15s; white-space: nowrap }
+.sw a svg { width: 15px; height: 15px; flex: none }
+.sw a:hover { color: var(--ink) }
+.sw a[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12) }
+.nav .spon[aria-current="page"] { background: var(--surface) }
+footer .fnav a, footer .help a { color: inherit }
+@media (max-width: 760px) { .sw a svg { display: none } .sw a { padding: 0 11px } }
+@media (max-width: 560px) { .nav .star { display: none } }
+@media (max-width: 420px) { .nav .spon { display: none } .sw { margin-left: 0 } .sw a { height: 30px; padding: 0 9px; font-size: 12px } }
+@media (max-width: 360px) { .nav .wrap { gap: 4px } .mark { font-size: 19px } .sw a { padding: 0 7px; font-size: 11.5px } .nav .pill.primary { padding: 0 9px; font-size: 12px } .ibtn { width: 32px; height: 32px } }
+/* practice inside the blocks site */
+.qa .prac2 { background: var(--sketch-soft); color: var(--sketch); border-color: transparent }
+.pbadge { position: absolute; left: 8px; top: 8px; font: 500 11px/1 var(--font-mono); padding: 5px 8px; border-radius: 9999px; background: var(--pill); color: var(--on-ink); pointer-events: none }
+.row h2 .more2 { font: 500 13px/1 var(--font-sans); color: var(--sketch); text-decoration: underline; text-underline-offset: 3px; margin-left: 12px }
+.row h2 .more2 + .more { margin-left: 16px }
+.row h2 .more2:first-of-type { margin-left: auto }
+a.card { text-decoration: none; color: inherit; display: block }
+a.card .open { cursor: pointer }
+.uses { display: grid; gap: 8px } .uses .chips { display: flex; flex-wrap: wrap; gap: 6px } .uses .chip { height: 30px; font-size: 12px }
+.uses .chip .lvd { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-muted) } .lvd.Easy { background: #2f9e44 !important } .lvd.Medium { background: #e67700 !important } .lvd.Hard { background: #e03131 !important }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important } }
 </style>
 
-<header class="nav gut"><div class="wrap">
-  <a class="mark" href="#top" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>
-  <span class="sp"></span>
-  <button class="ibtn" id="theme" type="button" aria-label="Switch theme"><svg class="i-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 12.5A6.5 6.5 0 0 1 7.5 4a6.5 6.5 0 1 0 8.5 8.5z"/></svg><svg class="i-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.6M10 15.9v1.6M2.5 10h1.6M15.9 10h1.6M4.7 4.7l1.1 1.1M14.2 14.2l1.1 1.1M4.7 15.3l1.1-1.1M14.2 5.8l1.1-1.1"/></svg></button>
-  <a class="pill ghost prac" href="practice/"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r=".8" fill="currentColor"/></svg><span class="lbl">Practice</span></a>
-  <a class="pill ghost spon" href="__SPURL__" aria-label="Sponsor this kit"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg><span class="lbl">Sponsor</span></a>
-  <a class="pill ghost star" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener" aria-label="Star on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg><span class="lbl">Star</span><span class="cnt" id="stars" hidden></span></a>
-  <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest" data-kit>Get the kit</a>
-</div></header>
+__NAV__
 
 <section class="hero gut" id="top"><div class="wrap">
   <div class="island" aria-hidden="true"><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.5V4.8a1.3 1.3 0 0 1 2.6 0V9M9.6 8.5V3.8a1.3 1.3 0 0 1 2.6 0V9M12.2 9V5a1.3 1.3 0 0 1 2.6 0v6c0 3.5-2.3 6-5.3 6-2.2 0-3.4-1.2-4.6-3.2L3.6 10.9a1.3 1.3 0 0 1 2.1-1.4L7 11"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5l10 6-4.6 1.2L8.4 15z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="13" height="11" rx="2"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l7 7-7 7-7-7z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4M10 4h6v6"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16c1-3 2.5-4 4-3s2 2.5 4 .5 2-5 4-8"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h10M10 5v11"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="13" height="12" rx="2"/><circle cx="7.5" cy="8" r="1.3"/><path d="m4 15 4.5-4.5 3 3 2-2 3 3"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16h8M4.5 12.5l6-7.5 5 4-6 7.5H6.5z"/></svg></span><span class="div"></span><span class="lib on"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h4.5v11H4zM8.5 4.5H13v11H8.5zM13.5 5l3.6-1 2.6 10.5-3.6 1z"/></svg>Library</span></div>
@@ -497,11 +509,11 @@ html.mo .rv.in { opacity: 1; transform: none }
   <h2>Bring it to your next <i>interview</i>.</h2>
   <div class="row2">
     <a class="pill primary" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest" data-kit>Get the kit</a>
-    <a class="pill ghost" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a>
+    <a class="pill ghost" href="practice/">Practise an interview</a>
   </div>
 </div></section>
 
-<footer class="gut"><div class="wrap"><span><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v__VERSION__</a> · MIT · no sign-up, no cookies</span><span class="help">Happy to help: <a data-mail="Help" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span><a href="__SPURL__">Sponsor</a> · sd:&lt;section&gt;/ Item - tags</span></div></footer>
+__FOOT__
 
 <dialog id="sheet" class="sheet" aria-labelledby="st">
   <div class="sh-grid">
@@ -514,7 +526,8 @@ html.mo .rv.in { opacity: 1; transform: none }
       <button class="cop" type="button" data-copy="svg"><b>Copy SVG</b><small>Figma, Canva</small></button>
       <details class="menu cop-more"><summary class="cop"><b>More</b><small>Download, name</small></summary><div class="mlist"><button type="button" data-dl="png">Download PNG</button><button type="button" data-dl="svg">Download SVG</button><button type="button" data-dl="excalidraw">Download .excalidraw</button><button type="button" id="sc">Copy library name</button></div></details>
     </div>
-    <a class="prac-l" id="sprac" href="#" hidden>Practise this question step by step, like the interview →</a>
+    <a class="prac-l" id="sprac" href="#" hidden></a>
+    <div class="uses" id="suses" hidden></div>
     <code id="sn" hidden></code>
     <div class="rel" id="srel"></div>
     <div class="fb" id="sfb"><span>Helpful?</span><button class="chip" type="button" data-fb="love" aria-label="Yes, this block is useful"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg>Yes</button><button class="chip" type="button" data-fb="Suggest a change">Suggest a change</button></div>
@@ -555,6 +568,16 @@ html.mo .rv.in { opacity: 1; transform: none }
 
 <script>
 const ITEMS = __ITEMS__;
+const PRACTICE = __PRACTICE__; // practice questions, and which questions use each block
+const PQ = PRACTICE.q, BYKIT = Object.fromEntries(Object.entries(PQ).map(([s, v]) => [v[2], s]));
+function prog(qs) { // progress across every scenario of one practice question
+  let p = {}; try { p = JSON.parse(localStorage.getItem("sdk-practice") || "{}"); } catch (e) {}
+  const r = Object.entries(p).filter(([k]) => k === qs || k.startsWith(qs + "~")).map(x => x[1]);
+  if (!r.length) return null;
+  const last = r.sort((a, b) => (b.at || 0) - (a.at || 0))[0], done = r.filter(x => x.done);
+  return { at: last.at || 0, done: done.length > 0, score: done.length ? Math.max(...done.map(x => x.score || 0)) : null, step: last.step || 0 };
+}
+const progLabel = g => g.done ? `Done · ${g.score}%` : `In progress · step ${g.step + 1}`;
 const SECTIONS = __SECTIONS__;
 const I = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON = {
@@ -633,19 +656,20 @@ const IC = {
   copy: '<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M13 7V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13H7"/>',
   save: '<path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/>',
   dice: '<rect x="3.5" y="3.5" width="13" height="13" rx="3"/><circle cx="7.3" cy="7.3" r=".9" fill="currentColor"/><circle cx="12.7" cy="12.7" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/>',
+  prac: '<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r=".8" fill="currentColor"/>',
   next: '<path d="M4 10h12M11 5l5 5-5 5"/>', prev: '<path d="M16 10H4M9 5l-5 5 5 5"/>', up: '<path d="M10 16V4M5 9l5-5 5 5"/>',
 };
 const S = (d, sw = 1.5) => `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
-const cardHTML = i => `<div class="card" data-s="${slug(i)}"><button class="open" type="button"><div class="ph"><img loading="lazy" decoding="async" width="480" height="320" alt="" src="${i.img}"></div><div class="ct"></div><div class="cm">sd:${i.cat}/</div></button><div class="qa"><button type="button" data-a="copy" title="Copy to Excalidraw">${S(IC.copy)}<span class="lb">Copy</span></button><button type="button" data-a="save" class="${inBoard(i) ? "saved" : ""}" title="Save to your board" aria-pressed="${inBoard(i)}">${S(IC.save)}</button></div></div>`;
+const cardHTML = i => { const qs = BYKIT[slug(i)], g = qs && prog(qs); return `<div class="card" data-s="${slug(i)}"><button class="open" type="button"><div class="ph"><img loading="lazy" decoding="async" width="480" height="320" alt="" src="${i.img}">${g ? `<span class="pbadge">${g.done ? "Done " + g.score + "%" : "In progress"}</span>` : ""}</div><div class="ct"></div><div class="cm">sd:${i.cat}/</div></button><div class="qa"><button type="button" data-a="copy" title="Copy to Excalidraw">${S(IC.copy)}<span class="lb">Copy</span></button>${qs ? `<button type="button" data-a="prac" class="prac2" title="Practise this question step by step">${S(IC.prac)}<span class="lb">Practise</span></button>` : ""}<button type="button" data-a="save" class="${inBoard(i) ? "saved" : ""}" title="Save to your board" aria-pressed="${inBoard(i)}">${S(IC.save)}</button></div></div>`; };
 function fill(el, list) { el.innerHTML = list.map(cardHTML).join(""); [...el.children].forEach((c, k) => { c.querySelector(".ct").textContent = list[k].title; c._item = list[k]; c._list = list; }); }
 const packHTML = p => `<button class="pack" type="button" data-pack="${p.id}"><div class="col">${p.items.slice(0, 4).map(i => `<img loading="lazy" decoding="async" alt="" src="${i.img}">`).join("")}</div><div class="pt">${p.title}</div><div class="pd">${p.desc}</div><div class="pn">${p.items.length} blocks · paste as one board</div></button>`;
 const AR = (d, l) => `<button class="arr" type="button" data-d="${d}" aria-label="${l}"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${d < 0 ? 'M9 2 4 7l5 5' : 'M5 2l5 5-5 5'}"/></svg></button>`;
 function trackRow(title, list, opts = {}) {
   const sec = document.createElement("section"); sec.className = "row";
-  sec.innerHTML = `<h2>${title} <span class="n">${opts.n ?? list.length}</span>${opts.more ? `<button class="more" type="button" data-c="${opts.more}">${opts.moreLabel || "Show all"}</button>` : ""}<span class="nav-arrows" ${opts.more ? "" : 'style="margin-left:auto"'}>${AR(-1, "Previous")}${AR(1, "Next")}</span></h2>`;
+  sec.innerHTML = `<h2>${title} <span class="n">${opts.n ?? list.length}</span>${opts.extra || ""}${opts.more ? `<button class="more" type="button" data-c="${opts.more}">${opts.moreLabel || "Show all"}</button>` : ""}<span class="nav-arrows" ${opts.more || opts.extra ? "" : 'style="margin-left:auto"'}>${AR(-1, "Previous")}${AR(1, "Next")}</span></h2>`;
   const t = document.createElement("div"); t.className = "track" + (opts.packs ? " ptrack" : "");
-  if (opts.packs) t.innerHTML = list.map(packHTML).join(""); else fill(t, list);
+  if (opts.packs) t.innerHTML = list.map(packHTML).join(""); else if (opts.raw) t.innerHTML = opts.raw; else fill(t, list);
   sec.append(t); sec._track = t;
   const upd = () => { const a = sec.querySelectorAll(".nav-arrows .arr"); a[0].disabled = t.scrollLeft < 4; a[1].disabled = t.scrollLeft + t.clientWidth > t.scrollWidth - 4; sec.querySelector(".nav-arrows").style.visibility = t.scrollWidth > t.clientWidth + 4 ? "" : "hidden"; };
   t.addEventListener("scroll", upd, { passive: true }); requestAnimationFrame(upd); addEventListener("resize", upd);
@@ -680,7 +704,7 @@ function draw(scroll) {
     const list = pk ? pk.items : board.map(s => BYSLUG.get(s));
     const sec = document.createElement("section"); sec.className = "row";
     sec.innerHTML = `<div class="phead"><button class="back" type="button" data-go="all">All blocks</button><h2 style="margin:0">${pk ? pk.title : "Your board"} <span class="n">${list.length}</span></h2><p>${pk ? pk.desc + " Paste them all at once, laid out and ready to connect." : list.length ? "The blocks you saved. Paste them all into Excalidraw in one go, or download a ready board." : "Nothing saved yet. Tap the bookmark on any block to collect it here."}</p>
-      ${list.length ? `<div class="acts"><button class="pill primary" type="button" data-set="copy">${S(IC.copy)}Copy all to Excalidraw</button><button class="pill ghost" type="button" data-set="dl">Download .excalidraw</button>${pk ? `<button class="pill ghost" type="button" data-set="save">${S(IC.save)}Save all to my board</button>` : ""}<button class="pill ghost" type="button" data-set="share">Share</button>${pk ? "" : `<button class="pill ghost" type="button" data-set="clear">Clear board</button>`}</div>` : ""}</div>`;
+      ${list.length ? `<div class="acts"><button class="pill primary" type="button" data-set="copy">${S(IC.copy)}Copy all to Excalidraw</button><button class="pill ghost" type="button" data-set="dl">Download .excalidraw</button>${pk ? `<button class="pill ghost" type="button" data-set="save">${S(IC.save)}Save all to my board</button>` : ""}<button class="pill ghost" type="button" data-set="share">Share</button>${pk && pk.id === "interview" ? `<a class="pill ghost" href="practice/">Practise an interview</a>` : ""}${pk ? "" : `<button class="pill ghost" type="button" data-set="clear">Clear board</button>`}</div>` : ""}</div>`;
     sec._set = list; sec._name = pk ? pk.id : "my-board";
     if (list.length) { const g = document.createElement("div"); g.className = "grid"; fill(g, list); sec.append(g); }
     rows.append(sec); rows.insertAdjacentHTML("beforeend", exploreHTML(list));
@@ -692,12 +716,14 @@ function draw(scroll) {
     else { const g = document.createElement("div"); g.className = "grid"; fill(g, list); sec.append(g); }
     rows.append(sec); rows.insertAdjacentHTML("beforeend", exploreHTML(list));
   } else {
+    const going = Object.keys(PQ).map(s => [s, prog(s)]).filter(x => x[1]).sort((a, b) => b[1].at - a[1].at);
+    if (going.length) rows.append(trackRow("Continue practising", going, { raw: going.map(([s, g]) => { const k = BYSLUG.get(PQ[s][2]); return `<a class="card" href="practice/#q=${s}"><div class="open"><div class="ph"><img loading="lazy" alt="" src="${k ? k.img : ""}"><span class="pbadge">${g.done ? "Done" : "In progress"}</span></div><div class="ct">${esc(PQ[s][0])}</div><div class="cm">${progLabel(g)}</div></div></a>`; }).join(""), extra: `<a class="more2" href="practice/">All questions</a>` }));
     rows.append(trackRow("Starter packs", PACKS, { packs: true }));
     if (recent.length) rows.append(trackRow("Recently viewed", recent.map(s => BYSLUG.get(s)).slice(0, 12)));
     if (board.length) rows.append(trackRow("Your board", board.map(s => BYSLUG.get(s)), { more: "board", moreLabel: "Open board" }));
     for (const c of ORDER.slice(1)) {
       const list = items.filter(i => i.cat === c); if (!list.length) continue;
-      rows.append(trackRow(LABEL[c], list.slice(0, 12), { n: list.length, more: list.length > 4 ? c : null }));
+      rows.append(trackRow(LABEL[c], list.slice(0, 12), { n: list.length, more: list.length > 4 ? c : null, extra: c === "tpl" ? `<a class="more2" href="practice/">Practise them step by step</a>` : "" }));
     }
   }
   watchSponsors(rows);
@@ -707,7 +733,7 @@ function go(c) { cat = c; q.value = ""; try { history.replaceState(null, "", c =
 rows.addEventListener("click", e => {
   const t = e.target;
   const a = t.closest(".arr"); if (a && a.closest(".row")) { const tr = a.closest(".row")._track; if (tr) tr.scrollBy({ left: Number(a.dataset.d) * tr.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); return; }
-  const m = t.closest(".more"); if (m) return go(m.dataset.c);
+  const m = t.closest("button.more"); if (m) return go(m.dataset.c);
   const g = t.closest("[data-go]"); if (g) return go(g.dataset.go);
   const p = t.closest("[data-pack]"); if (p) { gcEvent("pack-open/" + p.dataset.pack); return go("pack:" + p.dataset.pack); }
   if (t.closest("[data-rand]")) return surprise();
@@ -716,7 +742,7 @@ rows.addEventListener("click", e => {
   const st = t.closest("[data-set]"); if (st) { const sec = st.closest(".row"); return setAction(st.dataset.set, sec._set, sec._name, st); }
   const card = t.closest(".card"); if (!card || !card._item) return;
   const qa = t.closest(".qa button");
-  if (qa) { qa.dataset.a === "copy" ? copyExc([card._item], qa) : toggleSave(card._item); return; }
+  if (qa) { if (qa.dataset.a === "prac") { gcEvent("practice-from/card"); location.href = "practice/#q=" + BYKIT[slug(card._item)]; return; } qa.dataset.a === "copy" ? copyExc([card._item], qa) : toggleSave(card._item); return; }
   if (t.closest(".open")) open(card._item, card._list);
 });
 rows.addEventListener("pointerover", e => { const c = e.target.closest(".card"); if (c && c._item && !c._pf) { c._pf = 1; els(c._item).catch(() => {}); } }, { passive: true });
@@ -823,7 +849,10 @@ function open(i, list) {
   const rel = $("#srel"); rel.innerHTML = `<span class="sub">More like this</span><div class="track"></div>${inPacks.length ? `<div class="inpk">In ${inPacks.slice(0, 2).map(p => `<button type="button" data-pack="${p.id}">${p.title}</button>`).join(" and ")}${inPacks.length > 2 ? ` and ${inPacks.length - 2} more` : ""}</div>` : ""}`;
   fill(rel.querySelector(".track"), same);
   $("#sad").innerHTML = adHTML("sheet", i.cat, true); watchSponsors($("#sad"));
-  const pr = $("#sprac"); pr.hidden = i.cat !== "tpl"; if (i.cat === "tpl") pr.href = "practice/#q=" + i.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const qs = BYKIT[slug(i)], pr = $("#sprac"), g = qs && prog(qs); pr.hidden = !qs;
+  if (qs) { pr.href = "practice/#q=" + qs; pr.innerHTML = `<span>${g ? (g.done ? "Practise again" : "Continue practising") : "Practise this question step by step, like the interview"} <small>· ${PQ[qs][1]}${g ? " · " + progLabel(g) : ""}</small></span><span>→</span>`; }
+  const us = (PRACTICE.u[slug(i)] || []).filter(s => PQ[s] && s !== qs), ue = $("#suses"); ue.hidden = !us.length;
+  ue.innerHTML = us.length ? `<span class="sub">Practise it in ${us.length} interview question${us.length > 1 ? "s" : ""}</span><div class="chips">${us.slice(0, 5).map(s => `<a class="chip" href="practice/#q=${s}"><i class="lvd ${PQ[s][1]}"></i>${esc(PQ[s][0])}</a>`).join("")}${us.length > 5 ? `<a class="chip" href="practice/#uses=${slug(i)}&t=${encodeURIComponent(i.title)}">+${us.length - 5} more</a>` : ""}</div>` : "";
   if (!sheet.open) { openedAt = location.hash; sheet.showModal(); }
   sheet.querySelector(".sh-body").scrollTop = 0;
   try { history.replaceState(null, "", "#i=" + slug(i)); } catch (e) {}
