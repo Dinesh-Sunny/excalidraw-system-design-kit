@@ -4,6 +4,7 @@ import { SECTIONS } from "./components.js";
 import { diagram } from "./diagram.js";
 import { TEMPLATES, PATTERNS } from "./templates.js";
 import { AGENTIC, AI_TEMPLATES } from "./agentic.js";
+import { AEO_TEMPLATES } from "./aeo.js";
 import { UI, FRAMES, SCREENS } from "./ui.js";
 
 const items = []; // {name, section, skel}
@@ -130,7 +131,7 @@ for (const p of PATTERNS) add("pattern", p.name, diagram(p.spec));
 section("agentic", "20", "Agentic patterns", "agent", "Anthropic: building effective agents");
 for (const p of AGENTIC) add("agentic", p.name + " ai agent", diagram(p.spec));
 section("tpl", "21", "Full interview designs", "ai", "classic questions, ready to adapt");
-for (const p of [...TEMPLATES, ...AI_TEMPLATES]) add("tpl", p.name, diagram(p.spec));
+for (const p of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES]) add("tpl", p.name, diagram(p.spec));
 
 // ================= build =================
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
