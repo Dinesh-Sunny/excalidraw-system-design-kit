@@ -141,6 +141,8 @@ body.run > header.nav, body.run > footer { display: none }
 @media (min-width: 1000px) { .dz { grid-template-columns: minmax(0, 1fr) 380px; grid-template-rows: minmax(0, 1fr) } .move { border-top: 0 !important; border-left: 1px solid var(--hairline) } }
 .dz .canvas { padding: 0; place-items: stretch; overflow: hidden }
 .dz .canvas svg { width: 100%; height: 100%; display: block; animation: none }
+.dz .canvas { touch-action: none; cursor: grab } .dz .canvas:active { cursor: grabbing } .veil { pointer-events: none; transition: opacity .3s }
+@media (max-width: 999px) { .dz { grid-template-rows: minmax(300px, 1fr) auto } .dz .move { max-height: 42vh } }
 .hits .hit { fill: transparent; stroke: transparent; cursor: pointer; transition: stroke .2s }
 .hits .hit:hover { stroke: #6965db; stroke-width: 3; stroke-dasharray: 6 6 }
 .hits .fresh { stroke: #6965db; stroke-width: 4; animation: fresh 1.6s ease-out forwards }
@@ -224,7 +226,8 @@ body.run > header.nav, body.run > footer { display: none }
 .zc2 { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: #fff; border: 1px solid #e3e4e8; box-shadow: 0 2px 8px rgba(0,0,0,.08); z-index: 2 }
 .zc2 button { height: 30px; min-width: 30px; padding: 0 8px; border: 0; border-radius: 7px; background: none; cursor: pointer; font: 500 14px/1 var(--font-sans); color: #141414 } .zc2 button:hover { background: #f1f3f5 }
 .dz { position: relative }
-@media (max-width: 999px) { .zc2 { bottom: auto; top: 10px; left: 10px } }
+.cvw { position: relative; min-height: 0; display: grid } .cvw > .canvas { min-height: 0 }
+@media (max-width: 999px) { .zc2 { left: auto; right: 10px; bottom: 10px; background: rgba(255,255,255,.92) } }
 /* picker: the same hero as the blocks page */
 .pmain .wrap { padding-block: 36px 64px; display: grid; gap: 24px }
 .hero .filters .sel, .hero .filters .seg2 { height: 38px } .hero .filters .seg2 button { height: 32px }
@@ -462,7 +465,7 @@ function nudge(wrongTitle) { // a thinking prompt, not the answer
 }
 function renderDesign() {
   const n = Q.nodes.length, st = $("#stage");
-  if (!$("#dz")) { st.innerHTML = `<div class="dz" id="dz"><div class="canvas" id="cv"></div><div class="zc2" role="group" aria-label="Zoom"><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="fit" aria-label="Fit">Fit</button><button type="button" data-z="in" aria-label="Zoom in">+</button></div><aside class="move" id="mv"></aside></div>`; cam = null; }
+  if (!$("#dz")) { st.innerHTML = `<div class="dz" id="dz"><div class="cvw"><div class="canvas" id="cv"></div><div class="zc2" role="group" aria-label="Zoom"><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="fit" aria-label="Fit">Fit</button><button type="button" data-z="in" aria-label="Zoom in">+</button></div></div><aside class="move" id="mv"></aside></div>`; cam = null; }
   renderMove(); loadSvg();
   buttons(blk < n ? `Show me the next block<span class="kbd">→</span>` : `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>`, blk >= n ? `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>` : "");
 }
@@ -471,7 +474,8 @@ function renderMove() {
   const dots = Q.nodes.map((x, i) => `<i class="${i < blk ? (picks[i] === false ? "hp" : "ok") : i === blk ? "now" : ""}"></i>`).join("");
   const fbl = last && last.k ? `<span class="fbl"><a href="../#i=${last.k}">Open in blocks</a><button type="button" data-savek="${last.k}" class="${onBoard(last.k) ? "on" : ""}">${SAVEI}${onBoard(last.k) ? "Saved" : "Save block"}</button><button type="button" data-copyk="${last.k}">${COPYI}Copy</button></span>` : "";
   const stn = last && last.ok ? (Q.nodes.find(n => n.title === last.title) || {}) : {}, stl = stn.st || "";
-  const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span>${stl ? `<span class="stl">${stn.sd ? (Q.v2 && Q.v2.stackNote ? esc(Q.v2.stackNote) : "Built with") : "Tools"}: ${esc(stl)}</span>` : ""}${last.ok ? fbl : ""}</div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") + (Q.nodes[0].st ? `</span><span class="stl">${Q.nodes[0].sd ? "Built with" : "Tools"}: ${esc(Q.nodes[0].st)}` : "") : "Tap any block on the canvas to see why it's there."}</span></div>`;
+  const lone = last && last.ok && blk > 1 && blk < n && focusSet(blk).length === 1 ? (() => { const id = Q.nodes[blk - 1].id, later = Q.nodes.slice(blk).find(x => Q.edges.some(e => (e[0] === id && e[1] === x.id) || (e[1] === id && e[0] === x.id))); return later ? `<span class="stl">Links up once ${esc(later.title.replace(/\n/g, " "))} is in.</span>` : ""; })() : "";
+  const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span>${lone}${stl ? `<span class="stl">${stn.sd ? (Q.v2 && Q.v2.stackNote ? esc(Q.v2.stackNote) : "Built with") : "Tools"}: ${esc(stl)}</span>` : ""}${last.ok ? fbl : ""}</div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") + (Q.nodes[0].st ? `</span><span class="stl">${Q.nodes[0].sd ? "Built with" : "Tools"}: ${esc(Q.nodes[0].st)}` : "") : "Tap any block on the canvas to see why it's there."}</span></div>`;
   if (blk >= n) {
     const first = Object.values(picks).filter(v => v === true).length, total = n - 1;
     mv.innerHTML = `<div class="mh"><span class="gl">Design complete</span><div class="dots">${dots}</div></div>${fb}<p class="big2">${first} of ${total} <small>right first time</small></p>${rateHTML("hld")}`;
@@ -486,24 +490,48 @@ function pickBlock(t) {
   const next = Q.nodes[blk];
   if (t === next.title) {
     sub("picks", { [blk]: tries.size === 0 }); ev("practice-pick/" + (tries.size ? "retry" : "ok"));
-    last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "", k: next.k }; tries = new Set(); blk++; put({ blk }); renderDesign();
+    last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "", k: next.k }; tries = new Set(); blk++; camMode = "focus"; put({ blk }); renderDesign();
   } else {
     tries.add(t); last = { ok: false, text: nudge(t) }; ev("practice-pick/no");
     renderMove(); const b = [...document.querySelectorAll(".opt2")].find(x => x.dataset.pick === t); if (b) b.classList.add("shake");
   }
 }
-function revealNext() { const next = Q.nodes[blk]; sub("picks", { [blk]: false }); last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "", k: next.k }; tries = new Set(); blk++; put({ blk }); renderDesign(); }
-/* canvas camera: fit the blocks placed so far, glide between steps */
-function camFor(k) {
-  const [W, H] = Q.size, bx = Q.nodes.slice(0, k).map(x => Q.boxes[x.id]).filter(Boolean);
-  if (!bx.length) return [0, 0, W, H];
-  let x0 = Math.min(...bx.map(b => b[0])), y0 = Math.min(...bx.map(b => b[1])), x1 = Math.max(...bx.map(b => b[0] + b[2])), y1 = Math.max(...bx.map(b => b[1] + b[3]));
-  if (k >= Q.nodes.length) { x0 = 0; y0 = 0; x1 = W; y1 = H; }
-  const cv = $("#cv"), CH = cv ? cv.clientHeight : 600, avail = Math.max(160, CH);
-  const ar = cv ? cv.clientWidth / avail : 1.6, pad = k >= Q.nodes.length ? 10 : 90;
-  let w = Math.max(x1 - x0 + pad * 2, 640), h = Math.max(y1 - y0 + pad * 2, 360);
+function revealNext() { const next = Q.nodes[blk]; sub("picks", { [blk]: false }); last = { ok: true, title: next.title, text: Q.c.blocks[next.id] || "", k: next.k }; tries = new Set(); blk++; camMode = "focus"; put({ blk }); renderDesign(); }
+/* canvas camera. While building: focus on the newest block and the placed blocks it talks to, never smaller than a readable scale.
+   Fit shows everything placed so far; the finished design shows all. */
+let camMode = "focus";
+function focusSet(k) {
+  const placed = new Set(Q.nodes.slice(0, k).map(x => x.id)), nw = Q.nodes[k - 1]; if (!nw) return [];
+  const nb = Q.edges.filter(e => e[0] === nw.id || e[1] === nw.id).map(e => e[0] === nw.id ? e[1] : e[0]).filter(id => placed.has(id));
+  return [nw.id, ...new Set(nb)];
+}
+function camFor(k, mode) {
+  mode = mode || (k >= Q.nodes.length ? "all" : camMode);
+  const [W, H] = Q.size, all = Q.nodes.slice(0, k).map(x => Q.boxes[x.id]).filter(Boolean);
+  if (!all.length) return [0, 0, W, H];
+  const cv = $("#cv"), CW = cv ? cv.clientWidth : 900, CH = cv ? Math.max(160, cv.clientHeight) : 600, ar = CW / CH;
+  const ub = bx => [Math.min(...bx.map(b => b[0])), Math.min(...bx.map(b => b[1])), Math.max(...bx.map(b => b[0] + b[2])), Math.max(...bx.map(b => b[1] + b[3]))];
+  const ty = Math.min(...Object.values(Q.boxes).map(b => b[1])); // where the title band ends
+  if (mode === "all" || k <= 2) {
+    let [x0, y0, x1, y1] = k >= Q.nodes.length ? [0, 0, W, H] : ub(all); const pad = k >= Q.nodes.length ? 10 : 60;
+    let w = Math.max(x1 - x0 + pad * 2, 520), h = Math.max(y1 - y0 + pad * 2, 300);
+    if (w / h > ar) h = w / ar; else w = h * ar;
+    return [(x0 + x1) / 2 - w / 2, (y0 + y1) / 2 - h / 2, w, h];
+  }
+  // Most context that stays readable: show everything placed if it fits at a readable scale; otherwise zoom to that scale
+  // and slide the view the least amount needed to keep the new block and its links in frame.
+  const fs = focusSet(k), fb = fs.map(id => Q.boxes[id]).filter(Boolean);
+  const minS = CW < 700 ? 0.7 : 0.8, pad = 50;
+  let [a0, b0, a1, b1] = ub(all), w = a1 - a0 + pad * 2, h = b1 - b0 + pad * 2;
   if (w / h > ar) h = w / ar; else w = h * ar;
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, VH = h * CH / avail, top = k >= Q.nodes.length ? cy - h / 2 : Math.max(cy - h / 2, y0 - pad); return [cx - w / 2, top, w, VH];
+  w = Math.max(w, CW / 1.0); h = w / ar; // never zoom in past 1:1
+  if (CW / w < minS) { w = CW / minS; h = CH / minS; }
+  let cx = (a0 + a1) / 2, cy = (b0 + b1) / 2;
+  const [x0, y0, x1, y1] = ub(fb), m = 40;
+  const fit = (c, lo, hi, half) => hi - lo + 2 * m > 2 * half ? (lo + hi) / 2 : Math.min(Math.max(c, hi + m - half), lo - m + half);
+  cx = fit(cx, x0, x1, w / 2); cy = fit(cy, y0, y1, h / 2);
+  let top = cy - h / 2; if (top > 0 && top < ty - 24) top = ty - 24; // never cut the title in half
+  return [cx - w / 2, top, w, h];
 }
 function glide(svg, to) {
   const from = cam || to, t0 = performance.now(), D = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 520, ease = t => 1 - Math.pow(1 - t, 3);
@@ -518,12 +546,34 @@ function loadSvg() {
     cv.innerHTML = t; const svg = cv.querySelector("svg"); svg.removeAttribute("width"); svg.removeAttribute("height"); const bg = svg.querySelector(":scope > rect"); if (bg && bg.getAttribute("fill") === "#ffffff") bg.remove(); svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
     const NS = "http://www.w3.org/2000/svg", g = document.createElementNS(NS, "g"); g.setAttribute("class", "hits");
     Q.nodes.slice(0, k).forEach((x, i) => { const b = Q.boxes[x.id]; if (!b) return; const r = document.createElementNS(NS, "rect"); r.setAttribute("x", b[0] - 6); r.setAttribute("y", b[1] - 6); r.setAttribute("width", b[2] + 12); r.setAttribute("height", b[3] + 12); r.setAttribute("rx", 16); r.dataset.node = x.id; r.setAttribute("class", i === k - 1 && k > 1 && k <= Q.nodes.length ? "hit fresh" : "hit"); const tt = document.createElementNS(NS, "title"); tt.textContent = x.title; r.append(tt); g.append(r); });
-    svg.append(g);
+    if (k > 2 && k < Q.nodes.length) { // quiet the rest so the new block and its links stand out
+      const [W, H] = Q.size, m = document.createElementNS(NS, "mask"), full = (f, o2) => { const r = document.createElementNS(NS, "rect"); r.setAttribute("x", -W); r.setAttribute("y", -H); r.setAttribute("width", W * 3); r.setAttribute("height", H * 3); r.setAttribute("fill", f); if (o2) r.setAttribute("fill-opacity", o2); return r; };
+      m.id = "fmask"; m.append(full("#fff"));
+      focusSet(k).forEach(id => { const b = Q.boxes[id]; if (!b) return; const r = document.createElementNS(NS, "rect"); r.setAttribute("x", b[0] - 14); r.setAttribute("y", b[1] - 14); r.setAttribute("width", b[2] + 28); r.setAttribute("height", b[3] + 28); r.setAttribute("rx", 18); r.setAttribute("fill", "#000"); m.append(r); });
+      const veil = full("#fff", ".6"); veil.setAttribute("mask", "url(#fmask)"); veil.setAttribute("class", "veil"); svg.append(m, veil);
+    }
+    svg.append(g); zc2Label();
     if (cam) svg.setAttribute("viewBox", cam.join(" ")); glide(svg, camFor(k));
   };
   if (SVGC.has(key)) show(SVGC.get(key)); else fetch(`../p/${key}.svg`).then(r => r.text()).then(t => { SVGC.set(key, t); show(t); }).catch(() => {});
   const nk = Q.dir + "/" + (k + 1); if (k < Q.nodes.length && !SVGC.has(nk)) fetch(`../p/${nk}.svg`).then(r => r.text()).then(t => SVGC.set(nk, t)).catch(() => {});
 }
+function zc2Label() { const b = document.querySelector('.zc2 [data-z="fit"]'); if (!b) return; const done = Q && blk >= Q.nodes.length; b.textContent = !done && camMode === "all" ? "Focus" : "Fit"; b.title = !done && camMode === "all" ? "Back to the new block" : "Show everything placed so far"; }
+/* drag to pan, wheel or pinch to zoom (the camera is just the SVG viewBox) */
+(() => {
+  const pts = new Map(); let moved = 0, pinch0 = 0, cam0 = null;
+  const svgOf = e => e.target.closest && e.target.closest("#cv") ? $("#cv svg") : null;
+  const units = svg => cam[2] / svg.clientWidth;
+  addEventListener("pointerdown", e => { const svg = svgOf(e); if (!svg || !cam) return; pts.set(e.pointerId, [e.clientX, e.clientY]); moved = 0; cam0 = cam.slice(); if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); } });
+  addEventListener("pointermove", e => { if (!pts.has(e.pointerId)) return; const svg = $("#cv svg"); if (!svg) return; const p0 = pts.get(e.pointerId);
+    if (pts.size === 1) { const u = units(svg), dx = e.clientX - p0[0], dy = e.clientY - p0[1]; moved += Math.abs(dx) + Math.abs(dy); cam = [cam[0] - dx * u, cam[1] - dy * u, cam[2], cam[3]]; svg.setAttribute("viewBox", cam.join(" ")); pts.set(e.pointerId, [e.clientX, e.clientY]); }
+    else { pts.set(e.pointerId, [e.clientX, e.clientY]); const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch0) { const f = Math.min(4, Math.max(.25, pinch0 / d)), [x, y, w, h] = cam0; cam = [x + w * (1 - f) / 2, y + h * (1 - f) / 2, w * f, h * f]; svg.setAttribute("viewBox", cam.join(" ")); moved = 99; } } });
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch0 = 0; };
+  addEventListener("pointerup", up); addEventListener("pointercancel", up);
+  addEventListener("click", e => { if (moved > 6 && svgOf(e)) { e.stopPropagation(); e.preventDefault(); moved = 0; } }, true);
+  addEventListener("wheel", e => { const svg = svgOf(e); if (!svg || !cam) return; e.preventDefault(); const r = svg.getBoundingClientRect(), f = Math.exp(e.deltaY * (e.ctrlKey ? .01 : .0015)), u = units(svg);
+    const px = cam[0] + (e.clientX - r.left) * u, py = cam[1] + (e.clientY - r.top) * u; cam = [px - (px - cam[0]) * f, py - (py - cam[1]) * f, cam[2] * f, cam[3] * f]; svg.setAttribute("viewBox", cam.join(" ")); }, { passive: false });
+})();
 addEventListener("resize", () => { const svg = $("#cv svg"); if (svg && Q && STEPS[step].k === "hld") { cam = camFor(blk); svg.setAttribute("viewBox", cam.join(" ")); } });
 
 /* ---- every other step works like the design step: one tap, the answer lands on the board, a thinking prompt when it's wrong ---- */
@@ -726,7 +776,7 @@ $("#vRun").addEventListener("click", e => {
   const sb = e.target.closest("[data-sc],[data-lens],[data-mode]"); if (sb && setupMode) { const su = $("#stage")._su; if (sb.dataset.sc) su.sc = sb.dataset.sc; if (sb.dataset.lens !== undefined) su.lens = sb.dataset.lens; if (sb.dataset.mode) su.mode = sb.dataset.mode; SETUP.set(Q.slug, su); renderSetup(); return; }
   const qp = e.target.closest("[data-qp]"); if (qp) { quizPick(+qp.dataset.qp); return; }
   const pk = e.target.closest("[data-pick]"); if (pk) { pickBlock(pk.dataset.pick); return; }
-  const zz = e.target.closest("[data-z]"); if (zz && $("#cv svg") && cam) { const svg = $("#cv svg"); if (zz.dataset.z === "fit") { glide(svg, camFor(blk)); return; } const f = zz.dataset.z === "in" ? 0.75 : 1.33, [x, y, w, h] = cam; glide(svg, [x + w * (1 - f) / 2, y + h * (1 - f) / 2, w * f, h * f]); return; }
+  const zz = e.target.closest("[data-z]"); if (zz && $("#cv svg") && cam) { const svg = $("#cv svg"); if (zz.dataset.z === "fit") { camMode = camMode === "all" || blk >= Q.nodes.length ? "focus" : "all"; zc2Label(); glide(svg, camFor(blk, blk >= Q.nodes.length ? "all" : camMode)); ev("practice-cam/" + camMode); return; } const f = zz.dataset.z === "in" ? 0.75 : 1.33, [x, y, w, h] = cam; glide(svg, [x + w * (1 - f) / 2, y + h * (1 - f) / 2, w * f, h * f]); return; }
   const hn = e.target.closest("[data-node]"); if (hn) { const x = Q.nodes.find(y => y.id === hn.dataset.node); last = { ok: true, title: x.title, text: Q.c.blocks[x.id] || "", k: x.k }; renderMove(); return; }
   const sk = e.target.closest("[data-savek]"); if (sk) { boardToggle(sk.dataset.savek, "Block saved"); renderMove(); return; }
   const ck = e.target.closest("[data-copyk]"); if (ck) { copyKit("sdk-" + ck.dataset.copyk, "the block"); return; }
