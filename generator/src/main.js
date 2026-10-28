@@ -193,7 +193,7 @@ async function practiceBuild(spec) {
 const pslug = (name) => name.toLowerCase().split(" - ")[0].replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 window.PRACTICE = async () => {
   const out = [];
-  for (const t of [...TEMPLATES, ...AI_TEMPLATES]) {
+  for (const t of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES]) {
     const spec = t.spec, base = await practiceBuild(spec), variants = {}, v2 = V2[pslug(t.name)] || {};
     for (const sc of v2.scenarios || []) {
       if (!sc.add || !sc.add.nodes || !sc.add.nodes.length) continue;

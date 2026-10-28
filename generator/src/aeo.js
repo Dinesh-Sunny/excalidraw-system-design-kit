@@ -19,7 +19,7 @@ export const AEO_TEMPLATES = [
     nodes: [["pr", "Tracked Prompt\n(+ 3 phrasings)", "prompt", "llmops", 0, 1, 170], ["r", "N Repeated Runs\n(per engine, region)", "tasks", "svc", 1.4, 1, 170], ["eng", "AI Engine\n(non-deterministic)", "sparkle", "ext", 1.4, -0.4, 170],
       ["f", "Answer Facts\n(mentioned? cited?\nposition)", "table", "data", 2.85, 1, 170], ["st", "Stats Job\n(rate + Wilson\ninterval)", "chart", "svc", 4.3, 1, 170], ["sov", "Score + Share\nof Voice", "bars", "ops", 5.7, 0.2], ["an", "Change Detector\n(outside interval?)", "siren", "ops", 5.7, 1.8, 170],
       ["mv", "Engine Changes\n(model version,\nsearch on/off)", "flag", "ops", 2.85, 2.5, 170], ["ad", "Adaptive Sampler\n(more runs where\nvariance is high)", "sliders", "svc", 4.3, 2.5, 170]],
-    edges: [["pr", "r"], ["r", "eng", "ask"], ["r", "f", "parse"], ["f", "st"], ["st", "sov", "7/10 (45-90%)"], ["st", "an"], ["mv", "st", "annotate", D], ["st", "ad", "variance", D], ["ad", "r", "", { dash: true, via: [[4.3 + 80 / 240, 3.6], [1.4 + 80 / 240, 3.6]] }]],
+    edges: [["pr", "r"], ["r", "eng", "ask"], ["r", "f", "parse"], ["f", "st"], ["st", "sov", "7/10 (40-89%)"], ["st", "an"], ["mv", "st", "annotate", D], ["st", "ad", "variance", D], ["ad", "r", "", { dash: true, via: [[4.3 + 80 / 240, 3.6], [1.4 + 80 / 240, 3.6]] }]],
     notes: "Key decisions\n- One run means little: visibility\n  = share of runs that mention you\n- Report a range, not a point\n  (Wilson interval works at small N)\n- Alert only when the new rate is\n  outside last week's interval\n- Annotate engine changes: a jump\n  may be the model, not the brand\n- Spend runs where variance is high" } },
 
   { name: "AI Answer Engine - retrieve rerank generate cite perplexity chatgpt search", spec: {

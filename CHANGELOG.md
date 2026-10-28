@@ -3,6 +3,7 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- 8 new AI search practice questions (new "AI search" filter) with requirements, estimates, APIs, data models, per-block notes and deep-dive answers. Six more sourced lessons: Keyword Index (BM25), Reranker, Offline Evals, LLM-as-Judge, OLAP DB (ClickHouse) and Bot / Crawler.
 - AI search and AEO: 8 new full designs - AI Answer Engine (the 4 gates to a citation), AI Visibility Tracker, Noise-aware Visibility Score, Prompt Universe, Analytics Agent + MCP, AI Crawler Analytics, Dual-served Content and Site Audit Crawler - plus an "AI search and AEO" starter pack.
 - Eight more sourced lessons: API Gateway, DNS, Object Storage (S3), Search Index (Elasticsearch), Read Replica, Shard, Embedding Model and Hybrid Retriever. 19 blocks now have a full lesson.
 - 11 new modern blocks, each with its own icon: Edge Function, Service Mesh, Distributed Lock, Autoscaler, Idempotency Store, Lakehouse (Iceberg), OLAP DB (ClickHouse), Bloom Filter, Prompt Cache, Batch Inference and Agent Skills. The library now has 303 items.

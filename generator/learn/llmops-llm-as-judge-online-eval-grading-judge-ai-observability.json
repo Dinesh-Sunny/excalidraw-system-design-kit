@@ -1,0 +1,390 @@
+{
+ "family": "llmops",
+ "reviewed": "Oct 2026",
+ "what": "LLM-as-judge uses a second model with a clear rubric to grade your AI's answers. It scales grading to thousands of outputs, offline on test sets and online on sampled production traffic.",
+ "like": "Like a teaching assistant marking essays with the professor's rubric: fast and consistent, but the professor spot-checks some papers to make sure the marks are fair.",
+ "why": [
+  "Grades open-ended answers that exact match or F1 cannot score",
+  "Watches live quality on a sample of real traffic, not just test sets",
+  "Much cheaper and faster than humans, once checked against human labels"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "prod",
+    "t": "Production traffic|live requests and answers",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "samp",
+    "t": "Sampler|a slice of traces + filters",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "partition"
+   },
+   {
+    "id": "human",
+    "t": "Human labels|expert pass or fail",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "user"
+   },
+   {
+    "id": "rubric",
+    "t": "Rubric prompt|one failure, pass or fail",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "llmops",
+    "i": "doc"
+   },
+   {
+    "id": "judge",
+    "t": "Judge model|small, cheap LLM",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "calib",
+    "t": "Calibration|TPR · TNR · kappa",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "llmops",
+    "i": "chart"
+   },
+   {
+    "id": "swap",
+    "t": "Swap and repeat|reduce position bias",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "loop"
+   },
+   {
+    "id": "score",
+    "t": "Structured score|JSON: pass + reason",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "doc"
+   },
+   {
+    "id": "dash",
+    "t": "Dashboard|pass rate over time",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   }
+  ],
+  "edges": [
+   [
+    "prod",
+    "samp",
+    "sample"
+   ],
+   [
+    "samp",
+    "judge",
+    "trace"
+   ],
+   [
+    "rubric",
+    "judge",
+    "criteria"
+   ],
+   [
+    "judge",
+    "swap",
+    "pairwise"
+   ],
+   [
+    "judge",
+    "score",
+    "JSON"
+   ],
+   [
+    "score",
+    "dash",
+    "pass rate"
+   ],
+   [
+    "human",
+    "calib",
+    "labels"
+   ],
+   [
+    "calib",
+    "judge",
+    "trust?"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Sample real traffic",
+    "d": "Grading every request is costly, so a sampler picks a share of traces, often filtered to one feature, user group or prompt version.",
+    "hl": [
+     "prod",
+     "samp"
+    ]
+   },
+   {
+    "t": "Write a narrow rubric",
+    "d": "One judge per failure mode, with a clear pass or fail definition and a few examples. Binary answers are easier to keep consistent than a 1-5 scale.",
+    "hl": [
+     "rubric"
+    ]
+   },
+   {
+    "t": "Judge grades the answer",
+    "d": "Pointwise: score one answer against the rubric. Pairwise: pick the better of two answers, useful for A/B tests of prompts or models.",
+    "hl": [
+     "judge"
+    ]
+   },
+   {
+    "t": "Fight the judge's biases",
+    "d": "Judges can prefer the first answer, longer answers or their own model's style. Swap the order and only count wins that hold both ways.",
+    "hl": [
+     "swap",
+     "judge"
+    ]
+   },
+   {
+    "t": "Return structured scores",
+    "d": "Ask for JSON with the verdict and a short reason, so scores can be stored, charted and alerted on.",
+    "hl": [
+     "score",
+     "dash"
+    ]
+   },
+   {
+    "t": "Calibrate against humans",
+    "d": "Experts label a set of traces. Compare the judge's verdicts with theirs using true positive rate, true negative rate or Cohen's kappa before trusting the dashboard.",
+    "hl": [
+     "human",
+     "calib"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": ">80%",
+   "l": "GPT-4 judge agreement with humans, matching human-to-human agreement",
+   "s": "https://arxiv.org/html/2306.05685v4"
+  },
+  {
+   "v": "65%",
+   "l": "GPT-4 judge gave the same verdict after answer order swapped",
+   "s": "https://arxiv.org/html/2306.05685v4"
+  },
+  {
+   "v": ">90%",
+   "l": "judge TPR and TNR target on the dev set",
+   "s": "https://skills.sh/hamelsmu/evals-skills/validate-evaluator"
+  },
+  {
+   "v": "0.61-0.80",
+   "l": "kappa range Landis and Koch call substantial agreement",
+   "s": "https://en.wikipedia.org/wiki/Fleiss%27s_kappa"
+  },
+  {
+   "v": "50%",
+   "l": "OpenAI Batch API discount, results within 24 hours",
+   "s": "https://help.openai.com/en/articles/9197833-batch-api-faq"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Pointwise or pairwise",
+   "d": "Pointwise pass/fail scales and suits monitoring. Pairwise is better at spotting small differences between two versions, but pairs grow quickly with many models."
+  },
+  {
+   "t": "Judge model",
+   "d": "Start with a strong model to get the rubric right, then try a smaller, cheaper judge and keep it only if agreement with human labels holds."
+  },
+  {
+   "t": "Sampling rate and filters",
+   "d": "Grade a slice of production traffic, more for new or risky features and less for stable ones. Filters target the step you care about."
+  },
+  {
+   "t": "Output format",
+   "d": "Structured JSON with a boolean or category plus a short reason. Reasons help debugging; fixed fields make charts and alerts simple."
+  },
+  {
+   "t": "Cost control",
+   "d": "Use batch APIs for offline grading, cache repeated judgments, keep prompts short and only send the parts of the trace the rubric needs."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "llmops-offline-evals-eval-dataset-benchmark-regression-ai-observability",
+   "why": "Deterministic metrics on a labelled set when a right answer exists"
+  },
+  {
+   "slug": "agent-human-approval-human-in-the-loop-hitl-review-approve-ai-agentic",
+   "why": "A person reviews high-stakes outputs before they go out"
+  },
+  {
+   "slug": "llmops-guardrails-safety-moderation-input-output-filter-ai-observability",
+   "why": "Block unsafe output in the request path, not grade it later"
+  },
+  {
+   "slug": "ai-reranker-rerank-cross-encoder-relevance-ai",
+   "why": "A trained cross-encoder scores relevance faster and cheaper than an LLM"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Position bias",
+   "d": "In pairwise mode the judge favours whichever answer comes first.",
+   "see": "Verdicts flip when you swap the order",
+   "fix": "Judge both orders and count a win only when both agree; otherwise a tie"
+  },
+  {
+   "t": "Verbosity bias",
+   "d": "Longer, list-heavy answers win even when they add nothing.",
+   "see": "Win rate rises with answer length",
+   "fix": "Rubric says length is not quality; compare at similar length; add few-shot examples"
+  },
+  {
+   "t": "Self-preference",
+   "d": "A judge can rate answers from its own model family higher.",
+   "see": "One model wins much more under its own judge",
+   "fix": "Use a judge from a different family, or several judges, and check with humans"
+  },
+  {
+   "t": "Judge drifts from humans",
+   "d": "A rubric or model change quietly shifts what the judge passes.",
+   "see": "Agreement with the human-labelled set drops",
+   "fix": "Re-run calibration on every judge change and refresh human labels regularly"
+  },
+  {
+   "t": "Grading bill grows",
+   "d": "Judging every trace with a large model costs as much as the product.",
+   "see": "Eval spend rising faster than traffic",
+   "fix": "Sample, use a smaller judge, batch pricing, judge only the relevant span"
+  }
+ ],
+ "say": [
+  "I'd write one binary judge per failure mode found in error analysis - for example 'does the answer cite a page that supports the claim' - with a short rubric and examples.",
+  "Before trusting it, I'd have domain experts label around a hundred traces and check the judge's true positive and true negative rates, or Cohen's kappa, against them.",
+  "In production I'd sample a slice of traffic, have the judge return JSON with a verdict and reason, and chart the pass rate per prompt version.",
+  "For A/B tests I'd use pairwise judging with both answer orders, and run offline grading through a batch API to halve the cost."
+ ],
+ "followups": [
+  {
+   "q": "Why not just use raw accuracy against human labels?",
+   "a": "If most traces pass, a judge that always says pass looks accurate but catches nothing. True positive and true negative rates, or Cohen's kappa which corrects for chance agreement, show whether it really finds failures."
+  },
+  {
+   "q": "Pairwise or pointwise for comparing two rerankers?",
+   "a": "Pairwise: show the judge both answer lists for the same query and ask which better answers it, in both orders. It notices small differences that separate absolute scores can miss."
+  },
+  {
+   "q": "How do you keep the judge cheap at scale?",
+   "a": "Sample traffic, judge only the span that matters, use the smallest model that keeps agreement high, and push offline grading through batch APIs, which OpenAI prices at half the normal rate."
+  },
+  {
+   "q": "Can the same model be both generator and judge?",
+   "a": "It can, but watch self-preference. Prefer a different model family for the judge, or confirm with human labels that it is not going easy on its own outputs."
+  }
+ ],
+ "today": "Tools now judge single steps rather than whole traces: in February 2026 Langfuse added LLM-as-judge on individual observations such as one model call, retrieval or tool run.",
+ "check": [
+  {
+   "q": "In pairwise judging, verdicts flip when you swap A and B. What is this?",
+   "a": "Position bias",
+   "d": [
+    "Verbosity bias",
+    "Data drift",
+    "Overfitting"
+   ],
+   "why": "The judge favours a slot, not an answer. Judge both orders and count only consistent wins."
+  },
+  {
+   "q": "Most traces pass. Which check best shows if the judge catches failures?",
+   "a": "True negative rate on human-labelled fails",
+   "d": [
+    "Overall accuracy",
+    "Average answer length",
+    "Judge latency"
+   ],
+   "why": "With few failures, accuracy stays high even for a judge that always says pass."
+  },
+  {
+   "q": "Why ask the judge for JSON with a verdict and reason?",
+   "a": "Scores are easy to store, chart and alert on",
+   "d": [
+    "It makes the judge smarter",
+    "It removes all bias",
+    "It skips the need for a rubric"
+   ],
+   "why": "Structured output turns judgments into data; the reason helps debugging."
+  },
+  {
+   "q": "A cheap way to grade 100,000 offline cases with an LLM judge?",
+   "a": "Send them through a batch API",
+   "d": [
+    "Raise the temperature",
+    "Use the largest model available",
+    "Grade each case ten times"
+   ],
+   "why": "Batch APIs trade speed for a big discount, which suits offline grading."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Zheng et al.: Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena",
+   "u": "https://arxiv.org/html/2306.05685v4"
+  },
+  {
+   "t": "Hamel Husain evals-skills: validate-evaluator (mirror on skills.sh)",
+   "u": "https://skills.sh/hamelsmu/evals-skills/validate-evaluator"
+  },
+  {
+   "t": "Wikipedia: Fleiss' kappa (Landis and Koch table)",
+   "u": "https://en.wikipedia.org/wiki/Fleiss%27s_kappa"
+  },
+  {
+   "t": "OpenAI Help: Batch API FAQ",
+   "u": "https://help.openai.com/en/articles/9197833-batch-api-faq"
+  },
+  {
+   "t": "Langfuse docs: LLM-as-a-judge",
+   "u": "https://langfuse.com/docs/evaluation/evaluation-methods/llm-as-a-judge"
+  },
+  {
+   "t": "Langfuse changelog: observation-level evals",
+   "u": "https://langfuse.com/changelog/2026-02-13-observation-level-evals"
+  }
+ ]
+}

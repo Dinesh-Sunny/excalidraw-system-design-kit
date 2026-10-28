@@ -1,0 +1,102 @@
+{
+ "family": "client",
+ "reviewed": "Oct 2026",
+ "what": "A crawler is a program that fetches web pages, follows their links and stores what it finds, so a search engine or AI answer engine can index and cite them later.",
+ "like": "Like a librarian walking every shelf, noting new and changed books, while following each shop's sign about which rooms are staff only.",
+ "why": [
+  "Search and AI answer engines can only cite pages they have fetched",
+  "Keeps an index fresh as pages change or disappear",
+  "Lets you measure your own site the way bots see it"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "seeds", "t": "Seeds + sitemaps|known URLs to start", "x": 0, "y": 20, "w": 150, "h": 86, "c": "ext", "i": "doc"},
+   {"id": "frontier", "t": "Crawl frontier|one queue per domain", "x": 265, "y": 20, "w": 170, "h": 86, "c": "msg", "i": "queue"},
+   {"id": "robots", "t": "robots.txt cache|rules per host", "x": 550, "y": 20, "w": 150, "h": 86, "c": "edge", "i": "shield"},
+   {"id": "fetch", "t": "Fetcher|polite rate per host", "x": 265, "y": 180, "w": 170, "h": 86, "c": "client", "i": "globe"},
+   {"id": "render", "t": "Headless browser|only when JS needed", "x": 550, "y": 180, "w": 150, "h": 86, "c": "svc", "i": "eye"},
+   {"id": "dedupe", "t": "Dedupe|normalise URL, hash body", "x": 0, "y": 180, "w": 150, "h": 86, "c": "svc", "i": "hash"},
+   {"id": "store", "t": "Page store|text, links, metadata", "x": 265, "y": 340, "w": 170, "h": 86, "c": "data", "i": "bucket"},
+   {"id": "sched", "t": "Recrawl scheduler|by change rate", "x": 0, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "clock"}
+  ],
+  "edges": [
+   ["seeds", "frontier", "URLs"],
+   ["frontier", "robots", "allowed?"],
+   ["frontier", "fetch", "next URL"],
+   ["fetch", "render", "JS page"],
+   ["fetch", "store", "HTML"],
+   ["fetch", "dedupe", "new links"],
+   ["dedupe", "frontier", "unseen only"],
+   ["store", "sched", "changed?"],
+   ["sched", "frontier", "due again"]
+  ],
+  "steps": [
+   {"t": "Start from known URLs", "d": "Seeds come from earlier crawls, links and sitemaps. A sitemap is an XML list of a site's URLs with lastmod dates, often announced by a Sitemap: line in robots.txt.", "hl": ["seeds", "frontier"]},
+   {"t": "Check robots.txt first", "d": "Before fetching, the crawler reads /robots.txt for that host and obeys the most specific Allow or Disallow rule for its user agent, caching the file for up to a day.", "hl": ["frontier", "robots"]},
+   {"t": "Fetch politely", "d": "The frontier keeps a queue per domain so one site never gets hammered. The fetcher slows down on slow responses, 429 or 5xx errors.", "hl": ["frontier", "fetch"]},
+   {"t": "Render only if needed", "d": "Plain HTML is cheap to parse. Pages that build content with JavaScript go to a headless browser, which costs far more, so it is used only where needed.", "hl": ["fetch", "render"]},
+   {"t": "Skip what you have seen", "d": "New links are normalised (lowercase host, drop tracking params and fragments) and checked against seen URLs. A content hash catches the same page under different URLs.", "hl": ["dedupe", "frontier"]},
+   {"t": "Recrawl at the right time", "d": "Pages that change often or matter more are recrawled sooner; stable pages wait longer. HTTP ETag or Last-Modified lets a recrawl get a cheap 304 Not Modified.", "hl": ["store", "sched", "frontier"]}
+  ]
+ },
+ "numbers": [
+  {"v": "500 KiB", "l": "minimum robots.txt size a crawler must parse", "s": "https://www.rfc-editor.org/rfc/rfc9309"},
+  {"v": "24 h", "l": "longest a cached robots.txt should be used", "s": "https://www.rfc-editor.org/rfc/rfc9309"},
+  {"v": "5", "l": "consecutive robots.txt redirects a crawler should follow", "s": "https://www.rfc-editor.org/rfc/rfc9309"},
+  {"v": "50,000", "l": "URLs max per sitemap file, and 50 MB uncompressed", "s": "https://sitemaps.org/protocol.html"},
+  {"v": "~24 h", "l": "for OpenAI search to reflect a robots.txt change", "s": "https://developers.openai.com/api/docs/bots"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Politeness per host", "d": "Limit concurrent requests per domain, add a delay, and back off on 429, 5xx or rising latency. Honour Crawl-delay where your crawler supports it."},
+  {"t": "Which bots to allow", "d": "Allow search bots (OAI-SearchBot, Claude-SearchBot, PerplexityBot) to be cited in AI answers. Training bots (GPTBot, ClaudeBot) and Google-Extended can be blocked separately without leaving search."},
+  {"t": "When to render JS", "d": "Parse raw HTML first. Send a page to a headless browser only when the useful text is missing without scripts. Rendering is the most expensive step."},
+  {"t": "Dedupe keys", "d": "Normalise URLs and respect rel=canonical. Exact content hash for identical pages; a near-duplicate fingerprint like SimHash for pages that differ only in ads or dates."},
+  {"t": "Recrawl policy", "d": "Score each URL by change rate, importance and age. Use sitemap lastmod and conditional GETs so unchanged pages cost almost nothing."}
+ ],
+ "instead": [
+  {"slug": "msg-message-queue-mq-async-buffer-decouple", "why": "The frontier is really a set of queues; start with one for small crawls"},
+  {"slug": "data-search-index-elasticsearch-elasticsearch-opensearch-inverted-index-full-text", "why": "Where crawled pages go to be searched with BM25"},
+  {"slug": "edge-waf-firewall-security-ddos-waf-firewall", "why": "The site-side view: verify, allow or block bots at the edge"},
+  {"slug": "msg-batch-etl-spark-spark-airflow-etl-batch-pipeline-mapreduce", "why": "Fine for periodic bulk recrawls of a fixed list of URLs"}
+ ],
+ "breaks": [
+  {"t": "Crawler trap", "d": "Endless calendars, filters or session IDs create infinite unique URLs.", "see": "One host's frontier grows without end while new content stays flat", "fix": "URL normalisation, depth and per-host limits, drop known trap parameters"},
+  {"t": "Overloading a site", "d": "Too many parallel requests to one host.", "see": "Rising 429 and 5xx rates and slower responses from that host", "fix": "Per-host queues, adaptive delays, back off on errors"},
+  {"t": "Empty pages from JS sites", "d": "Content is built by scripts, so raw HTML has almost no text.", "see": "Very short extracted text on pages that look full in a browser", "fix": "Detect thin pages and send just those to a headless browser"},
+  {"t": "Fake bots", "d": "Scrapers set a User-Agent of Googlebot or GPTBot to slip past rules.", "see": "A 'bot' user agent from an IP outside the vendor's published ranges", "fix": "Check reverse DNS then forward DNS, or match the vendor's IP JSON list"},
+  {"t": "robots.txt server errors", "d": "A 5xx on robots.txt means the crawler must assume everything is disallowed.", "see": "Crawl volume from search bots drops to near zero", "fix": "Serve robots.txt reliably; a 404 means no rules, not a block"}
+ ],
+ "say": [
+  "My crawler keeps a frontier with one queue per domain, so I can fetch many sites in parallel while staying gentle with each one.",
+  "Before any fetch I check a cached robots.txt for that host, following RFC 9309, and back off on 429 or 5xx.",
+  "I normalise URLs and hash content to skip duplicates, and only send pages to a headless browser when raw HTML is missing the real text.",
+  "For AI visibility, the site should allow search bots like OAI-SearchBot and PerplexityBot even if it blocks training bots, and verify them by published IP ranges."
+ ],
+ "followups": [
+  {"q": "How do you verify a request really is Googlebot?", "a": "Reverse DNS the IP and check it ends in googlebot.com, google.com or googleusercontent.com, then forward DNS that name back to the same IP. Or match the IP against Google's published JSON range files. OpenAI, Anthropic and Perplexity publish IP lists too."},
+  {"q": "Does blocking GPTBot hide you from ChatGPT search?", "a": "No. GPTBot is for training; OAI-SearchBot is for ChatGPT search results. They are separate robots.txt entries. ChatGPT-User fetches on a person's request and may not follow robots.txt."},
+  {"q": "How do you decide what to recrawl?", "a": "Estimate each page's change rate from past crawls and sitemap lastmod, weight by importance, and schedule sooner when either is high. Conditional GETs return 304 when nothing changed, so checks stay cheap."},
+  {"q": "What is llms.txt?", "a": "A proposed Markdown file at /llms.txt: a title, a short summary, then lists of links to clean Markdown pages. It is a hint for LLMs, not an access rule like robots.txt, and support varies."}
+ ],
+ "today": "AI companies now split their bots by job: OpenAI, Anthropic and Perplexity each document separate training, search and user-triggered agents with their own robots.txt names and published IP lists.",
+ "check": [
+  {"q": "Your robots.txt returns a 503 error. What must an RFC 9309 crawler assume?", "a": "Everything is disallowed", "d": ["Everything is allowed", "Use the rules from last year", "Only the home page is allowed"], "why": "A 5xx means the file is unreachable, so the safe choice is a complete disallow. A 404 means no rules."},
+  {"q": "You want to appear in ChatGPT search but not in training. Which bot do you allow?", "a": "OAI-SearchBot", "d": ["GPTBot", "Google-Extended", "ClaudeBot"], "why": "OAI-SearchBot powers ChatGPT search; GPTBot is the training crawler."},
+  {"q": "Why keep one queue per domain in the frontier?", "a": "To limit how fast any single site is hit", "d": ["To sort pages alphabetically", "Because DNS only works per queue", "To avoid storing duplicate HTML"], "why": "Per-host queues let you crawl many sites at once while staying polite to each."},
+  {"q": "A request says it is Googlebot. How do you check?", "a": "Reverse DNS, then forward DNS back to the same IP", "d": ["Trust the User-Agent header", "Check the request has cookies", "Ask it to solve a CAPTCHA"], "why": "Anyone can fake a User-Agent; DNS or the published IP ranges cannot be faked so easily."}
+ ],
+ "sources": [
+  {"t": "RFC 9309: Robots Exclusion Protocol", "u": "https://www.rfc-editor.org/rfc/rfc9309"},
+  {"t": "sitemaps.org: Sitemaps XML format", "u": "https://sitemaps.org/protocol.html"},
+  {"t": "Google: verify requests from Google crawlers", "u": "https://developers.google.com/crawling/docs/crawlers-fetchers/verify-google-requests?hl=en"},
+  {"t": "Google: common crawlers (Google-Extended)", "u": "https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers?hl=en"},
+  {"t": "Google: optimize your crawl budget", "u": "https://developers.google.com/crawling/docs/crawl-budget"},
+  {"t": "OpenAI: overview of OpenAI crawlers", "u": "https://developers.openai.com/api/docs/bots"},
+  {"t": "Anthropic: does Anthropic crawl the web", "u": "https://support.claude.com/en/articles/8896518"},
+  {"t": "Perplexity: crawlers", "u": "https://docs.perplexity.ai/guides/bots"},
+  {"t": "llmstxt.org: the /llms.txt file", "u": "https://llmstxt.org/llms.txt"}
+ ]
+}

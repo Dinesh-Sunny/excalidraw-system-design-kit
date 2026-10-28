@@ -1,0 +1,99 @@
+{
+ "family": "ai",
+ "reviewed": "Oct 2026",
+ "what": "A reranker takes the top results from a fast first search and reorders them with a smarter, slower model that reads the query and each document together. Only the best few go on to the user or the LLM.",
+ "like": "Like a recruiter who skims 100 CVs by keyword, then a hiring manager who reads the top ones properly and picks the best 10.",
+ "why": [
+  "Big jump in precision at the top (nDCG@10, MRR) for little extra code",
+  "Keeps the cheap first stage cheap - only ~100 candidates pay the expensive model",
+  "Better context for RAG: fewer, more relevant chunks mean better, cheaper LLM answers"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "q", "t": "User query|\"best running shoe 2026\"", "x": 0, "y": 20, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "first", "t": "First stage|BM25 + vectors, fused", "x": 265, "y": 20, "w": 170, "h": 86, "c": "rag", "i": "lb"},
+   {"id": "cand", "t": "Candidates|top ~100 with text", "x": 550, "y": 20, "w": 150, "h": 86, "c": "rag", "i": "doc"},
+   {"id": "bi", "t": "Bi-encoder|query, doc embedded apart", "x": 0, "y": 180, "w": 150, "h": 86, "c": "ai", "i": "vector"},
+   {"id": "cross", "t": "Cross-encoder|query + doc read together", "x": 265, "y": 180, "w": 170, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "colbert", "t": "Late interaction|ColBERT MaxSim per token", "x": 550, "y": 180, "w": 150, "h": 86, "c": "ai", "i": "hash"},
+   {"id": "llmr", "t": "LLM reranker|listwise, window of 20", "x": 0, "y": 340, "w": 150, "h": 86, "c": "ai", "i": "agent"},
+   {"id": "top", "t": "Top 10|new order by score", "x": 265, "y": 340, "w": 170, "h": 86, "c": "rag", "i": "chart"},
+   {"id": "ans", "t": "Answer engine|LLM reads and cites", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ai", "i": "llm"}
+  ],
+  "edges": [
+   ["q", "first", "search"],
+   ["bi", "first", "fast recall"],
+   ["first", "cand", "top 100"],
+   ["cand", "cross", "pairs"],
+   ["cand", "colbert", "token vecs"],
+   ["cross", "top", "scores"],
+   ["colbert", "top", "MaxSim"],
+   ["llmr", "top", "optional"],
+   ["top", "ans", "cite"]
+  ],
+  "steps": [
+   {"t": "Cheap first stage", "d": "BM25 and a bi-encoder (query and documents embedded separately, ahead of time) pull candidates from millions of documents in milliseconds. The goal here is recall: get the right answer somewhere in the top 100.", "hl": ["q", "bi", "first"]},
+   {"t": "Keep the top 100", "d": "Only a small window of candidates, with their text, moves on. Anything outside the window is never rescored, so first-stage recall@100 sets the ceiling.", "hl": ["first", "cand"]},
+   {"t": "Cross-encoder reads pairs", "d": "The model reads query and document together in one pass, so every query word can attend to every document word. Much more accurate, but it must run once per pair.", "hl": ["cand", "cross"]},
+   {"t": "Or late interaction", "d": "ColBERT stores one vector per document token. At query time each query token finds its best match (MaxSim) and the maxima are summed. Close to cross-encoder quality, far cheaper.", "hl": ["cand", "colbert"]},
+   {"t": "Or an LLM reranks", "d": "An LLM can order passages listwise. RankGPT slides a window of 20 from the bottom up in steps of 10. Strong, but the slowest and most costly option.", "hl": ["llmr", "top"]},
+   {"t": "Best 10 get cited", "d": "The reordered top 10 goes to the user or into the LLM prompt. AI answer engines retrieve, rerank and then cite only the few pages that survive.", "hl": ["top", "ans"]}
+  ]
+ },
+ "numbers": [
+  {"v": "~100", "l": "typical candidates the retriever hands to a cross-encoder", "s": "https://sbert.net/examples/applications/retrieve_rerank"},
+  {"v": "10", "l": "default rank_window_size of Elasticsearch's reranker retriever", "s": "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrievers/text-similarity-reranker-retriever"},
+  {"v": "~170x", "l": "lower latency for ColBERT than a BERT-base reranker", "s": "https://arxiv.org/pdf/2004.12832v2"},
+  {"v": "1,000", "l": "max documents per Voyage rerank request", "s": "https://docs.voyageai.com/docs/reranker"},
+  {"v": "32,768", "l": "tokens shared by query and document in Cohere rerank-v5.0", "s": "https://docs.cohere.com/docs/reranking-best-practices"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Window size", "d": "How many candidates to rerank. Bigger raises the chance the right one is in the pool but costs more time; 50-100 is common. Measure recall@K of the first stage to pick it."},
+  {"t": "Which reranker", "d": "Hosted: Cohere Rerank, Voyage rerank, Elastic Rerank via the text_similarity_reranker retriever. Self-hosted: bge-reranker or other cross-encoders. Late interaction (ColBERT) if you can store per-token vectors."},
+  {"t": "Chunk size", "d": "Rerankers read limited text. Rerank passages, not whole sites; long documents get truncated or split, and the best chunk score usually stands for the document."},
+  {"t": "Latency budget", "d": "Reranking runs on every search, so it adds directly to response time. Batch pairs on a GPU, use a lite model for live traffic, or cache results for popular queries."},
+  {"t": "Score cut-off", "d": "Instead of always passing 10 chunks to the LLM, drop anything below a relevance score. Fewer, better chunks cut tokens and reduce wrong citations."}
+ ],
+ "instead": [
+  {"slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation", "why": "Fusion alone with RRF: no model cost, smaller quality lift"},
+  {"slug": "rag-keyword-index-bm25-bm25-full-text-elasticsearch-ai-retrieval-augmented-generation", "why": "The cheap first stage the reranker sits on top of"},
+  {"slug": "ai-llm-large-language-model-gpt-claude-gemini-api-inference-ai", "why": "An LLM as listwise reranker: strongest reasoning, slowest and priciest"},
+  {"slug": "llmops-offline-evals-eval-dataset-benchmark-regression-ai-observability", "why": "Prove the reranker helps: nDCG@10 and MRR on a labelled set"}
+ ],
+ "breaks": [
+  {"t": "Right doc never reached", "d": "The reranker can only reorder what the first stage found.", "see": "Low recall@100 on the eval set even though nDCG@10 of found items is fine", "fix": "Improve the first stage: hybrid BM25 + vectors, better chunking, a bigger window"},
+  {"t": "Latency creeps up", "d": "Reranking 200 long passages per query on CPU blows the time budget.", "see": "p95 search latency (the slowest 1 in 20 requests) jumps after launch", "fix": "Smaller window, shorter passages, GPU batching, a lite model or late interaction"},
+  {"t": "Truncated documents", "d": "Text past the model's limit is cut, so the key paragraph is never read.", "see": "Relevant long pages rank low; the matching text sits deep in the page", "fix": "Chunk before reranking and score the best chunk per document"},
+  {"t": "Domain drift", "d": "A general reranker misjudges your jargon or product names.", "see": "nDCG@10 on your own queries is lower than the vendor benchmark", "fix": "Add instructions where supported, fine-tune on your click or label data, or blend with BM25"}
+ ],
+ "say": [
+  "I'll use two stages: BM25 plus vector search fused with RRF to get a high-recall top 100, then a cross-encoder reranker for precision on the top 10.",
+  "The bi-encoder is fast because document vectors are precomputed; the cross-encoder is accurate because it reads query and document together, so I only run it on the shortlist.",
+  "I'll measure recall@100 for the first stage and nDCG@10 and MRR after reranking, so I know which stage to fix.",
+  "If latency is tight, I'll try ColBERT-style late interaction or a lite reranker, and cache results for the most popular queries."
+ ],
+ "followups": [
+  {"q": "Why not run the cross-encoder over the whole corpus?", "a": "It must process every query-document pair at query time, with no precomputed vectors. Over millions of documents that is far too slow, so it only reorders a shortlist from a fast retriever."},
+  {"q": "What is late interaction?", "a": "ColBERT encodes query and document separately into one vector per token. Scoring sums, for each query token, its maximum similarity to any document token (MaxSim). Document vectors are precomputed, so it is much cheaper than a cross-encoder."},
+  {"q": "How do nDCG@10 and MRR differ?", "a": "MRR looks at the rank of the first relevant result only: 1 for top spot, 1/2 for second. nDCG@10 uses graded relevance for all top 10 results and rewards putting the most relevant ones highest."},
+  {"q": "How does this relate to AI answer engines citing pages?", "a": "They retrieve many candidates, rerank, and pass only the top few passages to the LLM, which cites them. A page that is clear, specific and matches the question well survives reranking and gets cited."}
+ ],
+ "today": "Rerank models now read long inputs: Cohere's rerank-v5.0 accepts up to 32,768 tokens shared between query and document and up to 10,000 documents per request, so whole pages can often be scored without manual chunking.",
+ "check": [
+  {"q": "Why do we rerank only the top ~100 and not every document?", "a": "The cross-encoder must score each query-document pair, which is slow", "d": ["Rerankers only accept 100 documents ever", "Documents past 100 are always irrelevant", "BM25 scores cannot exceed 100"], "why": "Cross-encoders cannot precompute document vectors, so cost grows with every pair scored."},
+  {"q": "What makes a bi-encoder fast for first-stage retrieval?", "a": "Document embeddings are computed ahead of time and searched with an index", "d": ["It reads query and document together", "It uses an LLM to rank results", "It skips the documents entirely"], "why": "Only the query is embedded at search time; the rest is a nearest-neighbour lookup."},
+  {"q": "In ColBERT, what does MaxSim do?", "a": "For each query token, takes its best-matching document token similarity", "d": ["Picks the single longest document", "Averages all document vectors into one", "Keeps the highest BM25 score"], "why": "The per-token maxima are summed to give the document's score."},
+  {"q": "nDCG@10 went up after adding a reranker, but recall@100 is unchanged. What does that tell you?", "a": "The reranker improved the order, not what was found", "d": ["The first stage got better", "The reranker found new documents", "The eval set is broken"], "why": "A reranker only reorders candidates. Recall is set by the first stage."}
+ ],
+ "sources": [
+  {"t": "Sentence Transformers: Retrieve & Re-Rank", "u": "https://sbert.net/examples/applications/retrieve_rerank"},
+  {"t": "Elasticsearch docs: text similarity reranker retriever", "u": "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrievers/text-similarity-reranker-retriever"},
+  {"t": "ColBERT paper (arXiv 2004.12832)", "u": "https://arxiv.org/pdf/2004.12832v2"},
+  {"t": "Voyage AI docs: rerankers", "u": "https://docs.voyageai.com/docs/reranker"},
+  {"t": "Cohere docs: reranking best practices", "u": "https://docs.cohere.com/docs/reranking-best-practices"},
+  {"t": "RankGPT (GitHub)", "u": "https://github.com/sunnweiwei/RankGPT"}
+ ]
+}

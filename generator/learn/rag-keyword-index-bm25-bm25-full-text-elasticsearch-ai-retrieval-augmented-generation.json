@@ -1,0 +1,98 @@
+{
+ "family": "retrieval",
+ "reviewed": "Oct 2026",
+ "what": "A keyword index finds documents that contain the words in your query and ranks them with BM25, a scoring formula that rewards rare words and fair use of repetition. It powers Elasticsearch, OpenSearch and Lucene.",
+ "like": "Like the index at the back of a textbook: look up a word, get the page numbers, then read the pages where that word matters most.",
+ "why": [
+  "Nails exact names, codes and IDs (like \"E1234\" or \"iPhone 15 Pro\") that embeddings often blur",
+  "Fast and cheap: no GPU, no model, works on day one with any text",
+  "Easy to explain and debug - you can see which words matched and why"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "docs", "t": "Documents|pages, chunks, products", "x": 0, "y": 20, "w": 150, "h": 86, "c": "rag", "i": "doc"},
+   {"id": "an", "t": "Analyzer|split, lowercase, stem", "x": 265, "y": 20, "w": 170, "h": 86, "c": "svc", "i": "tool"},
+   {"id": "inv", "t": "Inverted index|term -> list of docs", "x": 550, "y": 20, "w": 150, "h": 86, "c": "data", "i": "db"},
+   {"id": "q", "t": "User query|\"fix error E1234\"", "x": 0, "y": 180, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "bm25", "t": "BM25 scorer|tf, IDF, doc length", "x": 265, "y": 180, "w": 170, "h": 86, "c": "rag", "i": "chart"},
+   {"id": "lex", "t": "Lexical top-K|ranked doc ids", "x": 550, "y": 180, "w": 150, "h": 86, "c": "rag", "i": "doc"},
+   {"id": "vec", "t": "Vector top-K|dense or sparse model", "x": 0, "y": 340, "w": 150, "h": 86, "c": "rag", "i": "vector"},
+   {"id": "rrf", "t": "RRF fusion|1 / (60 + rank)", "x": 265, "y": 340, "w": 170, "h": 86, "c": "rag", "i": "router"},
+   {"id": "out", "t": "Hybrid results|to reranker or LLM", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ai", "i": "llm"}
+  ],
+  "edges": [
+   ["docs", "an", "index time"],
+   ["an", "inv", "terms"],
+   ["q", "bm25", "analyzed"],
+   ["inv", "bm25", "postings"],
+   ["bm25", "lex", "scores"],
+   ["lex", "rrf", "rank list"],
+   ["vec", "rrf", "rank list"],
+   ["rrf", "out", "fused"]
+  ],
+  "steps": [
+   {"t": "Text becomes terms", "d": "An analyzer runs character filters, exactly one tokenizer, then token filters. \"Running Shoes!\" might become run and shoe after lowercasing and stemming (cutting words to their root).", "hl": ["docs", "an"]},
+   {"t": "Build the inverted index", "d": "For every unique term the index keeps a postings list: which documents hold it, how often, and where. Looking up a word is then a quick jump, not a scan.", "hl": ["an", "inv"]},
+   {"t": "Query uses same analyzer", "d": "The query goes through the same analyzer, so \"Shoes\" in a search matches \"shoe\" in a document. A different analyzer on each side is a classic silent miss.", "hl": ["q", "bm25"]},
+   {"t": "BM25 scores each match", "d": "IDF (inverse document frequency) gives rare words more weight. k1 caps how much repeating a word helps. b reduces the boost long documents get just for being long.", "hl": ["inv", "bm25"]},
+   {"t": "Lexical top-K list", "d": "Documents are sorted by summed BM25 score. Exact names, error codes and multi-word queries where every word matters tend to land right at the top.", "hl": ["bm25", "lex"]},
+   {"t": "Fuse with vectors", "d": "Hybrid search runs a vector search too, then Reciprocal Rank Fusion adds 1 / (60 + rank) from each list. Only ranks matter, so no score tuning is needed.", "hl": ["lex", "vec", "rrf", "out"]}
+  ]
+ },
+ "numbers": [
+  {"v": "1.2", "l": "default k1 in Elasticsearch: how fast repeated words stop helping", "s": "https://www.elastic.co/guide/en/elasticsearch/reference/8.3/index-modules-similarity.html"},
+  {"v": "0.75", "l": "default b: how much document length dampens the score", "s": "https://www.elastic.co/guide/en/elasticsearch/reference/8.3/index-modules-similarity.html"},
+  {"v": "60", "l": "default RRF rank constant k in Elasticsearch", "s": "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion"},
+  {"v": "1", "l": "tokenizer per analyzer; char and token filters are optional", "s": "https://www.elastic.co/guide/en/elasticsearch/reference/8.18/analyzer-anatomy.html"},
+  {"v": "+17%", "l": "average nDCG@10 for ELSER over BM25 on 12 BEIR datasets", "s": "https://www.elastic.co/kr/search-labs/blog/elastic-learned-sparse-encoder-elser-retrieval-performance"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Analyzer per field", "d": "Stemming and stop words help prose. Keep IDs, SKUs and codes as keyword fields or use a light analyzer, so \"E-1234\" is not split into pieces nobody searches for."},
+  {"t": "k1 and b", "d": "Defaults 1.2 and 0.75 suit most text. Lower b for fields where length means nothing, like titles; tune only against a labelled eval set, never by gut feel."},
+  {"t": "Field boosts", "d": "A match in the title or heading usually means more than one in the footer. Use multi_match with boosts such as title^3, and check nDCG before and after."},
+  {"t": "How to go hybrid", "d": "RRF is the safe start because it ignores raw scores. A weighted linear mix can win once you normalise scores and have evals to tune the weights."},
+  {"t": "Classic or learned sparse", "d": "Plain BM25 is free and explainable. Learned sparse models like SPLADE or Elastic ELSER add related terms with weights, still served from an inverted index, at the cost of model inference."}
+ ],
+ "instead": [
+  {"slug": "rag-vector-index-vector-db-ann-hnsw-pgvector-pinecone-ai-retrieval-augmented-generation", "why": "Matches meaning and paraphrases where the words differ"},
+  {"slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation", "why": "Best of both: BM25 plus vectors fused with RRF"},
+  {"slug": "data-search-index-elasticsearch-elasticsearch-opensearch-inverted-index-full-text", "why": "The full search engine block: shards, replicas, facets and filters"},
+  {"slug": "ai-reranker-rerank-cross-encoder-relevance-ai", "why": "Reorders the BM25 top 100 with a smarter, slower model"}
+ ],
+ "breaks": [
+  {"t": "Vocabulary mismatch", "d": "The user says \"laptop won't start\", the doc says \"notebook fails to boot\". No shared words, so BM25 never finds it.", "see": "Low recall@K on paraphrased queries in your eval set", "fix": "Add vector or learned sparse retrieval and fuse with RRF; synonyms for key domain terms"},
+  {"t": "Analyzer mismatch", "d": "Index and query are analyzed differently, so tokens never line up.", "see": "_analyze API shows different tokens for the same word; zero-hit queries rise", "fix": "Same analyzer on both sides (or a deliberate search_analyzer), then reindex"},
+  {"t": "Codes split apart", "d": "A standard tokenizer breaks \"SKU-88-B\" into tiny tokens that match half the catalogue.", "see": "Exact-ID searches return the right item on page two", "fix": "A keyword subfield for IDs and a boosted exact match clause"},
+  {"t": "Long pages win unfairly", "d": "Big pages repeat words often and crowd out short, precise answers.", "see": "Top results are long hub pages; nDCG@10 drops for specific questions", "fix": "Chunk pages into passages, tune b, or boost title and heading fields"}
+ ],
+ "say": [
+  "I'll keep a BM25 keyword index next to the vector index, because users search for exact product names, error codes and people that embeddings can blur.",
+  "BM25 weighs rare words up with IDF, saturates repeats with k1 and normalises length with b, so I start at the Elasticsearch defaults of 1.2 and 0.75.",
+  "I'll fuse the BM25 and vector top-K lists with Reciprocal Rank Fusion, then send the top 50 to 100 to a cross-encoder reranker.",
+  "I'll judge every change on a labelled set with recall@100 for the first stage and nDCG@10 and MRR for the final list."
+ ],
+ "followups": [
+  {"q": "Why does BM25 still matter when we have embeddings?", "a": "It wins on exact matches: names, SKUs, error codes, rare jargon and queries where every word must appear. It needs no model, is cheap, and is easy to debug. Hybrid search usually beats either side alone."},
+  {"q": "Explain k1 and b in one line each.", "a": "k1 controls saturation: how quickly extra repeats of a word stop adding score. b controls length normalisation: 0 ignores length, 1 fully penalises long documents."},
+  {"q": "How does RRF combine lists with different score scales?", "a": "It ignores raw scores and adds 1 / (k + rank) for each list a document appears in, with k usually 60. Documents high in both lists rise to the top without any score normalisation."},
+  {"q": "What is learned sparse retrieval?", "a": "A model like SPLADE or ELSER turns text into weighted terms, including helpful related terms not in the text. It is still served from an inverted index, so you keep exact matching and add some meaning."}
+ ],
+ "today": "Elastic's ELSER, a learned sparse model built on the SPLADE design, raised average nDCG@10 by 17% over BM25 on a 12-dataset BEIR subset, so many 2025-2026 stacks run BM25, learned sparse and dense retrieval side by side.",
+ "check": [
+  {"q": "A user searches for error code \"E1234\" and the vector search misses it. What helps most?", "a": "A BM25 keyword index fused into the results", "d": ["A bigger embedding model", "A longer chunk size", "A higher temperature on the LLM"], "why": "Exact codes are a lexical match. BM25 finds them reliably, and RRF blends them with semantic results."},
+  {"q": "In BM25, which part makes rare words count more than common ones?", "a": "IDF (inverse document frequency)", "d": ["The k1 parameter", "The b parameter", "The field boost"], "why": "IDF is high for words found in few documents. k1 handles repeats and b handles length."},
+  {"q": "You lower b towards 0 on a field. What changes?", "a": "Document length matters less to the score", "d": ["Rare words get less weight", "Repeated words count without limit", "The field stops being searchable"], "why": "b sets how much length normalisation is applied. At 0 there is none."},
+  {"q": "Why is RRF a popular default for hybrid search?", "a": "It uses ranks only, so BM25 and vector scores need no rescaling", "d": ["It retrains the embedding model", "It always returns fewer results", "It removes the need for a vector index"], "why": "BM25 and cosine scores live on different scales. RRF sidesteps that by adding 1 / (k + rank)."}
+ ],
+ "sources": [
+  {"t": "Elasticsearch docs: similarity settings (BM25 k1, b)", "u": "https://www.elastic.co/guide/en/elasticsearch/reference/8.3/index-modules-similarity.html"},
+  {"t": "Elasticsearch docs: reciprocal rank fusion", "u": "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion"},
+  {"t": "Elasticsearch docs: anatomy of an analyzer", "u": "https://www.elastic.co/guide/en/elasticsearch/reference/8.18/analyzer-anatomy.html"},
+  {"t": "Elasticsearch Guide: inverted index", "u": "https://www.elastic.co/guide/en/elasticsearch/guide/master/inverted-index.html"},
+  {"t": "Elastic Search Labs: ELSER retrieval performance", "u": "https://www.elastic.co/kr/search-labs/blog/elastic-learned-sparse-encoder-elser-retrieval-performance"},
+  {"t": "SPLADE paper (arXiv 2107.05720)", "u": "https://arxiv.org/abs/2107.05720v1"}
+ ]
+}

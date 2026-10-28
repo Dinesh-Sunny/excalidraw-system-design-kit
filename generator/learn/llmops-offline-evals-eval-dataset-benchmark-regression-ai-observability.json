@@ -1,0 +1,390 @@
+{
+ "family": "llmops",
+ "reviewed": "Oct 2026",
+ "what": "Offline evals run your AI system over a fixed, labelled test set before you ship, score every answer, and tell you whether a new prompt or model is better or worse than today's.",
+ "like": "Like a driving test on a set course: same roads, same examiner checklist, so you can fairly compare this year's driver with last year's.",
+ "why": [
+  "Catches regressions before users do - every prompt or model change gets a score",
+  "Turns 'it feels better' into numbers you can compare: F1, recall@K, nDCG",
+  "Lets you swap models with confidence, including cheaper ones, and see the cost change"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "golden",
+    "t": "Golden set|labelled inputs + answers",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "doc"
+   },
+   {
+    "id": "erran",
+    "t": "Error analysis|read and tag failures",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "eye"
+   },
+   {
+    "id": "traces",
+    "t": "Real traces|logged user sessions",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "log"
+   },
+   {
+    "id": "cand",
+    "t": "Candidate|new prompt or model",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "runner",
+    "t": "Eval runner|each case, N repeats",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "llmops",
+    "i": "loop"
+   },
+   {
+    "id": "cost",
+    "t": "Cost and latency|tokens and ms per run",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "clock"
+   },
+   {
+    "id": "score",
+    "t": "Scorers|F1 · recall@K · nDCG",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "chart"
+   },
+   {
+    "id": "cmp",
+    "t": "Vs baseline|difference + error bars",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "chart"
+   },
+   {
+    "id": "gate",
+    "t": "CI gate|pass or block the merge",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "shield"
+   }
+  ],
+  "edges": [
+   [
+    "traces",
+    "erran",
+    "sample"
+   ],
+   [
+    "erran",
+    "golden",
+    "label"
+   ],
+   [
+    "golden",
+    "runner",
+    "inputs"
+   ],
+   [
+    "cand",
+    "runner",
+    "run"
+   ],
+   [
+    "runner",
+    "score",
+    "outputs"
+   ],
+   [
+    "score",
+    "cmp",
+    "scores"
+   ],
+   [
+    "runner",
+    "cost",
+    "tokens"
+   ],
+   [
+    "cmp",
+    "gate",
+    "verdict"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Read real traces first",
+    "d": "Before any metric, read logged sessions and write a short note on what went wrong in each. Hamel Husain calls this error analysis: it shows which failures actually matter.",
+    "hl": [
+     "traces",
+     "erran"
+    ]
+   },
+   {
+    "t": "Build the golden set",
+    "d": "Group the notes into failure types, then save representative inputs with the expected answer or the documents that should be found. This labelled set is your fixed exam.",
+    "hl": [
+     "erran",
+     "golden"
+    ]
+   },
+   {
+    "t": "Run the candidate",
+    "d": "The runner sends every case through the new prompt or model. LLMs vary run to run, so each case is repeated a few times and averaged.",
+    "hl": [
+     "cand",
+     "runner"
+    ]
+   },
+   {
+    "t": "Score each answer",
+    "d": "Extraction: precision, recall and F1 against the labels. Retrieval: recall@K (did the right page make the top K), MRR (rank of the first hit) and nDCG (graded, position-weighted).",
+    "hl": [
+     "score"
+    ]
+   },
+   {
+    "t": "Compare with error bars",
+    "d": "Score the same questions for old and new versions and look at the paired difference with a 95% confidence interval. A small gain inside the noise is not a win.",
+    "hl": [
+     "cmp"
+    ]
+   },
+   {
+    "t": "Gate the merge",
+    "d": "CI runs the suite on every prompt or model change and fails the build when quality drops or cost per case jumps past your budget.",
+    "hl": [
+     "gate",
+     "cost"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "1.96 x SE",
+   "l": "either side of the mean gives a 95% confidence interval",
+   "s": "https://anthropic.com/research/statistical-approach-to-model-evals"
+  },
+  {
+   "v": "~100",
+   "l": "diverse traces as a working pool for error analysis",
+   "s": "https://hamel.dev/blog/posts/evals-faq/why-is-error-analysis-so-important-in-llm-evals-and-how-is-it-performed.html"
+  },
+  {
+   "v": "60-80%",
+   "l": "of development time one expert team spends on error analysis and evals",
+   "s": "https://hamel.dev/blog/posts/evals-faq/"
+  },
+  {
+   "v": "10",
+   "l": "default K for P@K, MRR and DCG in Elasticsearch rank eval",
+   "s": "https://www.elastic.co:443/guide/en/elasticsearch/reference/7.5/search-rank-eval.html"
+  },
+  {
+   "v": "100",
+   "l": "promptfoo exit code when any test case fails - handy in CI",
+   "s": "https://www.promptfoo.dev/docs/usage/command-line"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "What goes in the golden set",
+   "d": "Real traces picked by error analysis, plus hard and edge cases. Keep a frozen test split you never tune on, and add every production bug as a new case."
+  },
+  {
+   "t": "Which metric fits",
+   "d": "Exact match or F1 for extraction. Recall@K for a first-stage retriever, nDCG or MRR for the reranked list. Binary pass/fail checks or an LLM judge for open-ended answers."
+  },
+  {
+   "t": "Repeats and sample size",
+   "d": "Run each case several times when sampling is on, and use enough questions that the confidence interval is narrower than the change you care about."
+  },
+  {
+   "t": "When it runs",
+   "d": "A small, fast suite on every pull request; the full suite nightly or before a model switch. Pin model versions and temperature so runs stay comparable."
+  },
+  {
+   "t": "Tooling",
+   "d": "promptfoo or OpenAI Evals for config-driven tests in CI; Braintrust, Langfuse datasets or Arize Phoenix to store datasets, experiments and side-by-side diffs."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "llmops-llm-as-judge-online-eval-grading-judge-ai-observability",
+   "why": "Grade open-ended answers, and keep scoring live traffic after launch"
+  },
+  {
+   "slug": "llmops-tracing-langfuse-langsmith-opentelemetry-spans-ai-observability",
+   "why": "See each step of real requests; the raw material for error analysis"
+  },
+  {
+   "slug": "llmops-guardrails-safety-moderation-input-output-filter-ai-observability",
+   "why": "Block bad inputs and outputs at runtime rather than measure quality"
+  },
+  {
+   "slug": "ops-monitoring-metrics-prometheus-grafana-dashboards",
+   "why": "Track latency, errors and cost live, not answer quality"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Overfitting the eval",
+   "d": "Prompts get tuned until the golden set is perfect, but real users still hit new failures.",
+   "see": "Eval score climbs while user thumbs-down and support tickets stay flat",
+   "fix": "Keep a held-out test split, refresh cases from new traces every few weeks"
+  },
+  {
+   "t": "Noise looks like progress",
+   "d": "One run of a non-deterministic model moves the score by chance.",
+   "see": "Re-running the same version gives a different score",
+   "fix": "Repeat runs, report the confidence interval, use paired comparisons"
+  },
+  {
+   "t": "Generic metrics, real problems missed",
+   "d": "Off-the-shelf scores like 'helpfulness' do not match your actual failure modes.",
+   "see": "Scores look fine but error analysis finds the same bug again",
+   "fix": "Start from error analysis and write a check per real failure type"
+  },
+  {
+   "t": "Cost creeps up",
+   "d": "A new prompt passes quality but uses far more tokens or tool calls.",
+   "see": "Tokens per case or bill per run rising between versions",
+   "fix": "Track cost and latency per case next to quality and gate on both"
+  },
+  {
+   "t": "Stale labels",
+   "d": "The right answer changes (new docs, prices, pages) but the golden set does not.",
+   "see": "Correct new answers marked wrong",
+   "fix": "Version the dataset, give cases an owner and a review date"
+  }
+ ],
+ "say": [
+  "Before choosing metrics I'd read about a hundred real traces, tag the failures and build a golden set around the failure types that matter most.",
+  "For the retriever I'd track recall@K on the first stage, then nDCG@10 and MRR after the reranker, so I know which stage to fix.",
+  "Every prompt or model change runs the suite in CI with repeated runs, and I compare against the baseline on the same questions with a confidence interval.",
+  "I'd report cost and latency per case next to quality, so a cheaper model that holds quality is an easy yes."
+ ],
+ "followups": [
+  {
+   "q": "Precision, recall or F1 for an extraction task?",
+   "a": "Precision asks how many extracted items are right; recall asks how many of the true items you found. F1 is their harmonic mean, so it only stays high when both are good. Pick the one matching the cost of each mistake."
+  },
+  {
+   "q": "Why nDCG rather than recall@K for a reranker?",
+   "a": "Recall@K only asks whether the right page is somewhere in the top K. nDCG uses graded relevance and rewards putting the best pages first, which is what an answer engine citing the top few results needs."
+  },
+  {
+   "q": "Your new prompt scores 2 points higher. Ship it?",
+   "a": "Only if the gain is bigger than the noise. Run repeats, compute the paired difference on the same questions and its 95% confidence interval. If the interval includes zero, collect more cases or treat it as a tie."
+  },
+  {
+   "q": "Where do eval cases come from with no users yet?",
+   "a": "Start with synthetic inputs written to cover your feature and personas, label them, then replace and extend them with real traces as soon as you have traffic."
+  }
+ ],
+ "today": "In March 2026 OpenAI announced it would acquire promptfoo, the open-source eval and red-teaming tool, showing how central automated eval suites have become to shipping AI apps.",
+ "check": [
+  {
+   "q": "Which metric rewards putting the most relevant page at rank 1 rather than rank 8?",
+   "a": "nDCG",
+   "d": [
+    "Recall@10",
+    "Exact match",
+    "Token count"
+   ],
+   "why": "nDCG discounts gains by position and uses graded labels, so order matters."
+  },
+  {
+   "q": "A prompt change scores +1% on one run. What is the first thing to check?",
+   "a": "Whether the gain is outside the run-to-run noise",
+   "d": [
+    "Whether the prompt is shorter",
+    "Whether the model is newer",
+    "Whether the golden set is larger than 10 cases"
+   ],
+   "why": "LLM outputs vary; repeat runs and a confidence interval tell signal from noise."
+  },
+  {
+   "q": "What should you do before choosing eval metrics?",
+   "a": "Error analysis on real traces",
+   "d": [
+    "Buy a benchmark",
+    "Turn on every generic metric",
+    "Fine-tune the model"
+   ],
+   "why": "Reading and tagging failures shows which checks are worth writing."
+  },
+  {
+   "q": "Where do offline evals usually run on each prompt change?",
+   "a": "In CI, as a gate before merge",
+   "d": [
+    "Only in production",
+    "Once a year",
+    "On the user's device"
+   ],
+   "why": "Running in CI catches regressions before they reach users."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Anthropic: a statistical approach to model evals",
+   "u": "https://anthropic.com/research/statistical-approach-to-model-evals"
+  },
+  {
+   "t": "Hamel Husain: why error analysis matters in LLM evals",
+   "u": "https://hamel.dev/blog/posts/evals-faq/why-is-error-analysis-so-important-in-llm-evals-and-how-is-it-performed.html"
+  },
+  {
+   "t": "Hamel Husain and Shreya Shankar: LLM evals FAQ",
+   "u": "https://hamel.dev/blog/posts/evals-faq/"
+  },
+  {
+   "t": "Elasticsearch docs: ranking evaluation API",
+   "u": "https://www.elastic.co:443/guide/en/elasticsearch/reference/7.5/search-rank-eval.html"
+  },
+  {
+   "t": "promptfoo docs: command line",
+   "u": "https://www.promptfoo.dev/docs/usage/command-line"
+  },
+  {
+   "t": "SiliconANGLE: OpenAI to acquire Promptfoo",
+   "u": "https://siliconangle.com/2026/03/09/openai-acquire-promptfoo-expand-ai-application-testing-capabilities/"
+  }
+ ]
+}

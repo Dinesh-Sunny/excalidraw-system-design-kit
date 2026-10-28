@@ -1,0 +1,98 @@
+{
+ "family": "data",
+ "reviewed": "Oct 2026",
+ "what": "An OLAP database like ClickHouse stores each column on its own, so it can sum, count and group billions of rows in well under a second. It powers dashboards and analytics, not single-row app reads.",
+ "like": "Like a spreadsheet where you only pull out the one column you need to total, instead of photocopying every full row first.",
+ "why": [
+  "Reads only the columns a query uses, so big scans stay fast",
+  "Columns of similar values compress far better than rows",
+  "Pre-aggregated rollups make dashboard queries tiny and instant"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "ingest", "t": "Batched inserts|10k-100k rows each", "x": 0, "y": 20, "w": 150, "h": 86, "c": "svc", "i": "queue"},
+   {"id": "part", "t": "New data part|sorted by ORDER BY", "x": 265, "y": 20, "w": 170, "h": 86, "c": "data", "i": "partition"},
+   {"id": "cols", "t": "Column files|one file per column", "x": 265, "y": 180, "w": 170, "h": 86, "c": "data", "i": "db"},
+   {"id": "merge", "t": "Background merge|small parts to big", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ops", "i": "loop"},
+   {"id": "idx", "t": "Sparse index|1 entry per 8,192 rows", "x": 550, "y": 180, "w": 150, "h": 86, "c": "data", "i": "hash"},
+   {"id": "mv", "t": "Materialized view|insert trigger", "x": 0, "y": 180, "w": 150, "h": 86, "c": "msg", "i": "chart"},
+   {"id": "rollup", "t": "Rollup table|one row per day", "x": 0, "y": 340, "w": 150, "h": 86, "c": "data", "i": "chart"},
+   {"id": "query", "t": "Dashboard query|WHERE tenant AND day", "x": 265, "y": 340, "w": 170, "h": 86, "c": "client", "i": "user"},
+   {"id": "comp", "t": "Compression|LZ4 or ZSTD", "x": 550, "y": 340, "w": 150, "h": 86, "c": "data", "i": "bucket"}
+  ],
+  "edges": [
+   ["ingest", "part", "INSERT"],
+   ["part", "merge", "merge later"],
+   ["part", "cols", ""],
+   ["cols", "idx", "marks"],
+   ["ingest", "mv", "same block"],
+   ["mv", "rollup", "partial aggs"],
+   ["query", "idx", "skip ahead"],
+   ["cols", "comp", ""]
+  ],
+  "steps": [
+   {"t": "Rows arrive in batches", "d": "Your service buffers events, like one row per AI answer checked, and sends thousands at once. Each INSERT writes a new immutable data part on disk.", "hl": ["ingest", "part"]},
+   {"t": "Sorted, one file per column", "d": "Inside the part, rows are sorted by the table's ORDER BY key and each column lives in its own compressed file, so a query touches only the columns it names.", "hl": ["part", "cols", "comp"]},
+   {"t": "A sparse index", "d": "The primary index keeps the key of just the first row of each granule (8,192 rows by default). It is tiny, fits in memory, and tells ClickHouse which granules to skip.", "hl": ["idx"]},
+   {"t": "Merges in the background", "d": "MergeTree keeps joining small parts into bigger sorted ones. That is why many tiny inserts hurt: merges cannot keep up and you get too many parts.", "hl": ["part", "merge"]},
+   {"t": "Rollups at insert time", "d": "A materialized view runs on every inserted block and writes partial aggregates into a rollup table (SummingMergeTree or AggregatingMergeTree). Dashboards read thousands of rows instead of millions.", "hl": ["mv", "rollup"]},
+   {"t": "The dashboard query", "d": "WHERE tenant_id = 42 AND day in last 30 matches the ORDER BY prefix, so only a few granules are read, decompressed and aggregated in parallel.", "hl": ["query", "idx", "rollup"]}
+  ]
+ },
+ "numbers": [
+  {"v": "8,192", "l": "rows per granule by default; one index entry each", "s": "https://clickhouse.com/docs/primary-indexes"},
+  {"v": "92 ms", "l": "to scan 100 million rows in the docs' analytics example", "s": "https://clickhouse.com/docs/intro"},
+  {"v": "10k-100k", "l": "rows per insert batch is ideal; at least 1,000", "s": "https://clickhouse.com/docs/optimize/bulk-inserts"},
+  {"v": "~10x", "l": "less disk than PostgreSQL for the same 100M-row benchmark", "s": "https://clickhouse.com/engineering-resources/database-compression"},
+  {"v": "< 100-1,000", "l": "distinct values recommended for a partition key", "s": "https://clickhouse.com/docs/best-practices/choosing-a-partitioning-key"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "ORDER BY (primary key)", "d": "Put the columns you always filter on first, low cardinality before high: (tenant_id, day, engine). This decides which granules a query can skip, and cannot be changed cheaply later."},
+  {"t": "Partition key", "d": "Usually by month, like toStartOfMonth(day). It is for data management - dropping old months, TTL, tiered storage - not for speed. Keep distinct values low."},
+  {"t": "Rollups", "d": "Add a materialized view per hot dashboard shape (per tenant per day). Use -State functions in the view and -Merge functions when you query the rollup."},
+  {"t": "Insert path", "d": "Batch 10,000-100,000 rows about once a second from a queue or buffer. If clients cannot batch, turn on async inserts so the server batches for you."},
+  {"t": "Codecs", "d": "LZ4 by default for speed. ZSTD on cold or big text columns for smaller disk. Delta or DoubleDelta on timestamps."}
+ ],
+ "instead": [
+  {"slug": "data-postgresql-postgres-sql-relational", "why": "Transactions, updates and single-row reads; fine until analytics hits millions of rows"},
+  {"slug": "data-data-warehouse-snowflake-bigquery-redshift-olap-analytics", "why": "Managed warehouse for BI across many sources; less tuned for sub-second app dashboards"},
+  {"slug": "data-time-series-db-influxdb-timescale-prometheus-metrics", "why": "Metrics per series with retention; simpler when data is just numbers over time"},
+  {"slug": "data-search-index-elasticsearch-elasticsearch-opensearch-inverted-index-full-text", "why": "Full-text search and relevance ranking rather than heavy aggregation"}
+ ],
+ "breaks": [
+  {"t": "Too many parts", "d": "Thousands of tiny inserts each create a part and merges fall behind.", "see": "'Too many parts' errors and a rising part count in system.parts", "fix": "Batch inserts, use async inserts, or put a queue like Kafka in front"},
+  {"t": "Wrong ORDER BY", "d": "Queries filter on a column the sort key does not start with, so nothing can be skipped.", "see": "EXPLAIN indexes=1 shows most granules selected; rows read close to table size", "fix": "Reorder the key to match filters, or add a projection or skip index"},
+  {"t": "Over-partitioning", "d": "Partitioning by a high-cardinality column like user_id splits data into far too many parts.", "see": "'Too many partitions for single INSERT block' and slow merges", "fix": "Partition by month or not at all; put user_id in ORDER BY instead"},
+  {"t": "Rollup gives wrong numbers", "d": "Averages of averages, or a view GROUP BY that does not match the target ORDER BY.", "see": "Dashboard totals differ from a query on the raw table", "fix": "Store -State aggregates, read with -Merge, and match GROUP BY to ORDER BY"},
+  {"t": "Used like Postgres", "d": "Frequent single-row updates and deletes fight the append-and-merge design.", "see": "Heavy mutations queue in system.mutations", "fix": "Keep mutable data in Postgres; append new versions and use ReplacingMergeTree"}
+ ],
+ "say": [
+  "Every check of whether an AI answer engine cites a brand is a fact row - that grows to billions fast, so I keep it in ClickHouse, not Postgres.",
+  "The table is a MergeTree ordered by (tenant_id, day, engine, prompt_id), so each customer's dashboard filter skips straight to its own granules.",
+  "A materialized view rolls facts into a per-tenant per-day table at insert time, so the dashboard reads thousands of rows, not millions.",
+  "Writers batch through a queue about once a second, and Postgres stays the source of truth for accounts and settings."
+ ],
+ "followups": [
+  {"q": "Why not just add indexes in Postgres?", "a": "Postgres reads whole rows and builds B-tree indexes for point lookups. A dashboard summing a few columns over millions of rows still drags every column off disk. ClickHouse reads only the needed columns, compressed around 10x smaller, and scans them in parallel."},
+  {"q": "How do you keep tenants apart?", "a": "Put tenant_id first in ORDER BY so every query filters on it and reads only that tenant's granules. Enforce it in the API layer, and add row policies or per-tenant users so one forgotten WHERE cannot leak data."},
+  {"q": "What exactly is a granule?", "a": "The smallest block ClickHouse reads: 8,192 rows by default. The sparse index stores the key of the first row of each granule, so it can binary-search to the few granules that might match and skip the rest."},
+  {"q": "How do you handle late or corrected data?", "a": "Append a new version row and use ReplacingMergeTree, which keeps the latest by a version column during merges. Read with FINAL or argMax when exact answers matter before merges finish."}
+ ],
+ "check": [
+  {"q": "A ClickHouse table gets 5,000 single-row inserts a second. What goes wrong first?", "a": "Too many parts, because merges cannot keep up", "d": ["The sparse index runs out of memory", "Columns stop being compressed", "Queries start reading rows instead of columns"], "why": "Each insert creates a part. Batch 10k-100k rows about once a second instead."},
+  {"q": "What does the sparse primary index store?", "a": "The key of the first row in each 8,192-row granule", "d": ["A pointer to every single row", "A hash of every column value", "Only the minimum and maximum of the whole table"], "why": "One entry per granule keeps the index tiny enough to live in memory."},
+  {"q": "Dashboards always filter by tenant and date. Best ORDER BY?", "a": "(tenant_id, day, ...)", "d": ["(event_id)", "(rand())", "(day, event_id, tenant_id)"], "why": "Leading with the filter columns lets the index skip other tenants' granules."},
+  {"q": "What is partitioning in ClickHouse mainly for?", "a": "Managing data, like dropping old months", "d": ["Making every query faster", "Spreading one table across tenants", "Replacing the primary index"], "why": "The docs call it a data management tool. Speed comes from ORDER BY."}
+ ],
+ "sources": [
+  {"t": "ClickHouse docs: what is ClickHouse (row vs column)", "u": "https://clickhouse.com/docs/intro"},
+  {"t": "ClickHouse docs: primary indexes", "u": "https://clickhouse.com/docs/primary-indexes"},
+  {"t": "ClickHouse docs: bulk inserts", "u": "https://clickhouse.com/docs/optimize/bulk-inserts"},
+  {"t": "ClickHouse docs: choosing a partitioning key", "u": "https://clickhouse.com/docs/best-practices/choosing-a-partitioning-key"},
+  {"t": "ClickHouse docs: incremental materialized views", "u": "https://clickhouse.com/docs/materialized-view/incremental-materialized-view"},
+  {"t": "ClickHouse: database compression, encodings and ratios", "u": "https://clickhouse.com/engineering-resources/database-compression"}
+ ]
+}

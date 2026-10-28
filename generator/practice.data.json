@@ -1,234 +1,1929 @@
 {
-"_source": "Company tags come from public candidate reports (systemdesign.io question list, Oct 2026). Empty means no public source yet.",
-"url-shortener": {
- "level": "Easy", "track": "Classic", "companies": ["Google", "Meta", "Amazon", "Microsoft"],
- "reqF": ["Shorten a long URL to a 7-character code", "Redirect a code to the original URL", "Optional custom alias and expiry", "Click counts per link"],
- "reqN": ["Redirect p99 under 50 ms", "Very read heavy: 100 reads per write", "Highly available: a dead link is a broken promise", "Codes must never collide"],
- "est": ["Writes: 100M/day ≈ 1,200/s, peaks ~5k/s", "Reads: 100x ≈ 120k/s, peaks ~500k/s", "Storage: 100M x 500 B x 365 x 5 yr ≈ 90 TB", "Cache: top 20% of daily reads ≈ a few hundred GB"],
- "api": ["POST /urls {longUrl, alias?, expiresAt?} → 201 {code}", "GET /{code} → 301/302 Location: longUrl", "GET /urls/{code}/stats → {clicks, byDay}"],
- "data": ["urls: code PK, long_url, user_id, created_at, expires_at", "Key-value store partitioned by code", "clicks: append-only events to Kafka, rolled up in the warehouse"],
- "blocks": {"u": "Start from the people clicking links: almost all traffic is redirects.", "lb": "Spreads redirect traffic across stateless API servers.", "api": "Stateless service: creates codes and serves redirects.", "id": "Hands out unique 64-bit ids; base62 of the id is the code, so no collisions.", "c": "Hot codes live in Redis: most redirects never touch the DB.", "db": "Key-value store, partitioned by code: one lookup per miss.", "k": "Click events go to a queue so redirects stay fast.", "w": "Analytics runs offline on the warehouse, not on the hot path."},
- "dives": [["How do you generate codes without collisions?", "A Snowflake-style id generator, then base62. 7 chars = 3.5 trillion codes. No check-and-retry needed."], ["301 or 302?", "301 is cached by browsers (fewer hits, no click tracking). 302 every time (lets you count clicks)."], ["How do you keep redirects under 50 ms?", "Cache hot codes (80/20 rule), CDN or edge for the top links, KV store sharded by code."], ["Custom aliases?", "Check-and-set insert on the alias; reject if taken."]],
- "wrap": ["Bottleneck: the KV store on cache misses. Fix: bigger cache, read replicas.", "Abuse: rate limit creation per user, scan for malicious URLs.", "Next: expiry cleanup job, analytics dashboards."]
-},
-"rate-limiter": {
- "level": "Medium", "track": "Classic", "companies": ["Amazon", "Atlassian", "Uber", "Patreon"],
- "reqF": ["Limit requests per user, IP or API key", "Different rules per endpoint", "Return 429 with Retry-After when over the limit", "Rules change without a deploy"],
- "reqN": ["Adds under 1-2 ms per request", "Works across many gateway nodes", "Fails open if the limiter is down", "Accurate enough, not perfect"],
- "est": ["1M requests/s at the edge", "10M active keys x ~100 B ≈ 1 GB of counters", "One Redis round trip per request: shard Redis by key"],
- "api": ["Internal: allow(key, rule) → {allowed, remaining, resetAt}", "Headers: X-RateLimit-Limit, -Remaining, Retry-After", "Admin: PUT /rules/{id} {limit, window}"],
- "data": ["counters in Redis: key = rule:user:window → count, TTL", "rules: id, match (path, method), limit, window, scope"],
- "blocks": {"u": "Clients of every kind hit one front door.", "gw": "The limiter lives in the gateway so every service is protected.", "s": "Allowed requests pass straight to the services.", "r": "Shared counters in Redis, updated atomically with a Lua script.", "cfg": "Rules come from config, so limits change without a deploy.", "x": "Over the limit: 429 plus Retry-After, so clients back off."},
- "dives": [["Which algorithm?", "Token bucket: allows short bursts, simple, most common. Sliding window counter if you need smoother limits."], ["How do you stay correct across many gateways?", "Central Redis with an atomic Lua script (INCR + check + EXPIRE in one step)."], ["What if Redis is down?", "Fail open with a local in-memory fallback limit, and alert."], ["Hot keys?", "Shard counters by key; keep a local token cache for very hot clients."]],
- "wrap": ["Bottleneck: Redis round trip. Fix: local batching, shard by key.", "Next: per-plan limits, dashboards of who is throttled."]
-},
-"chat-system": {
- "level": "Medium", "track": "Classic", "companies": ["Meta", "Uber", "TikTok", "Amazon"],
- "reqF": ["1:1 and group chat", "Online presence and last seen", "Sent, delivered and read receipts", "Messages reach offline users later", "Photos and files"],
- "reqN": ["Delivery under 200 ms when both are online", "Messages never lost, kept in order per chat", "Billions of messages a day", "Works on flaky mobile networks"],
- "est": ["500M DAU x 40 msgs ≈ 20B msgs/day ≈ 230k/s", "Storage: 20B x 100 B ≈ 2 TB/day", "Open connections: ~100M at peak, ~50k per server ≈ 2k servers"],
- "api": ["WebSocket: send {chatId, clientMsgId, body}", "Server push: message, ack (sent/delivered/read), presence", "GET /chats/{id}/messages?before=cursor"],
- "data": ["messages: chat_id (partition), msg_id (sort), sender, body, ts", "chats + members tables", "presence in Redis with TTL heartbeats"],
- "blocks": {"a": "User A on a phone with a long-lived connection.", "b": "User B, maybe on another server or offline.", "w1": "WebSocket servers keep open connections for 2-way realtime.", "w2": "Each user is pinned to one chat server.", "k": "The queue routes messages between servers and absorbs bursts.", "p": "Presence lives in Redis with heartbeats and TTLs.", "db": "Cassandra: partition by chat, sort by message id, fast writes.", "push": "Offline users get a push, then sync when they reconnect.", "s3": "Media goes to object storage and a CDN, not through chat servers."},
- "dives": [["How do you keep order?", "Per-chat sequence ids assigned on write; clients sort by them."], ["How do you avoid duplicates?", "Client message id = idempotency key; server dedupes."], ["Group chat with 500 members?", "Fan out through the queue; big groups use pull on open."], ["How do you know who is online?", "Heartbeats every ~30 s into Redis with a TTL."]],
- "wrap": ["Bottleneck: connection servers. Fix: scale horizontally, a registry of user → server.", "Next: end-to-end encryption, message search."]
-},
-"news-feed": {
- "level": "Medium", "track": "Classic", "companies": ["Meta"],
- "reqF": ["Post text, photos and links", "See a feed of people you follow, newest or ranked", "Like and comment", "Infinite scroll"],
- "reqN": ["Feed loads in under 200 ms", "300M DAU, heavy reads", "A new post can take a few seconds to appear", "Celebrities with 100M followers"],
- "est": ["Reads: 300M x 10 feed loads ≈ 35k/s", "Writes: 300M x 0.5 posts ≈ 1.7k/s", "Fan-out: avg 200 followers ≈ 350k feed inserts/s"],
- "api": ["POST /posts {text, mediaIds}", "GET /feed?cursor=…&limit=20", "POST /posts/{id}/like"],
- "data": ["posts: post_id, author_id, body, media, created_at", "follows: follower_id, followee_id", "feed cache: user_id → list of post ids"],
- "blocks": {"u": "Readers open the feed far more than they post.", "gw": "Auth and routing for posts and feed reads.", "post": "Writes posts and announces them.", "feed": "Reads a user's precomputed feed.", "pdb": "Source of truth for posts.", "k": "New-post events decouple writing from fan-out.", "fo": "Workers push the post id into each follower's feed.", "g": "Who follows whom, read by the fan-out workers.", "fc": "Each feed is a Redis list of post ids, ready to read.", "cdn": "Images and video come from the CDN."},
- "dives": [["Fan-out on write or read?", "Write for most users (fast reads). Read-time pull for celebrities. Merge both: hybrid."], ["Why store ids, not posts, in the feed?", "Small lists; hydrate post details from cache at read time."], ["Pagination?", "Cursor based (last post id), never offset."], ["Ranking?", "A ranking service scores candidates; start with recency."]],
- "wrap": ["Bottleneck: fan-out for big accounts. Fix: hybrid fan-out.", "Next: ranking model, ads insertion, notifications."]
-},
-"video-streaming": {
- "level": "Medium", "track": "Classic", "companies": ["Meta", "Amazon", "Snowflake"],
- "reqF": ["Upload videos", "Watch with smooth playback on any device", "Adapt quality to network speed", "Video page: title, views, recommendations"],
- "reqN": ["Start playback in under 2 s", "Huge egress: CDN serves almost everything", "Uploads resumable", "Durable: never lose a video"],
- "est": ["Uploads: 500 hours per minute", "Each video stored in ~6 renditions ≈ 5x raw size", "Egress: millions of concurrent streams x ~5 Mbps ≈ Tbps, so CDN"],
- "api": ["POST /videos → pre-signed upload URL", "GET /videos/{id} → metadata + manifest URL", "GET manifest.m3u8 → segment list (from CDN)"],
- "data": ["videos: id, owner, title, status, renditions", "segments in object storage: /video/rendition/segment.ts"],
- "blocks": {"cr": "Creators upload large files.", "up": "Hands out pre-signed URLs so uploads go straight to storage.", "raw": "Raw uploads land in object storage.", "q": "Each upload becomes a transcode job.", "tr": "Workers split, encode many bitrates and merge.", "seg": "HLS/DASH segments for every quality.", "cdn": "The CDN serves the bytes, close to viewers.", "v": "Viewers stream segments and switch quality on the fly.", "api": "Video API serves the watch page and manifest.", "meta": "Metadata DB: titles, status, view counts."},
- "dives": [["Why pre-signed uploads?", "Big files skip your servers; resumable multipart upload to S3."], ["Adaptive bitrate?", "Client picks the next segment's quality from measured bandwidth."], ["How do you transcode fast?", "Split into chunks, encode in parallel as a DAG, merge."], ["Cost of egress?", "CDN with high hit ratio, pre-warm popular videos at the edge."]],
- "wrap": ["Bottleneck: transcode backlog. Fix: autoscale workers, prioritise popular creators.", "Next: recommendations, live streaming."]
-},
-"ride-sharing": {
- "level": "Hard", "track": "Classic", "companies": ["Uber", "Lyft", "Meta", "Google"],
- "reqF": ["Rider requests a ride", "Match the nearest available driver", "Live driver location and ETA", "Pay at the end of the trip"],
- "reqN": ["Matching in a few seconds", "1M drivers sending location every 4 s", "A driver is never offered two trips at once", "Highly available in every city"],
- "est": ["Location writes: 1M / 4 s = 250k/s", "Ride requests: ~1k/s at peak", "Location data is small and short-lived: keep it in memory"],
- "api": ["POST /rides {pickup, dropoff} → rideId", "WS: driver location updates, ride status pushes", "POST /rides/{id}/accept (driver)"],
- "data": ["trips: id, rider, driver, status, route, fare", "driver locations: in-memory geo index (H3 / geohash)"],
- "blocks": {"r": "Riders request trips and watch the car arrive.", "d": "Drivers stream their location every few seconds.", "gw": "WebSocket gateway for live, 2-way updates.", "t": "Trip service owns the ride lifecycle.", "l": "Location service ingests 250k updates per second.", "m": "Matching finds and locks the best nearby driver.", "geo": "In-memory geo index for nearby search.", "tdb": "Trips DB: durable record of every ride.", "maps": "Maps and ETA service for routes and arrival times.", "pay": "Payment runs when the trip ends."},
- "dives": [["Why not store locations in a database?", "250k writes/s of data that expires in seconds: keep it in memory (Redis GEO / H3 cells)."], ["How do you find nearby drivers?", "Look up the rider's cell and its neighbours, then rank by ETA."], ["How do you avoid double booking a driver?", "Lock the driver (atomic set with TTL) while the offer is open."], ["What if a region's servers fail?", "Partition by city; failover per region."]],
- "wrap": ["Bottleneck: location ingest. Fix: shard by geo cell.", "Next: surge pricing, pooled rides."]
-},
-"notification-system": {
- "level": "Medium", "track": "Classic", "companies": ["Google", "Pinterest", "Oracle", "StubHub"],
- "reqF": ["Send push, SMS and email", "Respect user preferences and opt-outs", "Templates per message type", "Track sent, delivered and opened"],
- "reqN": ["10M+ notifications a day, bursts", "At-least-once with no visible duplicates", "One slow channel never blocks the others", "Retries with backoff"],
- "est": ["10M/day ≈ 120/s average, bursts 10k/s", "Device tokens: 1B x 100 B ≈ 100 GB"],
- "api": ["POST /notify {userId, type, data, idempotencyKey}", "PUT /users/{id}/preferences"],
- "data": ["preferences: user, channel, opt_in, quiet_hours", "device_tokens: user, platform, token", "log: id, status, timestamps"],
- "blocks": {"s": "Any service can trigger a notification.", "n": "One service validates, applies preferences and renders templates.", "pref": "Preferences and device tokens decide where it can go.", "tpl": "Templates keep copy out of code.", "q1": "A queue per channel isolates failures.", "q2": "Android has its own queue.", "q3": "SMS is slow and costly, so it is isolated.", "q4": "Email can be batched.", "w": "Workers send, retry with backoff, then DLQ.", "p1": "Apple push service.", "p2": "Firebase for Android.", "p3": "SMS provider.", "p4": "Email provider."},
- "dives": [["How do you avoid duplicates?", "Idempotency key per notification; workers check before sending."], ["What if a provider is down?", "Retry with backoff, then dead-letter queue; failover to a second provider."], ["Quiet hours?", "Delay into a scheduled queue by user time zone."], ["Rate limits?", "Per-user caps so nobody gets spammed."]],
- "wrap": ["Bottleneck: provider limits. Fix: per-channel throttling, multiple providers.", "Next: digesting, A/B tests on copy."]
-},
-"web-crawler": {
- "level": "Medium", "track": "Classic", "companies": ["Amazon", "Google", "Meta", "Atlassian"],
- "reqF": ["Crawl the web from seed URLs", "Store page content", "Extract and follow links", "Re-crawl pages to keep them fresh"],
- "reqN": ["1B pages a month ≈ 400 pages/s", "Polite: never hammer one site", "Skip duplicates", "Robust to traps and bad HTML"],
- "est": ["400 pages/s x 500 KB ≈ 200 MB/s download", "Storage: 1B x 500 KB ≈ 500 TB/month (compress)", "URL frontier: billions of URLs on disk"],
- "api": ["Internal: frontier.next() → url", "fetch(url) → html", "store(url, content, hash)"],
- "data": ["url seen set (Bloom filter + store)", "content: url hash → compressed HTML in S3", "frontier: priority queues per host"],
- "blocks": {"seed": "Start from a list of seed URLs.", "f": "The frontier decides what to fetch next, by priority and politeness.", "fe": "Fetchers download pages in parallel.", "dns": "A cached DNS resolver avoids a slow lookup per page.", "web": "The websites themselves.", "cs": "Raw pages go to object storage.", "pa": "Parse HTML and extract links.", "dd": "A Bloom filter drops URLs already seen.", "seen": "The durable set of seen URLs."},
- "dives": [["How are you polite?", "One queue per host, a delay between requests, obey robots.txt."], ["Duplicates?", "URL dedupe with a Bloom filter; content dedupe with simhash."], ["Crawler traps?", "Max depth, URL length limits, per-site page caps."], ["Freshness?", "Re-crawl by page change rate and importance."]],
- "wrap": ["Bottleneck: DNS and network. Fix: DNS cache, more fetchers per region.", "Next: JavaScript rendering, ranking signals."]
-},
-"payment-system": {
- "level": "Hard", "track": "Classic", "companies": ["Stripe", "PayPal", "Paytm", "Databricks"],
- "reqF": ["Customer pays at checkout", "Charge through a payment provider", "Record every money movement", "Handle refunds"],
- "reqN": ["Never charge twice", "Never lose a payment: strong consistency", "Auditable to the cent", "Reconciled with the provider every day"],
- "est": ["1M payments/day ≈ 12/s average, 100x peaks on sale days", "Small data, high stakes: correctness over speed"],
- "api": ["POST /payments {orderId, amount, currency} Idempotency-Key: …", "Webhook: POST /psp/events (signed)", "POST /payments/{id}/refund"],
- "data": ["payments: id, order_id, amount, status (state machine), idempotency_key UNIQUE", "ledger_entries: account, debit, credit, payment_id (append-only)"],
- "blocks": {"u": "The customer presses Pay.", "co": "Checkout creates the order and calls payments.", "ps": "Payment service, idempotent by key.", "psp": "The provider (Stripe) moves the money.", "pdb": "Payments DB holds the state machine.", "risk": "Fraud check before charging.", "wh": "Webhooks confirm results from the provider.", "led": "Double-entry ledger: every debit has a credit.", "rec": "Daily reconciliation against the provider's settlement file."},
- "dives": [["How do you never charge twice?", "Idempotency key with a UNIQUE constraint; retries return the first result."], ["What states can a payment be in?", "CREATED → PENDING → SUCCEEDED / FAILED, only forward."], ["Why a ledger?", "Append-only double-entry: balances always add up and are auditable."], ["What if the webhook never arrives?", "Poll the provider for pending payments; reconcile daily."]],
- "wrap": ["Bottleneck: provider latency. Fix: async confirmation via webhooks.", "Next: multi-currency, payouts, chargebacks."]
-},
-"search-autocomplete": {
- "level": "Hard", "track": "Classic", "companies": ["Meta", "Google", "Expedia", "Bloomberg"],
- "reqF": ["Show top 5 suggestions as the user types", "Rank by popularity", "Update with trending queries", "Filter unsafe terms"],
- "reqN": ["Under 100 ms per keystroke", "10B queries a day", "Suggestions can be an hour stale"],
- "est": ["10B queries x ~5 keystrokes ≈ 600k lookups/s", "Unique prefixes: hundreds of millions; top-k cached per prefix fits in memory per shard"],
- "api": ["GET /suggest?q=sys → [5 suggestions]"],
- "data": ["trie: prefix → top-k completions (in memory, snapshot to store)", "query logs → hourly counts"],
- "blocks": {"u": "Users type a few letters.", "ac": "Autocomplete service answers each keystroke.", "tc": "In-memory trie with top-k cached at each node.", "ts": "Trie snapshots in storage, loaded at start.", "log": "Every query is logged to a stream.", "ag": "Hourly aggregation of query counts.", "tb": "Builds a fresh trie offline and swaps it in."},
- "dives": [["Why cache top-k per node?", "Lookup becomes O(prefix length), no tree walk at query time."], ["How do you update?", "Rebuild offline from logs and swap atomically."], ["Scale?", "Shard by prefix range; replicate hot shards."], ["Client tricks?", "Debounce typing, cache in the browser."]],
- "wrap": ["Bottleneck: hot prefixes like 'a'. Fix: replicate, cache at the edge.", "Next: personalisation, multiple languages."]
-},
-"file-storage-sync": {
- "level": "Medium", "track": "Classic", "companies": ["Dropbox", "Meta", "Google", "Amazon"],
- "reqF": ["Upload and download files", "Sync changes across all devices", "Keep file versions", "Share files"],
- "reqN": ["Upload only what changed", "Strong consistency for file metadata", "Durable storage", "Works offline, syncs later"],
- "est": ["50M users x 10 GB ≈ 500 PB raw, dedupe saves a lot", "Changes: ~1k commits/s"],
- "api": ["POST /blocks (upload chunk by hash)", "POST /files/commit {path, chunkHashes, baseVersion}", "GET /changes?cursor=…"],
- "data": ["files: id, path, owner, version, chunk_list", "chunks: hash → storage location (deduped)"],
- "blocks": {"c": "The desktop client watches folders and splits files into chunks.", "bs": "Block service accepts only the chunks that changed.", "s3": "Chunks stored once, by hash.", "ms": "Metadata service commits file versions.", "mdb": "SQL for metadata: versions need strong consistency.", "nt": "Other devices are told something changed.", "o": "Other devices pull only the new chunks."},
- "dives": [["Why chunk files?", "Upload only changed 4 MB chunks; dedupe identical chunks by hash."], ["Conflicts?", "Version check on commit; on conflict keep both copies."], ["Why SQL for metadata?", "Transactions for versions and paths."], ["How do devices find out?", "Long poll or WebSocket notifications, then fetch changes."]],
- "wrap": ["Bottleneck: metadata DB. Fix: shard by user or namespace.", "Next: sharing permissions, LAN sync."]
-},
-"ticket-booking": {
- "level": "Hard", "track": "Classic", "companies": [],
- "reqF": ["Browse events and seat maps", "Hold seats while paying", "Book and pay", "Release unpaid holds"],
- "reqN": ["Never double-book a seat", "Survive flash-sale spikes (100x)", "Fair queueing for hot events"],
- "est": ["Hot event: 1M users for 50k seats in minutes", "Normal: low traffic, mostly reads"],
- "api": ["GET /events/{id}/seats", "POST /holds {eventId, seatIds} → holdId (10 min)", "POST /bookings {holdId, payment}"],
- "data": ["seats: event_id, seat_id, status, UNIQUE (event, seat)", "holds in Redis with TTL", "bookings: id, user, seats, status"],
- "blocks": {"u": "Fans arriving all at once.", "wr": "A virtual waiting room lets people in at a safe rate.", "gw": "Gateway for the admitted users.", "ev": "Event service: details and seat maps.", "bk": "Booking service runs hold, pay, confirm.", "edb": "Events DB plus search.", "lk": "Seat holds in Redis with a 10-minute TTL.", "bdb": "Bookings in SQL with a unique constraint as the last guard.", "pay": "Payment gateway charges the card."},
- "dives": [["How do you prevent double booking?", "Hold with SET NX EX in Redis, plus a UNIQUE (event, seat) in the DB."], ["What happens if payment fails?", "The hold expires or is released; the seat returns."], ["Flash sale?", "Waiting room, cached event pages, admit in batches."], ["Fairness?", "Queue position by arrival, block bots."]],
- "wrap": ["Bottleneck: seat-hold contention. Fix: shard holds by section.", "Next: resale, dynamic pricing."]
-},
-"proximity-service": {
- "level": "Hard", "track": "Classic", "companies": ["Amazon", "Meta", "Google", "Uber"],
- "reqF": ["Find places within a radius", "See place details and reviews", "Owners add and edit places"],
- "reqN": ["Search under 100 ms", "Read heavy", "New places can take a day to appear"],
- "est": ["100M DAU x 5 searches ≈ 6k/s, peaks 30k/s", "200M places x 1 KB ≈ 200 GB"],
- "api": ["GET /nearby?lat=&lng=&radius=", "GET /places/{id}", "POST /places (owner)"],
- "data": ["places: id, name, lat, lng, geohash, category", "geo index: geohash cell → place ids"],
- "blocks": {"u": "People searching nearby.", "lb": "Spreads search traffic.", "ls": "Location search turns a point into cells and finds places.", "bs": "Business service handles owner edits.", "geo": "Geohash index: cell → place ids.", "c": "Cache of place details for fast results.", "db": "Business DB with read replicas."},
- "dives": [["How do you search a radius?", "Find the geohash cell for the point plus its 8 neighbours, then filter by distance."], ["Geohash or quadtree?", "Geohash is simple; a quadtree adapts to dense cities."], ["Freshness?", "Rebuild the index nightly; edits are rare."], ["Scale reads?", "Replicas and cache; the index fits in memory."]],
- "wrap": ["Bottleneck: dense cells downtown. Fix: longer geohash or quadtree.", "Next: ranking by rating and distance."]
-},
-"llm-chat-app": {
- "level": "Medium", "track": "AI", "companies": [],
- "reqF": ["Chat with an AI model, answers stream in", "Keep conversation history", "Pick the right model for the job", "Block unsafe input and output"],
- "reqN": ["First token in under 1 s", "Control cost per user", "Survive a provider outage", "Measure quality over time"],
- "est": ["1M DAU x 20 messages ≈ 230 req/s", "~1k tokens per turn ≈ 20B tokens/day: cost is the key number"],
- "api": ["POST /chat {conversationId, message} → SSE token stream", "GET /conversations/{id}"],
- "data": ["conversations, messages (role, content, tokens, model)", "usage per user per day"],
- "blocks": {"u": "The user sends a message.", "gw": "Auth and token-based rate limits.", "cs": "Chat service streams tokens back over SSE.", "cv": "Conversation store keeps history.", "g": "Guardrails check input and output.", "r": "The router picks a model by cost and latency.", "sc": "Semantic cache answers repeated questions cheaply.", "llm": "Hosted model API for the hard questions.", "sh": "Self-hosted model for cheap, high volume.", "ob": "Tracing and evals: latency, cost, quality."},
- "dives": [["How do you stream?", "Server-Sent Events from the chat service, token by token."], ["Long conversations?", "Trim or summarise old turns to fit the context window."], ["Cost control?", "Route easy prompts to small models, cache, limit tokens per user."], ["Provider outage?", "Fallback to another provider through the router."]],
- "wrap": ["Bottleneck: model latency and cost. Fix: routing, caching, smaller models.", "Next: tools, memory, RAG."]
-},
-"rag-pipeline": {
- "level": "Medium", "track": "AI", "companies": [],
- "reqF": ["Answer questions from company documents", "Cite sources", "Respect who can see what", "Stay up to date as documents change"],
- "reqN": ["Answer in a few seconds", "Grounded: say 'not found' instead of guessing", "Measurable quality"],
- "est": ["1M documents ≈ 20M chunks x 1.5 KB vectors ≈ 30 GB index", "Queries: tens per second"],
- "api": ["POST /ask {question} → {answer, citations}", "Ingest: on document change (CDC)"],
- "data": ["chunks: id, doc_id, text, embedding, acl, updated_at", "BM25 keyword index alongside vectors"],
- "blocks": {"doc": "Sources: PDFs, web pages, databases.", "ch": "Load and split into chunks with overlap.", "em": "Turn chunks into vectors.", "vdb": "Vector DB plus keyword index.", "u": "The user asks a question.", "rag": "RAG service runs the pipeline per question.", "ret": "Hybrid retrieval: vectors plus keywords.", "rr": "A reranker keeps the best 5 of 50.", "llm": "The LLM answers from the context, with citations."},
- "dives": [["Chunk size?", "300-800 tokens with overlap; keep source, date and ACL as metadata."], ["Why hybrid search plus rerank?", "Vectors catch meaning, keywords catch exact terms; the reranker orders them."], ["How do you stop made-up answers?", "Answer only from context, cite, say 'not found'."], ["How do you measure it?", "Recall@k for retrieval, faithfulness for answers."]],
- "wrap": ["Bottleneck: retrieval quality. Fix: better chunking, rerank, evals.", "Next: agentic RAG, multi-hop questions."]
-},
-"ai-agent-platform": {
- "level": "Hard", "track": "AI", "companies": [],
- "reqF": ["Agents complete multi-step tasks", "Use tools (APIs, code) through MCP", "Remember across sessions", "Ask a human before risky actions"],
- "reqN": ["Safe: permissions and sandboxing", "Resumable after failures", "Observable: every step traced", "Bounded cost and steps"],
- "est": ["A task = 10-50 model calls + tool calls", "Long tasks: minutes, so run asynchronously"],
- "api": ["POST /tasks {goal} → taskId", "GET /tasks/{id} (status, steps)", "POST /tasks/{id}/approve"],
- "data": ["tasks + steps (state, tool calls, results)", "memory: vector + key-value"],
- "blocks": {"u": "A user gives a goal.", "ag": "The orchestrator runs plan, act, observe.", "llm": "The model plans the next step.", "t": "Tools via MCP servers.", "mem": "Memory to recall and save facts.", "h": "Human approval for risky actions.", "sb": "Code runs in a sandbox.", "x": "External APIs the tools call.", "ob": "Every step traced and evaluated."},
- "dives": [["How does the loop stop?", "Step and token limits, a done check, timeouts."], ["How do tools stay safe?", "Least-privilege permissions, approval for risky ones, sandbox."], ["Failures mid-task?", "Persist state per step, make tools idempotent, resume."], ["How do you know it works?", "Task-success evals and traces."]],
- "wrap": ["Bottleneck: long tasks and cost. Fix: smaller models for sub-steps, caching.", "Next: multi-agent, scheduled agents."]
-},
-"coding-agent": {
- "level": "Hard", "track": "AI", "companies": [],
- "reqF": ["Take a coding task from the terminal or IDE", "Read, edit and search code", "Run tests and builds", "Open a pull request"],
- "reqN": ["Ask before risky commands", "Never break the repo: verify before commit", "Fast feedback loop"],
- "est": ["A task = 20-100 tool calls", "Context is the scarce resource: load only what matters"],
- "api": ["CLI: agent \"fix the failing test\"", "Tool calls: read, edit, grep, shell, git, MCP"],
- "data": ["project memory file loaded every session", "session transcript and checkpoints"],
- "blocks": {"dev": "The developer gives a task.", "ag": "The agent loop: gather context, act, verify.", "perm": "Permission prompts for risky commands.", "mem": "Project memory with conventions.", "llm": "The model decides the next action.", "fs": "File tools: read, edit, grep.", "sh": "Shell sandbox runs tests and builds.", "mcp": "MCP servers bring issues and docs.", "git": "Commit and open a pull request."},
- "dives": [["How does it find the right code?", "Search first (grep, file tree), then read only what matters."], ["How do you keep it safe?", "Permission modes, sandboxed shell, never push without asking."], ["How do you know the change works?", "Run tests and build before commit."], ["Big tasks?", "Sub-agents search in parallel, each with its own context."]],
- "wrap": ["Bottleneck: context window. Fix: search tools, summaries, sub-agents.", "Next: CI integration, code review bots."]
-},
-"deep-research-agent": {
- "level": "Hard", "track": "AI", "companies": [],
- "reqF": ["Answer a big research question", "Search the web and internal docs", "Write a report with citations"],
- "reqN": ["Done in minutes, not hours", "Every claim cited", "Budget on steps, tokens and time"],
- "est": ["One question ≈ 3-6 sub-questions x 10 searches each", "Tokens per report: hundreds of thousands"],
- "api": ["POST /research {question} → reportId", "GET /research/{id} (progress, report)"],
- "data": ["plan, sub-questions, findings with source URLs", "final report"],
- "blocks": {"u": "The user asks a big question.", "lead": "The lead agent plans sub-questions.", "w1": "Search agents run in parallel.", "w2": "Each has its own context window.", "w3": "More agents = broader coverage.", "web": "Web search API.", "docs": "Internal docs through RAG.", "rep": "The writer turns findings into a cited report."},
- "dives": [["Why multiple agents?", "Parallel search, separate contexts, faster and broader."], ["How do findings come back?", "Compressed summaries with sources, not raw pages."], ["How do you control cost?", "Budgets on steps, tokens and time per agent."], ["Quality?", "Every claim must cite; check citations before the final report."]],
- "wrap": ["Bottleneck: tokens. Fix: smaller models for search, compression.", "Next: follow-up questions, saved research."]
-},
-"customer-support-agent": {
- "level": "Medium", "track": "AI", "companies": [],
- "reqF": ["Answer customers from the help centre", "Take actions: order status, refunds", "Hand off to a human", "Log every conversation"],
- "reqN": ["Safe: limits on actions like refunds", "Protect personal data", "Fast replies", "Track resolution rate"],
- "est": ["10k conversations/day", "Target: resolve 50-70% without a human"],
- "api": ["Channels: chat widget, email → gateway", "Tools: getOrder, refund(cap), createTicket"],
- "data": ["conversations, actions taken, outcome, CSAT"],
- "blocks": {"c": "Customers write in by chat or email.", "gw": "One gateway for every channel.", "ag": "The support agent decides: answer, act or escalate.", "g": "Guardrails and PII redaction.", "kb": "Answers grounded in the help centre.", "crm": "Tools on orders and CRM, with limits.", "h": "A human takes over with full context.", "tk": "Every conversation becomes a ticket."},
- "dives": [["How do you keep answers right?", "Ground in the help centre with RAG; cite articles."], ["How do you limit damage?", "Tool limits like a refund cap, approval above it."], ["When to escalate?", "Low confidence, angry customer, or asked for a human."], ["How do you measure it?", "Resolution rate, CSAT, escalation rate."]],
- "wrap": ["Bottleneck: hard cases. Fix: better handoff, learn from human replies.", "Next: voice channel, proactive messages."]
-},
-"realtime-voice-agent": {
- "level": "Hard", "track": "AI", "companies": [],
- "reqF": ["Talk to callers on the phone or web", "Understand and answer in natural speech", "Handle interruptions", "Do tasks like booking"],
- "reqN": ["Voice-to-voice under ~800 ms", "Natural turn-taking", "Every stage streams"],
- "est": ["Latency budget: STT ~200 ms + LLM ~300 ms + TTS ~200 ms + network", "Concurrent calls x audio streams"],
- "api": ["SIP / WebRTC audio in and out", "Tool calls: book, look up customer"],
- "data": ["call records, transcripts, audio for evals"],
- "blocks": {"c": "The caller speaks.", "rtc": "WebRTC or SIP gateway carries audio.", "stt": "Streaming speech-to-text.", "ag": "The voice agent (LLM) decides what to say.", "tts": "Streaming text-to-speech talks back.", "vad": "Turn detection notices barge-in.", "t": "Tools for booking and CRM."},
- "dives": [["How do you hit 800 ms?", "Stream every stage: STT partials, LLM tokens, TTS audio."], ["Interruptions?", "Voice activity detection stops TTS when the caller talks."], ["Slow tools?", "Short filler phrases while the tool runs."], ["Speech-to-speech models?", "Fewer hops and lower latency, less control."]],
- "wrap": ["Bottleneck: latency. Fix: colocate models, stream, smaller models.", "Next: multilingual, call analytics."]
-},
-"enterprise-ai-gateway": {
- "level": "Medium", "track": "AI", "companies": [],
- "reqF": ["One endpoint for every team's model calls", "Quotas per team", "Route to the best provider", "Redact personal data"],
- "reqN": ["Adds little latency", "Survives a provider outage", "Cost visible per team"],
- "est": ["Thousands of requests per second across teams", "Billions of tokens a month: chargeback matters"],
- "api": ["POST /v1/messages (provider-compatible) with team key", "GET /usage?team="],
- "data": ["teams, keys, quotas", "usage events: tokens, cost, model, latency"],
- "blocks": {"apps": "Internal apps and agents call one gateway.", "gw": "Auth, quotas and routing.", "sc": "Semantic cache for repeated prompts.", "g": "Guardrails and PII redaction before providers.", "p1": "Claude API.", "p2": "Another provider as fallback.", "p3": "Self-hosted models for cheap volume.", "obs": "Tracing and cost metering per team."},
- "dives": [["Why one gateway?", "One place for keys, quotas, safety and cost."], ["Routing?", "By cost, latency and capability, with fallback."], ["Data protection?", "Redact PII before it leaves; log what was sent."], ["Chargeback?", "Meter tokens and cost per team key."]],
- "wrap": ["Bottleneck: the gateway itself. Fix: stateless, horizontally scaled.", "Next: evals, prompt registry."]
-}
+ "_source": "Company tags come from public candidate reports (systemdesign.io question list, Oct 2026). Empty means no public source yet.",
+ "url-shortener": {
+  "level": "Easy",
+  "track": "Classic",
+  "companies": [
+   "Google",
+   "Meta",
+   "Amazon",
+   "Microsoft"
+  ],
+  "reqF": [
+   "Shorten a long URL to a 7-character code",
+   "Redirect a code to the original URL",
+   "Optional custom alias and expiry",
+   "Click counts per link"
+  ],
+  "reqN": [
+   "Redirect p99 under 50 ms",
+   "Very read heavy: 100 reads per write",
+   "Highly available: a dead link is a broken promise",
+   "Codes must never collide"
+  ],
+  "est": [
+   "Writes: 100M/day ≈ 1,200/s, peaks ~5k/s",
+   "Reads: 100x ≈ 120k/s, peaks ~500k/s",
+   "Storage: 100M x 500 B x 365 x 5 yr ≈ 90 TB",
+   "Cache: top 20% of daily reads ≈ a few hundred GB"
+  ],
+  "api": [
+   "POST /urls {longUrl, alias?, expiresAt?} → 201 {code}",
+   "GET /{code} → 301/302 Location: longUrl",
+   "GET /urls/{code}/stats → {clicks, byDay}"
+  ],
+  "data": [
+   "urls: code PK, long_url, user_id, created_at, expires_at",
+   "Key-value store partitioned by code",
+   "clicks: append-only events to Kafka, rolled up in the warehouse"
+  ],
+  "blocks": {
+   "u": "Start from the people clicking links: almost all traffic is redirects.",
+   "lb": "Spreads redirect traffic across stateless API servers.",
+   "api": "Stateless service: creates codes and serves redirects.",
+   "id": "Hands out unique 64-bit ids; base62 of the id is the code, so no collisions.",
+   "c": "Hot codes live in Redis: most redirects never touch the DB.",
+   "db": "Key-value store, partitioned by code: one lookup per miss.",
+   "k": "Click events go to a queue so redirects stay fast.",
+   "w": "Analytics runs offline on the warehouse, not on the hot path."
+  },
+  "dives": [
+   [
+    "How do you generate codes without collisions?",
+    "A Snowflake-style id generator, then base62. 7 chars = 3.5 trillion codes. No check-and-retry needed."
+   ],
+   [
+    "301 or 302?",
+    "301 is cached by browsers (fewer hits, no click tracking). 302 every time (lets you count clicks)."
+   ],
+   [
+    "How do you keep redirects under 50 ms?",
+    "Cache hot codes (80/20 rule), CDN or edge for the top links, KV store sharded by code."
+   ],
+   [
+    "Custom aliases?",
+    "Check-and-set insert on the alias; reject if taken."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: the KV store on cache misses. Fix: bigger cache, read replicas.",
+   "Abuse: rate limit creation per user, scan for malicious URLs.",
+   "Next: expiry cleanup job, analytics dashboards."
+  ]
+ },
+ "rate-limiter": {
+  "level": "Medium",
+  "track": "Classic",
+  "companies": [
+   "Amazon",
+   "Atlassian",
+   "Uber",
+   "Patreon"
+  ],
+  "reqF": [
+   "Limit requests per user, IP or API key",
+   "Different rules per endpoint",
+   "Return 429 with Retry-After when over the limit",
+   "Rules change without a deploy"
+  ],
+  "reqN": [
+   "Adds under 1-2 ms per request",
+   "Works across many gateway nodes",
+   "Fails open if the limiter is down",
+   "Accurate enough, not perfect"
+  ],
+  "est": [
+   "1M requests/s at the edge",
+   "10M active keys x ~100 B ≈ 1 GB of counters",
+   "One Redis round trip per request: shard Redis by key"
+  ],
+  "api": [
+   "Internal: allow(key, rule) → {allowed, remaining, resetAt}",
+   "Headers: X-RateLimit-Limit, -Remaining, Retry-After",
+   "Admin: PUT /rules/{id} {limit, window}"
+  ],
+  "data": [
+   "counters in Redis: key = rule:user:window → count, TTL",
+   "rules: id, match (path, method), limit, window, scope"
+  ],
+  "blocks": {
+   "u": "Clients of every kind hit one front door.",
+   "gw": "The limiter lives in the gateway so every service is protected.",
+   "s": "Allowed requests pass straight to the services.",
+   "r": "Shared counters in Redis, updated atomically with a Lua script.",
+   "cfg": "Rules come from config, so limits change without a deploy.",
+   "x": "Over the limit: 429 plus Retry-After, so clients back off."
+  },
+  "dives": [
+   [
+    "Which algorithm?",
+    "Token bucket: allows short bursts, simple, most common. Sliding window counter if you need smoother limits."
+   ],
+   [
+    "How do you stay correct across many gateways?",
+    "Central Redis with an atomic Lua script (INCR + check + EXPIRE in one step)."
+   ],
+   [
+    "What if Redis is down?",
+    "Fail open with a local in-memory fallback limit, and alert."
+   ],
+   [
+    "Hot keys?",
+    "Shard counters by key; keep a local token cache for very hot clients."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: Redis round trip. Fix: local batching, shard by key.",
+   "Next: per-plan limits, dashboards of who is throttled."
+  ]
+ },
+ "chat-system": {
+  "level": "Medium",
+  "track": "Classic",
+  "companies": [
+   "Meta",
+   "Uber",
+   "TikTok",
+   "Amazon"
+  ],
+  "reqF": [
+   "1:1 and group chat",
+   "Online presence and last seen",
+   "Sent, delivered and read receipts",
+   "Messages reach offline users later",
+   "Photos and files"
+  ],
+  "reqN": [
+   "Delivery under 200 ms when both are online",
+   "Messages never lost, kept in order per chat",
+   "Billions of messages a day",
+   "Works on flaky mobile networks"
+  ],
+  "est": [
+   "500M DAU x 40 msgs ≈ 20B msgs/day ≈ 230k/s",
+   "Storage: 20B x 100 B ≈ 2 TB/day",
+   "Open connections: ~100M at peak, ~50k per server ≈ 2k servers"
+  ],
+  "api": [
+   "WebSocket: send {chatId, clientMsgId, body}",
+   "Server push: message, ack (sent/delivered/read), presence",
+   "GET /chats/{id}/messages?before=cursor"
+  ],
+  "data": [
+   "messages: chat_id (partition), msg_id (sort), sender, body, ts",
+   "chats + members tables",
+   "presence in Redis with TTL heartbeats"
+  ],
+  "blocks": {
+   "a": "User A on a phone with a long-lived connection.",
+   "b": "User B, maybe on another server or offline.",
+   "w1": "WebSocket servers keep open connections for 2-way realtime.",
+   "w2": "Each user is pinned to one chat server.",
+   "k": "The queue routes messages between servers and absorbs bursts.",
+   "p": "Presence lives in Redis with heartbeats and TTLs.",
+   "db": "Cassandra: partition by chat, sort by message id, fast writes.",
+   "push": "Offline users get a push, then sync when they reconnect.",
+   "s3": "Media goes to object storage and a CDN, not through chat servers."
+  },
+  "dives": [
+   [
+    "How do you keep order?",
+    "Per-chat sequence ids assigned on write; clients sort by them."
+   ],
+   [
+    "How do you avoid duplicates?",
+    "Client message id = idempotency key; server dedupes."
+   ],
+   [
+    "Group chat with 500 members?",
+    "Fan out through the queue; big groups use pull on open."
+   ],
+   [
+    "How do you know who is online?",
+    "Heartbeats every ~30 s into Redis with a TTL."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: connection servers. Fix: scale horizontally, a registry of user → server.",
+   "Next: end-to-end encryption, message search."
+  ]
+ },
+ "news-feed": {
+  "level": "Medium",
+  "track": "Classic",
+  "companies": [
+   "Meta"
+  ],
+  "reqF": [
+   "Post text, photos and links",
+   "See a feed of people you follow, newest or ranked",
+   "Like and comment",
+   "Infinite scroll"
+  ],
+  "reqN": [
+   "Feed loads in under 200 ms",
+   "300M DAU, heavy reads",
+   "A new post can take a few seconds to appear",
+   "Celebrities with 100M followers"
+  ],
+  "est": [
+   "Reads: 300M x 10 feed loads ≈ 35k/s",
+   "Writes: 300M x 0.5 posts ≈ 1.7k/s",
+   "Fan-out: avg 200 followers ≈ 350k feed inserts/s"
+  ],
+  "api": [
+   "POST /posts {text, mediaIds}",
+   "GET /feed?cursor=…&limit=20",
+   "POST /posts/{id}/like"
+  ],
+  "data": [
+   "posts: post_id, author_id, body, media, created_at",
+   "follows: follower_id, followee_id",
+   "feed cache: user_id → list of post ids"
+  ],
+  "blocks": {
+   "u": "Readers open the feed far more than they post.",
+   "gw": "Auth and routing for posts and feed reads.",
+   "post": "Writes posts and announces them.",
+   "feed": "Reads a user's precomputed feed.",
+   "pdb": "Source of truth for posts.",
+   "k": "New-post events decouple writing from fan-out.",
+   "fo": "Workers push the post id into each follower's feed.",
+   "g": "Who follows whom, read by the fan-out workers.",
+   "fc": "Each feed is a Redis list of post ids, ready to read.",
+   "cdn": "Images and video come from the CDN."
+  },
+  "dives": [
+   [
+    "Fan-out on write or read?",
+    "Write for most users (fast reads). Read-time pull for celebrities. Merge both: hybrid."
+   ],
+   [
+    "Why store ids, not posts, in the feed?",
+    "Small lists; hydrate post details from cache at read time."
+   ],
+   [
+    "Pagination?",
+    "Cursor based (last post id), never offset."
+   ],
+   [
+    "Ranking?",
+    "A ranking service scores candidates; start with recency."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: fan-out for big accounts. Fix: hybrid fan-out.",
+   "Next: ranking model, ads insertion, notifications."
+  ]
+ },
+ "video-streaming": {
+  "level": "Medium",
+  "track": "Classic",
+  "companies": [
+   "Meta",
+   "Amazon",
+   "Snowflake"
+  ],
+  "reqF": [
+   "Upload videos",
+   "Watch with smooth playback on any device",
+   "Adapt quality to network speed",
+   "Video page: title, views, recommendations"
+  ],
+  "reqN": [
+   "Start playback in under 2 s",
+   "Huge egress: CDN serves almost everything",
+   "Uploads resumable",
+   "Durable: never lose a video"
+  ],
+  "est": [
+   "Uploads: 500 hours per minute",
+   "Each video stored in ~6 renditions ≈ 5x raw size",
+   "Egress: millions of concurrent streams x ~5 Mbps ≈ Tbps, so CDN"
+  ],
+  "api": [
+   "POST /videos → pre-signed upload URL",
+   "GET /videos/{id} → metadata + manifest URL",
+   "GET manifest.m3u8 → segment list (from CDN)"
+  ],
+  "data": [
+   "videos: id, owner, title, status, renditions",
+   "segments in object storage: /video/rendition/segment.ts"
+  ],
+  "blocks": {
+   "cr": "Creators upload large files.",
+   "up": "Hands out pre-signed URLs so uploads go straight to storage.",
+   "raw": "Raw uploads land in object storage.",
+   "q": "Each upload becomes a transcode job.",
+   "tr": "Workers split, encode many bitrates and merge.",
+   "seg": "HLS/DASH segments for every quality.",
+   "cdn": "The CDN serves the bytes, close to viewers.",
+   "v": "Viewers stream segments and switch quality on the fly.",
+   "api": "Video API serves the watch page and manifest.",
+   "meta": "Metadata DB: titles, status, view counts."
+  },
+  "dives": [
+   [
+    "Why pre-signed uploads?",
+    "Big files skip your servers; resumable multipart upload to S3."
+   ],
+   [
+    "Adaptive bitrate?",
+    "Client picks the next segment's quality from measured bandwidth."
+   ],
+   [
+    "How do you transcode fast?",
+    "Split into chunks, encode in parallel as a DAG, merge."
+   ],
+   [
+    "Cost of egress?",
+    "CDN with high hit ratio, pre-warm popular videos at the edge."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: transcode backlog. Fix: autoscale workers, prioritise popular creators.",
+   "Next: recommendations, live streaming."
+  ]
+ },
+ "ride-sharing": {
+  "level": "Hard",
+  "track": "Classic",
+  "companies": [
+   "Uber",
+   "Lyft",
+   "Meta",
+   "Google"
+  ],
+  "reqF": [
+   "Rider requests a ride",
+   "Match the nearest available driver",
+   "Live driver location and ETA",
+   "Pay at the end of the trip"
+  ],
+  "reqN": [
+   "Matching in a few seconds",
+   "1M drivers sending location every 4 s",
+   "A driver is never offered two trips at once",
+   "Highly available in every city"
+  ],
+  "est": [
+   "Location writes: 1M / 4 s = 250k/s",
+   "Ride requests: ~1k/s at peak",
+   "Location data is small and short-lived: keep it in memory"
+  ],
+  "api": [
+   "POST /rides {pickup, dropoff} → rideId",
+   "WS: driver location updates, ride status pushes",
+   "POST /rides/{id}/accept (driver)"
+  ],
+  "data": [
+   "trips: id, rider, driver, status, route, fare",
+   "driver locations: in-memory geo index (H3 / geohash)"
+  ],
+  "blocks": {
+   "r": "Riders request trips and watch the car arrive.",
+   "d": "Drivers stream their location every few seconds.",
+   "gw": "WebSocket gateway for live, 2-way updates.",
+   "t": "Trip service owns the ride lifecycle.",
+   "l": "Location service ingests 250k updates per second.",
+   "m": "Matching finds and locks the best nearby driver.",
+   "geo": "In-memory geo index for nearby search.",
+   "tdb": "Trips DB: durable record of every ride.",
+   "maps": "Maps and ETA service for routes and arrival times.",
+   "pay": "Payment runs when the trip ends."
+  },
+  "dives": [
+   [
+    "Why not store locations in a database?",
+    "250k writes/s of data that expires in seconds: keep it in memory (Redis GEO / H3 cells)."
+   ],
+   [
+    "How do you find nearby drivers?",
+    "Look up the rider's cell and its neighbours, then rank by ETA."
+   ],
+   [
+    "How do you avoid double booking a driver?",
+    "Lock the driver (atomic set with TTL) while the offer is open."
+   ],
+   [
+    "What if a region's servers fail?",
+    "Partition by city; failover per region."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: location ingest. Fix: shard by geo cell.",
+   "Next: surge pricing, pooled rides."
+  ]
+ },
+ "notification-system": {
+  "level": "Medium",
+  "track": "Classic",
+  "companies": [
+   "Google",
+   "Pinterest",
+   "Oracle",
+   "StubHub"
+  ],
+  "reqF": [
+   "Send push, SMS and email",
+   "Respect user preferences and opt-outs",
+   "Templates per message type",
+   "Track sent, delivered and opened"
+  ],
+  "reqN": [
+   "10M+ notifications a day, bursts",
+   "At-least-once with no visible duplicates",
+   "One slow channel never blocks the others",
+   "Retries with backoff"
+  ],
+  "est": [
+   "10M/day ≈ 120/s average, bursts 10k/s",
+   "Device tokens: 1B x 100 B ≈ 100 GB"
+  ],
+  "api": [
+   "POST /notify {userId, type, data, idempotencyKey}",
+   "PUT /users/{id}/preferences"
+  ],
+  "data": [
+   "preferences: user, channel, opt_in, quiet_hours",
+   "device_tokens: user, platform, token",
+   "log: id, status, timestamps"
+  ],
+  "blocks": {
+   "s": "Any service can trigger a notification.",
+   "n": "One service validates, applies preferences and renders templates.",
+   "pref": "Preferences and device tokens decide where it can go.",
+   "tpl": "Templates keep copy out of code.",
+   "q1": "A queue per channel isolates failures.",
+   "q2": "Android has its own queue.",
+   "q3": "SMS is slow and costly, so it is isolated.",
+   "q4": "Email can be batched.",
+   "w": "Workers send, retry with backoff, then DLQ.",
+   "p1": "Apple push service.",
+   "p2": "Firebase for Android.",
+   "p3": "SMS provider.",
+   "p4": "Email provider."
+  },
+  "dives": [
+   [
+    "How do you avoid duplicates?",
+    "Idempotency key per notification; workers check before sending."
+   ],
+   [
+    "What if a provider is down?",
+    "Retry with backoff, then dead-letter queue; failover to a second provider."
+   ],
+   [
+    "Quiet hours?",
+    "Delay into a scheduled queue by user time zone."
+   ],
+   [
+    "Rate limits?",
+    "Per-user caps so nobody gets spammed."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: provider limits. Fix: per-channel throttling, multiple providers.",
+   "Next: digesting, A/B tests on copy."
+  ]
+ },
+ "web-crawler": {
+  "level": "Medium",
+  "track": "Classic",
+  "companies": [
+   "Amazon",
+   "Google",
+   "Meta",
+   "Atlassian"
+  ],
+  "reqF": [
+   "Crawl the web from seed URLs",
+   "Store page content",
+   "Extract and follow links",
+   "Re-crawl pages to keep them fresh"
+  ],
+  "reqN": [
+   "1B pages a month ≈ 400 pages/s",
+   "Polite: never hammer one site",
+   "Skip duplicates",
+   "Robust to traps and bad HTML"
+  ],
+  "est": [
+   "400 pages/s x 500 KB ≈ 200 MB/s download",
+   "Storage: 1B x 500 KB ≈ 500 TB/month (compress)",
+   "URL frontier: billions of URLs on disk"
+  ],
+  "api": [
+   "Internal: frontier.next() → url",
+   "fetch(url) → html",
+   "store(url, content, hash)"
+  ],
+  "data": [
+   "url seen set (Bloom filter + store)",
+   "content: url hash → compressed HTML in S3",
+   "frontier: priority queues per host"
+  ],
+  "blocks": {
+   "seed": "Start from a list of seed URLs.",
+   "f": "The frontier decides what to fetch next, by priority and politeness.",
+   "fe": "Fetchers download pages in parallel.",
+   "dns": "A cached DNS resolver avoids a slow lookup per page.",
+   "web": "The websites themselves.",
+   "cs": "Raw pages go to object storage.",
+   "pa": "Parse HTML and extract links.",
+   "dd": "A Bloom filter drops URLs already seen.",
+   "seen": "The durable set of seen URLs."
+  },
+  "dives": [
+   [
+    "How are you polite?",
+    "One queue per host, a delay between requests, obey robots.txt."
+   ],
+   [
+    "Duplicates?",
+    "URL dedupe with a Bloom filter; content dedupe with simhash."
+   ],
+   [
+    "Crawler traps?",
+    "Max depth, URL length limits, per-site page caps."
+   ],
+   [
+    "Freshness?",
+    "Re-crawl by page change rate and importance."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: DNS and network. Fix: DNS cache, more fetchers per region.",
+   "Next: JavaScript rendering, ranking signals."
+  ]
+ },
+ "payment-system": {
+  "level": "Hard",
+  "track": "Classic",
+  "companies": [
+   "Stripe",
+   "PayPal",
+   "Paytm",
+   "Databricks"
+  ],
+  "reqF": [
+   "Customer pays at checkout",
+   "Charge through a payment provider",
+   "Record every money movement",
+   "Handle refunds"
+  ],
+  "reqN": [
+   "Never charge twice",
+   "Never lose a payment: strong consistency",
+   "Auditable to the cent",
+   "Reconciled with the provider every day"
+  ],
+  "est": [
+   "1M payments/day ≈ 12/s average, 100x peaks on sale days",
+   "Small data, high stakes: correctness over speed"
+  ],
+  "api": [
+   "POST /payments {orderId, amount, currency} Idempotency-Key: …",
+   "Webhook: POST /psp/events (signed)",
+   "POST /payments/{id}/refund"
+  ],
+  "data": [
+   "payments: id, order_id, amount, status (state machine), idempotency_key UNIQUE",
+   "ledger_entries: account, debit, credit, payment_id (append-only)"
+  ],
+  "blocks": {
+   "u": "The customer presses Pay.",
+   "co": "Checkout creates the order and calls payments.",
+   "ps": "Payment service, idempotent by key.",
+   "psp": "The provider (Stripe) moves the money.",
+   "pdb": "Payments DB holds the state machine.",
+   "risk": "Fraud check before charging.",
+   "wh": "Webhooks confirm results from the provider.",
+   "led": "Double-entry ledger: every debit has a credit.",
+   "rec": "Daily reconciliation against the provider's settlement file."
+  },
+  "dives": [
+   [
+    "How do you never charge twice?",
+    "Idempotency key with a UNIQUE constraint; retries return the first result."
+   ],
+   [
+    "What states can a payment be in?",
+    "CREATED → PENDING → SUCCEEDED / FAILED, only forward."
+   ],
+   [
+    "Why a ledger?",
+    "Append-only double-entry: balances always add up and are auditable."
+   ],
+   [
+    "What if the webhook never arrives?",
+    "Poll the provider for pending payments; reconcile daily."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: provider latency. Fix: async confirmation via webhooks.",
+   "Next: multi-currency, payouts, chargebacks."
+  ]
+ },
+ "search-autocomplete": {
+  "level": "Hard",
+  "track": "Classic",
+  "companies": [
+   "Meta",
+   "Google",
+   "Expedia",
+   "Bloomberg"
+  ],
+  "reqF": [
+   "Show top 5 suggestions as the user types",
+   "Rank by popularity",
+   "Update with trending queries",
+   "Filter unsafe terms"
+  ],
+  "reqN": [
+   "Under 100 ms per keystroke",
+   "10B queries a day",
+   "Suggestions can be an hour stale"
+  ],
+  "est": [
+   "10B queries x ~5 keystrokes ≈ 600k lookups/s",
+   "Unique prefixes: hundreds of millions; top-k cached per prefix fits in memory per shard"
+  ],
+  "api": [
+   "GET /suggest?q=sys → [5 suggestions]"
+  ],
+  "data": [
+   "trie: prefix → top-k completions (in memory, snapshot to store)",
+   "query logs → hourly counts"
+  ],
+  "blocks": {
+   "u": "Users type a few letters.",
+   "ac": "Autocomplete service answers each keystroke.",
+   "tc": "In-memory trie with top-k cached at each node.",
+   "ts": "Trie snapshots in storage, loaded at start.",
+   "log": "Every query is logged to a stream.",
+   "ag": "Hourly aggregation of query counts.",
+   "tb": "Builds a fresh trie offline and swaps it in."
+  },
+  "dives": [
+   [
+    "Why cache top-k per node?",
+    "Lookup becomes O(prefix length), no tree walk at query time."
+   ],
+   [
+    "How do you update?",
+    "Rebuild offline from logs and swap atomically."
+   ],
+   [
+    "Scale?",
+    "Shard by prefix range; replicate hot shards."
+   ],
+   [
+    "Client tricks?",
+    "Debounce typing, cache in the browser."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: hot prefixes like 'a'. Fix: replicate, cache at the edge.",
+   "Next: personalisation, multiple languages."
+  ]
+ },
+ "file-storage-sync": {
+  "level": "Medium",
+  "track": "Classic",
+  "companies": [
+   "Dropbox",
+   "Meta",
+   "Google",
+   "Amazon"
+  ],
+  "reqF": [
+   "Upload and download files",
+   "Sync changes across all devices",
+   "Keep file versions",
+   "Share files"
+  ],
+  "reqN": [
+   "Upload only what changed",
+   "Strong consistency for file metadata",
+   "Durable storage",
+   "Works offline, syncs later"
+  ],
+  "est": [
+   "50M users x 10 GB ≈ 500 PB raw, dedupe saves a lot",
+   "Changes: ~1k commits/s"
+  ],
+  "api": [
+   "POST /blocks (upload chunk by hash)",
+   "POST /files/commit {path, chunkHashes, baseVersion}",
+   "GET /changes?cursor=…"
+  ],
+  "data": [
+   "files: id, path, owner, version, chunk_list",
+   "chunks: hash → storage location (deduped)"
+  ],
+  "blocks": {
+   "c": "The desktop client watches folders and splits files into chunks.",
+   "bs": "Block service accepts only the chunks that changed.",
+   "s3": "Chunks stored once, by hash.",
+   "ms": "Metadata service commits file versions.",
+   "mdb": "SQL for metadata: versions need strong consistency.",
+   "nt": "Other devices are told something changed.",
+   "o": "Other devices pull only the new chunks."
+  },
+  "dives": [
+   [
+    "Why chunk files?",
+    "Upload only changed 4 MB chunks; dedupe identical chunks by hash."
+   ],
+   [
+    "Conflicts?",
+    "Version check on commit; on conflict keep both copies."
+   ],
+   [
+    "Why SQL for metadata?",
+    "Transactions for versions and paths."
+   ],
+   [
+    "How do devices find out?",
+    "Long poll or WebSocket notifications, then fetch changes."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: metadata DB. Fix: shard by user or namespace.",
+   "Next: sharing permissions, LAN sync."
+  ]
+ },
+ "ticket-booking": {
+  "level": "Hard",
+  "track": "Classic",
+  "companies": [],
+  "reqF": [
+   "Browse events and seat maps",
+   "Hold seats while paying",
+   "Book and pay",
+   "Release unpaid holds"
+  ],
+  "reqN": [
+   "Never double-book a seat",
+   "Survive flash-sale spikes (100x)",
+   "Fair queueing for hot events"
+  ],
+  "est": [
+   "Hot event: 1M users for 50k seats in minutes",
+   "Normal: low traffic, mostly reads"
+  ],
+  "api": [
+   "GET /events/{id}/seats",
+   "POST /holds {eventId, seatIds} → holdId (10 min)",
+   "POST /bookings {holdId, payment}"
+  ],
+  "data": [
+   "seats: event_id, seat_id, status, UNIQUE (event, seat)",
+   "holds in Redis with TTL",
+   "bookings: id, user, seats, status"
+  ],
+  "blocks": {
+   "u": "Fans arriving all at once.",
+   "wr": "A virtual waiting room lets people in at a safe rate.",
+   "gw": "Gateway for the admitted users.",
+   "ev": "Event service: details and seat maps.",
+   "bk": "Booking service runs hold, pay, confirm.",
+   "edb": "Events DB plus search.",
+   "lk": "Seat holds in Redis with a 10-minute TTL.",
+   "bdb": "Bookings in SQL with a unique constraint as the last guard.",
+   "pay": "Payment gateway charges the card."
+  },
+  "dives": [
+   [
+    "How do you prevent double booking?",
+    "Hold with SET NX EX in Redis, plus a UNIQUE (event, seat) in the DB."
+   ],
+   [
+    "What happens if payment fails?",
+    "The hold expires or is released; the seat returns."
+   ],
+   [
+    "Flash sale?",
+    "Waiting room, cached event pages, admit in batches."
+   ],
+   [
+    "Fairness?",
+    "Queue position by arrival, block bots."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: seat-hold contention. Fix: shard holds by section.",
+   "Next: resale, dynamic pricing."
+  ]
+ },
+ "proximity-service": {
+  "level": "Hard",
+  "track": "Classic",
+  "companies": [
+   "Amazon",
+   "Meta",
+   "Google",
+   "Uber"
+  ],
+  "reqF": [
+   "Find places within a radius",
+   "See place details and reviews",
+   "Owners add and edit places"
+  ],
+  "reqN": [
+   "Search under 100 ms",
+   "Read heavy",
+   "New places can take a day to appear"
+  ],
+  "est": [
+   "100M DAU x 5 searches ≈ 6k/s, peaks 30k/s",
+   "200M places x 1 KB ≈ 200 GB"
+  ],
+  "api": [
+   "GET /nearby?lat=&lng=&radius=",
+   "GET /places/{id}",
+   "POST /places (owner)"
+  ],
+  "data": [
+   "places: id, name, lat, lng, geohash, category",
+   "geo index: geohash cell → place ids"
+  ],
+  "blocks": {
+   "u": "People searching nearby.",
+   "lb": "Spreads search traffic.",
+   "ls": "Location search turns a point into cells and finds places.",
+   "bs": "Business service handles owner edits.",
+   "geo": "Geohash index: cell → place ids.",
+   "c": "Cache of place details for fast results.",
+   "db": "Business DB with read replicas."
+  },
+  "dives": [
+   [
+    "How do you search a radius?",
+    "Find the geohash cell for the point plus its 8 neighbours, then filter by distance."
+   ],
+   [
+    "Geohash or quadtree?",
+    "Geohash is simple; a quadtree adapts to dense cities."
+   ],
+   [
+    "Freshness?",
+    "Rebuild the index nightly; edits are rare."
+   ],
+   [
+    "Scale reads?",
+    "Replicas and cache; the index fits in memory."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: dense cells downtown. Fix: longer geohash or quadtree.",
+   "Next: ranking by rating and distance."
+  ]
+ },
+ "llm-chat-app": {
+  "level": "Medium",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Chat with an AI model, answers stream in",
+   "Keep conversation history",
+   "Pick the right model for the job",
+   "Block unsafe input and output"
+  ],
+  "reqN": [
+   "First token in under 1 s",
+   "Control cost per user",
+   "Survive a provider outage",
+   "Measure quality over time"
+  ],
+  "est": [
+   "1M DAU x 20 messages ≈ 230 req/s",
+   "~1k tokens per turn ≈ 20B tokens/day: cost is the key number"
+  ],
+  "api": [
+   "POST /chat {conversationId, message} → SSE token stream",
+   "GET /conversations/{id}"
+  ],
+  "data": [
+   "conversations, messages (role, content, tokens, model)",
+   "usage per user per day"
+  ],
+  "blocks": {
+   "u": "The user sends a message.",
+   "gw": "Auth and token-based rate limits.",
+   "cs": "Chat service streams tokens back over SSE.",
+   "cv": "Conversation store keeps history.",
+   "g": "Guardrails check input and output.",
+   "r": "The router picks a model by cost and latency.",
+   "sc": "Semantic cache answers repeated questions cheaply.",
+   "llm": "Hosted model API for the hard questions.",
+   "sh": "Self-hosted model for cheap, high volume.",
+   "ob": "Tracing and evals: latency, cost, quality."
+  },
+  "dives": [
+   [
+    "How do you stream?",
+    "Server-Sent Events from the chat service, token by token."
+   ],
+   [
+    "Long conversations?",
+    "Trim or summarise old turns to fit the context window."
+   ],
+   [
+    "Cost control?",
+    "Route easy prompts to small models, cache, limit tokens per user."
+   ],
+   [
+    "Provider outage?",
+    "Fallback to another provider through the router."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: model latency and cost. Fix: routing, caching, smaller models.",
+   "Next: tools, memory, RAG."
+  ]
+ },
+ "rag-pipeline": {
+  "level": "Medium",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Answer questions from company documents",
+   "Cite sources",
+   "Respect who can see what",
+   "Stay up to date as documents change"
+  ],
+  "reqN": [
+   "Answer in a few seconds",
+   "Grounded: say 'not found' instead of guessing",
+   "Measurable quality"
+  ],
+  "est": [
+   "1M documents ≈ 20M chunks x 1.5 KB vectors ≈ 30 GB index",
+   "Queries: tens per second"
+  ],
+  "api": [
+   "POST /ask {question} → {answer, citations}",
+   "Ingest: on document change (CDC)"
+  ],
+  "data": [
+   "chunks: id, doc_id, text, embedding, acl, updated_at",
+   "BM25 keyword index alongside vectors"
+  ],
+  "blocks": {
+   "doc": "Sources: PDFs, web pages, databases.",
+   "ch": "Load and split into chunks with overlap.",
+   "em": "Turn chunks into vectors.",
+   "vdb": "Vector DB plus keyword index.",
+   "u": "The user asks a question.",
+   "rag": "RAG service runs the pipeline per question.",
+   "ret": "Hybrid retrieval: vectors plus keywords.",
+   "rr": "A reranker keeps the best 5 of 50.",
+   "llm": "The LLM answers from the context, with citations."
+  },
+  "dives": [
+   [
+    "Chunk size?",
+    "300-800 tokens with overlap; keep source, date and ACL as metadata."
+   ],
+   [
+    "Why hybrid search plus rerank?",
+    "Vectors catch meaning, keywords catch exact terms; the reranker orders them."
+   ],
+   [
+    "How do you stop made-up answers?",
+    "Answer only from context, cite, say 'not found'."
+   ],
+   [
+    "How do you measure it?",
+    "Recall@k for retrieval, faithfulness for answers."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: retrieval quality. Fix: better chunking, rerank, evals.",
+   "Next: agentic RAG, multi-hop questions."
+  ]
+ },
+ "ai-agent-platform": {
+  "level": "Hard",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Agents complete multi-step tasks",
+   "Use tools (APIs, code) through MCP",
+   "Remember across sessions",
+   "Ask a human before risky actions"
+  ],
+  "reqN": [
+   "Safe: permissions and sandboxing",
+   "Resumable after failures",
+   "Observable: every step traced",
+   "Bounded cost and steps"
+  ],
+  "est": [
+   "A task = 10-50 model calls + tool calls",
+   "Long tasks: minutes, so run asynchronously"
+  ],
+  "api": [
+   "POST /tasks {goal} → taskId",
+   "GET /tasks/{id} (status, steps)",
+   "POST /tasks/{id}/approve"
+  ],
+  "data": [
+   "tasks + steps (state, tool calls, results)",
+   "memory: vector + key-value"
+  ],
+  "blocks": {
+   "u": "A user gives a goal.",
+   "ag": "The orchestrator runs plan, act, observe.",
+   "llm": "The model plans the next step.",
+   "t": "Tools via MCP servers.",
+   "mem": "Memory to recall and save facts.",
+   "h": "Human approval for risky actions.",
+   "sb": "Code runs in a sandbox.",
+   "x": "External APIs the tools call.",
+   "ob": "Every step traced and evaluated."
+  },
+  "dives": [
+   [
+    "How does the loop stop?",
+    "Step and token limits, a done check, timeouts."
+   ],
+   [
+    "How do tools stay safe?",
+    "Least-privilege permissions, approval for risky ones, sandbox."
+   ],
+   [
+    "Failures mid-task?",
+    "Persist state per step, make tools idempotent, resume."
+   ],
+   [
+    "How do you know it works?",
+    "Task-success evals and traces."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: long tasks and cost. Fix: smaller models for sub-steps, caching.",
+   "Next: multi-agent, scheduled agents."
+  ]
+ },
+ "coding-agent": {
+  "level": "Hard",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Take a coding task from the terminal or IDE",
+   "Read, edit and search code",
+   "Run tests and builds",
+   "Open a pull request"
+  ],
+  "reqN": [
+   "Ask before risky commands",
+   "Never break the repo: verify before commit",
+   "Fast feedback loop"
+  ],
+  "est": [
+   "A task = 20-100 tool calls",
+   "Context is the scarce resource: load only what matters"
+  ],
+  "api": [
+   "CLI: agent \"fix the failing test\"",
+   "Tool calls: read, edit, grep, shell, git, MCP"
+  ],
+  "data": [
+   "project memory file loaded every session",
+   "session transcript and checkpoints"
+  ],
+  "blocks": {
+   "dev": "The developer gives a task.",
+   "ag": "The agent loop: gather context, act, verify.",
+   "perm": "Permission prompts for risky commands.",
+   "mem": "Project memory with conventions.",
+   "llm": "The model decides the next action.",
+   "fs": "File tools: read, edit, grep.",
+   "sh": "Shell sandbox runs tests and builds.",
+   "mcp": "MCP servers bring issues and docs.",
+   "git": "Commit and open a pull request."
+  },
+  "dives": [
+   [
+    "How does it find the right code?",
+    "Search first (grep, file tree), then read only what matters."
+   ],
+   [
+    "How do you keep it safe?",
+    "Permission modes, sandboxed shell, never push without asking."
+   ],
+   [
+    "How do you know the change works?",
+    "Run tests and build before commit."
+   ],
+   [
+    "Big tasks?",
+    "Sub-agents search in parallel, each with its own context."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: context window. Fix: search tools, summaries, sub-agents.",
+   "Next: CI integration, code review bots."
+  ]
+ },
+ "deep-research-agent": {
+  "level": "Hard",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Answer a big research question",
+   "Search the web and internal docs",
+   "Write a report with citations"
+  ],
+  "reqN": [
+   "Done in minutes, not hours",
+   "Every claim cited",
+   "Budget on steps, tokens and time"
+  ],
+  "est": [
+   "One question ≈ 3-6 sub-questions x 10 searches each",
+   "Tokens per report: hundreds of thousands"
+  ],
+  "api": [
+   "POST /research {question} → reportId",
+   "GET /research/{id} (progress, report)"
+  ],
+  "data": [
+   "plan, sub-questions, findings with source URLs",
+   "final report"
+  ],
+  "blocks": {
+   "u": "The user asks a big question.",
+   "lead": "The lead agent plans sub-questions.",
+   "w1": "Search agents run in parallel.",
+   "w2": "Each has its own context window.",
+   "w3": "More agents = broader coverage.",
+   "web": "Web search API.",
+   "docs": "Internal docs through RAG.",
+   "rep": "The writer turns findings into a cited report."
+  },
+  "dives": [
+   [
+    "Why multiple agents?",
+    "Parallel search, separate contexts, faster and broader."
+   ],
+   [
+    "How do findings come back?",
+    "Compressed summaries with sources, not raw pages."
+   ],
+   [
+    "How do you control cost?",
+    "Budgets on steps, tokens and time per agent."
+   ],
+   [
+    "Quality?",
+    "Every claim must cite; check citations before the final report."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: tokens. Fix: smaller models for search, compression.",
+   "Next: follow-up questions, saved research."
+  ]
+ },
+ "customer-support-agent": {
+  "level": "Medium",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Answer customers from the help centre",
+   "Take actions: order status, refunds",
+   "Hand off to a human",
+   "Log every conversation"
+  ],
+  "reqN": [
+   "Safe: limits on actions like refunds",
+   "Protect personal data",
+   "Fast replies",
+   "Track resolution rate"
+  ],
+  "est": [
+   "10k conversations/day",
+   "Target: resolve 50-70% without a human"
+  ],
+  "api": [
+   "Channels: chat widget, email → gateway",
+   "Tools: getOrder, refund(cap), createTicket"
+  ],
+  "data": [
+   "conversations, actions taken, outcome, CSAT"
+  ],
+  "blocks": {
+   "c": "Customers write in by chat or email.",
+   "gw": "One gateway for every channel.",
+   "ag": "The support agent decides: answer, act or escalate.",
+   "g": "Guardrails and PII redaction.",
+   "kb": "Answers grounded in the help centre.",
+   "crm": "Tools on orders and CRM, with limits.",
+   "h": "A human takes over with full context.",
+   "tk": "Every conversation becomes a ticket."
+  },
+  "dives": [
+   [
+    "How do you keep answers right?",
+    "Ground in the help centre with RAG; cite articles."
+   ],
+   [
+    "How do you limit damage?",
+    "Tool limits like a refund cap, approval above it."
+   ],
+   [
+    "When to escalate?",
+    "Low confidence, angry customer, or asked for a human."
+   ],
+   [
+    "How do you measure it?",
+    "Resolution rate, CSAT, escalation rate."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: hard cases. Fix: better handoff, learn from human replies.",
+   "Next: voice channel, proactive messages."
+  ]
+ },
+ "realtime-voice-agent": {
+  "level": "Hard",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Talk to callers on the phone or web",
+   "Understand and answer in natural speech",
+   "Handle interruptions",
+   "Do tasks like booking"
+  ],
+  "reqN": [
+   "Voice-to-voice under ~800 ms",
+   "Natural turn-taking",
+   "Every stage streams"
+  ],
+  "est": [
+   "Latency budget: STT ~200 ms + LLM ~300 ms + TTS ~200 ms + network",
+   "Concurrent calls x audio streams"
+  ],
+  "api": [
+   "SIP / WebRTC audio in and out",
+   "Tool calls: book, look up customer"
+  ],
+  "data": [
+   "call records, transcripts, audio for evals"
+  ],
+  "blocks": {
+   "c": "The caller speaks.",
+   "rtc": "WebRTC or SIP gateway carries audio.",
+   "stt": "Streaming speech-to-text.",
+   "ag": "The voice agent (LLM) decides what to say.",
+   "tts": "Streaming text-to-speech talks back.",
+   "vad": "Turn detection notices barge-in.",
+   "t": "Tools for booking and CRM."
+  },
+  "dives": [
+   [
+    "How do you hit 800 ms?",
+    "Stream every stage: STT partials, LLM tokens, TTS audio."
+   ],
+   [
+    "Interruptions?",
+    "Voice activity detection stops TTS when the caller talks."
+   ],
+   [
+    "Slow tools?",
+    "Short filler phrases while the tool runs."
+   ],
+   [
+    "Speech-to-speech models?",
+    "Fewer hops and lower latency, less control."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: latency. Fix: colocate models, stream, smaller models.",
+   "Next: multilingual, call analytics."
+  ]
+ },
+ "enterprise-ai-gateway": {
+  "level": "Medium",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "One endpoint for every team's model calls",
+   "Quotas per team",
+   "Route to the best provider",
+   "Redact personal data"
+  ],
+  "reqN": [
+   "Adds little latency",
+   "Survives a provider outage",
+   "Cost visible per team"
+  ],
+  "est": [
+   "Thousands of requests per second across teams",
+   "Billions of tokens a month: chargeback matters"
+  ],
+  "api": [
+   "POST /v1/messages (provider-compatible) with team key",
+   "GET /usage?team="
+  ],
+  "data": [
+   "teams, keys, quotas",
+   "usage events: tokens, cost, model, latency"
+  ],
+  "blocks": {
+   "apps": "Internal apps and agents call one gateway.",
+   "gw": "Auth, quotas and routing.",
+   "sc": "Semantic cache for repeated prompts.",
+   "g": "Guardrails and PII redaction before providers.",
+   "p1": "Claude API.",
+   "p2": "Another provider as fallback.",
+   "p3": "Self-hosted models for cheap volume.",
+   "obs": "Tracing and cost metering per team."
+  },
+  "dives": [
+   [
+    "Why one gateway?",
+    "One place for keys, quotas, safety and cost."
+   ],
+   [
+    "Routing?",
+    "By cost, latency and capability, with fallback."
+   ],
+   [
+    "Data protection?",
+    "Redact PII before it leaves; log what was sent."
+   ],
+   [
+    "Chargeback?",
+    "Meter tokens and cost per team key."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: the gateway itself. Fix: stateless, horizontally scaled.",
+   "Next: evals, prompt registry."
+  ]
+ },
+ "ai-answer-engine": {
+  "level": "Medium",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Answer a natural-language question in a few sentences",
+   "Ground the answer in fresh web pages",
+   "Show 3-6 citations the user can click",
+   "Handle follow-up questions in the same thread"
+  ],
+  "reqN": [
+   "First tokens in about 1-2 s, full answer in a few seconds",
+   "Citations must actually support the sentence they sit on",
+   "Fresh: news from today should be findable",
+   "Cost per answer low enough for a free tier"
+  ],
+  "est": [
+   "Assume 100M questions/day = ~1,200/s, peaks ~5k/s",
+   "Fan-out: 3-8 sub-queries each = ~10-40k searches/s",
+   "Retrieve ~100-1,000 candidates, rerank to 5-20 passages",
+   "Context: 10 passages x ~300 tokens = ~3k tokens per answer"
+  ],
+  "api": [
+   "POST /answer {question, threadId?, locale} -> stream {text, citations[]}",
+   "GET /search?q=&k= (internal retrieval service)",
+   "POST /rerank {query, passages[]} -> scores[]"
+  ],
+  "data": [
+   "Web index: url, title, passages, crawl_ts, language, authority signals",
+   "Inverted index (BM25) + vector index (ANN) over passages",
+   "answer log: question, sub_queries, passages_used, citations, model_version"
+  ],
+  "blocks": {
+   "u": "Start from the user's question - it is usually vague or compound.",
+   "rw": "An LLM rewrites the question and fans it out into several focused searches (query fan-out).",
+   "web": "Gate 1: only pages the crawler indexed can ever be cited.",
+   "kw": "BM25 keyword search - wins on exact names, numbers and rare words.",
+   "vx": "Vector (ANN) search - wins on meaning and paraphrases.",
+   "fu": "Reciprocal Rank Fusion merges both lists without tuning score scales.",
+   "rr": "A cross-encoder reranks the top ~100 down to ~10. Gate 3: only these reach the model.",
+   "llm": "The LLM writes the answer from the passages in its context window.",
+   "cite": "Gate 4: the model picks which passages to cite - the only opaque gate."
+  },
+  "dives": [
+   [
+    "Why not just use vector search?",
+    "One vector per passage averages away specifics, so exact names and compound queries (X AND Y) get missed. BM25 catches literal matches; fuse both with RRF, then rerank."
+   ],
+   [
+    "Why a two-stage retrieve-then-rerank?",
+    "Cheap first stage for recall over millions of passages, expensive cross-encoder only on the top ~100 for precision. Classic cheap structure in front of an expensive operation."
+   ],
+   [
+    "How do you keep citations honest?",
+    "Cite at passage level, check each sentence is supported by its cited passage (an entailment check or an LLM judge), and drop citations that fail."
+   ],
+   [
+    "How do you measure quality?",
+    "A golden set of questions with judged passages: recall@100 for retrieval, nDCG@10 after rerank, citation precision, and human or LLM-judge answer quality - re-run on every model change."
+   ],
+   [
+    "How do you keep it fresh?",
+    "Re-crawl news and high-change pages often, a small fresh index merged at query time, and recency as a ranking feature."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: reranker latency - cap candidates, distil a smaller reranker, cache popular queries.",
+   "Risk: hallucinated or wrong citations - verify support before showing.",
+   "Next: personalisation, multimodal answers, shopping results."
+  ]
+ },
+ "ai-visibility-tracker": {
+  "level": "Hard",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Brands pick prompts (buyer questions) to track",
+   "Run every prompt on 5-10 AI engines daily",
+   "Detect brand mentions, citations, position, sentiment and competitors",
+   "Dashboards, alerts and an API / MCP over the results"
+  ],
+  "reqN": [
+   "Daily freshness per plan, never double count",
+   "Survive provider outages and rate limits",
+   "Cost per answer well under 1 cent",
+   "Results comparable over time even when engines change"
+  ],
+  "est": [
+   "3,000 projects x 300 prompts x 4 engines = 3.6M answers/day = ~40/s avg, spiky",
+   "~3 KB per answer = ~10 GB/day raw, ~4 TB/year - S3 is cheap",
+   "Pro plan: 100 prompts x 3 engines x 30 days = 9,000 answers/month",
+   "Revenue ~$14k/day at $5M ARR -> answers must cost far below 1 cent"
+  ],
+  "api": [
+   "POST /projects/{id}/prompts {text, topic, locale}",
+   "GET /projects/{id}/visibility?engine=&from=&to= -> {score, ci, sov}",
+   "GET /answers/{id} -> {raw, citations[], mentions[]}",
+   "MCP tools: get_visibility, list_citations, compare_competitors"
+  ],
+  "data": [
+   "Postgres: tenant, project, prompt, engine, plan, quota",
+   "run(id, prompt_id, engine, region, model_version, day, run_no) - unique key",
+   "S3: raw answer JSON per run (keep forever, re-parse later)",
+   "ClickHouse: mention(run_id, brand, cited_url, domain, position, sentiment) ORDER BY (project, day)"
+  ],
+  "blocks": {
+   "u": "Brands and agencies (one agency owns many brands) - multi-tenant from day one.",
+   "app": "Web app, public API and MCP server share one service layer.",
+   "pg": "Source of truth for tenants, projects, prompts and plan quotas.",
+   "sch": "Spreads each project's runs over the day (no thundering herd) and enforces plan quotas.",
+   "q": "One queue per engine, so a slow or down engine never blocks the others.",
+   "w": "Workers with per-engine rate limits, retries with backoff and a circuit breaker.",
+   "eng": "ChatGPT search, Perplexity, AI Overviews, Gemini... each with its own API, limits and quirks.",
+   "raw": "Raw answers + citations in S3: cheap, and lets you re-parse when the parser improves.",
+   "p": "Rules first (URL -> domain -> brand, alias lists), a small LLM for sentiment and fuzzy matches, schema-checked output.",
+   "ch": "Columnar store for millions of facts - dashboards in milliseconds.",
+   "al": "Alerts only on real drops (outside the confidence interval) plus a weekly report.",
+   "ev": "Hand-labelled golden answers: precision/recall of mention and citation detection on every parser change."
+  },
+  "dives": [
+   [
+    "How do you stop retries double counting?",
+    "Idempotent job key = project + prompt + engine + region + day + run number, a unique constraint on run, and upserts into the facts table."
+   ],
+   [
+    "API answers differ from what users see in the app. What do you do?",
+    "Be explicit per engine: official API with web search on, headless browser runs from target regions for spot checks, and track the gap as its own metric."
+   ],
+   [
+    "How do you cut cost?",
+    "Dedupe identical prompt + engine + region + day across tenants, batch APIs for parsing, rules before LLM, small model for parsing, weekly cadence for long-tail prompts."
+   ],
+   [
+    "How do you parse mentions reliably?",
+    "Alias dictionary per brand (names, products, misspellings), URL -> domain -> brand for citations, a small LLM only for ambiguous cases, Zod/Pydantic schema validation, golden-set evals."
+   ],
+   [
+    "Postgres or ClickHouse?",
+    "Both: Postgres for config and transactions; ClickHouse for append-only facts with ORDER BY (project, day) and materialized rollups."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: engine rate limits and cost - quotas, dedupe, adaptive sampling.",
+   "Risk: silent parser regressions - golden set in CI, re-parse from raw.",
+   "Next: noise-aware scoring, Prompt Universe, agent over the data."
+  ]
+ },
+ "noise-aware-visibility-score": {
+  "level": "Hard",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Turn many noisy AI answers into one visibility score",
+   "Show share of voice against competitors",
+   "Show how confident the number is",
+   "Alert only on real changes"
+  ],
+  "reqN": [
+   "Statistically honest: no alert on noise",
+   "Stable over time across engine updates",
+   "Cheap: spend runs only where they matter",
+   "Explainable to a marketer in one line"
+  ],
+  "est": [
+   "Answers vary run to run: 1 run per prompt is not enough",
+   "10 runs at 7 mentions -> 70% with a 95% interval of roughly 40-89% (Wilson)",
+   "More runs shrink the interval roughly with the square root of N",
+   "300 prompts x 4 engines x 5 runs = 6,000 answers per project per day"
+  ],
+  "api": [
+   "GET /score?project=&engine=&topic= -> {rate, lo, hi, n}",
+   "GET /sov?topic= -> [{brand, share, lo, hi}]",
+   "GET /changes?since= -> [{prompt, before, after, significant}]"
+  ],
+  "data": [
+   "fact(run_id, prompt, engine, brand, mentioned, cited, position)",
+   "daily_rollup(project, prompt, engine, day, n, mentions, cites)",
+   "engine_event(engine, ts, kind: model_update | search_toggle)"
+  ],
+  "blocks": {
+   "pr": "Each tracked question plus a few phrasings - one wording is a biased sample.",
+   "r": "Run each prompt N times per engine and region: the unit of measure is a run.",
+   "eng": "Non-deterministic: the same prompt 30 seconds apart can give a different answer.",
+   "f": "Per-run facts: mentioned? cited? at what position?",
+   "st": "Rate = mentions / runs, with a Wilson interval (works at small N, unlike the plain +/- formula).",
+   "sov": "Score and Share of Voice shown as a range: '7 of 10 runs (45-90%)'.",
+   "an": "Flags a change only when the new rate falls outside last period's interval.",
+   "mv": "Engine model updates and search toggles are annotations - a jump may be the engine, not the brand.",
+   "ad": "Adaptive sampling: more runs where variance is high or a decision is close, fewer where it is stable."
+  },
+  "dives": [
+   [
+    "Why not just show the latest answer?",
+    "Answers are random samples. One run tells you almost nothing; a rate over N runs with an interval tells you what users usually see."
+   ],
+   [
+    "Why Wilson and not mean +/- 2 standard errors?",
+    "At small N and rates near 0% or 100% the simple formula gives impossible ranges (below 0). Wilson stays inside 0-100% and is honest at small N."
+   ],
+   [
+    "How do you detect a real drop?",
+    "Compare this week's interval with last week's (or a two-proportion test), require a minimum N, and use rolling windows to smooth daily noise."
+   ],
+   [
+    "How do you control cost?",
+    "Adaptive sampling - stop early when the interval is already narrow, add runs only where the interval straddles a decision threshold."
+   ],
+   [
+    "An engine ships a new model. Now what?",
+    "Annotate the timeline, compare before/after on a fixed control prompt set, and avoid alerting customers on an engine-wide shift."
+   ]
+  ],
+  "wrap": [
+   "Risk: false alarms erode trust - alert on significance, not on movement.",
+   "Next: weight prompts by demand so the score reflects real buyer traffic.",
+   "Next: per-engine and per-region breakdowns with the same interval logic."
+  ]
+ },
+ "prompt-universe": {
+  "level": "Medium",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Suggest the buyer questions a brand should track",
+   "Group similar questions into topics",
+   "Remove near-duplicates",
+   "Weight topics by how often people ask"
+  ],
+  "reqN": [
+   "Results in minutes for a new brand",
+   "Stable topic ids so trends don't reset",
+   "Works across languages and locales",
+   "Human can review and edit"
+  ],
+  "est": [
+   "Generate ~5,000 candidate questions per brand, keep ~300",
+   "Embeddings: 5,000 x 1,536 dims x 4 bytes = ~30 MB per brand",
+   "Clustering 5k vectors takes seconds on one machine",
+   "Re-cluster monthly, add new questions weekly"
+  ],
+  "api": [
+   "POST /projects/{id}/universe:generate {site, competitors, locales}",
+   "GET /projects/{id}/topics -> [{id, label, prompts[], weight}]",
+   "POST /topics/{id}/prompts/{pid}:approve"
+  ],
+  "data": [
+   "candidate(id, text, source, embedding, locale)",
+   "topic(id, label, centroid, weight, parent_ids[])",
+   "Vector index over prompts with filters: tenant, locale, topic"
+  ],
+  "blocks": {
+   "src": "Inputs: the brand's site, search-console keywords and competitors.",
+   "gen": "An LLM writes many realistic buyer questions per product and persona.",
+   "fo": "Captures the hidden sub-queries engines fan out to - they show what really gets searched.",
+   "emb": "Turns every question into a vector so similar meaning sits close together.",
+   "cl": "Clusters questions into topics and drops near-duplicates above a similarity threshold.",
+   "dm": "Demand signals (search volume, Bing AI grounding topics) weight each topic.",
+   "vx": "Vector index over prompts, filtered by tenant and locale, for search and dedupe.",
+   "set": "One representative prompt per cluster, weighted by demand.",
+   "rv": "A marketer approves or edits before anything is tracked (and paid for)."
+  },
+  "dives": [
+   [
+    "How do you pick the similarity threshold?",
+    "Label a few hundred pairs as same/different question, sweep the threshold, and pick the point with the best precision for 'duplicate' - measure, don't guess."
+   ],
+   [
+    "Why not a strict topic tree?",
+    "Real taxonomies are multi-parent (a question can be about pricing AND integrations), so store topics as tags with parent_ids, not one folder."
+   ],
+   [
+    "How do you keep topic ids stable after re-clustering?",
+    "Match new clusters to old ones by centroid similarity and keep the old id when the match is strong."
+   ],
+   [
+    "How do you search prompts for a brand name?",
+    "Hybrid: BM25 for exact brand and product names, vectors for meaning, fused with RRF."
+   ]
+  ],
+  "wrap": [
+   "Risk: generated questions nobody really asks - weight by demand signals.",
+   "Next: per-locale universes and competitor gap analysis.",
+   "Next: feed winning topics into Content Studio."
+  ]
+ },
+ "analytics-agent-mcp": {
+  "level": "Hard",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Answer 'why did our visibility drop last week?' in chat",
+   "Show the evidence: example answers and cited pages",
+   "Suggest and draft actions (with approval)",
+   "Expose the same tools to customers' own agents via MCP"
+  ],
+  "reqN": [
+   "Never leak data across tenants",
+   "Answers grounded in real numbers, not guesses",
+   "Fast: a few seconds per turn",
+   "Every run traceable and evaluated"
+  ],
+  "est": [
+   "Say 10k agent conversations/day, ~6 tool calls each = 60k tool calls/day",
+   "Batched tool calls cut turns roughly in half (fewer LLM round trips)",
+   "Each turn ~5-15k tokens of context",
+   "Read-only by default: writes need approval"
+  ],
+  "api": [
+   "POST /agent/chat {projectId, message} -> stream",
+   "Tools: get_visibility(project, engine, range), top_citations(project, topic), compare(brands[]), sample_answers(prompt, n)",
+   "MCP server: same tools, OAuth / API key, per-key scopes and rate limits"
+  ],
+  "data": [
+   "Facts in ClickHouse, raw answers in S3",
+   "trace(run_id, tool_calls[], tokens, latency, eval_scores)",
+   "skills: versioned playbooks (markdown + tool recipes)"
+  ],
+  "blocks": {
+   "u": "A marketer asks a question in plain English.",
+   "ext": "Customers' own agents (Claude, ChatGPT) call the same tools over MCP.",
+   "mcp": "MCP server: API keys, scopes, rate limits - the tool layer as a product.",
+   "ag": "The agent loop with plan mode: plan, call tools, check, answer.",
+   "llm": "The model that plans and writes - small model for simple steps, larger for analysis.",
+   "sk": "Skills: reusable playbooks ('diagnose a drop') loaded only when relevant.",
+   "t": "Fixed, typed metric tools rather than free text-to-SQL - safer and testable.",
+   "g": "Guardrails: tenant id injected by the server, row filters, read-only by default.",
+   "ch": "The facts the tools query.",
+   "raw": "Example answers and cited pages as evidence links.",
+   "tr": "Traces of every run plus an eval set of real questions with expected answers."
+  },
+  "dives": [
+   [
+    "Text-to-SQL or fixed tools?",
+    "Start with fixed, typed tools for the top questions (safe, fast, testable); add text-to-SQL later behind a read-only role, tenant row filters and query limits."
+   ],
+   [
+    "How do you guarantee tenant isolation?",
+    "The model never chooses the tenant: the server injects tenant_id into every tool call, and the database enforces row-level filters as a second line."
+   ],
+   [
+    "How do you make it faster and cheaper?",
+    "Let the model batch several tool calls in one turn (fan-out), cache tool results per day, and route simple steps to a small model."
+   ],
+   [
+    "How do you evaluate the agent?",
+    "A set of real questions with expected findings, trace every run, check tool choice (did it call the right tools?) and answer correctness, and re-run on every model or prompt change."
+   ],
+   [
+    "Tool selection with 50+ tools?",
+    "It's a retrieval problem: describe tools well, retrieve the top few per request (or group them into skills), and measure tool-selection recall."
+   ]
+  ],
+  "wrap": [
+   "Risk: confident wrong answers - require evidence links for every claim.",
+   "Risk: prompt injection from cited web pages - treat page text as data, never as instructions.",
+   "Next: scheduled agent runs that send a weekly 'what changed and why'."
+  ]
+ },
+ "ai-crawler-analytics": {
+  "level": "Medium",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Show which pages AI crawlers read and how often",
+   "Tell real AI bots from fakes",
+   "Link AI crawling to AI referral traffic and conversions",
+   "Per-page and per-bot trends"
+  ],
+  "reqN": [
+   "Ingest millions of log lines per day per big site",
+   "Dashboards load in under a second",
+   "No PII stored from human visitors",
+   "Minutes of delay is fine"
+  ],
+  "est": [
+   "A busy site: 50M hits/day = ~600/s, maybe 5-20% bots",
+   "Raw log line ~500 B -> 25 GB/day per big customer before compression",
+   "Columnar compression ~10x -> ~2.5 GB/day",
+   "Rollup page x bot x day turns billions of rows into millions"
+  ],
+  "api": [
+   "Log push endpoint (Cloudflare / Vercel / Fastly) or an edge snippet",
+   "GET /crawlers?project=&bot=&from= -> [{page, hits, last_seen}]",
+   "GET /ai-referrals?source=chatgpt.com -> sessions, conversions"
+  ],
+  "data": [
+   "hit(ts, project, url, bot, verified, status, bytes) ORDER BY (project, ts)",
+   "Materialized view: page x bot x day counts",
+   "bot_ranges(bot, cidr, fetched_at) refreshed daily"
+  ],
+  "blocks": {
+   "bots": "AI crawlers (GPTBot, ClaudeBot, PerplexityBot) and humans hit the site.",
+   "cdn": "The CDN or edge pushes logs - no code change on the customer's site.",
+   "k": "Kafka buffers raw hits so spikes never drop data.",
+   "v": "Verify bots: user agent is easy to fake, so also check published IP ranges or reverse DNS.",
+   "ip": "Bot operators publish IP ranges - refresh them daily.",
+   "ch": "ClickHouse stores hits in big batched inserts.",
+   "ga": "GA4 / Search Console referrals from chatgpt.com or perplexity.ai show traffic coming back.",
+   "dash": "Dashboards read only the rollups.",
+   "mv": "Materialized views keep page x bot x day counts up to date as data arrives."
+  },
+  "dives": [
+   [
+    "How do you verify a bot is really GPTBot?",
+    "Match the user agent, then check the IP against the operator's published ranges (or reverse DNS then forward DNS). Mark unverified hits separately."
+   ],
+   [
+    "Why ClickHouse and not Postgres?",
+    "Billions of append-only rows and aggregate queries: columnar storage reads only the columns needed and compresses well; Postgres row storage would scan far more."
+   ],
+   [
+    "How do you join crawling to revenue?",
+    "Referrer = AI engine -> session -> conversion in GA4; show crawl-to-referral ratios per page."
+   ],
+   [
+    "Privacy?",
+    "Keep bot hits in full, sample or aggregate human hits, drop IPs of humans after bot detection."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: ingest bursts - Kafka buffer + batch inserts.",
+   "Next: alert when a key page stops being crawled.",
+   "Next: recommend robots.txt / llms.txt changes."
+  ]
+ },
+ "dual-served-content": {
+  "level": "Medium",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Serve clean markdown to AI crawlers, HTML to humans",
+   "Same URL, same content",
+   "Publish llms.txt and an alternate link",
+   "No drift between the two versions"
+  ],
+  "reqN": [
+   "No impact on human page speed",
+   "Not cloaking: equivalent content",
+   "Cache-safe: humans never get markdown",
+   "Cheap to run at the edge"
+  ],
+  "est": [
+   "HTML page ~177 KB vs markdown ~4 KB (~97% smaller)",
+   "Bots are a small share of hits but read many pages",
+   "Edge middleware adds ~1 ms per request",
+   "Thousands of pages: build markdown at deploy time"
+  ],
+  "api": [
+   "Middleware: if verified AI bot -> rewrite to /api/md/[...path]",
+   "GET /api/md/... -> 200 text/markdown, X-Robots-Tag: noindex",
+   "GET /llms.txt -> index of key pages"
+  ],
+  "data": [
+   "Per page: MDX source + optional colocated machine.md",
+   "Fallback: generated markdown stripped from the MDX",
+   "Cache key includes a bot/human flag"
+  ],
+  "blocks": {
+   "h": "A normal visitor gets the full HTML page.",
+   "bot": "An AI crawler gets a markdown version of the same page.",
+   "mw": "Edge middleware checks the user agent (and ideally verifies the IP) before deciding.",
+   "html": "The normal Next.js page.",
+   "md": "A rewrite (not a redirect), so the URL - and any citation - stays the real page.",
+   "cache": "The CDN cache key must vary on bot vs human, or humans could be served markdown.",
+   "src": "One source of truth: MDX plus an optional hand-written machine.md.",
+   "llms": "llms.txt and an alternate link tell crawlers where the markdown lives.",
+   "ci": "A CI check fails the build if markdown and HTML drift apart."
+  },
+  "dives": [
+   [
+    "Why rewrite and not redirect?",
+    "A redirect changes the URL the crawler records; a rewrite keeps the canonical URL, so citations point to the real page."
+   ],
+   [
+    "Isn't this cloaking?",
+    "Not if the content is equivalent - same facts, cleaner format. A CI diff check keeps it honest."
+   ],
+   [
+    "How do you prove it helps?",
+    "A/B by page groups: half the pages dual-served, half not, compare crawl rate and citation rate over weeks with the noise-aware score."
+   ],
+   [
+    "What breaks with caching?",
+    "If the cache key ignores bot vs human, the first visitor type poisons the cache. Add the flag to the key or send Vary on the header you switch on."
+   ]
+  ],
+  "wrap": [
+   "Risk: fake bots - verify by IP ranges.",
+   "Risk: drift - generate from one source.",
+   "Next: structured data (schema.org) in both versions."
+  ]
+ },
+ "site-audit-crawler": {
+  "level": "Medium",
+  "track": "AI search",
+  "companies": [],
+  "reqF": [
+   "Crawl a brand's whole site on demand and on a schedule",
+   "Check AI crawler access (robots.txt, blocks)",
+   "Check structure: schema markup, headings, liftable facts",
+   "Turn findings into suggested fixes"
+  ],
+  "reqN": [
+   "Polite: never overload a customer's site",
+   "Incremental: re-crawl only what changed",
+   "Handles JS-heavy sites",
+   "Finishes a 10k-page site in under an hour"
+  ],
+  "est": [
+   "10k pages at 2-5 requests/s per domain = ~35-80 minutes",
+   "Raw HTML ~100 KB x 10k = ~1 GB per crawl",
+   "Headless rendering ~10x more expensive than a plain fetch",
+   "1,000 sites re-crawled weekly = ~10M fetches/week"
+  ],
+  "api": [
+   "POST /audits {domain, maxPages} -> {auditId}",
+   "GET /audits/{id} -> {progress, findings[]}",
+   "GET /audits/{id}/pages/{url} -> checks"
+  ],
+  "data": [
+   "frontier(domain, url, priority, next_fetch_at)",
+   "page(url, hash, etag, last_modified, fetched_at)",
+   "finding(audit_id, url, check, severity, fix)"
+  ],
+  "blocks": {
+   "start": "An audit request names the domain.",
+   "fr": "Crawl frontier with one queue per domain - the simplest way to stay polite.",
+   "rb": "Respect robots.txt and use sitemaps to find pages fast.",
+   "f": "Fetchers with a per-domain rate limit and backoff on errors.",
+   "js": "Render with a headless browser only when the raw HTML is empty (JS sites).",
+   "dd": "Normalise URLs and use a Bloom filter for 'seen this URL?' plus content hashes for duplicate pages.",
+   "chk": "Checks: schema markup, headings, AI bot access, page structure.",
+   "llm": "A small LLM flags whether key facts are stated in clear, liftable sentences.",
+   "pg": "Findings plus last-crawl data (ETag, hash) for the next incremental crawl.",
+   "fix": "Findings become fix suggestions and content tasks."
+  },
+  "dives": [
+   [
+    "How do you stay polite?",
+    "One queue per domain, a per-domain rate limit, honour Crawl-delay and 429/503 with backoff, and crawl off-peak."
+   ],
+   [
+    "Why a Bloom filter?",
+    "Tiny memory for 'have I seen this URL?' - it can say 'maybe seen' by mistake (rarely skipping a page) but never misses one it has truly seen."
+   ],
+   [
+    "How do you re-crawl cheaply?",
+    "Conditional GETs with ETag / If-Modified-Since, sitemap lastmod, and content hashes to skip unchanged pages."
+   ],
+   [
+    "When do you render JavaScript?",
+    "Only when the raw HTML is missing the main content - rendering costs about 10x a plain fetch."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: headless rendering - pool browsers, render only when needed.",
+   "Next: track fixes over time and link them to visibility changes.",
+   "Next: a crawl budget per plan."
+  ]
+ }
 }
