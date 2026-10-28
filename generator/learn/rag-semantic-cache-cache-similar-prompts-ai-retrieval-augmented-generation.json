@@ -1,0 +1,93 @@
+{
+ "family": "rag",
+ "reviewed": "Oct 2026",
+ "what": "A semantic cache stores past LLM answers and reuses one when a new question means the same thing, even if the words differ. It compares embeddings (number vectors of meaning) instead of exact text.",
+ "like": "Like a help desk that keeps answered tickets: 'how do I reset my password' and 'forgot my password' get the same reply without asking an expert again.",
+ "why": [
+  "Cuts LLM cost for repeated questions",
+  "Answers in milliseconds instead of seconds",
+  "Takes load off rate-limited model providers"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "app", "t": "Your app|user question", "x": 0, "y": 20, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "gw", "t": "LLM gateway|auth, routing, cache", "x": 265, "y": 20, "w": 170, "h": 86, "c": "edge", "i": "router"},
+   {"id": "llm", "t": "LLM provider|has its own prefix cache", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "exact", "t": "Exact cache|hash of the prompt", "x": 0, "y": 180, "w": 150, "h": 86, "c": "cache", "i": "hash"},
+   {"id": "emb", "t": "Embedding model|text to vector", "x": 265, "y": 180, "w": 170, "h": 86, "c": "ai", "i": "vector"},
+   {"id": "vec", "t": "Vector index|filtered by tenant", "x": 550, "y": 180, "w": 150, "h": 86, "c": "rag", "i": "vector"},
+   {"id": "metrics", "t": "Hit rate|and false hits", "x": 0, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "chart"},
+   {"id": "ttl", "t": "TTL expiry|keeps answers fresh", "x": 550, "y": 340, "w": 150, "h": 86, "c": "cache", "i": "clock"}
+  ],
+  "edges": [
+   ["app", "gw", "question"],
+   ["gw", "exact", "hash"],
+   ["gw", "emb", "embed"],
+   ["emb", "vec", "nearest"],
+   ["gw", "llm", "on miss"],
+   ["vec", "ttl", "expire"],
+   ["exact", "metrics", "hit or miss"]
+  ],
+  "steps": [
+   {"t": "Exact match first", "d": "The gateway hashes the normalised prompt plus model, settings and tenant. An identical repeat returns the stored answer at once - the cheapest possible hit.", "hl": ["app", "gw", "exact"]},
+   {"t": "Embed the question", "d": "On an exact miss, an embedding model turns the question into a vector, so questions with the same meaning land close together.", "hl": ["gw", "emb"]},
+   {"t": "Find the nearest one", "d": "Search the vector index, filtered by tenant or user. If the closest stored question is within the distance threshold, return its answer: a semantic hit.", "hl": ["emb", "vec"]},
+   {"t": "Miss? Ask the model", "d": "Otherwise call the LLM, then store the question vector and answer. The provider's prefix cache separately discounts the repeated start of the prompt.", "hl": ["gw", "llm"]},
+   {"t": "Expire to stay fresh", "d": "Each entry carries a TTL (time to live). Short TTLs for news or prices, longer for stable facts; clear entries when the source data changes.", "hl": ["vec", "ttl"]},
+   {"t": "Measure every lookup", "d": "Track exact hit rate, semantic hit rate and the false-hit rate from sampled reviews, so you know the cache saves money without giving wrong answers.", "hl": ["exact", "metrics"]}
+  ]
+ },
+ "numbers": [
+  {"v": "0 to 2", "l": "Redis cosine distance range; 0 means identical", "s": "https://redis.io/docs/latest/develop/ai/redisvl/0.15.0/user_guide/llmcache/"},
+  {"v": "0.1", "l": "example distance threshold in RedisVL docs; lower is stricter", "s": "https://redis.io/docs/latest/develop/ai/redisvl/0.15.0/user_guide/llmcache/"},
+  {"v": "0.1x", "l": "Claude cache read price vs base input, for most models", "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"},
+  {"v": "5 min", "l": "default Claude prompt cache lifetime, refreshed free on each use", "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"},
+  {"v": "1,024 tokens", "l": "minimum cacheable prompt for OpenAI GPT-5.6 and later", "s": "https://developers.openai.com/docs/guides/prompt-caching"}
+ ],
+ "tool": "vector",
+ "choices": [
+  {"t": "Distance threshold", "d": "Strict thresholds give few but safe hits; loose ones give more hits and more wrong answers. Tune on labelled pairs of questions marked same or different, per embedding model."},
+  {"t": "Cache key scope", "d": "Include tenant, user (for private data), model, system prompt version and language in the key or filter, so one customer never sees another's answer."},
+  {"t": "TTL and invalidation", "d": "Set TTL by how fast the truth changes. Clear or version entries when source documents, prompts or the model change."},
+  {"t": "What to cache", "d": "Cache stable, general questions. Skip personal, time-sensitive or long multi-turn conversations, where the same words can need different answers."},
+  {"t": "Exact, semantic or both", "d": "Exact hash lookup is free of false hits and very cheap. Add semantic lookup behind it only where paraphrased repeats are common."}
+ ],
+ "instead": [
+  {"slug": "cache-redis-cache-in-memory-kv-sorted-set-pubsub", "why": "Plain exact-key cache: zero false hits, but only identical prompts match"},
+  {"slug": "cache-cache-in-memory-read-through-cache-aside", "why": "Cache the retrieved documents or tool results instead of final answers"},
+  {"slug": "data-vector-db-pgvector-pinecone-weaviate-qdrant-embeddings-ann", "why": "The store a semantic cache is built on, used for retrieval too"},
+  {"slug": "ai-llm-large-language-model-gpt-claude-gemini-api-inference-ai", "why": "Rely on provider prefix caching alone when every answer must be fresh"}
+ ],
+ "breaks": [
+  {"t": "False hits", "d": "'Cancel my order' matches 'cancel my subscription' and returns the wrong answer.", "see": "Thumbs-down or complaints on cached answers; sampled reviews find mismatches", "fix": "Stricter threshold tuned on labelled pairs, plus a reranker or quick LLM check on borderline hits"},
+  {"t": "Stale answers", "d": "Prices or policies changed but the cache keeps serving the old reply.", "see": "Cached answers disagree with the source documents", "fix": "Shorter TTLs, invalidate on data change, version keys by document or prompt version"},
+  {"t": "Cross-tenant leak", "d": "A private answer for one customer is served to another with a similar question.", "see": "Audit finds hits where the tenant differs", "fix": "Tenant and user filters on every lookup, never cache personal answers globally"},
+  {"t": "Low hit rate", "d": "Questions are too varied, so the cache costs an embedding call and gives little back.", "see": "Semantic hit rate stays in single digits while latency rises", "fix": "Cache only high-repeat routes, or rely on exact cache and provider prefix caching"}
+ ],
+ "say": [
+  "In the LLM gateway I'd check an exact hash cache first, then a semantic cache that embeds the question and looks for a neighbour within a distance threshold.",
+  "I'd tune that threshold on labelled pairs of same and different questions, because a false hit means a confident wrong answer.",
+  "Cache entries are scoped by tenant, model and prompt version, with TTLs matched to how fast the data changes.",
+  "Provider prompt caching is separate: it discounts a repeated prompt prefix, so I'd put the stable system prompt and documents first to get both savings."
+ ],
+ "followups": [
+  {"q": "How is semantic caching different from provider prompt caching?", "a": "Semantic caching skips the model call entirely by reusing a whole answer for a similar question. Prompt caching still calls the model but reuses work on an identical prompt prefix, billed at a discount such as 0.1x for Claude cache reads."},
+  {"q": "How do you pick the similarity threshold?", "a": "Collect real question pairs, label them same-answer or different-answer, then measure hit rate and false-hit rate at several thresholds. Choose the loosest threshold whose false-hit rate your product accepts, and redo it when the embedding model changes."},
+  {"q": "Which metrics show the cache is working?", "a": "Exact and semantic hit rate, false-hit rate from sampled human or LLM review, latency on hits versus misses, and money saved per day compared with the cost of embedding calls."},
+  {"q": "Would you cache answers in a multi-turn chat?", "a": "Usually only the first turn or standalone questions. Later turns depend on earlier context, so the same words can need a different answer. Include a conversation summary in the key if you must."}
+ ],
+ "today": "Provider prompt caching kept getting cheaper in 2026: OpenAI lists cached input discounted up to 95%, so teams usually structure prompts for prefix caching first and add a semantic cache only for high-repeat questions.",
+ "check": [
+  {"q": "'How do I reset my password?' and 'Forgot my password' should share an answer. Which cache can do that?", "a": "A semantic cache using embeddings", "d": ["An exact-match hash cache", "Provider prompt caching", "A CDN edge cache"], "why": "Only embedding similarity sees that different words mean the same thing."},
+  {"q": "Cached answers are sometimes for a different question. What do you change?", "a": "Make the distance threshold stricter, tuned on labelled pairs", "d": ["Make the TTL longer", "Loosen the distance threshold", "Remove the tenant filter"], "why": "A stricter threshold only accepts very close matches, cutting false hits."},
+  {"q": "What does provider prompt caching reuse?", "a": "An identical prompt prefix, billed at a discount", "d": ["Whole answers to similar questions", "Any prompt with similar meaning", "Embeddings from your vector index"], "why": "Prefix caching needs an exact match on the start of the prompt and still runs the model."},
+  {"q": "Why put the tenant id in every semantic cache lookup?", "a": "So one customer never gets another customer's answer", "d": ["To make embeddings smaller", "To raise the hit rate", "Because vector search needs it to work"], "why": "Similar questions from different tenants can need private, different answers."}
+ ],
+ "sources": [
+  {"t": "Redis docs: RedisVL LLM caching", "u": "https://redis.io/docs/latest/develop/ai/redisvl/0.15.0/user_guide/llmcache/"},
+  {"t": "Claude docs: prompt caching", "u": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"},
+  {"t": "OpenAI docs: prompt caching", "u": "https://developers.openai.com/docs/guides/prompt-caching"}
+ ]
+}

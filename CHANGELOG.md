@@ -3,6 +3,7 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Two more sourced lessons: Guardrails (prompt injection, structured outputs, small classifiers first) and Semantic Cache (distance thresholds vs provider prompt caching).
 - 3 new blocks for AI search designs: AI Answer Engine, Late Interaction (ColBERT) and Headless Browser Farm.
 - 8 new AI search practice questions (new "AI search" filter) with requirements, estimates, APIs, data models, per-block notes and deep-dive answers. Six more sourced lessons: Keyword Index (BM25), Reranker, Offline Evals, LLM-as-Judge, OLAP DB (ClickHouse) and Bot / Crawler.
 - AI search and AEO: 8 new full designs - AI Answer Engine (the 4 gates to a citation), AI Visibility Tracker, Noise-aware Visibility Score, Prompt Universe, Analytics Agent + MCP, AI Crawler Analytics, Dual-served Content and Site Audit Crawler - plus an "AI search and AEO" starter pack.
