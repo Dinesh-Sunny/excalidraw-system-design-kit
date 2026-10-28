@@ -435,7 +435,11 @@ html.mo .rv.in { opacity: 1; transform: none }
 .sw a[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12) }
 .nav .spon[aria-current="page"] { background: var(--surface) }
 footer .fnav a, footer .help a { color: inherit }
-@media (max-width: 760px) { .sw a svg { display: none } .sw a { padding: 0 11px } }
+@media (max-width: 900px) { .sw a svg { display: none } .sw a { padding: 0 11px } .nav .star .lbl, .nav .spon .lbl { display: none } .nav .star, .nav .spon { padding: 0 11px } }
+.mlist { max-width: calc(100vw - 24px) }
+@media (max-width: 420px) { .tray [data-board="dl"] { display: none } }
+@media (max-width: 560px) { .open-acts .mlist { position: fixed; left: 12px; right: 12px; top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-width: none } }
+@media (max-width: 360px) { .tray { gap: 4px; padding: 6px 6px 6px 10px } .tray .pill { padding: 0 9px } #trayn { font-size: 12px } }
 @media (max-width: 560px) { .nav .star { display: none } }
 @media (max-width: 420px) { .nav .spon { display: none } .sw { margin-left: 0 } .sw a { height: 30px; padding: 0 9px; font-size: 12px } }
 @media (max-width: 360px) { .nav .wrap { gap: 4px } .mark { font-size: 19px } .sw a { padding: 0 7px; font-size: 11.5px } .nav .pill.primary { padding: 0 9px; font-size: 12px } .ibtn { width: 32px; height: 32px } }

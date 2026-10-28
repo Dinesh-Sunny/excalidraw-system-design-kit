@@ -85,7 +85,7 @@ body.run > header.nav, body.run > footer { display: none }
 .link { border: 0; background: none; padding: 0 6px; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); text-decoration: underline; text-underline-offset: 3px }
 .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%) translateY(20px); opacity: 0; background: var(--pill); color: var(--on-ink); padding: 10px 18px; border-radius: 9999px; font: 500 14px/1 var(--font-sans); transition: .2s ease-out; pointer-events: none; z-index: 50 }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0) }
-@media (max-width: 900px) { .tabs button { display: none } .tabs .sm { display: block } }
+
 @media (max-width: 700px) { .canvas { place-items: center start; overflow: auto; padding: 10px } .canvas svg { width: auto; height: 100%; min-width: 0; flex: none } }
 @media (max-width: 560px) { .bot .sp, .lg, .kbd { display: none } .bot { gap: 6px } .bot .pill { padding: 0 14px } #bExtra .link { padding: 0 4px } .tog { margin-right: 2px } .top { gap: 10px } .top h2 { font-size: 18px; flex: 1 } .tabs { flex: none } .col { padding-top: 24px } .bot .pill.primary { min-width: 0; flex: 1 } .cap { flex-direction: column; gap: 4px } .canvas { padding: 10px } }
 
@@ -237,6 +237,24 @@ body.run > header.nav, body.run > footer { display: none }
 .zc2 button { height: 30px; min-width: 30px; padding: 0 8px; border: 0; border-radius: 7px; background: none; cursor: pointer; font: 500 14px/1 var(--font-sans); color: #141414 } .zc2 button:hover { background: #f1f3f5 }
 .dz { position: relative }
 @media (max-width: 999px) { .zc2 { bottom: auto; top: 10px; left: 10px } }
+/* workspace never grows wider than the screen */
+.ws { grid-template-columns: minmax(0, 1fr) } .top { min-width: 0 } .top > * { min-width: 0 }
+.tabs { overflow: hidden }
+.tabs.compact > button { display: none } .tabs.compact .sm { display: flex }
+.tabs .sm { display: none; align-items: center; gap: 10px; min-width: 0 } .tabs .sm b { font: 500 13px/1 var(--font-sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.sdots { display: inline-flex; gap: 3px; flex: none } .sdots button { width: 14px; height: 6px; padding: 0; border: 0; border-radius: 9999px; background: var(--hairline); cursor: pointer } .sdots button.done { background: var(--slate) } .sdots button.on { background: var(--sketch); width: 22px }
+@media (max-width: 900px) { .tabs > button { display: none } .tabs .sm { display: flex } }
+@media (max-width: 420px) { .sdots { display: none } }
+/* start card: one sentence, three choices */
+.sc1 { min-height: 100%; display: grid; place-items: center; padding: 32px 20px; background: radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground) }
+.scard1 { width: min(560px, 100%); display: grid; gap: 18px; padding: 24px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--hairline); box-shadow: var(--shadow-float); animation: rise .35s cubic-bezier(.2,.8,.2,1) }
+.sth { width: 100%; aspect-ratio: 16 / 7; object-fit: contain; border-radius: var(--r-md); background: var(--thumb); border: 1px solid var(--hairline); padding: 10px }
+.sct { display: grid; gap: 8px } .scm { display: flex; gap: 10px; align-items: center; font: 400 13px/1 var(--font-sans); color: var(--ink-muted) }
+.sent { margin: 0; font: 400 clamp(20px, 3vw, 24px)/1.9 var(--font-serif); color: var(--ink-muted) }
+.pk { display: inline-block; vertical-align: baseline } .pkb { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 10px; background: var(--sketch-soft); color: var(--sketch); font: 500 0.9em/1.5 var(--font-sans); cursor: pointer; transition: background .15s } .pkb:hover { filter: brightness(.96) } .pkb svg { width: 12px; height: 12px }
+.pk .mlist { min-width: 240px; max-height: 320px; overflow: auto; font-size: 14px } .pk .mlist button { display: grid; gap: 2px } .pk .mlist b { font: 500 14px/18px var(--font-sans); color: var(--ink) } .pk .mlist small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) } .pk .mlist button.on { background: var(--sketch-soft) }
+.sstp { display: flex; align-items: center; gap: 4px } .sstp i { flex: 1; max-width: 36px; height: 6px; border-radius: 9999px; background: var(--hairline) } .sstp span { margin-left: 8px; font: 400 12px/1 var(--font-mono); color: var(--ink-muted); white-space: nowrap }
+@media (max-width: 560px) { .scard1 { padding: 16px; gap: 14px } .sc1 { padding: 16px 12px; place-items: start center } .pk .mlist { position: fixed; left: 12px; right: 12px; top: auto; bottom: 90px; max-height: 50vh } }
 /* blocks-site features inside practice */
 .pq { height: 44px; width: min(420px, 100%); padding: 0 16px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); font: 400 15px/1 var(--font-sans); color: var(--ink) }
 .pq:focus { outline: 0; border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
@@ -248,6 +266,7 @@ body.run > header.nav, body.run > footer { display: none }
 .qw .qa { top: 8px; right: 8px }
 .fbl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px } .fbl a, .fbl button { height: 28px; padding: 0 10px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink); text-decoration: none } .fbl svg { width: 13px; height: 13px } .fbl .on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
 .rmenu { position: relative; flex: none } .rmenu > summary { list-style: none } .rmenu > summary::-webkit-details-marker { display: none } .rmenu .mlist { right: 0; left: auto; top: 44px; bottom: auto; min-width: 230px; z-index: 30 }
+@media (max-width: 560px) { .rmenu .mlist { position: fixed; left: 12px; right: 12px; top: 62px; min-width: 0 } }
 .fbrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 400 13px/1 var(--font-sans); color: var(--ink-muted) } .fbrow .chip { height: 30px; font-size: 12px } .fbrow .chip.on { background: var(--pill); color: var(--on-ink); border-color: var(--pill) } .fbrow svg { width: 14px; height: 14px }
 .toast button { margin-left: 10px; border: 0; background: none; color: inherit; font: 600 14px/1 var(--font-sans); text-decoration: underline; cursor: pointer } .toast.act { pointer-events: auto }
 @media (prefers-reduced-motion: reduce) { .qw { animation: none } }
@@ -484,7 +503,7 @@ function camFor(k) {
   const ar = cv ? cv.clientWidth / avail : 1.6, pad = k >= Q.nodes.length ? 10 : 90;
   let w = Math.max(x1 - x0 + pad * 2, 640), h = Math.max(y1 - y0 + pad * 2, 360);
   if (w / h > ar) h = w / ar; else w = h * ar;
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, VH = h * CH / avail; return [cx - w / 2, cy - h / 2, w, VH];
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, VH = h * CH / avail, top = k >= Q.nodes.length ? cy - h / 2 : Math.max(cy - h / 2, y0 - pad); return [cx - w / 2, top, w, VH];
 }
 function glide(svg, to) {
   const from = cam || to, t0 = performance.now(), D = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 520, ease = t => 1 - Math.pow(1 - t, 3);
@@ -582,7 +601,7 @@ function renderQuiz(k) {
   }
   st.innerHTML = `<div class="qcol"><div class="qtop"><span class="qtt">${esc(S.t)}</span><div class="dots">${dots}</div>${lensLine()}</div>
     ${k === "est" ? `<details class="calcd" open><summary>Calculator</summary>${calcHTML()}</details>` : ""}
-    ${n > 0 || k === "req" ? `<div class="board2 b-${k}">${boardHTML(k, R, n)}</div>` : ""}${active}</div>`;
+    ${n > 0 ? `<div class="board2 b-${k}">${boardHTML(k, R, n)}</div>` : ""}${active}</div>`;
   hookTools();
   const a = st.querySelector(".act"); if (a) requestAnimationFrame(() => a.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
 }
@@ -600,20 +619,31 @@ function quizBack() { const k = STEPS[step].k; const n = qi(k); if (n <= 0) retu
 function quizDone() { const k = STEPS[step].k, R = rounds(k); let n = qi(k); while (n < R.length && R[n].info) n++; return n >= R.length; }
 
 /* ---- render ---- */
-function buttons(main, extra = "", prevVisible = true) { $("#bMain").innerHTML = main; $("#bExtra").innerHTML = extra; $("#bPrev").style.visibility = prevVisible ? "visible" : "hidden"; }
-function tabs() { const r = rec().rate || {}; $("#rTabs").innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}">${x.t}${(r[x.k] || (x.k === "deep" && r.deep0)) ? `<i class="dot ${r[x.k] || r.deep0}"></i>` : ""}</button>`).join("") + `<span class="sm">${finished ? "Scorecard" : (step + 1) + "/" + STEPS.length + " · " + STEPS[step].t}</span>`; }
-function renderSetup() {
+function buttons(main, extra = "", prevVisible = true) { $("#bMain").innerHTML = main; $("#bExtra").innerHTML = extra; $("#bPrev").style.display = prevVisible ? "" : "none"; }
+function tabs() {
+  const r = rec().rate || {}, el = $("#rTabs");
+  el.innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}">${x.t}${(r[x.k] || (x.k === "deep" && r.deep0)) ? `<i class="dot ${r[x.k] || r.deep0}"></i>` : ""}</button>`).join("")
+    + `<span class="sm"><b>${finished ? "Scorecard" : esc(STEPS[step].t)}</b><span class="sdots">${STEPS.map((x, i) => `<button type="button" data-step="${i}" title="${esc(x.t)}" aria-label="${esc(x.t)}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}"></button>`).join("")}</span></span>`;
+  fitTabs();
+}
+function fitTabs() { const el = $("#rTabs"); if (!el) return; el.classList.remove("compact"); if (el.scrollWidth > el.clientWidth + 1) el.classList.add("compact"); }
+addEventListener("resize", fitTabs);
+function renderSetup() { // one start card: a sentence with three choices, sensible defaults, one tap to start
   const d = Q, su = SETUP.get(d.slug) || { sc: "classic", lens: "", mode: "learn" };
-  const scs = [{ id: "classic", name: "Classic interview", blurb: "The standard version most interviewers ask.", lens: "The core design, end to end." }, ...(d.v2.scenarios || [])];
+  const scs = [{ id: "classic", name: "Classic", blurb: "The version most interviewers ask" }, ...(d.v2.scenarios || [])], sc = scs.find(x => x.id === su.sc) || scs[0];
   const lenses = Object.keys(LENSES).sort((a, b) => (d.companies.includes(b) - d.companies.includes(a)) || a.localeCompare(b));
-  $("#stage").innerHTML = `<div class="qcol setup"><div class="qtop"><span class="gl">Set up your interview · reviewed Oct 2026</span><span class="qtt">${esc(d.title)}</span></div>
-    <div class="sg"><div class="gl">Scenario</div><div class="scs">${scs.map(x => { const add = x.id === "classic" ? "" : [((x.reqF || []).length + (x.reqN || []).length) ? `+${(x.reqF || []).length + (x.reqN || []).length} requirements` : "", d.variants[x.id] ? `+${d.variants[x.id].n - d.nodes.length} blocks` : "", (x.dives || []).length ? `+${x.dives.length} deep dive` : ""].filter(Boolean).join(" · "); return `<button type="button" class="scn${su.sc === x.id ? " on" : ""}" data-sc="${x.id}"><b>${esc(x.name)}</b><span>${esc(x.blurb)}</span>${add ? `<small>${add}</small>` : ""}</button>`; }).join("")}</div></div>
-    <div class="sg"><div class="gl">Interviewer</div><div class="lns"><button type="button" class="ln2${!su.lens ? " on" : ""}" data-lens="">Any</button>${lenses.map(l => `<button type="button" class="ln2${su.lens === l ? " on" : ""}" data-lens="${l}">${l}${d.companies.includes(l) ? " <i>asks this</i>" : ""}</button>`).join("")}</div><p class="look" id="lensTxt">${su.lens ? esc(LENSES[su.lens].cares) : "A balanced interviewer. Pick a company to practise their follow-up questions."}</p></div>
-    <div class="sg"><div class="gl">Mode</div><div class="seg2" id="smode"><button type="button" data-mode="learn" aria-pressed="${su.mode !== "mock"}">Learn, no timer</button><button type="button" data-mode="mock" aria-pressed="${su.mode === "mock"}">Mock, 45 minutes</button></div></div>
-    <div class="sg"><div class="gl">Your steps</div><div class="stp">${buildSteps(d).map((x, i) => `<span>${i + 1}. ${esc(x.t)}</span>`).join("")}</div></div></div>`;
+  const pick = (id, label, items) => `<details class="menu pk" id="${id}"><summary class="pkb">${esc(label)}<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></summary><div class="mlist down">${items}</div></details>`;
+  const opt = (attr, v, on, name, sub) => `<button type="button" ${attr}="${v}" class="${on ? "on" : ""}"><b>${esc(name)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</button>`;
+  const n = buildSteps(d).length;
+  $("#stage").innerHTML = `<div class="sc1"><div class="scard1">
+    <img class="sth" alt="" src="../${d.thumb}">
+    <div class="sct"><span class="qtt">${esc(d.title)}</span><span class="scm"><span class="lv ${d.level}">${d.level}</span>${d.companies.length ? esc(d.companies.slice(0, 3).join(", ")) : d.track === "AI" ? "AI design" : "Classic"}</span></div>
+    <div class="sent">Practise the ${pick("pSc", sc.name, scs.map(x => opt("data-sc", x.id, x.id === sc.id, x.name, x.blurb)).join(""))} version with ${pick("pLn", su.lens || "any", opt("data-lens", "", !su.lens, "Any interviewer", "") + lenses.map(l => opt("data-lens", l, su.lens === l, l, d.companies.includes(l) ? "Asks this question" : "")).join(""))} interviewer, ${pick("pMd", su.mode === "mock" ? "timed" : "at my pace", opt("data-mode", "learn", su.mode !== "mock", "At my pace", "No timer") + opt("data-mode", "mock", su.mode === "mock", "Timed", "45 minutes, like the real one"))}.</div>
+    <div class="sstp" aria-label="${n} steps">${buildSteps(d).map(x => `<i title="${esc(x.t)}"></i>`).join("")}<span>${n} steps · about 45 min</span></div>
+  </div></div>`;
   $("#stage")._su = su;
-  buttons(`Start practising<span class="kbd">↵</span>`, "", false);
-  $("#rTabs").innerHTML = `<span class="sm" style="display:block">Setup</span>`;
+  buttons(`Start<span class="kbd">↵</span>`, "", false);
+  $("#rTabs").innerHTML = "";
 }
 function startFromSetup() { const su = $("#stage")._su; SETUP.set(Q.slug, su); const base = BY[Q.slug]; Q = null; history.replaceState(null, "", "#q=" + base.slug + "&s=1"); route(); if (su.mode === "mock") setTimeout(() => { if (!tick) $("#rTimer").click(); }, 300); ev("practice-setup/" + su.sc + "/" + (su.lens || "any") + "/" + su.mode); }
 function render() {
@@ -650,12 +680,13 @@ function renderScore() {
   const weak = sc.map((x, i) => [x, i]).filter(([x]) => x !== null && x < 1.5).map(([, i]) => i);
   const nxt = D.filter(d => d.slug !== Q.slug && d.track === Q.track && !(store.get()[d.slug] || {}).done)[0] || D[(D.indexOf(BY[Q.slug]) + 1) % D.length];
   const bar = x => x === null ? `<i class="sb"></i>` : `<i class="sb" style="--w:${x / 2 * 100}%" data-v="${x >= 1.5 ? "nail" : x >= 0.5 ? "part" : "miss"}"></i>`;
-  $("#stage").innerHTML = `<div class="col"><span class="dvn">Scorecard</span><h3 class="qn">${pct}% <small>overall, from first-try answers and your ratings</small></h3>
+  const none = !got.length;
+  $("#stage").innerHTML = `<div class="col"><span class="dvn">Scorecard</span><h3 class="qn">${none ? "Your score shows here" : pct + "%"} <small>${none ? "" : "first try and your ratings"}</small></h3>
     <div class="scard">${STEPS.map((x, i) => `<button type="button" class="srow" data-step="${i}"><span>${x.t}</span>${bar(sc[i])}<em>${sc[i] === null ? "not rated" : sc[i] >= 1.5 ? "Strong" : sc[i] >= 0.5 ? "Partly" : "Review"}</em></button>`).join("")}</div>
-    <p class="look">${weak.length ? `Practise ${weak.map(i => STEPS[i].t.toLowerCase()).join(", ")} again, then redraw the whole design from memory tomorrow.` : "Strong across the board. Redraw it from memory tomorrow to lock it in."}</p>
-    <div class="row">${weak.length ? `<button class="pill primary" type="button" data-step="${weak[0]}">Practise ${STEPS[weak[0]].t.toLowerCase()}</button>` : ""}<button class="pill ghost" type="button" data-x="copy">Copy design to Excalidraw</button><button class="pill ghost" type="button" data-x="save">${onBoard(Q.kit) ? "Saved to your board" : "Save to your board"}</button><a class="pill ghost" href="../#i=${Q.kit}">Open in the blocks</a></div>
+    <p class="look">${none ? "Answer a few steps and each one gets its bar. Start with Requirements." : weak.length ? `Practise ${weak.map(i => STEPS[i].t.toLowerCase()).join(", ")} again, then redraw the whole design from memory tomorrow.` : "Strong across the board. Redraw it from memory tomorrow to lock it in."}</p>
+    <div class="row">${none ? `<button class="pill primary" type="button" data-step="0">Start with Requirements</button>` : ""}${weak.length ? `<button class="pill primary" type="button" data-step="${weak[0]}">Practise ${STEPS[weak[0]].t.toLowerCase()}</button>` : ""}<button class="pill ghost" type="button" data-x="copy">Copy design to Excalidraw</button><button class="pill ghost" type="button" data-x="save">${onBoard(Q.kit) ? "Saved to your board" : "Save to your board"}</button><a class="pill ghost" href="../#i=${Q.kit}">Open in the blocks</a></div>
     <div class="fbrow"><span>Helpful?</span><button class="chip" type="button" data-fb="love"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16.5s-6.5-3.9-6.5-8.6A3.4 3.4 0 0 1 10 5.6a3.4 3.4 0 0 1 6.5 2.3c0 4.7-6.5 8.6-6.5 8.6z"/></svg>Yes</button><button class="chip" type="button" data-fb="suggest">Suggest a change</button><span class="sp" style="flex:1"></span><button class="link" type="button" data-x="restart">Start again</button></div></div>`;
-  put({ done: true, score: pct });
+  if (!none) put({ done: true, score: pct });
   buttons(`Next: ${esc(nxt.title)}`); $("#bMain").dataset.next = nxt.slug;
 }
 
@@ -723,7 +754,8 @@ function shareQ() { const url = location.origin + location.pathname + "#q=" + Q.
 function suggest() { const u = new URL(REPO + "/issues/new"); u.searchParams.set("template", "1-block-feedback.yml"); u.searchParams.set("title", `[Practice] ${Q.title}`); u.searchParams.set("block", "sd:tpl/ " + Q.title); u.searchParams.set("link", location.href); ev("fb/suggest/practice-" + Q.slug); window.open(u.toString(), "_blank", "noopener"); }
 async function copyPng() { try { const blob = fetch(`../s/${Q.kitId}.svg`).then(r => r.text()).then(t => new Promise((res, rej) => { const img = new Image(), url = URL.createObjectURL(new Blob([t], { type: "image/svg+xml" })); img.onload = () => { const c = document.createElement("canvas"); c.width = img.naturalWidth * 2; c.height = img.naturalHeight * 2; const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); c.toBlob(b => b ? res(b) : rej(), "image/png"); }; img.onerror = rej; img.src = url; })); await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]); say("Image copied. Paste it anywhere"); ev("copy-png/" + Q.kit); } catch (e) { say("Copy didn't go through. Try the download"); } }
 async function downloadDesign() { try { const els = await fetch(`../e/${Q.kitId}.json`).then(r => r.json()); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify({ type: "excalidraw", version: 2, source: location.origin + location.pathname, elements: els, appState: { viewBackgroundColor: "#ffffff", gridSize: 20 }, files: {} })], { type: "application/json" })); a.download = Q.slug + ".excalidraw"; document.body.append(a); a.click(); a.remove(); say("Downloaded " + Q.slug + ".excalidraw"); ev("download-excalidraw/" + Q.kit); } catch (e) { say("Download didn't go through. Try again"); } }
-document.addEventListener("click", e => { const m = $("#rMenu"); if (m && m.open && !m.contains(e.target)) m.open = false; });
+document.addEventListener("click", e => { document.querySelectorAll("details.menu[open]").forEach(d => { if (!d.contains(e.target)) d.open = false; }); });
+document.addEventListener("toggle", e => { if (e.target.matches && e.target.matches("details.menu") && e.target.open) document.querySelectorAll("details.menu[open]").forEach(d => { if (d !== e.target) d.open = false; }); }, true);
 async function copyDesign() {
   try {
     const p = fetch(`../e/${Q.kitId}.json`).then(r => r.json()).then(els => new Blob([JSON.stringify({ type: "excalidraw/clipboard", elements: els, files: {} })], { type: "text/plain" }));
