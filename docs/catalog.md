@@ -464,3 +464,11 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Customer Support Agent** - ai helpdesk escalation
 - **Realtime Voice Agent** - phone call speech ai
 - **Enterprise AI Gateway** - llm platform governance
+- **AI Visibility Tracker** - aeo geo ai search brand tracking searchable profound
+- **Noise-aware Visibility Score** - repeated runs confidence interval share of voice
+- **AI Answer Engine** - retrieve rerank generate cite perplexity chatgpt search
+- **Prompt Universe** - which questions to track query fan-out clustering
+- **Analytics Agent + MCP** - ask why visibility dropped text-to-sql tools
+- **AI Crawler Analytics** - gptbot claudebot perplexitybot logs referrals llm analytics
+- **Dual-served Content** - markdown for ai crawlers middleware llms txt
+- **Site Audit Crawler** - technical seo aeo audit schema robots
