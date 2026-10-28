@@ -1,0 +1,388 @@
+{
+ "family": "messaging",
+ "reviewed": "Oct 2026",
+ "what": "A dead letter queue (DLQ) is a side queue where messages go after failing too many times. The main queue keeps flowing while you study and replay the failures.",
+ "like": "Like the post office's undeliverable mail desk: letters that keep bouncing are set aside for a person to check, so the rest of the mail still goes out.",
+ "why": [
+  "One bad message (a poison message) cannot block or slow every other job",
+  "Failed work is kept safe for debugging instead of being lost",
+  "After a fix you can replay the failures with one redrive"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "prod",
+    "t": "Producer|AI engine enqueues jobs",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "src",
+    "t": "Source queue|jobs waiting",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "msg",
+    "i": "queue"
+   },
+   {
+    "id": "work",
+    "t": "Worker|runs the AI job",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "redrive",
+    "t": "Redrive|move back to source",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "loop"
+   },
+   {
+    "id": "dlq",
+    "t": "Dead letter queue|parked failures",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "msg",
+    "i": "queue"
+   },
+   {
+    "id": "idem",
+    "t": "Idempotency check|skip work already done",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "lock"
+   },
+   {
+    "id": "fix",
+    "t": "Engineer + logs|find and fix the bug",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   },
+   {
+    "id": "alarm",
+    "t": "DLQ depth alarm|messages visible > 0",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "chart"
+   },
+   {
+    "id": "ret",
+    "t": "Retention|longer than source",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "clock"
+   }
+  ],
+  "edges": [
+   [
+    "prod",
+    "src",
+    "send"
+   ],
+   [
+    "src",
+    "work",
+    "receive"
+   ],
+   [
+    "work",
+    "idem",
+    "seen key?"
+   ],
+   [
+    "src",
+    "dlq",
+    "max tries"
+   ],
+   [
+    "dlq",
+    "alarm",
+    "depth > 0"
+   ],
+   [
+    "alarm",
+    "fix",
+    "page"
+   ],
+   [
+    "fix",
+    "redrive",
+    "after fix"
+   ],
+   [
+    "redrive",
+    "src",
+    "move back"
+   ],
+   [
+    "dlq",
+    "ret",
+    "kept for"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "A job is queued",
+    "d": "The AI engine puts a job on the source queue, for example 'summarise page 42'. A worker receives it and starts processing.",
+    "hl": [
+     "prod",
+     "src",
+     "work"
+    ]
+   },
+   {
+    "t": "It fails and returns",
+    "d": "If the worker crashes or errors, it never deletes the message. After the visibility timeout (a hidden pause) the message shows up again and the receive count goes up by one.",
+    "hl": [
+     "src",
+     "work"
+    ]
+   },
+   {
+    "t": "Too many tries",
+    "d": "The redrive policy sets maxReceiveCount. Once a message is received that many times without being deleted, the queue moves it to the DLQ.",
+    "hl": [
+     "src",
+     "dlq"
+    ]
+   },
+   {
+    "t": "Someone gets told",
+    "d": "An alarm watches how many messages sit in the DLQ. Anything above zero means real failures that need a person or an automatic triage job.",
+    "hl": [
+     "dlq",
+     "alarm",
+     "fix"
+    ]
+   },
+   {
+    "t": "Kept long enough",
+    "d": "In SQS standard queues the clock keeps the original enqueue time, so set DLQ retention longer than the source queue or failures quietly expire.",
+    "hl": [
+     "dlq",
+     "ret"
+    ]
+   },
+   {
+    "t": "Fix, then redrive",
+    "d": "After the bug is fixed, redrive moves messages back to the source queue. Workers check an idempotency key so jobs that already half-succeeded are not done twice.",
+    "hl": [
+     "fix",
+     "redrive",
+     "src",
+     "idem"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "14 days",
+   "l": "longest an SQS message can be retained",
+   "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html"
+  },
+  {
+   "v": "4 days",
+   "l": "default SQS retention, so raise it on the DLQ",
+   "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html"
+  },
+  {
+   "v": "> 3",
+   "l": "maxReceiveCount above 3: SQS moves repeat failures to queue back",
+   "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.md"
+  },
+  {
+   "v": "10",
+   "l": "source queues you can name in a DLQ redrive allow policy",
+   "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.md"
+  },
+  {
+   "v": "1 MiB",
+   "l": "largest SQS message, so store big payloads elsewhere",
+   "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html"
+  }
+ ],
+ "tool": "mq",
+ "choices": [
+  {
+   "t": "maxReceiveCount",
+   "d": "How many tries before a message is parked. Too low (1) sends messages to the DLQ on one hiccup; too high lets a poison message burn worker time for hours."
+  },
+  {
+   "t": "Retry delay",
+   "d": "Visibility timeout sets the pause before a retry. Make it longer than the slowest normal job, and use backoff (longer waits each try) for rate limited LLM APIs."
+  },
+  {
+   "t": "DLQ retention",
+   "d": "Set it longer than the source queue's retention, ideally the 14 day maximum, so you have time to investigate before messages expire."
+  },
+  {
+   "t": "Alert threshold",
+   "d": "Alarm on DLQ depth above zero for critical jobs. For noisy jobs alert on the rate of new arrivals instead, so the team is not paged for one stray message."
+  },
+  {
+   "t": "Redrive plan",
+   "d": "Manual redrive after a fix, or an automatic job that retries later. Always pair it with idempotent handlers and a cap so a still broken message cannot loop forever."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "svc-circuit-breaker-resilience-fallback-hystrix-retry",
+   "why": "Stop calling a failing dependency at all instead of parking each message"
+  },
+  {
+   "slug": "msg-kafka-event-log-stream-topic-partitions",
+   "why": "Keep the log and use a retry topic plus a DLQ topic"
+  },
+  {
+   "slug": "msg-message-queue-mq-async-buffer-decouple",
+   "why": "The main queue itself; the DLQ is one feature beside it"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Poison message loops forever",
+   "d": "No redrive policy, so a bad message is retried again and again.",
+   "see": "Same message ID in error logs every few minutes; worker CPU busy with no progress",
+   "fix": "Add a redrive policy with a sensible maxReceiveCount and a DLQ"
+  },
+  {
+   "t": "DLQ fills silently",
+   "d": "Messages land in the DLQ but no one is watching.",
+   "see": "Users report missing results days later; DLQ visible count growing",
+   "fix": "CloudWatch alarm on ApproximateNumberOfMessagesVisible for the DLQ, routed to on-call"
+  },
+  {
+   "t": "Failures expire before review",
+   "d": "DLQ retention equals or is shorter than the source queue, and the original enqueue time is kept.",
+   "see": "DLQ empties itself though nobody redrove it",
+   "fix": "Give the DLQ a longer retention than the source"
+  },
+  {
+   "t": "Redrive causes duplicates",
+   "d": "Some jobs half-succeeded before failing, then run again.",
+   "see": "Double charges, duplicate emails or two copies of the same row",
+   "fix": "Idempotency keys and upserts so reprocessing the same message is safe"
+  },
+  {
+   "t": "Healthy jobs sent to DLQ",
+   "d": "Visibility timeout is shorter than normal processing time, so slow jobs look failed.",
+   "see": "DLQ messages that succeed when replayed unchanged",
+   "fix": "Raise the visibility timeout or extend it while the job runs"
+  }
+ ],
+ "say": [
+  "Every async queue gets a dead letter queue: after about five failed receives the message is parked there, so one poison message never blocks the rest.",
+  "I alarm on DLQ depth, keep DLQ retention longer than the source queue, and log the error with the message ID so it is easy to trace.",
+  "Handlers are idempotent with a job key, so once we ship a fix we can redrive the whole DLQ back to the source safely.",
+  "For our AI jobs, a timeout from the model provider is retried with backoff, but a page the parser cannot read goes straight to the DLQ."
+ ],
+ "followups": [
+  {
+   "q": "How do you pick maxReceiveCount?",
+   "a": "Count how many retries a temporary problem needs to clear, like a short LLM rate limit, then add a little room. Three to five is common. Pair it with backoff so the retries are spread out rather than instant."
+  },
+  {
+   "q": "Does Kafka have a DLQ?",
+   "a": "Not built into the broker. Consumers commit offsets, so you write failures to your own retry or DLQ topic. Kafka Connect offers one for sink connectors through errors.tolerance=all and errors.deadletterqueue.topic.name."
+  },
+  {
+   "q": "Transient versus permanent errors?",
+   "a": "Transient errors, like timeouts or 429 rate limits, deserve retries with backoff. Permanent ones, like bad input or a schema mismatch, will never pass, so send them to the DLQ early and save worker time."
+  },
+  {
+   "q": "What about FIFO queues?",
+   "a": "A DLQ can break strict ordering, because a parked message is skipped while later ones go ahead. If order really matters, AWS advises not using a DLQ there and handling failures in the app."
+  }
+ ],
+ "check": [
+  {
+   "q": "What does maxReceiveCount control?",
+   "a": "How many receives before a message moves to the DLQ",
+   "d": [
+    "How many workers can read at once",
+    "How long a message stays in the queue",
+    "The largest message size"
+   ],
+   "why": "It lives in the redrive policy and counts receives without a delete."
+  },
+  {
+   "q": "In an SQS standard queue, why set DLQ retention longer than the source?",
+   "a": "The original enqueue time is kept, so time already spent counts",
+   "d": [
+    "The DLQ resets the clock to zero",
+    "Longer retention makes redrive faster",
+    "AWS requires it for alarms"
+   ],
+   "why": "A message 1 day old moved to a 4 day DLQ is deleted after 3 more days."
+  },
+  {
+   "q": "You redrive 1,000 failed jobs. What keeps reprocessing safe?",
+   "a": "Idempotent handlers using a job key",
+   "d": [
+    "A bigger visibility timeout",
+    "Turning off the alarm",
+    "A lower maxReceiveCount"
+   ],
+   "why": "Some jobs may have partly run, so running them again must not double the effect."
+  },
+  {
+   "q": "Which metric should alarm on a DLQ?",
+   "a": "ApproximateNumberOfMessagesVisible",
+   "d": [
+    "NumberOfMessagesSent on the producer",
+    "CPU of the worker hosts",
+    "ApproximateNumberOfMessagesDelayed"
+   ],
+   "why": "It shows how many failures are waiting in the DLQ right now."
+  }
+ ],
+ "sources": [
+  {
+   "t": "AWS: Using dead-letter queues in Amazon SQS",
+   "u": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.md"
+  },
+  {
+   "t": "AWS: Amazon SQS message quotas",
+   "u": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html"
+  },
+  {
+   "t": "AWS: Alarms for dead-letter queues",
+   "u": "https://docs.aws.amazon.com/en_gb/AWSSimpleQueueService/latest/SQSDeveloperGuide/dead-letter-queues-alarms-cloudwatch.html"
+  },
+  {
+   "t": "Apache Kafka wiki: Connect error handling and DLQ",
+   "u": "https://cwiki-test.apache.org/confluence/x/yZ3LB"
+  }
+ ]
+}

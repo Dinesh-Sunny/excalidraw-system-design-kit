@@ -1,0 +1,388 @@
+{
+ "family": "llmops",
+ "reviewed": "Oct 2026",
+ "what": "Token and cost metering reads the token counts every LLM reply already carries, turns them into money, and adds them up per user, team, customer and feature so you can set budgets and spot runaway spend.",
+ "like": "Like an electricity meter with a sub-meter per room: the bill says what you spent, the sub-meters say which room did it.",
+ "why": [
+  "Every call has a real price, and it grows with tokens, not with requests",
+  "Shows which tenant, feature or prompt is expensive, so you fix the right thing",
+  "Budgets and alerts stop a bug or a looping agent from burning money overnight"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "app",
+    "t": "Your app|tags tenant + feature",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "llm",
+    "t": "LLM API|reply has a usage block",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "usage",
+    "t": "Usage fields|input · cached · output",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "doc"
+   },
+   {
+    "id": "price",
+    "t": "Price table|$ per token type",
+    "x": 0,
+    "y": 180,
+    "w": 160,
+    "h": 86,
+    "c": "llmops",
+    "i": "hash"
+   },
+   {
+    "id": "meter",
+    "t": "Cost meter|tokens x price",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "llmops",
+    "i": "chart"
+   },
+   {
+    "id": "budget",
+    "t": "Budget check|soft alert, hard stop",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "lock"
+   },
+   {
+    "id": "store",
+    "t": "Spend log|one row per call",
+    "x": 0,
+    "y": 340,
+    "w": 160,
+    "h": 86,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "dash",
+    "t": "Dashboards|cost per answer",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "chart"
+   },
+   {
+    "id": "alert",
+    "t": "Spend alerts|spikes and burn rate",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   }
+  ],
+  "edges": [
+   [
+    "app",
+    "llm",
+    "prompt"
+   ],
+   [
+    "llm",
+    "usage",
+    "usage"
+   ],
+   [
+    "usage",
+    "meter",
+    "counts"
+   ],
+   [
+    "price",
+    "meter",
+    "rates"
+   ],
+   [
+    "meter",
+    "budget",
+    "add spend"
+   ],
+   [
+    "meter",
+    "store",
+    "write row"
+   ],
+   [
+    "store",
+    "dash",
+    "roll up"
+   ],
+   [
+    "budget",
+    "alert",
+    "near limit"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Tag every call",
+    "d": "Your app sends the prompt along with tags: which tenant, user, feature and prompt version. Without tags you get one big bill and no idea who caused it.",
+    "hl": [
+     "app",
+     "llm"
+    ]
+   },
+   {
+    "t": "Read the usage block",
+    "d": "Each reply reports input tokens, cached input tokens and output tokens. Reasoning (thinking) tokens are hidden from you but billed as output, so read the counts, never estimate.",
+    "hl": [
+     "llm",
+     "usage"
+    ]
+   },
+   {
+    "t": "Multiply by price",
+    "d": "Cost = each token bucket x its own price. Cached reads are much cheaper than fresh input, cache writes cost a bit more, and output usually costs most.",
+    "hl": [
+     "usage",
+     "price",
+     "meter"
+    ]
+   },
+   {
+    "t": "Check the budget",
+    "d": "Add the cost to the running total for that key, team or customer. A soft limit sends a warning; a hard limit blocks the next call with a clear error.",
+    "hl": [
+     "meter",
+     "budget"
+    ]
+   },
+   {
+    "t": "Log and roll up",
+    "d": "Write one row per call to a spend log, then roll it up by tenant, model and feature. Divide by results to get cost per answer, the number product owners care about.",
+    "hl": [
+     "store",
+     "dash"
+    ]
+   },
+   {
+    "t": "Alert on spikes",
+    "d": "Watch spend per hour against a normal baseline. A sudden jump usually means a retry loop, an agent stuck calling tools, or a prompt that grew.",
+    "hl": [
+     "budget",
+     "alert"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "0.1x",
+   "l": "cache read price versus base input price on most Claude models",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching?stream=top"
+  },
+  {
+   "v": "1.25x",
+   "l": "cache write price for a 5-minute cache on Claude",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching?stream=top"
+  },
+  {
+   "v": "25,000",
+   "l": "tokens OpenAI suggests reserving for reasoning plus output at first",
+   "s": "https://developers.openai.com/api/docs/guides/reasoning.md"
+  },
+  {
+   "v": "200,000",
+   "l": "input tokens where a higher long-context price tier starts (Langfuse example)",
+   "s": "https://langfuse.com/docs/observability/features/token-and-cost-tracking"
+  }
+ ],
+ "tool": "llm",
+ "choices": [
+  {
+   "t": "Where to meter",
+   "d": "In the app SDK, in a gateway (LiteLLM, OpenRouter, Cloudflare) or in tracing (Langfuse). A gateway sees every call from every team in one place."
+  },
+  {
+   "t": "Attribution keys",
+   "d": "Pick the dimensions early: tenant, user, feature, model, prompt version. Issue one virtual key per team or customer so spend cannot be mislabelled."
+  },
+  {
+   "t": "Soft and hard limits",
+   "d": "Soft limit: alert at, say, 80% of budget. Hard limit: block or downgrade to a cheaper model. Choose the reset window (daily, monthly) per budget."
+  },
+  {
+   "t": "Ingest or infer cost",
+   "d": "Prefer the provider's reported counts. Re-tokenizing text to guess cost misses hidden reasoning tokens and cache discounts."
+  },
+  {
+   "t": "Unit economics",
+   "d": "Track cost per successful answer, per resolved ticket or per document indexed, not just total spend. It tells you if a model change was worth it."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "llmops-tracing-langfuse-langsmith-opentelemetry-spans-ai-observability",
+   "why": "Full per-step traces; cost is one field on each span"
+  },
+  {
+   "slug": "ops-monitoring-metrics-prometheus-grafana-dashboards",
+   "why": "General metrics stack if you only need token counters and alerts"
+  },
+  {
+   "slug": "edge-rate-limiter-throttle-token-bucket-leaky-bucket-sliding-window",
+   "why": "Caps request or token rate, not money spent"
+  },
+  {
+   "slug": "data-olap-db-clickhouse-clickhouse-druid-pinot-realtime-analytics-columnar",
+   "why": "Store billions of spend rows and slice them fast"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Reasoning tokens missed",
+   "d": "Cost is estimated from visible text, but thinking tokens are billed as output too.",
+   "see": "Your numbers sit well below the provider invoice",
+   "fix": "Use the usage block from each reply, including reasoning_tokens"
+  },
+  {
+   "t": "Agent loop burns budget",
+   "d": "An agent keeps calling tools and the model for one task.",
+   "see": "One trace with hundreds of calls; spend per hour spikes",
+   "fix": "Per-task step and spend caps, plus a hard budget on the key"
+  },
+  {
+   "t": "Cached tokens priced wrong",
+   "d": "Cached reads are billed as full input, or cache writes are ignored.",
+   "see": "Cost per call does not drop after you add prompt caching",
+   "fix": "Separate buckets: input, cache read, cache write, output, each with its own price"
+  },
+  {
+   "t": "Spend lands on the wrong tenant",
+   "d": "Requests share one API key or trust a user field the client can set.",
+   "see": "A big 'unknown' slice on the dashboard",
+   "fix": "One virtual key per team or customer, and tags set on the server"
+  },
+  {
+   "t": "Stale price table",
+   "d": "A provider changes prices or adds a tier and your table does not.",
+   "see": "Small but steady gap against the invoice",
+   "fix": "Reconcile with the provider bill monthly and version the price table"
+  }
+ ],
+ "say": [
+  "Every LLM call goes through one place that reads the usage block and writes a spend row tagged with tenant, feature, model and prompt version.",
+  "Cost is tokens times price per bucket: fresh input, cached input, cache writes and output, and reasoning tokens count as output.",
+  "Each customer gets a budget with a soft alert and a hard stop, and an agent run has its own step and spend cap.",
+  "The headline metric is cost per successful answer, so we can see if a cheaper model or a cache really saved money without hurting quality."
+ ],
+ "followups": [
+  {
+   "q": "How do you charge customers for AI usage?",
+   "a": "Meter tokens per customer from the usage block, convert with a versioned price table, and add a margin or sell credits. Reconcile with the provider invoice so your totals and theirs match."
+  },
+  {
+   "q": "How would you cut cost without hurting quality?",
+   "a": "Measure cost per answer first. Then cache stable prompt prefixes, route easy queries to a smaller model, trim retrieved context, and cap output length. Check every change against your eval set."
+  },
+  {
+   "q": "What do you do when a tenant hits its budget?",
+   "a": "Warn at the soft limit. At the hard limit, block with a clear error, or drop to a cheaper model if the product allows. Never fail silently."
+  },
+  {
+   "q": "Why not just count words to estimate cost?",
+   "a": "Tokenizers differ per model, cache discounts change the price, and reasoning tokens are hidden. The provider's reported counts are the only reliable source."
+  }
+ ],
+ "today": "Reasoning models are now common, and their hidden thinking tokens are billed as output, so metering straight from each reply's usage block has become the standard way to track cost.",
+ "check": [
+  {
+   "q": "A reasoning model's reply shows only 50 words, yet the call costs a lot. Why?",
+   "a": "Hidden reasoning tokens are billed as output",
+   "d": [
+    "Input tokens are billed twice",
+    "The cache write failed",
+    "Long words cost extra"
+   ],
+   "why": "Thinking tokens are not shown but still count as output tokens."
+  },
+  {
+   "q": "Which is the best headline cost metric for a product team?",
+   "a": "Cost per successful answer",
+   "d": [
+    "Total tokens per month",
+    "Requests per second",
+    "Average prompt length"
+   ],
+   "why": "It ties spend to the value users get, so model and prompt changes can be judged fairly."
+  },
+  {
+   "q": "How do you stop one team's spend landing on another's bill?",
+   "a": "Give each team its own virtual key and tag on the server",
+   "d": [
+    "Ask users to fill in a team field",
+    "Split the invoice evenly",
+    "Count requests instead of tokens"
+   ],
+   "why": "Server-side keys and tags cannot be set wrongly by a client."
+  },
+  {
+   "q": "A tenant reaches 80% of its monthly budget. What should happen?",
+   "a": "A soft-limit alert goes out",
+   "d": [
+    "All calls are blocked at once",
+    "The budget resets",
+    "Nothing until the invoice arrives"
+   ],
+   "why": "Soft limits warn early; the hard limit blocks only at 100%."
+  }
+ ],
+ "sources": [
+  {
+   "t": "OpenAI docs: reasoning models",
+   "u": "https://developers.openai.com/api/docs/guides/reasoning.md"
+  },
+  {
+   "t": "Anthropic docs: prompt caching pricing and usage",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching?stream=top"
+  },
+  {
+   "t": "Langfuse docs: token and cost tracking",
+   "u": "https://langfuse.com/docs/observability/features/token-and-cost-tracking"
+  },
+  {
+   "t": "LiteLLM docs: spend tracking",
+   "u": "https://docs.litellm.ai/docs/proxy/cost_tracking.md"
+  },
+  {
+   "t": "LiteLLM docs: budgets and rate limits",
+   "u": "https://docs.litellm.ai/docs/proxy/users"
+  },
+  {
+   "t": "OpenRouter docs: usage accounting",
+   "u": "https://openrouter.ai/docs/guides/administration/usage-accounting"
+  }
+ ]
+}

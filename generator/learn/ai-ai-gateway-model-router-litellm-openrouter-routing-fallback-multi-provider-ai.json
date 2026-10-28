@@ -1,0 +1,393 @@
+{
+ "family": "ai",
+ "reviewed": "Oct 2026",
+ "what": "An AI gateway is one API that sits in front of many model providers. It picks a model for each call, retries or falls back when one fails, and applies keys, budgets, caching, logging and guardrails in one place.",
+ "like": "Like a travel agent: you say where you want to go, and they pick the airline, rebook you if a flight is cancelled, and keep every receipt.",
+ "why": [
+  "Switch or mix providers without changing app code",
+  "Fallbacks keep the product up when one provider rate-limits or goes down",
+  "One place for keys, budgets, caching, logs and safety checks"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "app",
+    "t": "Your apps|one OpenAI-style API",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "auth",
+    "t": "Keys and limits|per-key RPM, TPM, budget",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "shield"
+   },
+   {
+    "id": "cache",
+    "t": "Response cache|exact or semantic",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "cache",
+    "i": "cache"
+   },
+   {
+    "id": "guard",
+    "t": "Guardrails|check input and output",
+    "x": 0,
+    "y": 180,
+    "w": 160,
+    "h": 86,
+    "c": "llmops",
+    "i": "shield"
+   },
+   {
+    "id": "router",
+    "t": "Router|cost · latency · quality",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "router"
+   },
+   {
+    "id": "log",
+    "t": "Logs and spend|tokens, cost, latency",
+    "x": 0,
+    "y": 340,
+    "w": 160,
+    "h": 86,
+    "c": "llmops",
+    "i": "log"
+   },
+   {
+    "id": "small",
+    "t": "Small model|cheap, fast first",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "big",
+    "t": "Big model|escalate or fallback",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "prov",
+    "t": "Other provider|on 429 or 5xx",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "globe"
+   }
+  ],
+  "edges": [
+   [
+    "app",
+    "auth",
+    "request"
+   ],
+   [
+    "auth",
+    "cache",
+    "lookup"
+   ],
+   [
+    "auth",
+    "router",
+    "miss"
+   ],
+   [
+    "guard",
+    "router",
+    "checked"
+   ],
+   [
+    "router",
+    "small",
+    "first try"
+   ],
+   [
+    "small",
+    "big",
+    "escalate"
+   ],
+   [
+    "router",
+    "prov",
+    "fallback"
+   ],
+   [
+    "router",
+    "log",
+    "log"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "One API in",
+    "d": "Apps call one OpenAI-style endpoint with a virtual key. The gateway translates to each provider's format, so swapping models is a config change, not a code change.",
+    "hl": [
+     "app",
+     "auth"
+    ]
+   },
+   {
+    "t": "Check key and limits",
+    "d": "Each key carries requests per minute (RPM), tokens per minute (TPM) and a spend budget. Over the limit, the caller gets a clear 429 instead of a surprise bill.",
+    "hl": [
+     "auth"
+    ]
+   },
+   {
+    "t": "Try the cache",
+    "d": "An identical (or, with semantic caching, a very similar) prompt can be answered from cache, skipping the model call entirely.",
+    "hl": [
+     "auth",
+     "cache"
+    ]
+   },
+   {
+    "t": "Guard and route",
+    "d": "Guardrails screen the prompt. The router then picks a model by cost, latency, quality or a rule, for example a small model first for easy queries.",
+    "hl": [
+     "guard",
+     "router",
+     "small"
+    ]
+   },
+   {
+    "t": "Retry, fall back, escalate",
+    "d": "On a 429 or 5xx it retries, then moves to the next model or provider in the list. In a cascade, a weak or low-confidence answer escalates to the big model.",
+    "hl": [
+     "router",
+     "small",
+     "big",
+     "prov"
+    ]
+   },
+   {
+    "t": "Log everything",
+    "d": "Every call records model, tokens, cost, latency and errors per key and team, which feeds dashboards, budgets and debugging.",
+    "hl": [
+     "router",
+     "log"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "up to 98%",
+   "l": "cost cut by an LLM cascade matching GPT-4 quality (FrugalGPT)",
+   "s": "https://arxiv.org/abs/2305.05176"
+  },
+  {
+   "v": "up to 90%",
+   "l": "lower latency from Cloudflare AI Gateway caching on repeated requests",
+   "s": "https://developers.cloudflare.com/ai-gateway/features/"
+  },
+  {
+   "v": "7",
+   "l": "load-balancing algorithms in Kong AI Proxy Advanced, including semantic",
+   "s": "https://developer.konghq.com/plugins/ai-proxy-advanced"
+  },
+  {
+   "v": "3",
+   "l": "max entries in OpenRouter's Anthropic-style fallbacks parameter",
+   "s": "https://openrouter.ai/docs/guides/routing/model-fallbacks"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Build, host or buy",
+   "d": "Self-host LiteLLM proxy or Kong for control and data residency; use OpenRouter or Cloudflare AI Gateway as a managed service; Azure API Management fits teams already on Azure."
+  },
+  {
+   "t": "Routing rule",
+   "d": "Fixed per feature, weighted split for A/B tests, lowest latency, lowest cost, or semantic (match the prompt to a model). Start simple and measure."
+  },
+  {
+   "t": "Fallback list",
+   "d": "Order models and providers by preference. Decide which errors trigger it: rate limits and 5xx yes, bad requests no. Separate fallbacks for context-too-long and content-policy errors."
+  },
+  {
+   "t": "Retries and cooldown",
+   "d": "A few retries with backoff, then take a failing deployment out of rotation for a cooldown window so you stop hammering it."
+  },
+  {
+   "t": "Cascade threshold",
+   "d": "Small model first, escalate when a check (confidence score, validator, judge) says the answer is weak. Tune the threshold on an eval set to trade cost for quality."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "edge-api-gateway-auth-routing-throttling-bff-kong",
+   "why": "General API gateway without token-aware limits or model fallbacks"
+  },
+  {
+   "slug": "svc-circuit-breaker-resilience-fallback-hystrix-retry",
+   "why": "Retry and fallback logic inside one service only"
+  },
+  {
+   "slug": "rag-semantic-cache-cache-similar-prompts-ai-retrieval-augmented-generation",
+   "why": "Just the caching part, without routing or keys"
+  },
+  {
+   "slug": "ai-llm-large-language-model-gpt-claude-gemini-api-inference-ai",
+   "why": "Call one provider directly when you only use one model"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Fallback changes behaviour",
+   "d": "The backup model formats answers differently or is weaker.",
+   "see": "Parse errors or quality drop during a provider incident",
+   "fix": "Run evals on every model in the fallback list and pin output schemas"
+  },
+  {
+   "t": "Retry storm",
+   "d": "Every client retries a rate-limited provider at once.",
+   "see": "429s rise and latency climbs across all teams",
+   "fix": "Backoff with jitter, honour Retry-After, cooldown failing deployments"
+  },
+  {
+   "t": "Gateway is a single point",
+   "d": "All AI traffic flows through one service.",
+   "see": "Every AI feature slows when the gateway does",
+   "fix": "Run several replicas behind a load balancer and keep it stateless"
+  },
+  {
+   "t": "Surprise bill on fallback",
+   "d": "The backup model is far pricier than the primary.",
+   "see": "Spend jumps during an outage",
+   "fix": "Budget-aware routing and price-checked fallback lists"
+  },
+  {
+   "t": "Budgets fail open",
+   "d": "Spend tracking needs its database; if that is down, limits are skipped.",
+   "see": "Calls succeed past the budget",
+   "fix": "Monitor the spend store and alert when it is unreachable"
+  }
+ ],
+ "say": [
+  "All model calls go through an AI gateway like LiteLLM proxy, so apps use one API and we can change providers in config.",
+  "Each team gets a virtual key with RPM, TPM and a monthly budget, and every call is logged with tokens and cost.",
+  "On a 429 or 5xx we retry with backoff, then fall back to a second provider, and a failing deployment cools down for a while.",
+  "For cost we cascade: a small model answers first and we escalate to the big model only when a check says the answer is weak."
+ ],
+ "followups": [
+  {
+   "q": "Why not call providers directly from each service?",
+   "a": "Every team would re-build keys, retries, fallbacks, logging and budgets, each a bit differently. A gateway does it once and gives one spend view across the company."
+  },
+  {
+   "q": "How do you choose which model handles a request?",
+   "a": "Start with a fixed model per feature. Then add rules by task type or prompt length, latency-based routing, or a cascade. Judge every rule by cost per good answer on an eval set."
+  },
+  {
+   "q": "What errors should trigger a fallback?",
+   "a": "Rate limits (429), server errors (5xx), timeouts, and context-too-long or content-policy errors to a model that can handle them. Plain bad requests should fail fast, not fall back."
+  },
+  {
+   "q": "Does the gateway add latency?",
+   "a": "A little for the extra network hop, kept small by running it close to your apps. Cache hits and smarter routing usually save far more than that."
+  }
+ ],
+ "today": "By 2026 AI gateways are a standard platform piece: LiteLLM, OpenRouter, Cloudflare AI Gateway, Azure API Management and Kong all offer routing, fallbacks, token limits, caching and spend tracking.",
+ "check": [
+  {
+   "q": "Your main provider returns 429 for a minute. What should the gateway do?",
+   "a": "Retry with backoff, then fall back to the next model",
+   "d": [
+    "Return the error to every user",
+    "Switch providers forever",
+    "Double the request rate"
+   ],
+   "why": "Rate limits are short; backoff plus a fallback list keeps the product up."
+  },
+  {
+   "q": "What is a model cascade?",
+   "a": "Try a small model first, escalate weak answers to a bigger one",
+   "d": [
+    "Calling every model and averaging",
+    "Splitting traffic 50/50 for a test",
+    "Sending long prompts to the cheapest model"
+   ],
+   "why": "Most queries are easy, so the cheap model handles them and cost drops."
+  },
+  {
+   "q": "Which limit protects you from one team running up a huge bill?",
+   "a": "A spend budget on that team's virtual key",
+   "d": [
+    "A longer timeout",
+    "A bigger cache",
+    "More retries"
+   ],
+   "why": "Budgets cap money per key or team; RPM and TPM cap speed."
+  },
+  {
+   "q": "A fallback model starts returning broken JSON during an outage. Best fix?",
+   "a": "Eval every fallback model and enforce the output schema",
+   "d": [
+    "Remove all fallbacks",
+    "Turn off logging",
+    "Raise the temperature"
+   ],
+   "why": "Fallbacks only help if the backup model meets the same contract."
+  }
+ ],
+ "sources": [
+  {
+   "t": "LiteLLM docs: proxy reliability and fallbacks",
+   "u": "https://docs.litellm.ai/docs/proxy/reliability.md"
+  },
+  {
+   "t": "LiteLLM docs: budgets and rate limits",
+   "u": "https://docs.litellm.ai/docs/proxy/users"
+  },
+  {
+   "t": "OpenRouter docs: model fallbacks",
+   "u": "https://openrouter.ai/docs/guides/routing/model-fallbacks"
+  },
+  {
+   "t": "Cloudflare AI Gateway: features",
+   "u": "https://developers.cloudflare.com/ai-gateway/features/"
+  },
+  {
+   "t": "Microsoft Learn: AI gateway in Azure API Management",
+   "u": "https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities"
+  },
+  {
+   "t": "Kong docs: AI Proxy Advanced",
+   "u": "https://developer.konghq.com/plugins/ai-proxy-advanced"
+  },
+  {
+   "t": "FrugalGPT paper (arXiv 2305.05176)",
+   "u": "https://arxiv.org/abs/2305.05176"
+  }
+ ]
+}

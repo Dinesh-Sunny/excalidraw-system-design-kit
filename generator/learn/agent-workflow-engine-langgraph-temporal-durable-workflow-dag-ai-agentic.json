@@ -1,0 +1,383 @@
+{
+ "family": "agent",
+ "reviewed": "Oct 2026",
+ "what": "A workflow engine runs long, multi-step jobs and remembers where each one is. If a server crashes mid-way, the job resumes from the last finished step instead of starting over.",
+ "like": "Like a recipe card where you tick each step as you go: if the phone rings, you come back and carry on from the last tick, not from scratch.",
+ "why": [
+  "Long jobs (minutes to months) survive crashes, deploys and restarts",
+  "Retries, timeouts and waits are handled for you, not hand-written each time",
+  "Every step is recorded, so you can see exactly where a run is and why it failed"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "api",
+    "t": "API / trigger|start a workflow",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "srv",
+    "t": "Workflow service|Temporal server",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "hist",
+    "t": "Event history|every step recorded",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "log"
+   },
+   {
+    "id": "worker",
+    "t": "Worker|runs workflow code",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "loop"
+   },
+   {
+    "id": "act",
+    "t": "Activities|LLM, search, DB calls",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "agent",
+    "i": "tool"
+   },
+   {
+    "id": "human",
+    "t": "Human reviewer|sends a signal",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "timer",
+    "t": "Durable timer|wait 5 s or 5 months",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "clock"
+   },
+   {
+    "id": "retry",
+    "t": "Retry policy|1 s, x2, up to 100 s",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "loop"
+   }
+  ],
+  "edges": [
+   [
+    "api",
+    "srv",
+    "start"
+   ],
+   [
+    "srv",
+    "hist",
+    "append"
+   ],
+   [
+    "srv",
+    "worker",
+    "task"
+   ],
+   [
+    "worker",
+    "act",
+    "call"
+   ],
+   [
+    "act",
+    "retry",
+    "on error"
+   ],
+   [
+    "worker",
+    "timer",
+    "wait"
+   ],
+   [
+    "human",
+    "srv",
+    "signal"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Start a workflow",
+    "d": "Your API asks the engine to start, say, 'research company X'. The engine gives it an ID and records a start event.",
+    "hl": [
+     "api",
+     "srv",
+     "hist"
+    ]
+   },
+   {
+    "t": "Workflow code plans steps",
+    "d": "A worker runs your workflow function. It must be deterministic (same input, same decisions), so it never reads the clock or calls APIs directly.",
+    "hl": [
+     "srv",
+     "worker"
+    ]
+   },
+   {
+    "t": "Activities do real work",
+    "d": "LLM calls, web searches and database writes run as activities. Each result is saved in the event history before the next step starts.",
+    "hl": [
+     "worker",
+     "act",
+     "hist"
+    ]
+   },
+   {
+    "t": "Failures retry themselves",
+    "d": "A failed activity retries with backoff: Temporal's default starts at 1 s, doubles each time, caps at 100 s and keeps trying unless you set limits.",
+    "hl": [
+     "act",
+     "retry"
+    ]
+   },
+   {
+    "t": "Crash? Replay history",
+    "d": "A new worker replays the event history. Finished activities return their recorded results instead of running again, so the run continues from where it stopped.",
+    "hl": [
+     "worker",
+     "hist"
+    ]
+   },
+   {
+    "t": "Wait for people cheaply",
+    "d": "Timers and signals let a run pause for a human approval. The worker goes idle while the server holds the state, for seconds or months.",
+    "hl": [
+     "human",
+     "srv",
+     "timer"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "51,200",
+   "l": "events (or 50 MB) max in one Temporal workflow history",
+   "s": "https://docs.temporal.io/workflow-execution/limits.md"
+  },
+  {
+   "v": "10,240",
+   "l": "events (or 10 MB) when Temporal starts warning you",
+   "s": "https://docs.temporal.io/workflow-execution/limits.md"
+  },
+  {
+   "v": "25,000",
+   "l": "events max in one Step Functions Standard execution history",
+   "s": "https://docs.aws.amazon.com/step-functions/latest/dg/limits.html"
+  },
+  {
+   "v": "1 year",
+   "l": "longest a Step Functions Standard execution can run",
+   "s": "https://docs.aws.amazon.com/step-functions/latest/dg/limits.html"
+  },
+  {
+   "v": "256 KiB",
+   "l": "largest Step Functions state input or output",
+   "s": "https://docs.aws.amazon.com/step-functions/latest/dg/limits.html"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Which engine",
+   "d": "Temporal for code-first durable workflows; Step Functions for AWS-native JSON state machines; Airflow for scheduled batch DAGs; LangGraph for agent graphs with checkpoints."
+  },
+  {
+   "t": "Activity timeouts and retries",
+   "d": "Set a start-to-close timeout per activity and a retry policy. Mark permanent errors (bad input) as non-retryable so they fail fast instead of retrying forever."
+  },
+  {
+   "t": "Step size",
+   "d": "One activity per side effect (one LLM call, one write). Smaller steps mean less rework after a crash, but every step adds history events."
+  },
+  {
+   "t": "Long runs",
+   "d": "Loops and agents that run for weeks grow history. Use Continue-As-New in Temporal, or start a fresh execution in Step Functions, before hitting the limits."
+  },
+  {
+   "t": "Agent state store",
+   "d": "For LangGraph, pick a checkpointer: SqliteSaver for local work, PostgresSaver for production, keyed by thread_id so each conversation resumes correctly."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "msg-message-queue-mq-async-buffer-decouple",
+   "why": "Fine for single-step jobs; you hand-build retries and state"
+  },
+  {
+   "slug": "msg-batch-etl-spark-spark-airflow-etl-batch-pipeline-mapreduce",
+   "why": "Scheduled data pipelines rather than per-request long-running jobs"
+  },
+  {
+   "slug": "agent-ai-agent-agent-llm-loop-autonomous-ai-agentic",
+   "why": "A simple in-memory agent loop for short tasks"
+  },
+  {
+   "slug": "agent-human-approval-human-in-the-loop-hitl-review-approve-ai-agentic",
+   "why": "The approval step itself, which a workflow engine can host"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Non-determinism error",
+   "d": "Workflow code used the system clock, random numbers or changed step order in a deploy.",
+   "see": "Replay fails with a non-deterministic error and the run is stuck",
+   "fix": "Use SDK time and random APIs, move I/O into activities, version code changes"
+  },
+  {
+   "t": "History too long",
+   "d": "An agent loop adds events every turn until it reaches the limit.",
+   "see": "History size warnings at 10,240 events, then the hard limit stops the run",
+   "fix": "Continue-As-New with a small state summary"
+  },
+  {
+   "t": "Activity runs twice",
+   "d": "A worker finished the work but crashed before reporting, so it is retried.",
+   "see": "Duplicate emails, double writes or two charges",
+   "fix": "Idempotent activities with an idempotency key or upserts"
+  },
+  {
+   "t": "Big payloads",
+   "d": "Whole documents or LLM outputs are passed between steps.",
+   "see": "Payload size errors, slow history loading",
+   "fix": "Store blobs in object storage and pass only the key"
+  },
+  {
+   "t": "Retries that never stop",
+   "d": "Default activity retries are unlimited, so a permanent error keeps retrying.",
+   "see": "Runs stay open for days with the same error each attempt",
+   "fix": "Non-retryable error types, maximum attempts or a schedule-to-close timeout"
+  }
+ ],
+ "say": [
+  "For long multi-step AI jobs I'd use a durable workflow engine like Temporal: the workflow code decides the steps and every LLM or search call is an activity with its own timeout and retry policy.",
+  "The engine records each step in an event history, so if a worker dies it replays the history and carries on without repeating finished work.",
+  "Activities are idempotent with a job key, because at-least-once retries mean any one of them can run twice.",
+  "For human review the workflow waits on a signal with a timer as a deadline, which costs nothing while it waits."
+ ],
+ "followups": [
+  {
+   "q": "Why must workflow code be deterministic?",
+   "a": "Recovery works by replaying the history and re-running the code. If the code makes different decisions on replay, say from reading the clock, its commands no longer match the history and the engine raises a non-determinism error."
+  },
+  {
+   "q": "Temporal versus Airflow?",
+   "a": "Airflow schedules batch DAGs of data tasks, usually on a timetable. Temporal runs many per-request workflows written as normal code, with signals, long waits and fine-grained retries. Many teams use both."
+  },
+  {
+   "q": "How does LangGraph persistence relate?",
+   "a": "A LangGraph checkpointer saves the graph state per thread_id, which enables human-in-the-loop pauses, time travel and recovery for agents. Temporal adds durable retries, timers and signals around a whole multi-step job."
+  },
+  {
+   "q": "How do you handle an agent that runs for weeks?",
+   "a": "Keep each turn as activities, summarise state, and call Continue-As-New before the history nears the event limit. Large tool outputs go to storage, with only keys in the history."
+  }
+ ],
+ "check": [
+  {
+   "q": "Where should an LLM API call go in a Temporal workflow?",
+   "a": "In an activity",
+   "d": [
+    "Directly in workflow code",
+    "In the event history",
+    "In a signal handler"
+   ],
+   "why": "Workflow code must be deterministic; activities do the real I/O and get retries."
+  },
+  {
+   "q": "A worker crashes halfway through a run. What happens?",
+   "a": "Another worker replays the history and continues",
+   "d": [
+    "The whole run starts from step one",
+    "The run is lost",
+    "A human must restart it by hand"
+   ],
+   "why": "Finished activities return their recorded results during replay."
+  },
+  {
+   "q": "Your agent loop has run 10,000 turns. What should it do?",
+   "a": "Continue-As-New with a compact state",
+   "d": [
+    "Increase the worker CPU",
+    "Turn off retries",
+    "Store more data in history"
+   ],
+   "why": "History has a hard event limit, and starting a fresh run resets it."
+  },
+  {
+   "q": "Why make activities idempotent?",
+   "a": "Retries mean an activity can run more than once",
+   "d": [
+    "Activities run only once ever",
+    "It makes workflows deterministic",
+    "It shrinks the history"
+   ],
+   "why": "A crash after doing the work but before reporting causes a retry."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Temporal: Workflow Execution limits",
+   "u": "https://docs.temporal.io/workflow-execution/limits.md"
+  },
+  {
+   "t": "Temporal: Events and Event History",
+   "u": "https://docs.temporal.io/workflow-execution/event.md"
+  },
+  {
+   "t": "Temporal: Workflow Definition",
+   "u": "https://docs.temporal.io/workflow-definition"
+  },
+  {
+   "t": "Temporal: Retry Policies",
+   "u": "https://docs.temporal.io/encyclopedia/retry-policies"
+  },
+  {
+   "t": "Temporal: Reliable document approvals (human in the loop)",
+   "u": "https://docs.temporal.io/guides/reliable-document-approvals"
+  },
+  {
+   "t": "AWS: Step Functions service quotas",
+   "u": "https://docs.aws.amazon.com/step-functions/latest/dg/limits.html"
+  },
+  {
+   "t": "LangGraph: Persistence",
+   "u": "https://docs.langchain.com/oss/python/langgraph/persistence"
+  }
+ ]
+}
