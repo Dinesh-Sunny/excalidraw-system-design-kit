@@ -2446,5 +2446,201 @@
     ]
    ]
   }
+ },
+ "prompt-universe": {
+  "modern": [
+   [
+    "Hyperbolic embeddings",
+    "Hierarchies fit curved (hyperbolic) space far better than flat vectors, but HNSW assumes flat space - prefetch many candidates and rescore."
+   ],
+   [
+    "Fan-out capture",
+    "Engines expose or leak the sub-queries they search; those are the real demand signals."
+   ],
+   [
+    "Multi-parent taxonomies",
+    "Store topics as a graph of tags, not one tree, so a prompt can live under pricing AND integrations."
+   ]
+  ],
+  "extra": {
+   "t": "Clustering judgement",
+   "look": "They want measured thresholds, not magic numbers.",
+   "rounds": [
+    [
+     "How do you choose the duplicate threshold?",
+     "Label pairs, sweep the threshold, pick by precision",
+     [
+      "Use 0.8 because everyone does",
+      "Ask the LLM",
+      "Use the median distance"
+     ]
+    ],
+    [
+     "Topic ids change every re-cluster. Fix?",
+     "Match new clusters to old by centroid and keep ids",
+     [
+      "Never re-cluster",
+      "Rename all topics",
+      "Let users fix it"
+     ]
+    ],
+    [
+     "Searching prompts for 'HubSpot pricing' - best retriever?",
+     "Hybrid: BM25 for the name plus vectors",
+     [
+      "Vectors only",
+      "Regex only",
+      "An LLM reading all prompts"
+     ]
+    ]
+   ]
+  }
+ },
+ "ai-crawler-analytics": {
+  "modern": [
+   [
+    "Signed bot traffic",
+    "Web Bot Auth and verified bot lists from CDNs make bot identity cryptographic, not just a user agent."
+   ],
+   [
+    "Pay per crawl",
+    "CDNs let sites charge or block AI crawlers per request - a new signal to track."
+   ],
+   [
+    "Agent traffic",
+    "AI agents browsing on a user's behalf (ChatGPT-User, Claude-User) behave like humans and may not follow robots.txt."
+   ]
+  ],
+  "extra": {
+   "t": "Logs at scale",
+   "look": "Volume, verification and columnar storage.",
+   "rounds": [
+    [
+     "Best proof a hit really is GPTBot?",
+     "Its IP is in OpenAI's published ranges",
+     [
+      "The user agent says GPTBot",
+      "It requested robots.txt",
+      "It came at night"
+     ]
+    ],
+    [
+     "Where do dashboards read from?",
+     "Pre-aggregated rollups (materialized views)",
+     [
+      "Raw logs every time",
+      "Postgres row by row",
+      "The CDN directly"
+     ]
+    ],
+    [
+     "Insert pattern for ClickHouse?",
+     "Big batches, about one insert per second",
+     [
+      "One insert per hit",
+      "One insert per day",
+      "Updates in place"
+     ]
+    ]
+   ]
+  }
+ },
+ "dual-served-content": {
+  "modern": [
+   [
+    "llms.txt",
+    "A markdown index at /llms.txt points AI tools at the clean versions of key pages."
+   ],
+   [
+    "Markdown for agents at the CDN",
+    "CDNs can convert HTML to markdown for AI agents on request, no app code needed."
+   ],
+   [
+    "Structured data",
+    "schema.org markup in both versions gives engines clean facts to lift."
+   ]
+  ],
+  "extra": {
+   "t": "Edge details",
+   "look": "They wrote this system - expect sharp questions on caching and honesty.",
+   "rounds": [
+    [
+     "Rewrite or redirect for bots?",
+     "Rewrite - the URL (and citation) stays the real page",
+     [
+      "Redirect to /md",
+      "Serve a different domain",
+      "Block bots"
+     ]
+    ],
+    [
+     "Humans start getting markdown. Likely cause?",
+     "The cache key ignores bot vs human",
+     [
+      "The MDX is broken",
+      "Too much traffic",
+      "DNS"
+     ]
+    ],
+    [
+     "How do you show it works?",
+     "A/B over page groups, compare citation rates",
+     [
+      "Ask a model",
+      "Count markdown views",
+      "Check page speed"
+     ]
+    ]
+   ]
+  }
+ },
+ "site-audit-crawler": {
+  "modern": [
+   [
+    "AI bot access checks",
+    "Check robots.txt for GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot and Google-Extended separately - they do different jobs."
+   ],
+   [
+    "Render budgets",
+    "Headless rendering only when needed, from a pooled browser farm."
+   ],
+   [
+    "Liftable facts",
+    "Small models flag pages where key facts are buried in images, tabs or vague copy."
+   ]
+  ],
+  "extra": {
+   "t": "Crawler basics",
+   "look": "Classic crawler questions with an AI search twist.",
+   "rounds": [
+    [
+     "Simplest way to stay polite?",
+     "One queue and rate limit per domain",
+     [
+      "One global queue",
+      "Crawl at night only",
+      "Ignore robots.txt for audits"
+     ]
+    ],
+    [
+     "Bloom filter says 'maybe seen'. Risk?",
+     "Rarely skipping a page we never fetched",
+     [
+      "Fetching a page twice",
+      "Crashing",
+      "Leaking data"
+     ]
+    ],
+    [
+     "When do you render JavaScript?",
+     "Only when raw HTML lacks the main content",
+     [
+      "Always",
+      "Never",
+      "Only on mobile pages"
+     ]
+    ]
+   ]
+  }
  }
 }
