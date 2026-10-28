@@ -1,0 +1,97 @@
+{
+ "family": "queue",
+ "reviewed": "Oct 2026",
+ "what": "A message queue holds jobs between the service that creates them and the workers that do them. The sender drops a message in and moves on; a worker picks it up later and deletes it when done.",
+ "like": "Like a ticket rail in a restaurant kitchen: waiters clip orders on and go back to tables, and cooks take the next ticket when ready.",
+ "why": [
+  "Fast responses: slow work happens in the background, not in the request",
+  "Absorbs traffic spikes: the queue grows and workers catch up at their own pace",
+  "Decouples services: if workers are down, messages wait instead of being lost"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "prod", "t": "Producer|sends and moves on", "x": 0, "y": 20, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "queue", "t": "Queue|messages wait here", "x": 265, "y": 20, "w": 170, "h": 86, "c": "msg", "i": "queue"},
+   {"id": "cons", "t": "Worker|receive, work, delete", "x": 550, "y": 20, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "scale", "t": "Autoscaler|queue depth metric", "x": 0, "y": 180, "w": 150, "h": 86, "c": "ops", "i": "chart"},
+   {"id": "vis", "t": "In flight|hidden until timeout", "x": 265, "y": 180, "w": 170, "h": 86, "c": "msg", "i": "clock"},
+   {"id": "dedupe", "t": "Processed IDs|idempotency check", "x": 550, "y": 180, "w": 150, "h": 86, "c": "data", "i": "db"},
+   {"id": "dlq", "t": "Dead letter queue|after too many tries", "x": 265, "y": 340, "w": 170, "h": 86, "c": "msg", "i": "queue"},
+   {"id": "alarm", "t": "Alarm|DLQ not empty", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "eye"}
+  ],
+  "edges": [
+   ["prod", "queue", "send"],
+   ["queue", "cons", "receive"],
+   ["queue", "vis", "hide"],
+   ["cons", "dedupe", "seen it?"],
+   ["vis", "dlq", "too many"],
+   ["dlq", "alarm", "alert"],
+   ["queue", "scale", "depth"]
+  ],
+  "steps": [
+   {"t": "Producer sends a message", "d": "The web service puts a small message, like resize photo 42, on the queue and replies to the user straight away. Big files go to storage, with only a link in the message.", "hl": ["prod", "queue"]},
+   {"t": "A worker receives it", "d": "A worker pulls the message. In SQS it is now hidden from other workers for the visibility timeout, 30 seconds by default, while the work happens.", "hl": ["queue", "cons", "vis"]},
+   {"t": "Work, then acknowledge", "d": "When the job succeeds the worker deletes it (SQS) or sends an ack (RabbitMQ). It first checks the message ID, so a repeat delivery does no harm.", "hl": ["cons", "dedupe"]},
+   {"t": "No ack? It comes back", "d": "If the worker crashes or runs past the timeout, the message becomes visible again and another worker retries it. That is at-least-once delivery.", "hl": ["vis", "queue"]},
+   {"t": "Too many tries: DLQ", "d": "After maxReceiveCount receives without success, the message moves to a dead letter queue, so one broken message cannot block the rest. An alarm tells you to look.", "hl": ["vis", "dlq", "alarm"]},
+   {"t": "Scale on queue depth", "d": "Queue length is your backpressure signal. When it grows, add workers; when it shrinks, remove them. Prefetch limits stop any one worker grabbing too much.", "hl": ["queue", "scale"]}
+  ]
+ },
+ "numbers": [
+  {"v": "30 s", "l": "default SQS visibility timeout; the maximum is 12 hours", "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/AboutVT.html"},
+  {"v": "4 days", "l": "default SQS message retention, adjustable from 1 minute to 14 days", "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html"},
+  {"v": "1 MiB", "l": "largest SQS message; store bigger payloads in S3", "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html"},
+  {"v": "3,000 /s", "l": "SQS FIFO messages per API method, batching 10 per call", "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-queue-types.html"},
+  {"v": "~120,000", "l": "in-flight messages allowed on an SQS standard queue", "s": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/AboutVT.html"}
+ ],
+ "tool": "mq",
+ "choices": [
+  {"t": "Standard or FIFO", "d": "Standard: nearly unlimited throughput, at-least-once, best-effort order. FIFO: order kept per message group and duplicate sends removed within 5 minutes, but lower throughput."},
+  {"t": "Visibility timeout", "d": "Set it longer than a normal job takes. For jobs of unknown length, start short and extend with ChangeMessageVisibility as a heartbeat while working."},
+  {"t": "Retries and DLQ", "d": "Pick maxReceiveCount high enough to ride out brief hiccups; 1 sends a message aside after one failure. Give the DLQ a longer retention than the main queue so failed messages are still there to inspect."},
+  {"t": "Ack mode and prefetch", "d": "Use manual acks, since automatic acks count a message done the moment it is sent. In RabbitMQ a prefetch of 100 to 300 usually gives good throughput."},
+  {"t": "Idempotency key", "d": "Give every message a unique ID and record processed IDs, or make the action safe to repeat, like set status=paid rather than add 10 pounds."}
+ ],
+ "instead": [
+  {"slug": "msg-kafka-event-log-stream-topic-partitions", "why": "Replayable log with many reader groups and very high throughput"},
+  {"slug": "msg-pub-sub-topic-sns-fan-out-broadcast-topic", "why": "One event delivered to many different services at once"},
+  {"slug": "cache-redis-cache-in-memory-kv-sorted-set-pubsub", "why": "Lightweight list or stream queue when you already run Redis"}
+ ],
+ "breaks": [
+  {"t": "Backlog keeps growing", "d": "Messages arrive faster than workers finish them.", "see": "Queue depth and age of the oldest message climbing", "fix": "Autoscale workers on queue depth, speed up the handler, batch receives"},
+  {"t": "Same job done twice", "d": "A worker finished but its delete or ack was lost, so the message came back.", "see": "Duplicate emails or charges for one message ID", "fix": "Idempotent consumers: store processed IDs, or use FIFO deduplication on send"},
+  {"t": "Timeout too short", "d": "Jobs take longer than the visibility timeout, so a second worker starts the same job.", "see": "Receive count above 1 on healthy messages; overlapping work in logs", "fix": "Raise the timeout, or extend it with a heartbeat during long jobs"},
+  {"t": "Poison message", "d": "One message always fails, maybe bad data, and keeps being retried.", "see": "The same message ID failing again and again in logs", "fix": "A DLQ with a sensible maxReceiveCount, plus an alarm and a redrive after fixing"},
+  {"t": "Order matters but drifts", "d": "A standard queue does not promise order, so updates can apply out of sequence.", "see": "An older update overwriting a newer one", "fix": "FIFO with a message group per entity, or version numbers on each update"}
+ ],
+ "say": [
+  "The API puts a job on a queue and returns 202 straight away, and a pool of workers processes jobs in the background.",
+  "Delivery is at-least-once, so every handler is idempotent, keyed on a message ID we store when the job completes.",
+  "Failed jobs retry through the visibility timeout, and after a few attempts they land in a dead letter queue with an alarm on it.",
+  "We autoscale workers on queue depth, so a traffic spike makes the queue longer for a while instead of overloading the database."
+ ],
+ "followups": [
+  {"q": "Why not just call the other service directly?", "a": "A direct call means the user waits for the slow work, and if the other service is down the request fails. A queue lets you reply fast, smooths spikes and keeps work safe until a worker is free."},
+  {"q": "How do you get exactly-once processing?", "a": "Delivery is usually at-least-once, so aim for exactly-once effect: idempotent handlers that record each message ID, or update in the same database transaction. SQS FIFO also drops duplicate sends within a 5 minute window."},
+  {"q": "How do you keep order?", "a": "Use FIFO with a message group ID per customer or order. Order holds inside each group while different groups run in parallel. A standard queue gives only best-effort order."},
+  {"q": "A worker crashes mid-job. What happens?", "a": "It never deleted or acked the message, so after the visibility timeout (SQS) or when its connection closes (RabbitMQ) the message is delivered again, marked as a redelivery, to another worker."}
+ ],
+ "today": "In August 2025 Amazon SQS raised its largest message from 256 KiB to 1 MiB, so many payloads no longer need the store-in-S3-and-send-a-link pattern.",
+ "check": [
+  {"q": "A worker takes the message but crashes before deleting it. What does SQS do?", "a": "Makes it visible again after the visibility timeout", "d": ["Deletes it straight away", "Sends it to the DLQ at once", "Keeps it hidden forever"], "why": "The message comes back so another worker can retry it - that is at-least-once delivery."},
+  {"q": "Why must queue consumers be idempotent?", "a": "The same message can be delivered more than once", "d": ["Queues always lose some messages", "It makes messages smaller", "It removes the need for acks"], "why": "Retries and lost acks cause repeats, so handling a message twice must be safe."},
+  {"q": "One bad message fails every time. What stops it retrying forever?", "a": "A dead letter queue with maxReceiveCount", "d": ["A longer retention period", "Turning on long polling", "Adding more workers"], "why": "After that many receives the message moves aside to the DLQ for a look."},
+  {"q": "You need a customer's updates applied in order. Which setup?", "a": "A FIFO queue with the customer ID as message group", "d": ["A standard queue with more workers", "A longer visibility timeout", "Automatic acknowledgements"], "why": "FIFO keeps order inside each message group while other customers run in parallel."}
+ ],
+ "sources": [
+  {"t": "Amazon SQS: visibility timeout", "u": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/AboutVT.html"},
+  {"t": "Amazon SQS: message quotas", "u": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html"},
+  {"t": "Amazon SQS: queue types (standard and FIFO)", "u": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-queue-types.html"},
+  {"t": "Amazon SQS: exactly-once processing in FIFO", "u": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues-exactly-once-processing.md"},
+  {"t": "Amazon SQS: dead-letter queues", "u": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/SQSDeadLetterQueue.html"},
+  {"t": "RabbitMQ: consumer acknowledgements and publisher confirms", "u": "https://www.rabbitmq.com/docs/confirms"},
+  {"t": "AWS: SQS raises max message size to 1 MiB (Aug 2025)", "u": "https://aws.amazon.com/about-aws/whats-new/2025/08/amazon-sqs-max-payload-size-1mib"}
+ ]
+}

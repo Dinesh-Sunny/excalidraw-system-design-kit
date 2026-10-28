@@ -1,0 +1,404 @@
+{
+ "family": "agent",
+ "reviewed": "Oct 2026",
+ "what": "An AI agent is an LLM running in a loop: it picks the next step, calls a tool, reads the result and repeats until the task is done or a limit is reached.",
+ "like": "Like a new intern with a phone and a checklist: try something, see what happened, try the next thing, and check with you before spending money.",
+ "why": [
+  "Handles open-ended tasks where you can't script the steps in advance",
+  "Works with real systems through tools, so each step is checked against real results",
+  "One model plus many tools (often via MCP) covers search, code, files and APIs"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "user",
+    "t": "Person or system|goal + limits",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "approve",
+    "t": "Human approval|yes or no on risky steps",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "agent",
+    "i": "shield"
+   },
+   {
+    "id": "trace",
+    "t": "Tracing + evals|every step recorded",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "llmops",
+    "i": "eye"
+   },
+   {
+    "id": "llm",
+    "t": "LLM|chooses the next step",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "loop",
+    "t": "Agent loop|think · act · observe",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "agent",
+    "i": "loop"
+   },
+   {
+    "id": "mem",
+    "t": "Memory|context + long-term store",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "agent",
+    "i": "memory"
+   },
+   {
+    "id": "tools",
+    "t": "Tools|functions with schemas",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "agent",
+    "i": "tool"
+   },
+   {
+    "id": "mcp",
+    "t": "MCP server|tools · resources",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "agent",
+    "i": "service"
+   },
+   {
+    "id": "sandbox",
+    "t": "Sandbox|isolated code + files",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "agent",
+    "i": "lock"
+   }
+  ],
+  "edges": [
+   [
+    "user",
+    "loop",
+    "task"
+   ],
+   [
+    "loop",
+    "llm",
+    "next step?"
+   ],
+   [
+    "loop",
+    "tools",
+    "tool call"
+   ],
+   [
+    "loop",
+    "mcp",
+    "tools/call"
+   ],
+   [
+    "loop",
+    "sandbox",
+    "run code"
+   ],
+   [
+    "loop",
+    "mem",
+    "read/write"
+   ],
+   [
+    "loop",
+    "approve",
+    "risky? ask"
+   ],
+   [
+    "loop",
+    "trace",
+    "spans"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Receive a goal",
+    "d": "A person or another system hands over a task, the tools the agent may use, and limits such as a maximum number of steps.",
+    "hl": [
+     "user",
+     "loop"
+    ]
+   },
+   {
+    "t": "Think: pick a step",
+    "d": "The loop sends the goal, history and tool list to the LLM. The model either answers, or asks for a tool by name with JSON arguments that match its schema.",
+    "hl": [
+     "loop",
+     "llm",
+     "mem"
+    ]
+   },
+   {
+    "t": "Act through a tool",
+    "d": "Your code runs the call: a local function, a tool on an MCP server via tools/call, or code inside a sandbox. The model only asks; your code does the work.",
+    "hl": [
+     "tools",
+     "mcp",
+     "sandbox"
+    ]
+   },
+   {
+    "t": "Pause on risky actions",
+    "d": "Before deleting, paying or sending, the loop asks a human for a yes or no. The MCP spec says a person should always be able to deny a tool call.",
+    "hl": [
+     "approve"
+    ]
+   },
+   {
+    "t": "Observe and repeat",
+    "d": "The tool result goes back into the context as ground truth. The loop repeats while the model asks for tools, and stops on a final answer or at the step limit.",
+    "hl": [
+     "loop",
+     "llm"
+    ]
+   },
+   {
+    "t": "Remember and review",
+    "d": "Facts worth keeping go to a long-term memory store for later sessions. Every model call and tool call is recorded as a trace, so you can debug and run evals.",
+    "hl": [
+     "mem",
+     "trace"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "2",
+   "l": "standard MCP transports: stdio (local) and Streamable HTTP (remote)",
+   "s": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports"
+  },
+  {
+   "v": "1:1",
+   "l": "each MCP client inside the host talks to exactly one server",
+   "s": "https://modelcontextprotocol.io/specification/2025-11-25/architecture"
+  },
+  {
+   "v": "10,000",
+   "l": "active MCP servers when MCP joined the Linux Foundation, Dec 2025",
+   "s": "https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/"
+  },
+  {
+   "v": "20",
+   "l": "strict (schema-checked) tools allowed per Claude request",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+  }
+ ],
+ "tool": "agent",
+ "choices": [
+  {
+   "t": "Workflow or agent",
+   "d": "If you know the steps, write them as a workflow in code: cheaper and predictable. Use an agent only when the model must decide the path itself."
+  },
+  {
+   "t": "Step limit",
+   "d": "Cap turns (for example max_turns) and total tokens or time per task. When the cap is hit, stop cleanly and report progress instead of looping."
+  },
+  {
+   "t": "Tool design",
+   "d": "Few, clear tools with good descriptions and strict schemas. Shape arguments so mistakes are hard (poka-yoke), and return helpful error text the model can fix from."
+  },
+  {
+   "t": "Approval policy",
+   "d": "Reads run freely; writes that cost money, delete data or contact people wait for a human yes. Show the exact tool inputs in the request."
+  },
+  {
+   "t": "Memory strategy",
+   "d": "Short-term memory is the context window; summarise or compact it as it grows. Keep durable facts in a long-term store the agent reads at the start."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "ai-llm-large-language-model-gpt-claude-gemini-api-inference-ai",
+   "why": "One clear step? A single LLM call is cheaper and faster"
+  },
+  {
+   "slug": "agent-tools-function-calling-tool-use-api-ai-agentic",
+   "why": "A fixed tool call in your code, with no open-ended loop"
+  },
+  {
+   "slug": "agent-supervisor-agent-orchestrator-manager-multi-agent-lead-ai-agentic",
+   "why": "Big jobs split across specialist agents under a lead"
+  },
+  {
+   "slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation",
+   "why": "Answering from documents usually needs retrieval, not autonomy"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Loops without progress",
+   "d": "The agent repeats the same search or edit and never finishes.",
+   "see": "Turn count near the limit, the same tool call again and again in traces",
+   "fix": "A step limit, a check for repeated calls, clearer success criteria in the prompt"
+  },
+  {
+   "t": "Wrong tool or bad arguments",
+   "d": "Vague tool descriptions lead to the wrong call or invalid inputs.",
+   "see": "Tool errors (isError true) and retries in traces",
+   "fix": "Better names and docs, strict schemas, error messages that say how to fix the input"
+  },
+  {
+   "t": "Context fills up",
+   "d": "Long tasks pile tool results into the context window.",
+   "see": "Rising input tokens per turn, slower and costlier steps, early stops",
+   "fix": "Clear old tool results, compact the history, keep key facts in a memory store"
+  },
+  {
+   "t": "Instructions hidden in data",
+   "d": "A web page or file the agent reads contains text that tries to steer it (prompt injection).",
+   "see": "Unexpected tool calls right after reading outside content",
+   "fix": "Treat tool output as data, least-privilege tools, a sandbox, human approval for risky actions"
+  },
+  {
+   "t": "Small errors add up",
+   "d": "Each step is a little uncertain, so long runs drift and cost more.",
+   "see": "Eval pass rate falls as tasks get longer; cost per task climbs",
+   "fix": "Shorter loops, checkpoints with a human, evals on full runs, a workflow where steps are known"
+  }
+ ],
+ "say": [
+  "I'll start with a workflow and only make it an agent where the path truly depends on what the model finds.",
+  "The agent loop calls the LLM with the tool list, runs any tool it asks for, feeds the result back, and stops on a final answer or a max-turns limit.",
+  "Tools come from MCP servers so they are reusable, and anything that writes, pays or sends goes through a human approval step; code runs in a sandbox.",
+  "Every run is traced, model calls and tool calls as spans, and I keep an eval set of real tasks to check success rate, steps and cost before each change."
+ ],
+ "followups": [
+  {
+   "q": "Workflow or agent - how do you choose?",
+   "a": "If the steps are known, a workflow in code is cheaper, faster and easier to test. Use an agent when the number and order of steps depend on what it discovers, like debugging or research. Agents trade cost and latency for flexibility."
+  },
+  {
+   "q": "How does the agent remember things?",
+   "a": "Short-term memory is the context window: the conversation and tool results. Long-term memory is an outside store (files, a database or vectors) the agent reads and writes through tools, so knowledge survives across sessions."
+  },
+  {
+   "q": "What is MCP and why use it?",
+   "a": "The Model Context Protocol is an open standard, built on JSON-RPC, for connecting AI apps to tools and data. A server exposes tools, resources and prompts once, and any MCP host can use them."
+  },
+  {
+   "q": "How do you test an agent?",
+   "a": "Build an eval set of real tasks with clear pass checks, run the full loop in a sandbox, and read the traces. Track success rate, steps, tokens and cost per task, and rerun the set on every prompt or tool change."
+  }
+ ],
+ "today": "In December 2025 Anthropic gave MCP to the new Agentic AI Foundation under the Linux Foundation, co-founded with Block and OpenAI, so the protocol is now run as a shared open standard.",
+ "check": [
+  {
+   "q": "When should an agent stop its loop?",
+   "a": "On a final answer, or when it hits the step or budget limit",
+   "d": [
+    "Only when the user closes the app",
+    "After exactly one tool call",
+    "Whenever a tool returns an error"
+   ],
+   "why": "A final answer ends the loop; a max-turns cap keeps it in control. Tool errors are fed back so the model can fix its call."
+  },
+  {
+   "q": "The agent is about to delete a customer's data. What should happen?",
+   "a": "Pause and ask a human to approve or deny",
+   "d": [
+    "Run it right away to save time",
+    "Ask the LLM if it is sure",
+    "Retry it twice to be safe"
+   ],
+   "why": "Risky, hard-to-undo actions go through human approval. MCP says a person should be able to deny tool calls."
+  },
+  {
+   "q": "In MCP, what does a server expose?",
+   "a": "Tools, resources and prompts",
+   "d": [
+    "Model weights and GPUs",
+    "Only a chat window",
+    "The host's full conversation history"
+   ],
+   "why": "Servers offer focused capabilities. By design they don't see the whole conversation; the host keeps that."
+  },
+  {
+   "q": "The steps of a task are always the same. What fits best?",
+   "a": "A workflow in code that calls the LLM at fixed points",
+   "d": [
+    "A fully autonomous agent",
+    "Several agents debating each step",
+    "An agent with no step limit"
+   ],
+   "why": "Known steps make a workflow cheaper, faster and easier to test than an agent."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Anthropic: building effective agents",
+   "u": "https://www.anthropic.com/research/building-effective-agents"
+  },
+  {
+   "t": "Claude docs: how tool use works",
+   "u": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works"
+  },
+  {
+   "t": "Claude docs: memory tool",
+   "u": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool"
+  },
+  {
+   "t": "Claude docs: structured outputs",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+  },
+  {
+   "t": "MCP spec: architecture",
+   "u": "https://modelcontextprotocol.io/specification/2025-11-25/architecture"
+  },
+  {
+   "t": "MCP spec: transports",
+   "u": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports"
+  },
+  {
+   "t": "MCP spec: tools",
+   "u": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools"
+  },
+  {
+   "t": "MCP blog: MCP joins the Agentic AI Foundation",
+   "u": "https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/"
+  },
+  {
+   "t": "OpenAI Agents SDK: running agents",
+   "u": "https://openai.github.io/openai-agents-python/running_agents/"
+  },
+  {
+   "t": "OpenAI Agents SDK: tracing",
+   "u": "https://openai.github.io/openai-agents-python/tracing/"
+  }
+ ]
+}

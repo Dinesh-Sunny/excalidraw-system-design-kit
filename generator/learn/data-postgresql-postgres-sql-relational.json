@@ -1,0 +1,416 @@
+{
+ "family": "database",
+ "reviewed": "Oct 2026",
+ "what": "PostgreSQL is an open-source relational database: data lives in tables of rows and columns, you ask for it with SQL, and transactions keep every change safe and all-or-nothing.",
+ "like": "Like a well-run library: books (rows) on labelled shelves (tables), a card catalogue (index) to find them fast, and a logbook of every change.",
+ "why": [
+  "Strong guarantees: transactions, constraints, foreign keys and joins",
+  "Indexes make lookups fast and SQL handles almost any question",
+  "Huge extension ecosystem, such as pgvector for AI embeddings"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "app",
+    "t": "Your service|SQL over a connection",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "pool",
+    "t": "PgBouncer|shares a few connections",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "lb"
+   },
+   {
+    "id": "vacuum",
+    "t": "VACUUM|clears dead row versions",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "evict"
+   },
+   {
+    "id": "backend",
+    "t": "Backend process|one per connection",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "service"
+   },
+   {
+    "id": "buffers",
+    "t": "Shared buffers|table + index pages in RAM",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "memory"
+   },
+   {
+    "id": "btree",
+    "t": "B-tree index|sorted keys, few hops",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "partition"
+   },
+   {
+    "id": "wal",
+    "t": "WAL|logged before data",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "log"
+   },
+   {
+    "id": "replica",
+    "t": "Read replica|replays the WAL",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "replica"
+   },
+   {
+    "id": "heap",
+    "t": "Table files|rows + old versions",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "db"
+   }
+  ],
+  "edges": [
+   [
+    "app",
+    "pool",
+    "connect"
+   ],
+   [
+    "pool",
+    "backend",
+    "reuse conn"
+   ],
+   [
+    "backend",
+    "wal",
+    "log first"
+   ],
+   [
+    "backend",
+    "buffers",
+    ""
+   ],
+   [
+    "buffers",
+    "btree",
+    "find key"
+   ],
+   [
+    "btree",
+    "heap",
+    "row pointer"
+   ],
+   [
+    "buffers",
+    "heap",
+    "write later"
+   ],
+   [
+    "wal",
+    "replica",
+    "stream"
+   ],
+   [
+    "vacuum",
+    "btree",
+    "tidy"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Connect through a pool",
+    "d": "Each connection gets its own backend process on the server. PgBouncer lets thousands of app clients share a small set of real connections, so the database is not swamped.",
+    "hl": [
+     "app",
+     "pool",
+     "backend"
+    ]
+   },
+   {
+    "t": "Find rows by index",
+    "d": "A B-tree index keeps keys sorted in a shallow tree of pages. A lookup walks from the root to a leaf in a few hops, then jumps to the row instead of scanning the table.",
+    "hl": [
+     "buffers",
+     "btree",
+     "heap"
+    ]
+   },
+   {
+    "t": "Log first, then commit",
+    "d": "Every change is written to the WAL (write-ahead log) first. At commit only that sequential log is flushed; data pages are written later, and after a crash the WAL is replayed.",
+    "hl": [
+     "backend",
+     "wal"
+    ]
+   },
+   {
+    "t": "New versions, not overwrites",
+    "d": "MVCC (multi-version concurrency control): an UPDATE writes a new row version and keeps the old one. Each statement reads a snapshot, so readers and writers never block each other.",
+    "hl": [
+     "buffers",
+     "heap"
+    ]
+   },
+   {
+    "t": "VACUUM tidies up",
+    "d": "Old versions nobody can see any more are dead rows. Autovacuum reclaims their space in tables and indexes so the database does not keep growing.",
+    "hl": [
+     "vacuum",
+     "btree",
+     "heap"
+    ]
+   },
+   {
+    "t": "Replicas replay the WAL",
+    "d": "Streaming replication sends WAL to standby servers, which replay it and can serve read-only queries. It is asynchronous by default, usually under a second behind.",
+    "hl": [
+     "wal",
+     "replica"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "100",
+   "l": "default max_connections on a typical install",
+   "s": "https://postgresqlco.nf/doc/en/param/max_connections/"
+  },
+  {
+   "v": "20",
+   "l": "PgBouncer default server connections per user and database pool",
+   "s": "https://www.pgbouncer.org/config"
+  },
+  {
+   "v": "< 1 s",
+   "l": "typical lag of an async streaming replica that keeps up",
+   "s": "https://www.postgresql.org/docs/18/warm-standby.html"
+  },
+  {
+   "v": "~1,000s",
+   "l": "partitions the planner handles well, if queries prune most",
+   "s": "https://www.postgresql.org/docs/18/ddl-partitioning.html"
+  },
+  {
+   "v": "2,000",
+   "l": "max dimensions for a pgvector vector index (16,000 stored)",
+   "s": "https://github.com/pgvector/pgvector"
+  }
+ ],
+ "tool": "sqlindex",
+ "choices": [
+  {
+   "t": "Indexes",
+   "d": "Add a B-tree on columns you filter, join or sort by. Each index speeds reads but slows writes and uses space, so index for real queries only."
+  },
+  {
+   "t": "Isolation level",
+   "d": "Read Committed is the default: each statement sees fresh committed data. Repeatable Read or Serializable give one snapshot per transaction, but you must retry on serialization failures (SQLSTATE 40001)."
+  },
+  {
+   "t": "Pool mode",
+   "d": "PgBouncer defaults to session pooling. Transaction pooling hands a server connection back after each transaction, so far more clients fit, but session features like SET need care."
+  },
+  {
+   "t": "Replication",
+   "d": "Async replicas are fast and good for read scaling. Synchronous replication waits for a standby to confirm each commit, trading some latency for no lost writes on failover."
+  },
+  {
+   "t": "Partitioning",
+   "d": "Split a huge table by range, list or hash. Queries skip partitions they cannot match, and dropping an old partition beats a big DELETE."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "data-key-value-dynamodb-dynamodb-kv-nosql",
+   "why": "Simple key lookups at massive scale with no servers to run"
+  },
+  {
+   "slug": "data-wide-column-cassandra-cassandra-scylla-hbase-nosql",
+   "why": "Write-heavy data spread across many nodes and data centres"
+  },
+  {
+   "slug": "data-search-index-elasticsearch-elasticsearch-opensearch-inverted-index-full-text",
+   "why": "Full-text search with ranking and fuzzy matching"
+  },
+  {
+   "slug": "data-data-warehouse-snowflake-bigquery-redshift-olap-analytics",
+   "why": "Big analytical scans across billions of rows"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Too many connections",
+   "d": "Each connection is a process with its own memory, so a burst of app instances runs out of slots.",
+   "see": "Connection errors at peak traffic, server memory climbing",
+   "fix": "Put PgBouncer in front in transaction mode and cap app pool sizes"
+  },
+  {
+   "t": "Slow query, missing index",
+   "d": "A filter on an unindexed column scans the whole table.",
+   "see": "EXPLAIN shows Seq Scan; p99 latency (slowest 1 in 100) rises with table size",
+   "fix": "Add the right B-tree or composite index and check EXPLAIN ANALYZE"
+  },
+  {
+   "t": "Table bloat",
+   "d": "Dead row versions pile up faster than autovacuum clears them, often due to a long-open transaction.",
+   "see": "n_dead_tup growing, table size rising with steady row count",
+   "fix": "Tune autovacuum per table and close idle-in-transaction sessions"
+  },
+  {
+   "t": "Stale reads from a replica",
+   "d": "Async replicas trail the primary slightly, so a user may not see their own write.",
+   "see": "Replication lag metric; \"I saved it but it is gone\" reports",
+   "fix": "Read your own writes from the primary, or wait for the replica to catch up"
+  },
+  {
+   "t": "Transaction ID wraparound",
+   "d": "Transaction IDs are 32 bits, so every table must be vacuumed regularly to freeze old rows.",
+   "see": "age(datfrozenxid) climbing and warnings in the log",
+   "fix": "Keep autovacuum healthy and watch frozen-XID age"
+  }
+ ],
+ "say": [
+  "I'll store the core data in PostgreSQL because it needs transactions, constraints and joins.",
+  "I'll index the columns in our hot WHERE clauses, and keep the default Read Committed isolation unless a flow needs a stricter snapshot.",
+  "Reads scale with streaming replicas, and PgBouncer in transaction mode keeps connection count low as app servers grow.",
+  "If one table gets huge I'll partition it by time, and only shard across machines once a single primary truly runs out of room."
+ ],
+ "followups": [
+  {
+   "q": "Why are index lookups fast?",
+   "a": "A B-tree keeps keys sorted in a shallow tree of pages. Each page holds many keys, so even a large table needs only a few page reads from root to leaf, then one jump to the row."
+  },
+  {
+   "q": "What does MVCC buy you?",
+   "a": "Updates create new row versions, and each statement reads a snapshot. Readers never block writers and writers never block readers. The cost is dead versions that VACUUM must clean up."
+  },
+  {
+   "q": "How would you scale reads?",
+   "a": "Add streaming replicas and send read-only queries there, plus a cache for hot keys. Replicas are async by default, so read-your-own-writes traffic still goes to the primary."
+  },
+  {
+   "q": "What happens if the primary crashes?",
+   "a": "Committed changes are safe in the WAL and replayed on restart. For high availability a replica is promoted; with async replication the last moment of writes may be missing, so use synchronous replication where that matters."
+  }
+ ],
+ "today": "PostgreSQL 18 is the current release in late 2026, with PostgreSQL 19 at release-candidate stage (RC 1 out on 15 Oct 2026).",
+ "check": [
+  {
+   "q": "What is PostgreSQL's default transaction isolation level?",
+   "a": "Read Committed",
+   "d": [
+    "Serializable",
+    "Repeatable Read",
+    "Read Uncommitted"
+   ],
+   "why": "Each statement sees data committed before it began. Read Uncommitted exists by name but behaves like Read Committed."
+  },
+  {
+   "q": "Why does a commit not need to write every changed data page to disk?",
+   "a": "The WAL is flushed instead and can redo changes after a crash",
+   "d": [
+    "Data pages are always kept only in memory",
+    "Replicas store the data for it",
+    "VACUUM writes the pages at commit"
+   ],
+   "why": "Flushing one sequential log is cheap. Data pages are written later in the background."
+  },
+  {
+   "q": "Your app has 2,000 short-lived clients hitting one database. What helps most?",
+   "a": "A pooler like PgBouncer in transaction mode",
+   "d": [
+    "Raising max_connections to 5,000",
+    "Switching to Serializable isolation",
+    "Adding more indexes"
+   ],
+   "why": "Each connection is a server process. A pooler lets many clients share a few real connections."
+  },
+  {
+   "q": "A table keeps growing though its row count is steady. Likely cause?",
+   "a": "Dead row versions not being vacuumed",
+   "d": [
+    "A missing B-tree index",
+    "Replication lag",
+    "Too many partitions"
+   ],
+   "why": "MVCC leaves old versions behind. Autovacuum frees their space unless something holds them back."
+  }
+ ],
+ "sources": [
+  {
+   "t": "PostgreSQL 18 docs: transaction isolation",
+   "u": "https://www.postgresql.org/docs/current/transaction-iso.html"
+  },
+  {
+   "t": "PostgreSQL docs: MVCC introduction",
+   "u": "https://www.postgresql.org/docs/19/mvcc-intro.html"
+  },
+  {
+   "t": "PostgreSQL 18 docs: write-ahead logging",
+   "u": "https://www.postgresql.org/docs/18/wal-intro.html"
+  },
+  {
+   "t": "PostgreSQL 18 docs: log-shipping standby servers",
+   "u": "https://www.postgresql.org/docs/18/warm-standby.html"
+  },
+  {
+   "t": "PostgreSQL 18 docs: table partitioning",
+   "u": "https://www.postgresql.org/docs/18/ddl-partitioning.html"
+  },
+  {
+   "t": "PostgreSQL docs: B-tree indexes",
+   "u": "https://www.postgresql.org/docs/17/btree.html"
+  },
+  {
+   "t": "PostgreSQL 18 docs (mirror): routine vacuuming",
+   "u": "https://docs.w3cub.com/postgresql~18/routine-vacuuming"
+  },
+  {
+   "t": "postgresqlco.nf: max_connections",
+   "u": "https://postgresqlco.nf/doc/en/param/max_connections/"
+  },
+  {
+   "t": "PgBouncer docs: configuration",
+   "u": "https://www.pgbouncer.org/config"
+  },
+  {
+   "t": "pgvector README",
+   "u": "https://github.com/pgvector/pgvector"
+  }
+ ]
+}

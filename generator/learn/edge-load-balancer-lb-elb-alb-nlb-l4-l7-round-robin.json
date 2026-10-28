@@ -1,0 +1,396 @@
+{
+ "family": "edge",
+ "reviewed": "Oct 2026",
+ "what": "A load balancer sits in front of a group of servers and spreads incoming requests across the healthy ones, so no single server is overloaded and one failure does not take the site down.",
+ "like": "Like a host at a busy restaurant who seats each new guest at a free table and skips any table that is being cleaned.",
+ "why": [
+  "Add or remove servers without clients noticing - scale out instead of up",
+  "Health checks route around broken servers automatically",
+  "One place to end TLS, route by path or host, and drain servers for deploys"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "users",
+    "t": "Clients|browsers and apps",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "listener",
+    "t": "Listener|:443 - TLS ends here",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "shield"
+   },
+   {
+    "id": "rules",
+    "t": "L7 rules|path, host, header",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "router"
+   },
+   {
+    "id": "health",
+    "t": "Health checker|probe every 30 s",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   },
+   {
+    "id": "pick",
+    "t": "Picker|round robin or least",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "lb"
+   },
+   {
+    "id": "sticky",
+    "t": "Sticky cookie|same user, same server",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "lock"
+   },
+   {
+    "id": "s1",
+    "t": "Server A|healthy",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "s2",
+    "t": "Server B|healthy",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "s3",
+    "t": "Server C|draining",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   }
+  ],
+  "edges": [
+   [
+    "users",
+    "listener",
+    "HTTPS"
+   ],
+   [
+    "listener",
+    "rules",
+    "plain HTTP"
+   ],
+   [
+    "rules",
+    "pick",
+    "target group"
+   ],
+   [
+    "sticky",
+    "pick",
+    "pin user"
+   ],
+   [
+    "pick",
+    "s2",
+    "send"
+   ],
+   [
+    "pick",
+    "s1",
+    ""
+   ],
+   [
+    "health",
+    "s1",
+    "GET /health"
+   ],
+   [
+    "pick",
+    "s3",
+    "no new reqs"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Client connects",
+    "d": "DNS hands the client the load balancer's address, not a server's. The client opens one connection to the listener, for example on port 443.",
+    "hl": [
+     "users",
+     "listener"
+    ]
+   },
+   {
+    "t": "TLS ends here",
+    "d": "The listener decrypts traffic with your certificate (TLS termination), so certificates and cipher rules live in one place. It can re-encrypt to the servers if you need that.",
+    "hl": [
+     "listener"
+    ]
+   },
+   {
+    "t": "Read the request",
+    "d": "A layer 7 (HTTP) balancer reads path, host and headers and picks a target group, e.g. /api to API servers. A layer 4 balancer only sees IPs and ports and forwards the connection.",
+    "hl": [
+     "listener",
+     "rules"
+    ]
+   },
+   {
+    "t": "Pick a healthy server",
+    "d": "Round robin takes turns. Least connections or least outstanding requests favours the least busy server. Consistent hashing sends the same key to the same server, handy for caches.",
+    "hl": [
+     "rules",
+     "pick",
+     "s1",
+     "s2"
+    ]
+   },
+   {
+    "t": "Keep checking health",
+    "d": "The balancer probes each server on a path like /health. On AWS ALB the defaults are every 30 s, out after 2 failures, back after 5 passes.",
+    "hl": [
+     "health",
+     "s1"
+    ]
+   },
+   {
+    "t": "Stick and drain",
+    "d": "A sticky cookie can keep one user on one server. A server being removed gets no new requests and 300 s (ALB default) to finish the ones in flight.",
+    "hl": [
+     "sticky",
+     "pick",
+     "s3"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "30 s",
+   "l": "ALB health check interval; 2 fails out, 5 passes back",
+   "s": "https://docs.amazonaws.cn/en_us/elasticloadbalancing/latest/application/target-group-health-checks.html"
+  },
+  {
+   "v": "300 s",
+   "l": "ALB deregistration delay (connection draining) by default",
+   "s": "https://docs.aws.amazon.com/en_us/elasticloadbalancing/latest/application/edit-target-group-attributes.html"
+  },
+  {
+   "v": "60 s",
+   "l": "ALB idle connection timeout by default (1 to 4000 s)",
+   "s": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-load-balancer-attributes.html"
+  },
+  {
+   "v": "350 s",
+   "l": "NLB default TCP idle timeout before a quiet flow is dropped",
+   "s": "https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.md"
+  },
+  {
+   "v": "1/N",
+   "l": "requests that move when one of N hosts joins (ring hash)",
+   "s": "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/load_balancers"
+  }
+ ],
+ "tool": "lb",
+ "choices": [
+  {
+   "t": "Layer 4 or layer 7",
+   "d": "L4 (AWS NLB) forwards TCP or UDP, scales to millions of requests per second, static IP per zone. L7 (AWS ALB, NGINX, Envoy) reads HTTP so it can route by path, host or header."
+  },
+  {
+   "t": "Algorithm",
+   "d": "Round robin for similar, short requests. Least connections for uneven or long-lived work. Consistent hashing (ring hash, Maglev) when the same key should keep landing on the same server."
+  },
+  {
+   "t": "Health check",
+   "d": "Pick the path, interval and thresholds. A quick check that the app itself can serve is usually best; checking every dependency can mark all servers down at once."
+  },
+  {
+   "t": "Stickiness",
+   "d": "Off is simplest. Turn it on only if servers hold session state; ALB lets you set the cookie duration from 1 second to 7 days. Better still, keep sessions in a shared store."
+  },
+  {
+   "t": "Draining and timeouts",
+   "d": "Set the deregistration delay a little longer than your slowest request so deploys drop nothing. Match idle timeouts to long connections like WebSockets."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "edge-dns-route53-domain-name-resolution-geo-routing",
+   "why": "Spread users across regions by answering DNS with the nearest healthy site"
+  },
+  {
+   "slug": "edge-api-gateway-auth-routing-throttling-bff-kong",
+   "why": "Adds auth, API keys, quotas and request shaping on top of routing"
+  },
+  {
+   "slug": "edge-cdn-cloudfront-akamai-edge-cache-static-assets",
+   "why": "Serves cached content from the edge so many requests never reach servers"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Uneven load",
+   "d": "Round robin assumes requests cost the same; sticky sessions or long connections pile up on a few servers.",
+   "see": "One server at high CPU or many active connections while others idle",
+   "fix": "Least connections or least outstanding requests, shorter stickiness, sessions in a shared store"
+  },
+  {
+   "t": "Health check that lies",
+   "d": "A shallow check passes while the app fails, or a deep one fails everywhere when one dependency blips.",
+   "see": "5xx errors with all targets healthy, or every target unhealthy at once",
+   "fix": "Check that the app can serve its own requests; watch dependencies separately"
+  },
+  {
+   "t": "Deploys drop requests",
+   "d": "A server stops before its in-flight requests finish.",
+   "see": "A burst of 502 or 503 errors at each deploy",
+   "fix": "Deregistration delay longer than the slowest request, plus graceful shutdown in the app"
+  },
+  {
+   "t": "Quiet connections cut",
+   "d": "A long-lived TCP connection sends nothing for longer than the idle timeout, so the balancer forgets it.",
+   "see": "Clients get a TCP reset after a quiet spell (350 s on NLB by default)",
+   "fix": "Send TCP keepalives or app-level pings, or raise the idle timeout"
+  }
+ ],
+ "say": [
+  "I'll put a layer 7 load balancer in front of the stateless app servers, terminating TLS there and routing /api and /static to separate target groups.",
+  "It uses least outstanding requests because our request times vary, and health checks hit a lightweight /health endpoint so broken servers drop out within a minute.",
+  "Servers keep no session state - sessions live in Redis - so I don't need sticky sessions and can add or remove servers freely.",
+  "For deploys I rely on connection draining so in-flight requests finish before a server goes away."
+ ],
+ "followups": [
+  {
+   "q": "When would you pick L4 over L7?",
+   "a": "When you need raw speed, non-HTTP protocols (TCP or UDP), a static IP, or the client must keep TLS end to end. L7 is the choice when you want routing by path or header, TLS termination, or HTTP-aware features like cookies."
+  },
+  {
+   "q": "Why consistent hashing instead of hash mod N?",
+   "a": "With mod N, adding a server remaps almost every key, so caches go cold. A hash ring moves only about 1/N of keys. Maglev builds and looks up faster but moves a few more keys when hosts change."
+  },
+  {
+   "q": "Isn't the load balancer itself a single point of failure?",
+   "a": "Managed balancers run several nodes across availability zones; NLB has one IP per enabled zone and DNS returns them all. Self-hosted, you run two or more balancers with a floating IP or DNS in front."
+  },
+  {
+   "q": "How do you avoid dropping requests during a deploy?",
+   "a": "Deregister the server first, let connection draining finish in-flight work, then stop it. Health checks keep new servers out until they pass, and slow start can ramp their share up gently."
+  }
+ ],
+ "today": "On AWS, the console's default TLS policy for ALB HTTPS listeners is now ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09, which offers hybrid post-quantum (ML-KEM) key exchange while still serving TLS 1.2 and 1.3 clients.",
+ "check": [
+  {
+   "q": "You need to route /api and /images to different server groups. Which balancer?",
+   "a": "A layer 7 (HTTP) load balancer",
+   "d": [
+    "A layer 4 (TCP) load balancer",
+    "Plain round robin DNS",
+    "A sticky cookie"
+   ],
+   "why": "Only an L7 balancer reads the HTTP path. L4 sees just IPs and ports."
+  },
+  {
+   "q": "Requests vary from 5 ms to 5 s. Which algorithm spreads load best?",
+   "a": "Least connections / least outstanding requests",
+   "d": [
+    "Round robin",
+    "IP hash",
+    "Random with no weights"
+   ],
+   "why": "It sends new work to the server with the fewest requests in progress, so slow requests don't pile up on one box."
+  },
+  {
+   "q": "What does connection draining (deregistration delay) do?",
+   "a": "Lets in-flight requests finish before a server is removed",
+   "d": [
+    "Stops TLS on the server",
+    "Moves sessions to another server",
+    "Retries failed requests on a new server"
+   ],
+   "why": "The server gets no new requests but keeps serving current ones, 300 s by default on ALB."
+  },
+  {
+   "q": "Why use consistent hashing for a cache tier?",
+   "a": "Adding or removing one server moves only a small share of keys",
+   "d": [
+    "It encrypts the keys",
+    "It makes every server hold every key",
+    "It removes the need for health checks"
+   ],
+   "why": "With a hash ring, one host change affects about 1/N of keys, so most of the cache stays warm."
+  }
+ ],
+ "sources": [
+  {
+   "t": "AWS docs: ALB target group health checks",
+   "u": "https://docs.amazonaws.cn/en_us/elasticloadbalancing/latest/application/target-group-health-checks.html"
+  },
+  {
+   "t": "AWS docs: ALB target group attributes",
+   "u": "https://docs.aws.amazon.com/en_us/elasticloadbalancing/latest/application/edit-target-group-attributes.html"
+  },
+  {
+   "t": "AWS docs: ALB load balancer attributes",
+   "u": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-load-balancer-attributes.html"
+  },
+  {
+   "t": "AWS docs: what is a Network Load Balancer",
+   "u": "https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html"
+  },
+  {
+   "t": "AWS docs: Network Load Balancers",
+   "u": "https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.md"
+  },
+  {
+   "t": "AWS docs: ALB security policies",
+   "u": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/describe-ssl-policies.html"
+  },
+  {
+   "t": "NGINX docs: HTTP load balancing",
+   "u": "https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/"
+  },
+  {
+   "t": "Envoy docs: supported load balancers",
+   "u": "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/load_balancers"
+  },
+  {
+   "t": "HAProxy docs: backends and algorithms",
+   "u": "https://www.haproxy.com/documentation/haproxy-configuration-tutorials/core-concepts/backends"
+  }
+ ]
+}

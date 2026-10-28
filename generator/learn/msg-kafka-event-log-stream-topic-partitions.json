@@ -1,0 +1,100 @@
+{
+ "family": "stream",
+ "reviewed": "Oct 2026",
+ "what": "Kafka is a durable, append-only event log split into topics and partitions. Producers write events once, and many consumer groups read them at their own pace, even replaying old ones.",
+ "like": "Like a ship's logbook copied onto several ships: entries are only ever added at the end, and every reader keeps a bookmark of the last line they read.",
+ "why": [
+  "Very high throughput by spreading a topic over many partitions and brokers",
+  "Events stay for days (or forever), so new readers can replay history",
+  "One stream feeds many independent consumer groups without them slowing each other"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "prod", "t": "Producer|key picks the partition", "x": 0, "y": 20, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "p0", "t": "Partition 0|leader on broker 1", "x": 265, "y": 20, "w": 170, "h": 86, "c": "msg", "i": "partition"},
+   {"id": "p1", "t": "Partition 1|leader on broker 2", "x": 265, "y": 180, "w": 170, "h": 86, "c": "msg", "i": "partition"},
+   {"id": "ret", "t": "Retention|delete old or compact", "x": 265, "y": 340, "w": 170, "h": 86, "c": "msg", "i": "clock"},
+   {"id": "foll", "t": "Follower replicas|in-sync set (ISR)", "x": 550, "y": 20, "w": 150, "h": 86, "c": "msg", "i": "replica"},
+   {"id": "cg", "t": "Consumer group|one partition each", "x": 550, "y": 180, "w": 150, "h": 86, "c": "svc", "i": "user"},
+   {"id": "off", "t": "Committed offsets|bookmark per partition", "x": 550, "y": 340, "w": 150, "h": 86, "c": "msg", "i": "log"},
+   {"id": "ctrl", "t": "KRaft controllers|cluster metadata", "x": 0, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "lock"}
+  ],
+  "edges": [
+   ["prod", "p0", "hash(key)"],
+   ["prod", "p1", ""],
+   ["p0", "foll", "replicate"],
+   ["p1", "cg", "poll"],
+   ["cg", "off", "commit"],
+   ["p1", "ret", "old segments"],
+   ["ctrl", "p1", "elect leader"]
+  ],
+  "steps": [
+   {"t": "Producer picks a partition", "d": "A record with a key is hashed (murmur2) and taken modulo the partition count, so the same key, like user:42, always lands in the same partition.", "hl": ["prod", "p0", "p1"]},
+   {"t": "Appended with an offset", "d": "The partition leader adds the record to the end of its log and gives it the next offset (a position number). Order is kept inside a partition, not across partitions.", "hl": ["p0", "p1"]},
+   {"t": "Copied to followers", "d": "Followers copy the leader. With acks=all the leader confirms only once every in-sync replica (ISR) has the record, and min.insync.replicas sets how many must be there.", "hl": ["p0", "foll"]},
+   {"t": "Group reads in parallel", "d": "Each partition is read by exactly one consumer in a group, so a group scales up to one consumer per partition. Other groups read the same data separately.", "hl": ["p1", "cg"]},
+   {"t": "Bookmarks are saved", "d": "Consumers commit the next offset they will read into the internal __consumer_offsets topic. After a restart they carry on from that bookmark, or rewind to replay.", "hl": ["cg", "off"]},
+   {"t": "Controllers and cleanup", "d": "KRaft controllers, a Raft quorum, hold cluster metadata and pick new leaders. Old log segments are deleted after the retention time, or compacted to the latest value per key.", "hl": ["ctrl", "ret"]}
+  ]
+ },
+ "numbers": [
+  {"v": "7 days", "l": "default topic retention on Confluent Cloud (retention.ms 604,800,000)", "s": "https://docs.confluent.io/cloud/current/topics/manage.html"},
+  {"v": "3", "l": "default replication factor on Confluent Cloud: three copies of each partition", "s": "https://docs.confluent.io/cloud/current/topics/manage.html"},
+  {"v": "2", "l": "default min.insync.replicas on Confluent Cloud, so one replica can fail", "s": "https://docs.confluent.io/cloud/current/topics/manage.html"},
+  {"v": "3.0", "l": "release where acks=all and the idempotent producer became defaults", "s": "https://docs.confluent.io/cloud/current/client-apps/optimizing/durability.html"},
+  {"v": "4.0", "l": "first release running entirely without ZooKeeper (March 2025)", "s": "https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/"}
+ ],
+ "tool": "kafka",
+ "choices": [
+  {"t": "Partition count", "d": "Sets the most consumers a group can use in parallel. Pick enough for future load up front, because adding partitions later moves keys and can break per-key ordering."},
+  {"t": "Partition key", "d": "Use the thing that needs ordering, like order ID or user ID. A key with too much traffic overloads one partition; no key spreads records evenly."},
+  {"t": "Durability: acks and ISR", "d": "Replication factor 3, min.insync.replicas 2 and acks=all is the usual safe setup. acks=1 is quicker but can lose writes if a leader fails."},
+  {"t": "Retention or compaction", "d": "Time or size based delete for event streams. cleanup.policy=compact keeps the latest value per key, handy for a changelog or current state."},
+  {"t": "Delivery guarantee", "d": "At-least-once is the default, so make consumers idempotent. For exactly-once, use transactions with read_committed consumers and commit offsets inside the transaction."}
+ ],
+ "instead": [
+  {"slug": "msg-message-queue-mq-async-buffer-decouple", "why": "Simple job queue: each task done once, no replay or partitions to plan"},
+  {"slug": "msg-pub-sub-topic-sns-fan-out-broadcast-topic", "why": "Push fan-out to many subscribers without keeping a long history"},
+  {"slug": "cache-redis-cache-in-memory-kv-sorted-set-pubsub", "why": "Redis Streams for small, short-lived streams you already run Redis for"},
+  {"slug": "data-object-storage-s3-s3-blob-gcs-files-images-video", "why": "Cheap long-term archive of events once real-time reading is done"}
+ ],
+ "breaks": [
+  {"t": "Consumer lag grows", "d": "Consumers read slower than producers write, so they fall behind.", "see": "Consumer lag (latest offset minus committed offset) rising per partition", "fix": "Add consumers up to the partition count, speed up processing, or add partitions"},
+  {"t": "Hot partition", "d": "One key carries most of the traffic, so one partition and broker do most of the work.", "see": "One partition with far more bytes in and lag than the rest", "fix": "A better key, or add a suffix to spread one hot key over several partitions"},
+  {"t": "Rebalance pauses", "d": "Consumers joining or leaving make the group reshuffle partitions, and reading pauses meanwhile.", "see": "Frequent rebalance logs and lag spikes when pods restart", "fix": "Opt in to the newer consumer group protocol (KIP-848) and keep each batch of work short"},
+  {"t": "Duplicates after a crash", "d": "A consumer processes records but crashes before committing, so they are read again.", "see": "Same event handled twice, e.g. a double email", "fix": "Idempotent handlers with an event ID, or transactions for Kafka-to-Kafka flows"},
+  {"t": "Writes rejected", "d": "Too few in-sync replicas are left for acks=all writes.", "see": "Producer errors on acks=all writes while the ISR list has shrunk", "fix": "Bring brokers back, spread replicas across zones, alert when the ISR shrinks"}
+ ],
+ "say": [
+  "I'll publish order events to a Kafka topic keyed by order ID, so all events for one order stay in order inside one partition.",
+  "I'll start with enough partitions for peak load, because a consumer group can run at most one consumer per partition.",
+  "For durability: replication factor 3, min.insync.replicas 2 and acks=all, so we can lose a broker without losing acknowledged writes.",
+  "Delivery is at-least-once, so consumers are idempotent using the event ID, and new services can replay the topic from the start."
+ ],
+ "followups": [
+  {"q": "How does Kafka keep ordering?", "a": "Only within a partition. Records with the same key go to the same partition, so per-key order holds. If you need global order you need one partition, which caps throughput."},
+  {"q": "What happens when a broker dies?", "a": "For each partition it led, the controller picks a new leader from the in-sync replicas. With f+1 replicas Kafka can lose f of them without losing committed records."},
+  {"q": "How do you get exactly-once?", "a": "The idempotent producer removes duplicate writes using a producer ID and sequence numbers. Transactions write outputs and consumer offsets together, and read_committed consumers only see committed data."},
+  {"q": "Kafka or a plain queue like SQS?", "a": "Kafka when you need replay, many independent readers, high throughput or per-key order. A queue when each job just needs doing once, with per-message retries and less to run."}
+ ],
+ "today": "Kafka 4.0 (March 2025) dropped ZooKeeper completely and runs only in KRaft mode, and it added share groups (KIP-932) in early access for queue-style reading of a topic.",
+ "check": [
+  {"q": "A topic has 6 partitions. How many consumers in one group can read at the same time?", "a": "6", "d": ["12", "1", "As many as you start"], "why": "Each partition goes to exactly one consumer in a group, so extra consumers sit idle."},
+  {"q": "You need all events for one customer handled in order. What do you do?", "a": "Use the customer ID as the record key", "d": ["Use a single consumer group per customer", "Turn on log compaction", "Set acks=0 for speed"], "why": "Same key, same partition, and order is kept inside a partition."},
+  {"q": "With acks=all, when does the leader confirm a write?", "a": "When every in-sync replica has it", "d": ["As soon as the leader writes it", "When a consumer reads it", "When it is flushed to S3"], "why": "acks=all waits for the in-sync replicas, and min.insync.replicas sets the minimum count."},
+  {"q": "What does Kafka 4.0 use instead of ZooKeeper?", "a": "KRaft controllers", "d": ["etcd", "A Redis cluster", "The consumer group coordinator"], "why": "A Raft quorum of controllers inside Kafka keeps the cluster metadata."}
+ ],
+ "sources": [
+  {"t": "Confluent docs: consumer design, groups and offsets", "u": "https://docs.confluent.io/kafka/design/consumer-design.html"},
+  {"t": "Confluent docs: replication and committed messages", "u": "https://docs.confluent.io/kafka/design/replication.html"},
+  {"t": "Confluent docs: message delivery guarantees", "u": "https://docs.confluent.io/kafka/design/delivery-semantics.html"},
+  {"t": "Confluent docs: optimize clients for durability", "u": "https://docs.confluent.io/cloud/current/client-apps/optimizing/durability.html"},
+  {"t": "Confluent Cloud docs: topic configuration reference", "u": "https://docs.confluent.io/cloud/current/topics/manage.html"},
+  {"t": "Confluent: Kafka partition key", "u": "https://www.confluent.io/en-gb/learn/kafka-partition-key"},
+  {"t": "Confluent docs: KRaft overview", "u": "https://docs.confluent.io/platform/current/kafka-metadata/kraft.html"},
+  {"t": "Apache Kafka 4.0.0 release announcement", "u": "https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/"},
+  {"t": "Apache Kafka 4.0 upgrade notes", "u": "https://kafka.apache.org/40/getting-started/upgrade/"}
+ ]
+}

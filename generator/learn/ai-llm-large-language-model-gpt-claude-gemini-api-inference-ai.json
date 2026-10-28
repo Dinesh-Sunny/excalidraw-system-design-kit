@@ -1,0 +1,428 @@
+{
+ "family": "ai",
+ "reviewed": "Oct 2026",
+ "what": "A large language model (LLM) reads text as tokens and writes a reply one token at a time. You call it over an API with a prompt and get text, JSON or tool calls back.",
+ "like": "Like a very well-read assistant on the phone: you read out the whole brief, they think, then answer word by word - and you pay for every word both ways.",
+ "why": [
+  "One API handles writing, summarising, extracting, classifying and coding",
+  "Structured output and tool use turn free text into data your code can trust",
+  "Streaming, caching and model routing keep it fast and affordable at scale"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "app",
+    "t": "Your app|prompt + settings",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "gw",
+    "t": "API gateway|key check · rate limits",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "shield"
+   },
+   {
+    "id": "router",
+    "t": "Model router|small or large model?",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ai",
+    "i": "router"
+   },
+   {
+    "id": "tok",
+    "t": "Tokenizer|text to token ids",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "hash"
+   },
+   {
+    "id": "prefill",
+    "t": "Prefill|whole prompt at once",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "decode",
+    "t": "Decode loop|one token per step",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "loop"
+   },
+   {
+    "id": "stream",
+    "t": "Stream out|server-sent events",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "kv",
+    "t": "KV cache|paged GPU memory",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "cache",
+    "i": "memory"
+   },
+   {
+    "id": "pcache",
+    "t": "Prompt cache|reuse a same prefix",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "cache",
+    "i": "cache"
+   }
+  ],
+  "edges": [
+   [
+    "app",
+    "gw",
+    "request"
+   ],
+   [
+    "gw",
+    "router",
+    "allowed"
+   ],
+   [
+    "router",
+    "tok",
+    "pick model"
+   ],
+   [
+    "tok",
+    "prefill",
+    "token ids"
+   ],
+   [
+    "pcache",
+    "prefill",
+    "cache hit"
+   ],
+   [
+    "prefill",
+    "kv",
+    "store K,V"
+   ],
+   [
+    "prefill",
+    "decode",
+    "1st token"
+   ],
+   [
+    "kv",
+    "decode",
+    "read"
+   ],
+   [
+    "decode",
+    "stream",
+    "tokens"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "A request arrives",
+    "d": "Your app sends a prompt (system text, chat history, tool list) plus settings like max_tokens. The gateway checks your key and limits on requests and tokens per minute.",
+    "hl": [
+     "app",
+     "gw"
+    ]
+   },
+   {
+    "t": "Pick the right model",
+    "d": "A router sends easy, common questions to a small fast model and hard ones to a large model. Most traffic gets cheaper and quicker; quality stays high where it matters.",
+    "hl": [
+     "router"
+    ]
+   },
+   {
+    "t": "Text becomes tokens",
+    "d": "A tokenizer splits text into tokens, about 4 characters of English each. The prompt, tool definitions and the reply all have to fit in the context window.",
+    "hl": [
+     "tok"
+    ]
+   },
+   {
+    "t": "Prefill reads the prompt",
+    "d": "The model reads every prompt token in parallel and saves their keys and values (the KV cache). If the same prefix was cached a moment ago, that work is skipped.",
+    "hl": [
+     "prefill",
+     "kv",
+     "pcache"
+    ]
+   },
+   {
+    "t": "Decode writes the reply",
+    "d": "Then it makes one token per step, each step reading the KV cache. The server batches many users' steps together so the GPU stays busy. This phase sets tokens per second.",
+    "hl": [
+     "decode",
+     "kv"
+    ]
+   },
+   {
+    "t": "Stream it back",
+    "d": "Each token is sent as a server-sent event the moment it exists. Users start reading after the time to first token (TTFT) instead of waiting for the whole answer.",
+    "hl": [
+     "decode",
+     "stream"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "~4 chars",
+   "l": "of English per token, so 100 tokens is about 75 words",
+   "s": "https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them"
+  },
+  {
+   "v": "1M tokens",
+   "l": "context window of current Claude models, up to 128k output",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/context-windows"
+  },
+  {
+   "v": "5 min",
+   "l": "default prompt cache lifetime, refreshed free on each hit",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+  },
+  {
+   "v": "under 4%",
+   "l": "KV cache memory wasted with PagedAttention, versus 60-80% before",
+   "s": "https://vllm.ai/blog/2023-06-20-vllm"
+  },
+  {
+   "v": "2-4x",
+   "l": "more throughput from vLLM at the same latency",
+   "s": "https://arxiv.org/abs/2309.06180"
+  }
+ ],
+ "tool": "llm",
+ "choices": [
+  {
+   "t": "Model size",
+   "d": "Small models are fast and cheap for classifying, extracting and short replies. Large models for hard reasoning and code. A router can mix both by task."
+  },
+  {
+   "t": "Token budget",
+   "d": "Cost and latency both grow with tokens in and out. Keep prompts tight, set max_tokens near the size you expect, and ask for sentence counts rather than word counts."
+  },
+  {
+   "t": "Streaming",
+   "d": "Turn it on for anything a person watches, so text appears after the first token. It also keeps long replies from hitting HTTP timeouts."
+  },
+  {
+   "t": "Prompt caching",
+   "d": "Put the stable parts first (tools, then system prompt, then long documents) and mark a cache point. Repeat calls reuse that prefix and answer sooner."
+  },
+  {
+   "t": "Output shape",
+   "d": "Free text for people. For code, use structured outputs (a JSON schema) or strict tool use, so every reply parses and has the fields you need."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "ai-embedding-model-embeddings-encoder-vectors-ai",
+   "why": "Need similarity or search, not generated text? Embeddings are far cheaper"
+  },
+  {
+   "slug": "rag-semantic-cache-cache-similar-prompts-ai-retrieval-augmented-generation",
+   "why": "Answer repeated, similar questions without calling the model again"
+  },
+  {
+   "slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation",
+   "why": "Fetch real facts first so answers come from your data"
+  },
+  {
+   "slug": "data-search-index-elasticsearch-elasticsearch-opensearch-inverted-index-full-text",
+   "why": "Exact keyword lookups are a search engine job, not a model job"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Rate limited",
+   "d": "Traffic goes over your requests or tokens per minute, and the API answers 429.",
+   "see": "429 errors and a Retry-After header in the logs",
+   "fix": "Retry with exponential backoff plus jitter, set max_tokens near real size, queue or batch work"
+  },
+  {
+   "t": "Prompt too long",
+   "d": "History, documents and tool results grow past the context window.",
+   "see": "400 'prompt is too long', or replies that stop with a context-window stop reason",
+   "fix": "Trim or summarise old turns, retrieve only the relevant chunks, use compaction"
+  },
+  {
+   "t": "Confident but wrong",
+   "d": "The model fills a gap with a plausible guess (a hallucination).",
+   "see": "Answers that cite facts missing from your sources; users report errors",
+   "fix": "Ground it: give documents, ask for quotes and citations, allow 'I don't know', verify claims"
+  },
+  {
+   "t": "Slow first token",
+   "d": "A long prompt makes prefill heavy before any text appears.",
+   "see": "High TTFT on dashboards, while tokens per second looks fine",
+   "fix": "Prompt caching for the stable prefix, shorter prompts, a smaller model for the task"
+  },
+  {
+   "t": "Bill grows quietly",
+   "d": "Long prompts sent on every call add up, since cost scales with tokens.",
+   "see": "Input tokens per request creeping up in usage reports",
+   "fix": "Cache shared prefixes, route easy work to small models, cap output length"
+  }
+ ],
+ "say": [
+  "I'll call the LLM through a small gateway service that holds the API key, enforces per-user token limits and retries 429s with exponential backoff and jitter.",
+  "A router sends simple, high-volume requests to a small model and only the hard ones to a large model, which keeps cost and latency down.",
+  "I'll stream responses so time to first token is what users feel, and put the long system prompt and tools first so prompt caching skips most of the prefill.",
+  "For anything my code consumes, I use structured outputs or tool use with a JSON schema, and I ground answers in retrieved documents to cut hallucinations."
+ ],
+ "followups": [
+  {
+   "q": "Why is the first token slow but the rest fast?",
+   "a": "Prefill must process the whole prompt before the first token, so TTFT grows with prompt length. After that, decode makes one token per step, so the steady rate is tokens per second. Caching the prefix and streaming help most."
+  },
+  {
+   "q": "How does a server handle many users on one GPU?",
+   "a": "Continuous batching: each decode step runs many sequences together, and a finished one is swapped for a new request straight away. PagedAttention stores the KV cache in small blocks, so less memory is wasted and more requests fit."
+  },
+  {
+   "q": "How do you get reliable JSON out?",
+   "a": "Use structured outputs with a JSON schema, or strict tool use, so decoding is constrained to the schema. Still handle the edge cases: a refusal or hitting max_tokens can leave output that does not match."
+  },
+  {
+   "q": "How would you reduce hallucinations?",
+   "a": "Give the model the source text (RAG), tell it to answer only from those documents, allow 'I don't know', ask for quotes or citations, and check claims in an eval. It lowers the rate; it never fully removes it."
+  }
+ ],
+ "today": "In the Claude API version 2026-10-21, sending temperature, top_p or top_k returns a 400 error and requests sample at the default temperature of 1.0, so steady output now comes from clear prompts, schemas and evals rather than a sampling dial.",
+ "check": [
+  {
+   "q": "Users wait a long time before any text appears, then it flows quickly. What should you look at first?",
+   "a": "Time to first token, driven by a long prompt in prefill",
+   "d": [
+    "Tokens per second during decode",
+    "The temperature setting",
+    "The size of max_tokens"
+   ],
+   "why": "The delay comes before the first token, so it is prefill work. Prompt caching and shorter prompts help."
+  },
+  {
+   "q": "Which order lets prompt caching reuse the most work?",
+   "a": "Stable parts first: tools, system prompt, long documents, then the new question",
+   "d": [
+    "The new question first, then everything else",
+    "Shuffle the documents each time for variety",
+    "Put a timestamp at the very top"
+   ],
+   "why": "The cache matches a prefix from the start. Anything that changes near the top breaks the match."
+  },
+  {
+   "q": "The API returns 429. What is the friendly fix?",
+   "a": "Wait and retry with exponential backoff plus random jitter",
+   "d": [
+    "Retry instantly in a tight loop",
+    "Raise max_tokens so each call does more",
+    "Switch to a longer prompt"
+   ],
+   "why": "429 means a rate limit. Backing off with jitter spreads retries out instead of hitting the limit again together."
+  },
+  {
+   "q": "Your code must always get valid JSON with set fields. What do you use?",
+   "a": "Structured outputs (a JSON schema) or strict tool use",
+   "d": [
+    "Ask nicely in the prompt and parse with regex",
+    "Lower the context window",
+    "Turn off streaming"
+   ],
+   "why": "A schema constrains decoding, so the reply parses and has the required fields."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Claude docs: context windows",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/context-windows"
+  },
+  {
+   "t": "Claude docs: prompt caching",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+  },
+  {
+   "t": "Claude docs: streaming messages",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/streaming"
+  },
+  {
+   "t": "Claude docs: how tool use works",
+   "u": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works"
+  },
+  {
+   "t": "Claude docs: structured outputs",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+  },
+  {
+   "t": "Claude docs: reduce latency",
+   "u": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-latency"
+  },
+  {
+   "t": "Claude docs: reduce hallucinations",
+   "u": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations"
+  },
+  {
+   "t": "Claude docs: API version 2026-10-21 migration",
+   "u": "https://platform.claude.com/docs/en/api/migration-2026-10-21"
+  },
+  {
+   "t": "OpenAI help: what are tokens",
+   "u": "https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them"
+  },
+  {
+   "t": "OpenAI docs: rate limits",
+   "u": "https://developers.openai.com/api/docs/guides/rate-limits"
+  },
+  {
+   "t": "vLLM blog: PagedAttention",
+   "u": "https://vllm.ai/blog/2023-06-20-vllm"
+  },
+  {
+   "t": "vLLM paper (Kwon et al., SOSP 2023)",
+   "u": "https://arxiv.org/abs/2309.06180"
+  },
+  {
+   "t": "Anyscale: continuous batching",
+   "u": "https://anyscale.com/blog/continuous-batching-llm-inference"
+  },
+  {
+   "t": "Anthropic: building effective agents (routing)",
+   "u": "https://www.anthropic.com/research/building-effective-agents"
+  }
+ ]
+}

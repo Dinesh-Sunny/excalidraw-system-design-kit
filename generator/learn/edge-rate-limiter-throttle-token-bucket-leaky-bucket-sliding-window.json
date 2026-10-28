@@ -1,0 +1,402 @@
+{
+ "family": "edge",
+ "reviewed": "Oct 2026",
+ "what": "A rate limiter counts how many requests each caller makes in a time window and turns away the extras with HTTP 429, so one busy client cannot crowd out everyone else.",
+ "like": "Like a theme park ride that lets 20 people on every few minutes: the queue moves steadily and the ride never gets overloaded.",
+ "why": [
+  "Protects your servers and database from spikes, bugs and abuse",
+  "Shares capacity fairly between users, API keys or tenants",
+  "Tells clients clearly when to slow down and when to try again"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "client",
+    "t": "Client|API key, user or IP",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "limiter",
+    "t": "Limiter|in gateway or middleware",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "shield"
+   },
+   {
+    "id": "api",
+    "t": "Your API|only allowed calls",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "reject",
+    "t": "429 Too Many|Retry-After: 30",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "clock"
+   },
+   {
+    "id": "store",
+    "t": "Shared counters|Redis, one Lua call",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "cache"
+   },
+   {
+    "id": "peers",
+    "t": "Other gateways|same shared counts",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "lb"
+   },
+   {
+    "id": "headers",
+    "t": "RateLimit header|quota left, reset",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "edge",
+    "i": "doc"
+   },
+   {
+    "id": "bucket",
+    "t": "Bucket state|tokens + last refill",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "bucket"
+   },
+   {
+    "id": "metrics",
+    "t": "Metrics|allowed vs limited",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "chart"
+   }
+  ],
+  "edges": [
+   [
+    "client",
+    "limiter",
+    "request"
+   ],
+   [
+    "limiter",
+    "api",
+    "allowed"
+   ],
+   [
+    "limiter",
+    "reject",
+    "over limit"
+   ],
+   [
+    "reject",
+    "client",
+    "back off"
+   ],
+   [
+    "reject",
+    "headers",
+    ""
+   ],
+   [
+    "limiter",
+    "store",
+    "spend token"
+   ],
+   [
+    "store",
+    "bucket",
+    "read, write"
+   ],
+   [
+    "peers",
+    "store",
+    "same keys"
+   ],
+   [
+    "store",
+    "metrics",
+    "counts"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Name the bucket",
+    "d": "The limiter builds a key from who is calling and which rule applies, such as user:42:per-minute. Each key gets its own count.",
+    "hl": [
+     "client",
+     "limiter"
+    ]
+   },
+   {
+    "t": "Ask the shared store",
+    "d": "One Lua script in Redis reads the count, decides and writes back in a single atomic step, so two requests can never both take the last slot.",
+    "hl": [
+     "limiter",
+     "store"
+    ]
+   },
+   {
+    "t": "Refill and spend",
+    "d": "Token bucket: tokens refill at a steady rate up to a cap, and each request spends one. The cap is the burst you allow; an empty bucket means no.",
+    "hl": [
+     "store",
+     "bucket"
+    ]
+   },
+   {
+    "t": "Allowed: pass it on",
+    "d": "The request goes to your API. Replies can carry a RateLimit header telling the client how much quota is left and when the window resets.",
+    "hl": [
+     "limiter",
+     "api",
+     "headers"
+    ]
+   },
+   {
+    "t": "Denied: answer 429",
+    "d": "The limiter replies 429 Too Many Requests, ideally with Retry-After in seconds. Good clients wait, then retry with exponential backoff plus random jitter.",
+    "hl": [
+     "reject",
+     "client",
+     "headers"
+    ]
+   },
+   {
+    "t": "One limit everywhere",
+    "d": "Every gateway uses the same Redis keys, so the limit holds across the whole fleet. Graph allowed versus limited to tune rules safely.",
+    "hl": [
+     "peers",
+     "store",
+     "metrics"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "10,000 /s",
+   "l": "API Gateway default per account per Region, plus 5,000 burst",
+   "s": "https://docs.amazonaws.cn/en_us/apigateway/latest/developerguide/limits.html"
+  },
+  {
+   "v": "2x",
+   "l": "burst a fixed window can let through at window boundaries",
+   "s": "https://redis.io/tutorials/howtos/ratelimiting.md"
+  },
+  {
+   "v": "0.003%",
+   "l": "requests misjudged by Cloudflare's sliding window estimate (400M tested)",
+   "s": "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/"
+  },
+  {
+   "v": "100 /s",
+   "l": "Stripe's global live-mode API limit per account (sandbox 25)",
+   "s": "https://docs.stripe.com/rate-limits"
+  },
+  {
+   "v": "2",
+   "l": "numbers stored per key for a sliding window counter",
+   "s": "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/"
+  }
+ ],
+ "tool": "ratelimit",
+ "choices": [
+  {
+   "t": "Algorithm",
+   "d": "Token bucket allows short bursts with a steady average. Leaky bucket gives a smooth, no-burst flow. Sliding window counter is a cheap, accurate default. Fixed window is simplest but bursts at edges."
+  },
+  {
+   "t": "What to key on",
+   "d": "Per API key or user is fairest. Per IP works for logged-out traffic. Add per-endpoint rules for expensive calls, and a global cap to protect the whole service."
+  },
+  {
+   "t": "Limit and burst size",
+   "d": "Pick the steady rate and how big a burst is fine, e.g. 10 per second with a bucket of 50. Dark launch first: log who would be limited before you enforce."
+  },
+  {
+   "t": "Where it runs",
+   "d": "At the edge or API gateway to stop traffic early, or inside the service for limits that need business context. Many systems use both."
+  },
+  {
+   "t": "If the store is down",
+   "d": "Fail open (allow, maybe with a local in-memory limit) to keep serving, or fail closed (deny) for sensitive actions like logins. Decide up front."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "edge-api-gateway-auth-routing-throttling-bff-kong",
+   "why": "Built-in throttling and quotas per key, with no limiter code to write"
+  },
+  {
+   "slug": "msg-message-queue-mq-async-buffer-decouple",
+   "why": "Accept every request and work through the backlog at your own pace"
+  },
+  {
+   "slug": "svc-circuit-breaker-resilience-fallback-hystrix-retry",
+   "why": "Protects you from a slow downstream service rather than from noisy callers"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Boundary burst",
+   "d": "A fixed window resets on the minute, so a client can use a full quota just before and again just after.",
+   "see": "Traffic spikes at the start of every window, up to twice the limit",
+   "fix": "Sliding window counter or token bucket"
+  },
+  {
+   "t": "Race on the counter",
+   "d": "Read then write as separate calls, so two servers both see room and both allow.",
+   "see": "More requests get through than the limit under heavy load",
+   "fix": "One atomic Lua script (or INCR) per check in Redis"
+  },
+  {
+   "t": "Retry storm",
+   "d": "Limited clients retry at once and keep the pressure on.",
+   "see": "429 rate stays high, with the same clients retrying in tight loops",
+   "fix": "Send Retry-After; clients back off exponentially with jitter"
+  },
+  {
+   "t": "Good traffic limited",
+   "d": "A real spike, like a flash sale, hits limits sized for normal days.",
+   "see": "429s for real customers and a dip in successful orders",
+   "fix": "Dark launch rules, limit per customer, raise limits before big events"
+  }
+ ],
+ "say": [
+  "I'll rate limit at the API gateway per API key with a token bucket, so short bursts are fine but the average rate is capped.",
+  "Counters live in Redis and each check is one Lua script, so the limit is exact across every gateway node.",
+  "Over the limit we return 429 with Retry-After, and our clients back off with jitter.",
+  "If Redis is unreachable we fail open with a small local limit, because blocking every user is worse than letting a few extra requests through."
+ ],
+ "followups": [
+  {
+   "q": "Token bucket or leaky bucket?",
+   "a": "Token bucket lets bursts through up to the bucket size, then holds the average rate. Leaky bucket drains at a fixed rate, so output stays smooth with no bursts. As meters they are mirror images; the difference is mainly burst behaviour."
+  },
+  {
+   "q": "How do you make it work across 50 servers?",
+   "a": "Keep the counters in a shared store like Redis and do each check atomically in one round trip with a Lua script. In Redis Cluster, use hash tags so all keys for one limit land in the same slot."
+  },
+  {
+   "q": "Why not store every request timestamp?",
+   "a": "A sliding window log is exact but memory grows with traffic, up to one entry per request per client. A sliding window counter keeps two numbers and blends them, which Cloudflare found nearly as accurate."
+  },
+  {
+   "q": "What should a client do when it gets 429?",
+   "a": "Wait at least the Retry-After time if given, then retry with exponential backoff plus random jitter so clients don't all return at once. Better still, limit itself on the client side."
+  }
+ ],
+ "today": "The IETF RateLimit header fields draft (version 11, May 2026) is still an Internet-Draft, not yet an RFC; it defines RateLimit-Policy and RateLimit headers as one shared format instead of the many X-RateLimit-* variants.",
+ "check": [
+  {
+   "q": "Your API should allow short bursts but cap the average rate. Which algorithm?",
+   "a": "Token bucket",
+   "d": [
+    "Fixed window counter",
+    "Leaky bucket as a queue",
+    "Sliding window log"
+   ],
+   "why": "Saved-up tokens allow a burst up to the bucket size, while the refill rate sets the average."
+  },
+  {
+   "q": "Which status code means 'you sent too many requests'?",
+   "a": "429",
+   "d": [
+    "403",
+    "503",
+    "409"
+   ],
+   "why": "429 Too Many Requests is the rate limit code; a Retry-After header can say when to try again."
+  },
+  {
+   "q": "Two gateways share one Redis limit. How do you stop both taking the last slot?",
+   "a": "Check and update in one atomic Lua script",
+   "d": [
+    "GET the count, then SET it",
+    "Give each gateway half the limit",
+    "Add a longer TTL"
+   ],
+   "why": "Redis runs a script without interleaving other commands, so the read-decide-write cannot race."
+  },
+  {
+   "q": "What is the main weakness of a fixed window counter?",
+   "a": "Bursts of up to 2x the limit at window edges",
+   "d": [
+    "It needs one key per request",
+    "It cannot use Redis",
+    "It never resets"
+   ],
+   "why": "A client can spend a full quota at the end of one window and again at the start of the next."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: 429 Too Many Requests",
+   "u": "https://developer.mozilla.org/docs/Web/HTTP/Reference/Status/429"
+  },
+  {
+   "t": "IETF draft: RateLimit header fields for HTTP (-11)",
+   "u": "https://www.ietf.org/archive/id/draft-ietf-httpapi-ratelimit-headers-11.html"
+  },
+  {
+   "t": "AWS docs: API Gateway request throttling",
+   "u": "https://docs.aws.eu/apigateway/latest/developerguide/api-gateway-request-throttling.html"
+  },
+  {
+   "t": "AWS docs: API Gateway quotas",
+   "u": "https://docs.amazonaws.cn/en_us/apigateway/latest/developerguide/limits.html"
+  },
+  {
+   "t": "Stripe blog: scaling your API with rate limiters",
+   "u": "https://stripe.com/blog/rate-limiters"
+  },
+  {
+   "t": "Stripe docs: rate limits",
+   "u": "https://docs.stripe.com/rate-limits"
+  },
+  {
+   "t": "Cloudflare blog: counting things, a lot of different things",
+   "u": "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/"
+  },
+  {
+   "t": "Redis tutorial: build 5 rate limiters",
+   "u": "https://redis.io/tutorials/howtos/ratelimiting.md"
+  },
+  {
+   "t": "Wikipedia: leaky bucket",
+   "u": "https://en.wikipedia.org/wiki/Leaky_bucket"
+  }
+ ]
+}

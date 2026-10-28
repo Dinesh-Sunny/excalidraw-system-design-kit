@@ -1,0 +1,384 @@
+{
+ "family": "database",
+ "reviewed": "Oct 2026",
+ "what": "A wide-column store like Cassandra or ScyllaDB spreads rows across many equal nodes by hashing a partition key. It takes huge write volumes, keeps copies on several nodes and lets you pick consistency per query.",
+ "like": "Like a giant post office: the postcode (partition key) picks the sorting room, and inside, letters are filed in date order (clustering columns).",
+ "why": [
+  "Writes are very fast: append to a log, update memory, done",
+  "No single leader, so any node can serve and you add nodes to grow",
+  "Copies across racks and data centres keep it running through failures"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "client",
+    "t": "Your service|CQL query",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "ring",
+    "t": "Token ring|hash(partition key)",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "hash"
+   },
+   {
+    "id": "coord",
+    "t": "Coordinator|any node routes it",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "router"
+   },
+   {
+    "id": "commit",
+    "t": "Commit log|append-only on disk",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "log"
+   },
+   {
+    "id": "compact",
+    "t": "Compaction|merge files, drop old",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "loop"
+   },
+   {
+    "id": "replicas",
+    "t": "Replicas|RF copies, e.g. 3",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "replica"
+   },
+   {
+    "id": "memtable",
+    "t": "Memtable|sorted, in RAM",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "cache",
+    "i": "memory"
+   },
+   {
+    "id": "sstable",
+    "t": "SSTables|immutable sorted files",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "doc"
+   }
+  ],
+  "edges": [
+   [
+    "client",
+    "coord",
+    "INSERT"
+   ],
+   [
+    "coord",
+    "ring",
+    "which nodes?"
+   ],
+   [
+    "coord",
+    "replicas",
+    "send to RF"
+   ],
+   [
+    "replicas",
+    "commit",
+    "1. append"
+   ],
+   [
+    "replicas",
+    "memtable",
+    "2. update"
+   ],
+   [
+    "memtable",
+    "sstable",
+    "flush"
+   ],
+   [
+    "sstable",
+    "compact",
+    "merge"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Hash the partition key",
+    "d": "Any node can act as coordinator. It hashes the partition key to a token on the ring, and the nodes owning that token range hold the data. Vnodes give each node several small ranges.",
+    "hl": [
+     "client",
+     "coord",
+     "ring"
+    ]
+   },
+   {
+    "t": "Send to every replica",
+    "d": "The write goes to all RF (replication factor) replicas. The coordinator replies once W of them confirm, where W comes from your consistency level: ONE, QUORUM or ALL.",
+    "hl": [
+     "coord",
+     "replicas"
+    ]
+   },
+   {
+    "t": "Append, then remember",
+    "d": "Each replica appends the write to its commit log for durability, then updates the memtable, a sorted in-memory table. No read before write, which is why writes are so quick.",
+    "hl": [
+     "commit",
+     "memtable"
+    ]
+   },
+   {
+    "t": "Flush to SSTables",
+    "d": "When the memtable fills up it is flushed to disk as an SSTable, a sorted file that is never changed again. This is the LSM tree (log-structured merge tree) pattern.",
+    "hl": [
+     "memtable",
+     "sstable"
+    ]
+   },
+   {
+    "t": "Compaction merges files",
+    "d": "In the background, compaction merges SSTables, keeps the newest value per cell and drops deleted data once its tombstone (delete marker) is old enough.",
+    "hl": [
+     "sstable",
+     "compact"
+    ]
+   },
+   {
+    "t": "Reads ask R replicas",
+    "d": "A read checks the memtable and SSTables (Bloom filters skip files) on R replicas. If R + W > RF, the read and write sets overlap, so you see the latest acknowledged write.",
+    "hl": [
+     "coord",
+     "replicas",
+     "memtable",
+     "sstable"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "n/2 + 1",
+   "l": "replicas QUORUM needs: 2 of 3 when RF is 3",
+   "s": "https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo"
+  },
+  {
+   "v": "16",
+   "l": "vnode tokens per node in the production config example",
+   "s": "https://cassandra.apache.org/doc/latest/getting-started/production.html"
+  },
+  {
+   "v": "100 MB",
+   "l": "keep each partition under this, and under 100,000 values",
+   "s": "https://cassandra.apache.org/doc/4.0/cassandra/data_modeling/intro.html"
+  },
+  {
+   "v": "10 days",
+   "l": "default gc_grace_seconds before tombstones can be purged",
+   "s": "https://cassandra.apache.org/doc/latest/cassandra/reference/cql-commands/create-table.html"
+  },
+  {
+   "v": "10 s",
+   "l": "default commit log sync period in periodic mode",
+   "s": "https://cassandra.apache.org/doc/latest/cassandra/architecture/storage-engine.html"
+  }
+ ],
+ "tool": "quorum",
+ "choices": [
+  {
+   "t": "Partition key",
+   "d": "The most important choice. Pick a key that spreads load evenly and lets each query read one partition, for example (user_id, month) for a timeline."
+  },
+  {
+   "t": "Clustering columns",
+   "d": "They sort rows inside a partition, such as by time descending, so \"latest 20 messages\" is one quick slice read."
+  },
+  {
+   "t": "Replication",
+   "d": "Use NetworkTopologyStrategy in production and set RF per data centre, commonly 3, so one node can be down while QUORUM still works."
+  },
+  {
+   "t": "Consistency level",
+   "d": "Set per query. LOCAL_QUORUM for reads and writes gives R + W > RF inside one data centre; ONE is fastest but may read slightly stale data."
+  },
+  {
+   "t": "Compaction strategy",
+   "d": "Size-tiered is the default and suits write-heavy tables. Pick per table to match how data is written, read and expired."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "data-postgresql-postgres-sql-relational",
+   "why": "Joins, transactions and flexible queries on data that fits one primary"
+  },
+  {
+   "slug": "data-key-value-dynamodb-dynamodb-kv-nosql",
+   "why": "Same partition-key model, fully managed with no nodes to run"
+  },
+  {
+   "slug": "msg-kafka-event-log-stream-topic-partitions",
+   "why": "When you need an ordered, replayable stream rather than queryable rows"
+  },
+  {
+   "slug": "data-data-warehouse-snowflake-bigquery-redshift-olap-analytics",
+   "why": "Ad-hoc analytics and big scans across all the data"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Hot partition",
+   "d": "One partition key gets most of the traffic, so its few replica nodes work flat out.",
+   "see": "A few nodes with high CPU and latency while others are calm",
+   "fix": "Add a bucket to the key, e.g. (sensor_id, day), to spread load"
+  },
+  {
+   "t": "Partition too large",
+   "d": "An unbounded partition keeps growing, making reads, repairs and compaction heavy.",
+   "see": "Large-partition warnings in logs, slow reads for one key",
+   "fix": "Bound partitions by time or bucket; aim under 100 MB"
+  },
+  {
+   "t": "Tombstone build-up",
+   "d": "Many deletes or TTLs leave delete markers that reads must skip over until compaction purges them.",
+   "see": "Tombstone warnings in logs, slow range reads",
+   "fix": "Model to avoid mass deletes; use TTLs with time-window tables"
+  },
+  {
+   "t": "Deleted data comes back",
+   "d": "A replica missed a delete and was not repaired before the tombstone was purged.",
+   "see": "Old rows reappear after a node rejoins",
+   "fix": "Run full repair at least once within every gc_grace_seconds window"
+  },
+  {
+   "t": "Query needs a scan",
+   "d": "A query does not use the partition key, so it would touch every node.",
+   "see": "ALLOW FILTERING in queries, timeouts on reads",
+   "fix": "Add a new table shaped for that query and write to both"
+  }
+ ],
+ "say": [
+  "I'll use Cassandra for this write-heavy data, modelled query-first: one table per access pattern, each read hitting one partition.",
+  "The partition key is (user_id, month) so partitions stay bounded, and a clustering column sorts by time so the newest rows come first.",
+  "With RF 3 and LOCAL_QUORUM on both reads and writes, R + W > RF, so reads see the latest write and one node can be down.",
+  "There are no joins, so I denormalise and write the same data to a second table when another query needs it."
+ ],
+ "followups": [
+  {
+   "q": "How does Cassandra decide which node holds a row?",
+   "a": "It hashes the partition key to a token on a ring. Each node owns token ranges (vnodes), and the replication strategy walks the ring to pick RF replicas, spread across racks and data centres."
+  },
+  {
+   "q": "Why are writes so fast?",
+   "a": "It is an LSM tree: a write is a commit log append plus an in-memory memtable update, with no read first. Memtables flush to immutable SSTables, and compaction merges them later."
+  },
+  {
+   "q": "How do replicas that missed writes catch up?",
+   "a": "Hinted handoff replays writes when a node returns, read repair fixes mismatches seen during reads, and anti-entropy repair compares Merkle trees to sync everything."
+  },
+  {
+   "q": "How do you model a chat app?",
+   "a": "Start from the query, e.g. \"latest messages in a room\". Table keyed by (room_id, bucket) with message time as a descending clustering column. Each page of messages is one partition slice."
+  }
+ ],
+ "today": "ScyllaDB is a C++ rewrite that speaks Cassandra's CQL (and the DynamoDB API), uses a shard-per-core design, and splits data into same-size tablets instead of vnodes.",
+ "check": [
+  {
+   "q": "RF is 3. Which consistency levels for reads and writes guarantee you read the latest write?",
+   "a": "QUORUM writes and QUORUM reads",
+   "d": [
+    "ONE writes and ONE reads",
+    "ONE writes and QUORUM reads",
+    "ANY writes and ONE reads"
+   ],
+   "why": "2 + 2 > 3, so read and write replicas always overlap by at least one node."
+  },
+  {
+   "q": "Where does a write go first on a replica?",
+   "a": "The commit log, then the memtable",
+   "d": [
+    "Straight into an SSTable",
+    "A B-tree page updated in place",
+    "Only to memory, nothing on disk"
+   ],
+   "why": "The log gives durability and the memtable keeps data sorted until it is flushed to an SSTable."
+  },
+  {
+   "q": "One device sends far more data than all the others and its nodes are overloaded. What is this?",
+   "a": "A hot partition",
+   "d": [
+    "A tombstone storm",
+    "Compaction lag",
+    "Clock skew"
+   ],
+   "why": "One partition key lives on a few replicas. Adding a bucket to the key spreads it out."
+  },
+  {
+   "q": "What is the first step in Cassandra data modelling?",
+   "a": "List the queries the app will run",
+   "d": [
+    "Normalise the entities into tables",
+    "Design foreign keys between tables",
+    "Pick the compaction strategy"
+   ],
+   "why": "Modelling is query-driven: each table is shaped so one query reads as few partitions as possible."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Cassandra docs: Dynamo architecture",
+   "u": "https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo"
+  },
+  {
+   "t": "Cassandra docs: storage engine",
+   "u": "https://cassandra.apache.org/doc/latest/cassandra/architecture/storage-engine.html"
+  },
+  {
+   "t": "Cassandra docs: data modelling introduction",
+   "u": "https://cassandra.apache.org/doc/4.0/cassandra/data_modeling/intro.html"
+  },
+  {
+   "t": "Cassandra docs: CREATE TABLE",
+   "u": "https://cassandra.apache.org/doc/latest/cassandra/reference/cql-commands/create-table.html"
+  },
+  {
+   "t": "Cassandra docs: production recommendations",
+   "u": "https://cassandra.apache.org/doc/latest/getting-started/production.html"
+  },
+  {
+   "t": "ScyllaDB docs: gc_grace_seconds and tombstones",
+   "u": "https://opensource.docs.scylladb.com/stable/kb/gc-grace-seconds.html"
+  },
+  {
+   "t": "ScyllaDB: architecture",
+   "u": "https://www.scylladb.com/technology/"
+  }
+ ]
+}
