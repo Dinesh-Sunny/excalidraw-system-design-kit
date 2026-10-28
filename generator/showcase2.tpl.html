@@ -469,7 +469,7 @@ a.card .open { cursor: pointer }
 .stg { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 20px; background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; animation: swap .3s ease-out; cursor: default }
 .stg[hidden] { display: none }
 .stg svg { width: 100%; height: 100%; max-height: 72dvh }
-.stg .vt { position: absolute; left: 14px; top: 12px; font: 500 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.92); border: 1px solid #e3e4e8; padding: 6px 9px; border-radius: 9999px; letter-spacing: .04em; text-transform: uppercase }
+.stg .vt { cursor: pointer; position: absolute; left: 14px; top: 12px; font: 500 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.92); border: 1px solid #e3e4e8; padding: 6px 9px; border-radius: 9999px; letter-spacing: .04em; text-transform: uppercase }
 .sheet.learn.v-other .zc, .sheet.learn.v-other .zhint, .sheet.learn.v-other .sh-pos, .sheet.learn.v-other .arr { visibility: hidden }
 .ib-n rect { transition: stroke-width .25s, filter .25s, opacity .25s } .ib-n text { font-family: var(--font-hand); fill: #1e1e1e } .ib-n .t2 { font-family: var(--font-sans); fill: #495057 }
 .stg.has-hl .ib-n:not(.on) { opacity: .35 } .ib-n.on rect { stroke-width: 3.5; filter: drop-shadow(0 6px 14px rgba(105,101,219,.28)) }
@@ -1035,11 +1035,12 @@ function realMap(s, R) { // this block in the middle, what usually comes before 
 }
 function setView(v, hl) {
   const stg = $("#stg"), s = LST.slug, L = LEARN.L[s], R = LEARN.R[s]; if (!stg) return;
+  if (!L) v = "block"; // the picture only follows the reading inside a full lesson; every other block always shows itself
   if (v === LST.view && JSON.stringify(hl || []) === JSON.stringify(LST.hl)) return;
   LST.view = v; LST.hl = hl || [];
   sheet.classList.toggle("v-other", v !== "block");
-  if (v === "inside" && L && L.inside) { const I = L.inside; stg.hidden = false; stg.classList.toggle("has-hl", !!LST.hl.length); stg.innerHTML = `<span class="vt">Inside</span>` + diagramSVG(I.w, I.h, I.nodes, I.edges, LST.hl, { label: "Inside " + cur.title }); }
-  else if (v === "real" && R && ((R.up || []).length || (R.down || []).length)) { stg.hidden = false; stg.classList.remove("has-hl"); stg.innerHTML = `<span class="vt">In real systems</span>` + realMap(s, R); }
+  if (v === "inside" && L && L.inside) { const I = L.inside; stg.hidden = false; stg.classList.toggle("has-hl", !!LST.hl.length); stg.innerHTML = `<button type="button" class="vt" data-vback>Inside · show the block</button>` + diagramSVG(I.w, I.h, I.nodes, I.edges, LST.hl, { label: "Inside " + cur.title }); }
+  else if (v === "real" && R && ((R.up || []).length || (R.down || []).length)) { stg.hidden = false; stg.classList.remove("has-hl"); stg.innerHTML = `<button type="button" class="vt" data-vback>In real systems · show the block</button>` + realMap(s, R); }
   else { stg.hidden = true; sheet.classList.remove("v-other"); }
 }
 function stepOn(k) { const L = LEARN.L[LST.slug]; if (!L) return; document.querySelectorAll(".lsteps button").forEach((b, i) => b.classList.toggle("on", i === k)); setView("inside", k < 0 ? [] : L.inside.steps[k].hl); }
@@ -1070,7 +1071,7 @@ function renderLearn(i) {
   el.innerHTML = S.map(([id, t, v, h]) => `<section class="ls" id="l-${id}" data-view="${v}"><h4>${id === "basics" ? "What it is" : id === "inside" ? "How it works inside" : id === "try" ? "Try it" : id === "choices" ? "Choices you'll make" : id === "real" ? "In real systems" : id === "interview" ? "In the interview" : "Check yourself"}</h4>${h}</section>`).join("");
   nav.hidden = !L || S.length < 3; nav.innerHTML = L ? S.map(([id, t], k) => `<button type="button" data-lgo="${id}" class="${k === 0 ? "on" : ""}">${t}</button>`).join("") : "";
   if (L && L.tool && TOOLS[L.tool] && $("#ltool")) TOOLS[L.tool]($("#ltool"), s);
-  if (!S.length) return; setView("block");
+  setView("block"); if (!S.length || !L) return; // no lesson yet: the picture stays the block
   const root = matchMedia("(min-width: 900px)").matches ? sheet.querySelector(".sh-body") : sheet;
   LST.io = new IntersectionObserver(es => { const vis = [...el.children].filter(x => { const r = x.getBoundingClientRect(), rr = root.getBoundingClientRect(); return r.top < rr.top + rr.height * .45 && r.bottom > rr.top + 80; });
     const sec = vis[vis.length - 1]; if (!sec) { setView("block"); return; } const id = sec.id.slice(2);
@@ -1101,7 +1102,7 @@ $("#learn").addEventListener("click", e => {
     if (an.dataset.ans === c.a) { card.querySelectorAll("button").forEach(b => { b.disabled = true; }); const w0 = card.querySelector(".why"); if (w0) w0.remove(); an.classList.add("yes"); card.insertAdjacentHTML("beforeend", `<p class="why"><b>Yes. </b>${ex(c.why)}</p>`); gcEvent("learn-check/" + LST.slug); try { const m = JSON.parse(localStorage.getItem("sdk-learn") || "{}"); m[LST.slug] = Math.max(m[LST.slug] || 0, card.parentNode.querySelectorAll(".yes").length); localStorage.setItem("sdk-learn", JSON.stringify(m)); } catch (er) {} }
     else { an.classList.add("no"); an.disabled = true; const w = card.querySelector(".why"); if (w) w.remove(); card.insertAdjacentHTML("beforeend", `<p class="why">Close. Have another look.</p>`); } }
 });
-document.addEventListener("click", e => { const ob = e.target.closest("#stg [data-open]"); if (ob && BYSLUG.has(ob.dataset.open)) open(BYSLUG.get(ob.dataset.open)); });
+document.addEventListener("click", e => { if (e.target.closest("#stg [data-vback]")) { LST.lock = Date.now(); LST.hl = []; document.querySelectorAll(".lsteps button.on").forEach(b => b.classList.remove("on")); $("#stg").hidden = true; sheet.classList.remove("v-other"); LST.view = "block"; return; } const ob = e.target.closest("#stg [data-open]"); if (ob && BYSLUG.has(ob.dataset.open)) open(BYSLUG.get(ob.dataset.open)); });
 /* hands-on tools, one per kind of block */
 const TOOLS = {
   cache(el) { // a 4-slot cache in front of a slow database: request keys, watch hits, misses and evictions
