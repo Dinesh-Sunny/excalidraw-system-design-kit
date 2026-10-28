@@ -1,0 +1,371 @@
+{
+ "family": "data",
+ "reviewed": "Oct 2026",
+ "what": "A data warehouse (Snowflake, BigQuery, Redshift) stores all your company's history in columns and answers big analytics questions in SQL, scanning billions of rows in seconds.",
+ "like": "Like a library archive built for research: not for checking out one book fast, but for answering 'what did everyone borrow last year?'",
+ "why": [
+  "One place to join data from every app and source",
+  "Columnar storage reads only the columns a query needs",
+  "Storage and compute scale and bill separately, so you pay for queries you run"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "src",
+    "t": "Sources|app DB, events, logs",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "svc",
+    "i": "db"
+   },
+   {
+    "id": "load",
+    "t": "Load raw (EL)|connectors, Kafka, batch",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "msg",
+    "i": "queue"
+   },
+   {
+    "id": "raw",
+    "t": "Raw tables|landing zone",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "bucket"
+   },
+   {
+    "id": "bi",
+    "t": "Reports and BI|monthly tenant reports",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "client",
+    "i": "chart"
+   },
+   {
+    "id": "compute",
+    "t": "Compute|slots or virtual warehouse",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "service"
+   },
+   {
+    "id": "dbt",
+    "t": "dbt models (T)|SQL inside the warehouse",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "loop"
+   },
+   {
+    "id": "storage",
+    "t": "Columnar storage|partitioned + clustered",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "partition"
+   },
+   {
+    "id": "star",
+    "t": "Star schema|fact_hits + dimensions",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "db"
+   }
+  ],
+  "edges": [
+   [
+    "src",
+    "load",
+    "extract"
+   ],
+   [
+    "load",
+    "raw",
+    "load"
+   ],
+   [
+    "raw",
+    "dbt",
+    "transform"
+   ],
+   [
+    "dbt",
+    "star",
+    "build"
+   ],
+   [
+    "star",
+    "storage",
+    "stored as"
+   ],
+   [
+    "bi",
+    "compute",
+    "SQL"
+   ],
+   [
+    "compute",
+    "storage",
+    "scan cols"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Extract and load raw",
+    "d": "Copy data from app databases, event streams and logs into raw tables as-is. This is ELT: load first, transform later inside the warehouse.",
+    "hl": [
+     "src",
+     "load",
+     "raw"
+    ]
+   },
+   {
+    "t": "Transform with dbt",
+    "d": "dbt turns raw tables into clean models using SQL SELECTs. Incremental models only process new or changed rows since the last run, saving time and money.",
+    "hl": [
+     "raw",
+     "dbt"
+    ]
+   },
+   {
+    "t": "Shape a star schema",
+    "d": "A fact table holds events and numbers (one row per crawler hit or citation). Dimension tables describe them (tenant, page, bot, date). Reports join facts to dimensions.",
+    "hl": [
+     "dbt",
+     "star"
+    ]
+   },
+   {
+    "t": "Store in columns",
+    "d": "Each column is stored and compressed on its own, so a query reading 3 of 50 columns reads far less. Partitioning and clustering let it skip whole blocks.",
+    "hl": [
+     "star",
+     "storage"
+    ]
+   },
+   {
+    "t": "Compute runs the query",
+    "d": "Compute is separate from storage: BigQuery uses slots (virtual CPUs), Snowflake uses virtual warehouses that bill credits per second. Many teams can query the same data at once.",
+    "hl": [
+     "bi",
+     "compute",
+     "storage"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "$6.25",
+   "l": "per TiB scanned with BigQuery on-demand pricing (first 1 TiB/month free)",
+   "s": "https://cloud.google.com/bigquery/pricing/?hl=en"
+  },
+  {
+   "v": "10 MB",
+   "l": "minimum billed per table referenced in a BigQuery query",
+   "s": "https://cloud.google.com/bigquery/pricing/?hl=en"
+  },
+  {
+   "v": "4",
+   "l": "most clustering columns a BigQuery table can have",
+   "s": "https://docs.cloud.google.com/bigquery/docs/clustered-tables"
+  },
+  {
+   "v": "10 GB",
+   "l": "suggested average size per BigQuery partition, at least",
+   "s": "https://docs.cloud.google.com/bigquery/docs/clustered-tables"
+  },
+  {
+   "v": "1 credit/hr",
+   "l": "Snowflake X-Small warehouse; billed per second, 60 s minimum",
+   "s": "https://docs.snowflake.com/user-guide/warehouses-overview"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Partition column",
+   "d": "Usually a date (event_date). Queries that filter on it skip other partitions and scan fewer bytes. Avoid tiny partitions; BigQuery suggests about 10 GB or more each."
+  },
+  {
+   "t": "Clustering keys",
+   "d": "Up to 4 columns, like tenant_id then page_id. Rows are sorted by them, so filters on tenant prune blocks. Good first step for performance."
+  },
+  {
+   "t": "Pricing model",
+   "d": "Pay per byte scanned (on-demand) for spiky use, or reserve capacity (BigQuery slots, Snowflake warehouse size and auto-suspend) for steady, predictable spend."
+  },
+  {
+   "t": "Model shape",
+   "d": "Star schema for clear reports, or wide denormalised tables when joins cost more than storage. dbt incremental models for big fact tables."
+  },
+  {
+   "t": "Table format",
+   "d": "Native warehouse tables are simplest. Open formats like Apache Iceberg on object storage let Spark, Trino, Flink and the warehouse share one copy."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "data-olap-db-clickhouse-clickhouse-druid-pinot-realtime-analytics-columnar",
+   "why": "Sub-second dashboards on fresh events, many users clicking at once"
+  },
+  {
+   "slug": "data-postgresql-postgres-sql-relational",
+   "why": "Small data or live app reads and writes, not big scans"
+  },
+  {
+   "slug": "data-object-storage-s3-s3-blob-gcs-files-images-video",
+   "why": "Lakehouse: Iceberg tables on S3, query with many engines"
+  },
+  {
+   "slug": "msg-stream-processor-flink-flink-spark-streaming-kafka-streams-realtime",
+   "why": "Results needed within seconds, computed as events arrive"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Surprise bill",
+   "d": "A SELECT * over a huge table with no partition filter scans everything.",
+   "see": "Bytes billed per query jumps; cost dashboard spikes",
+   "fix": "Partition filters, select only needed columns, per-user quotas, dry runs"
+  },
+  {
+   "t": "Noisy tenant",
+   "d": "One big tenant's report hogs shared compute and others wait.",
+   "see": "Queued queries and slot or warehouse saturation at month end",
+   "fix": "Separate warehouses or reservations per workload, schedule heavy jobs"
+  },
+  {
+   "t": "Too many small partitions",
+   "d": "Hourly partitions on a small table create lots of metadata.",
+   "see": "Slow planning; partition count near limits",
+   "fix": "Coarser partitions (daily or monthly) plus clustering"
+  },
+  {
+   "t": "Broken incremental model",
+   "d": "Late rows are skipped or a re-run doubles rows.",
+   "see": "Totals differ from a full rebuild",
+   "fix": "Idempotent merges on a unique key, a look-back window, periodic full refresh"
+  },
+  {
+   "t": "Stale data",
+   "d": "A nightly load fails and reports show yesterday's numbers.",
+   "see": "Freshness check or max(loaded_at) older than expected",
+   "fix": "dbt source freshness tests, alerts, retries in the scheduler"
+  }
+ ],
+ "say": [
+  "Raw crawler hits and AI citations land in BigQuery through ELT, and dbt builds a star schema: fact_hits plus tenant, page, bot and date dimensions.",
+  "The fact table is partitioned by event_date and clustered by tenant_id, so a monthly report for one tenant scans only that month and that tenant's blocks.",
+  "Monthly visibility reports for all tenants run as one scheduled job on reserved capacity, so cost is predictable instead of per-byte surprises.",
+  "Customer-facing live dashboards read from ClickHouse; the warehouse stays the source of truth for history and billing-grade reports."
+ ],
+ "followups": [
+  {
+   "q": "Why separate storage from compute?",
+   "a": "Data sits once in cheap durable storage. Compute starts, scales and stops on its own, so a month-end report can get a big cluster for an hour without paying for it all month, and teams do not block each other."
+  },
+  {
+   "q": "Warehouse, ClickHouse or lakehouse?",
+   "a": "Warehouse for SQL analytics and reports with little ops. ClickHouse for sub-second, high-concurrency dashboards on fresh data. Lakehouse (Iceberg on S3) when many engines must share open data without copies."
+  },
+  {
+   "q": "How do you keep multi-tenant reports safe?",
+   "a": "Every fact row carries tenant_id; cluster on it, and use row-level security or authorized views so a tenant's query can only see its rows. Test it in CI."
+  },
+  {
+   "q": "How do you control cost?",
+   "a": "Partition and cluster, avoid SELECT *, materialise common aggregates with dbt, set quotas, and move steady workloads to reserved slots or right-sized auto-suspending warehouses."
+  }
+ ],
+ "today": "Open table formats are now mainstream: Apache Iceberg tables can be read and written by Spark, Trino, Flink and others at once, and major warehouses can query them, blurring the warehouse and lakehouse line.",
+ "check": [
+  {
+   "q": "A report reads 3 columns from a 50-column table. Why is a warehouse fast at this?",
+   "a": "Columnar storage reads only those 3 columns",
+   "d": [
+    "It caches every row in RAM",
+    "It uses a B-tree index per row",
+    "It reads rows in parallel from the app DB"
+   ],
+   "why": "Each column is stored separately, so unused columns are never read or billed."
+  },
+  {
+   "q": "In a star schema, where does 'one row per crawler hit' belong?",
+   "a": "In the fact table",
+   "d": [
+    "In a dimension table",
+    "In a lookup cache",
+    "In the raw landing zone only"
+   ],
+   "why": "Facts hold events and measures; dimensions describe them (tenant, page, bot, date)."
+  },
+  {
+   "q": "Your BigQuery query filters on event_date and tenant_id. What setup cuts bytes scanned most?",
+   "a": "Partition by event_date, cluster by tenant_id",
+   "d": [
+    "Partition by tenant_id, cluster by nothing",
+    "Add more slots",
+    "Use SELECT * with LIMIT 10"
+   ],
+   "why": "Partitions skip other dates and clustering prunes blocks for other tenants. LIMIT does not reduce bytes scanned."
+  },
+  {
+   "q": "What does ELT mean compared with ETL?",
+   "a": "Load raw data first, transform inside the warehouse",
+   "d": [
+    "Transform on a separate server before loading",
+    "Export data out of the warehouse to transform",
+    "Load only data that was already cleaned"
+   ],
+   "why": "The warehouse's compute does the transforms, often with dbt, and raw data stays for re-runs."
+  }
+ ],
+ "sources": [
+  {
+   "t": "BigQuery docs: introduction to clustered tables",
+   "u": "https://docs.cloud.google.com/bigquery/docs/clustered-tables"
+  },
+  {
+   "t": "BigQuery docs: introduction to partitioned tables",
+   "u": "https://docs.cloud.google.com/bigquery/docs/partitioned-tables"
+  },
+  {
+   "t": "BigQuery pricing",
+   "u": "https://cloud.google.com/bigquery/pricing/?hl=en"
+  },
+  {
+   "t": "Snowflake docs: overview of warehouses",
+   "u": "https://docs.snowflake.com/user-guide/warehouses-overview"
+  },
+  {
+   "t": "dbt docs: about incremental models",
+   "u": "https://docs.getdbt.com/docs/build/incremental-models-overview.md"
+  },
+  {
+   "t": "Apache Iceberg",
+   "u": "https://iceberg.apache.org/"
+  }
+ ]
+}

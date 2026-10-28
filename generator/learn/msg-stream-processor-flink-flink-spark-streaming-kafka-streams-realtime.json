@@ -1,0 +1,392 @@
+{
+ "family": "stream",
+ "reviewed": "Oct 2026",
+ "what": "A stream processor like Flink reads an endless flow of events (often from Kafka), groups and counts them as they arrive, and keeps running totals safe across crashes.",
+ "like": "Like a scoreboard operator who updates the score after every play, instead of recounting the whole match at the end.",
+ "why": [
+  "Fresh answers in seconds, not after tonight's batch job",
+  "Counts by when things really happened (event time), even if data arrives out of order",
+  "Checkpoints let it crash and resume without double counting"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "kafka",
+    "t": "Kafka topic|raw crawler hits",
+    "x": 0,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "msg",
+    "i": "queue"
+   },
+   {
+    "id": "wm",
+    "t": "Watermarks|the event-time clock",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "clock"
+   },
+   {
+    "id": "late",
+    "t": "Late data|side output or drop",
+    "x": 550,
+    "y": 20,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   },
+   {
+    "id": "src",
+    "t": "Kafka source|reads, tracks offsets",
+    "x": 0,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "msg",
+    "i": "partition"
+   },
+   {
+    "id": "win",
+    "t": "Window operator|1-min tumbling per page",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "loop"
+   },
+   {
+    "id": "sink",
+    "t": "Kafka sink|transactional writes",
+    "x": 550,
+    "y": 180,
+    "w": 150,
+    "h": 86,
+    "c": "msg",
+    "i": "queue"
+   },
+   {
+    "id": "bp",
+    "t": "Backpressure|slow sink slows source",
+    "x": 0,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "ops",
+    "i": "chart"
+   },
+   {
+    "id": "state",
+    "t": "State backend|RocksDB or ForSt",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "ckpt",
+    "t": "Checkpoint|snapshot to S3",
+    "x": 550,
+    "y": 340,
+    "w": 150,
+    "h": 86,
+    "c": "data",
+    "i": "snapshot"
+   }
+  ],
+  "edges": [
+   [
+    "kafka",
+    "src",
+    "poll"
+   ],
+   [
+    "src",
+    "win",
+    "keyBy page"
+   ],
+   [
+    "wm",
+    "win",
+    "advance"
+   ],
+   [
+    "win",
+    "late",
+    "too late"
+   ],
+   [
+    "win",
+    "sink",
+    "counts"
+   ],
+   [
+    "win",
+    "state",
+    "per key"
+   ],
+   [
+    "state",
+    "ckpt",
+    "barrier"
+   ],
+   [
+    "sink",
+    "ckpt",
+    "commit"
+   ],
+   [
+    "bp",
+    "src",
+    "throttle"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Read the event stream",
+    "d": "The Kafka source reads crawler hits from each partition and remembers its offsets (its place in each partition), so it can rewind after a failure.",
+    "hl": [
+     "kafka",
+     "src"
+    ]
+   },
+   {
+    "t": "Use event time",
+    "d": "Each hit carries the time it happened (event time), not the time Flink saw it (processing time). Watermarks say 'event time has reached t', so windows know when to close.",
+    "hl": [
+     "src",
+     "wm"
+    ]
+   },
+   {
+    "t": "Key and window",
+    "d": "keyBy(page) sends every hit for a page to the same task. A 1-minute tumbling window counts hits per page per minute; sliding and session windows are other shapes.",
+    "hl": [
+     "src",
+     "win"
+    ]
+   },
+   {
+    "t": "Keep state, handle late",
+    "d": "Running counts live in keyed state (RocksDB, or ForSt in Flink 2.0). Hits arriving after the watermark passed are late: allow some lateness, or send them to a side output.",
+    "hl": [
+     "win",
+     "state",
+     "late"
+    ]
+   },
+   {
+    "t": "Checkpoint for exactly-once",
+    "d": "Barriers flow through the job; each operator snapshots state. The Kafka sink pre-commits a transaction and commits only when the checkpoint completes, so results are written once.",
+    "hl": [
+     "state",
+     "ckpt",
+     "sink"
+    ]
+   },
+   {
+    "t": "Feel the backpressure",
+    "d": "If the sink slows down, buffers fill and Flink slows the source instead of dropping data. Checkpoint barriers slow too, which is why unaligned checkpoints exist.",
+    "hl": [
+     "bp",
+     "src",
+     "sink"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "3",
+   "l": "classic window shapes: tumbling, sliding and session",
+   "s": "https://ci.apache.org/projects/flink/flink-docs-master/docs/concepts/time/"
+  },
+  {
+   "v": "1.4.0",
+   "l": "Flink release (Dec 2017) that added two-phase commit sinks",
+   "s": "https://flink.apache.org/2018/02/28/an-overview-of-end-to-end-exactly-once-processing-in-apache-flink-with-apache-kafka-too/"
+  },
+  {
+   "v": "0.11",
+   "l": "first Kafka version with transactions, needed for exactly-once",
+   "s": "https://flink.apache.org/2018/02/28/an-overview-of-end-to-end-exactly-once-processing-in-apache-flink-with-apache-kafka-too/"
+  },
+  {
+   "v": "1.11",
+   "l": "Flink release that first added unaligned checkpoints",
+   "s": "https://flink.apache.org/2020/10/15/from-aligned-to-unaligned-checkpoints-part-1-checkpoints-alignment-and-backpressure/"
+  },
+  {
+   "v": "up to 94%",
+   "l": "shorter checkpoints with Flink 2.0 disaggregated state, per VLDB paper",
+   "s": "https://www.vldb.org/pvldb/vol18/p4846-mei.pdf"
+  }
+ ],
+ "tool": "kafka",
+ "choices": [
+  {
+   "t": "Watermark delay",
+   "d": "How long to wait for out-of-order events before closing a window. Longer means more complete counts but slower results; shorter means fresher but more late data."
+  },
+  {
+   "t": "Window type and size",
+   "d": "Tumbling for clean per-minute buckets, sliding for moving averages (say 5 minutes every 1 minute), session for bursts split by a gap of inactivity."
+  },
+  {
+   "t": "Late data policy",
+   "d": "Drop it, allow lateness so windows update again, or route it to a side output that a batch job folds in later."
+  },
+  {
+   "t": "Checkpoint interval",
+   "d": "Shorter means less replay after a crash, but more overhead. With exactly-once Kafka sinks, readers see results only after each checkpoint, so it also sets output latency."
+  },
+  {
+   "t": "State backend",
+   "d": "Heap state is fastest for small state. RocksDB spills to local disk for large state; Flink 2.0 ForSt keeps state in remote storage like S3."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "msg-batch-etl-spark-spark-airflow-etl-batch-pipeline-mapreduce",
+   "why": "Hourly or nightly batch is simpler when minutes of delay are fine"
+  },
+  {
+   "slug": "data-olap-db-clickhouse-clickhouse-druid-pinot-realtime-analytics-columnar",
+   "why": "Ingest raw events and aggregate at query time with materialized views"
+  },
+  {
+   "slug": "msg-kafka-event-log-stream-topic-partitions",
+   "why": "Kafka Streams library runs inside your app, no separate cluster"
+  },
+  {
+   "slug": "cache-redis-cache-in-memory-kv-sorted-set-pubsub",
+   "why": "A simple INCR counter per page-minute when exactness is not needed"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Watermark stuck",
+   "d": "One idle Kafka partition sends no events, so the minimum watermark never moves and windows never close.",
+   "see": "Output stops while input keeps flowing; current watermark metric flat",
+   "fix": "Mark idle sources (withIdleness) so they do not hold back the watermark"
+  },
+  {
+   "t": "Too much late data",
+   "d": "Crawler logs arrive minutes late from some regions, after windows closed.",
+   "see": "numLateRecordsDropped climbing; counts lower than the batch total",
+   "fix": "Raise watermark delay or allowed lateness, or reconcile with a side output"
+  },
+  {
+   "t": "Backpressure",
+   "d": "A slow sink or a hot key makes upstream tasks wait.",
+   "see": "Busy or backpressured tasks in the web UI; Kafka consumer lag growing",
+   "fix": "Scale the slow operator, pre-aggregate hot keys, batch sink writes"
+  },
+  {
+   "t": "Checkpoints time out",
+   "d": "Under backpressure, barriers queue behind data and checkpoints take too long.",
+   "see": "Checkpoint duration rising, failed checkpoints in the UI",
+   "fix": "Unaligned checkpoints, buffer debloating, fix the root backpressure"
+  },
+  {
+   "t": "State grows forever",
+   "d": "Keys for old pages or sessions are never cleared.",
+   "see": "State size and checkpoint size grow every day",
+   "fix": "State TTL, windows that close, RocksDB or ForSt for large state"
+  }
+ ],
+ "say": [
+  "Crawler hits land in Kafka; a Flink job keys by page and counts hits in 1-minute tumbling windows using event time from the log line.",
+  "I'll set a watermark a little behind the newest event to absorb out-of-order logs, and send anything later to a side output that we reconcile.",
+  "Checkpoints to S3 plus a transactional Kafka sink give exactly-once results, so a crash replays from the last checkpoint without double counting.",
+  "If one page is extremely hot, I pre-aggregate before the keyBy so a single task is not the bottleneck."
+ ],
+ "followups": [
+  {
+   "q": "Event time or processing time - when does it matter?",
+   "a": "Processing time is simpler and fastest, but replays and delays shift counts into the wrong minute. Event time gives the same answer every run, which matters for billing and reports."
+  },
+  {
+   "q": "How does exactly-once work end to end?",
+   "a": "Flink checkpoints source offsets and state together. The Kafka sink writes inside a transaction that it pre-commits at the checkpoint and commits once the checkpoint completes. Downstream consumers read only committed data."
+  },
+  {
+   "q": "How would you count unique pages crawled per bot per day?",
+   "a": "Key by bot, 1-day tumbling window, and a HyperLogLog sketch in state instead of a full set, so memory stays small for a close estimate."
+  },
+  {
+   "q": "Flink or just ClickHouse materialized views?",
+   "a": "For simple counts, ClickHouse views are less to run. Flink earns its place with event-time windows, joins between streams, late-data rules and exactly-once outputs to other systems."
+  }
+ ],
+ "today": "Flink 2.0 moves state to remote storage (disaggregated state with the ForSt store); its VLDB 2025 paper reports up to 94% shorter checkpoints and much faster recovery and rescaling than Flink 1.20.",
+ "check": [
+  {
+   "q": "A crawler log line is stamped 10:00:05 but reaches Flink at 10:03. Which time should a per-minute report use?",
+   "a": "Event time (10:00:05)",
+   "d": [
+    "Processing time (10:03)",
+    "Kafka broker time",
+    "Whichever comes first"
+   ],
+   "why": "Event time puts the hit in the minute it really happened, so reruns give the same counts."
+  },
+  {
+   "q": "What does a watermark of 10:01 tell a window operator?",
+   "a": "Event time has reached 10:01, so earlier windows can close",
+   "d": [
+    "The job is 1 minute behind Kafka",
+    "Checkpoint 1001 has finished",
+    "Only 101 events are buffered"
+   ],
+   "why": "Watermarks are Flink's event-time clock; windows ending at or before it can fire."
+  },
+  {
+   "q": "You want counts that reset every minute with no overlap. Which window?",
+   "a": "Tumbling window",
+   "d": [
+    "Sliding window",
+    "Session window",
+    "Global window"
+   ],
+   "why": "Tumbling windows are fixed and non-overlapping. Sliding windows overlap, sessions close after a gap."
+  },
+  {
+   "q": "Why can checkpoints slow down when the job is backpressured?",
+   "a": "Barriers wait in the same queues as the data",
+   "d": [
+    "S3 refuses writes under load",
+    "Watermarks stop all checkpoints",
+    "Kafka deletes old offsets"
+   ],
+   "why": "Aligned barriers travel with the records, so slow data means slow barriers. Unaligned checkpoints help."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Flink docs: timely stream processing",
+   "u": "https://ci.apache.org/projects/flink/flink-docs-master/docs/concepts/time/"
+  },
+  {
+   "t": "Flink blog: end-to-end exactly-once with Kafka",
+   "u": "https://flink.apache.org/2018/02/28/an-overview-of-end-to-end-exactly-once-processing-in-apache-flink-with-apache-kafka-too/"
+  },
+  {
+   "t": "Flink blog: aligned to unaligned checkpoints",
+   "u": "https://flink.apache.org/2020/10/15/from-aligned-to-unaligned-checkpoints-part-1-checkpoints-alignment-and-backpressure/"
+  },
+  {
+   "t": "VLDB 2025: disaggregated state in Flink 2.0",
+   "u": "https://www.vldb.org/pvldb/vol18/p4846-mei.pdf"
+  }
+ ]
+}

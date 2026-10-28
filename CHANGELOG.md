@@ -3,6 +3,7 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Four more lessons: Human Approval, PII Redaction, Stream Processor (Flink) and Data Warehouse.
 - Six more lessons: Token & Cost Metering, AI Gateway / Model Router, Citations, Context Builder, Dead Letter Queue and Workflow Engine.
 - Six more lessons: Idempotency Store, Bloom Filter, Agent Skills, Tools (function calling), Prompt Cache and Batch Inference.
 - AI search: 3 more designs with practice questions (Search Relevance Eval Loop, Agentic Search Loop, Pipeline Migration) and 6 more sourced lessons: Late Interaction (ColBERT), AI Answer Engine, Circuit Breaker, Scheduler / Cron, LLM Tracing and Headless Browser Farm.
