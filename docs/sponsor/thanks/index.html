@@ -78,7 +78,7 @@ a { color: inherit }
   radial-gradient(45% 40% at 88% 18%, var(--atmo-lav-2), transparent 70%),
   radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px,
   var(--ground) }
-.hero .wrap { position: relative; z-index: 1; padding-block: 28px 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
+.hero .wrap { position: relative; z-index: 1; padding-block: 56px 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
 .hero .wrap > * { max-width: 100% }
 .island { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 10px; background: var(--surface); box-shadow: 0 0 0 1px var(--hairline), 0 2px 6px rgba(0,0,0,.06); margin-bottom: 18px }
 .island span { width: 32px; height: 32px; border-radius: 7px; display: grid; place-items: center; color: var(--ink) }
@@ -457,6 +457,76 @@ a.card { text-decoration: none; color: inherit; display: block }
 a.card .open { cursor: pointer }
 .uses { display: grid; gap: 8px } .uses .chips { display: flex; flex-wrap: wrap; gap: 6px } .uses .chip { height: 30px; font-size: 12px }
 .uses .chip .lvd { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-muted) } .lvd.Easy { background: #2f9e44 !important } .lvd.Medium { background: #e67700 !important } .lvd.Hard { background: #e03131 !important }
+/* block preview top: one primary action, practise for designs, the rest in More */
+.sacts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.sacts .pill { height: 40px; padding: 0 16px; font-size: 14px } .sacts .pill svg { width: 16px; height: 16px }
+.sacts .pill.primary.done .cl::after { content: " - copied"; opacity: .75 }
+.sacts #sprac { color: var(--sketch); border-color: transparent; background: var(--sketch-soft) } .sacts #sprac[hidden] { display: none }
+.smore summary { gap: 6px } .smore summary svg { width: 12px; height: 12px }
+.smore .mlist { min-width: 240px } .smore .mlist button { display: grid; gap: 1px } .smore .mlist small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) } .smore hr { border: 0; border-top: 1px solid var(--hairline); margin: 4px 6px }
+.sheet.learn .keys { display: none } .sheet.learn #srel { border-top: 1px solid var(--hairline); padding-top: 22px; margin-top: 10px }
+@media (max-width: 420px) { .sacts .pill { padding: 0 13px } }
+@media (max-width: 560px) { .smore .mlist { position: fixed; left: 12px; right: 12px; top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); min-width: 0; max-width: none } }
+/* ---------- learn: a calm reading column, the picture on the left follows what you read ---------- */
+.sheet.learn { width: min(1240px, calc(100vw - 32px)) }
+@media (min-width: 900px) { .sheet.learn .sh-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) } }
+.stg { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 20px; background: radial-gradient(circle, #d3d6de 1.1px, transparent 1.3px) 0 0 / 22px 22px, #fff; animation: swap .3s ease-out; cursor: default }
+.stg[hidden] { display: none }
+.stg svg { width: 100%; height: 100%; max-height: 72dvh }
+.stg .vt { position: absolute; left: 14px; top: 12px; font: 500 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.92); border: 1px solid #e3e4e8; padding: 6px 9px; border-radius: 9999px; letter-spacing: .04em; text-transform: uppercase }
+.sheet.learn.v-other .zc, .sheet.learn.v-other .zhint, .sheet.learn.v-other .sh-pos, .sheet.learn.v-other .arr { visibility: hidden }
+.ib-n rect { transition: stroke-width .25s, filter .25s, opacity .25s } .ib-n text { font-family: var(--font-hand); fill: #1e1e1e } .ib-n .t2 { font-family: var(--font-sans); fill: #495057 }
+.stg.has-hl .ib-n:not(.on) { opacity: .35 } .ib-n.on rect { stroke-width: 3.5; filter: drop-shadow(0 6px 14px rgba(105,101,219,.28)) }
+.ib-e { stroke: #868e96; stroke-width: 1.6; fill: none } .ib-e.on { stroke: #6965db; stroke-width: 2.4 } .ib-l { font: 400 12px var(--font-hand); fill: #495057 }
+.cm-n { cursor: pointer } .cm-n:hover rect { stroke: #6965db }
+.lnav { position: sticky; top: -18px; z-index: 4; min-height: 51px; align-items: center; box-shadow: 0 8px 12px -10px rgba(0,0,0,.12); margin: -6px -20px 0; padding: 10px 20px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; background: var(--surface); border-bottom: 1px solid var(--hairline) }
+.lnav::-webkit-scrollbar { display: none } .lnav[hidden] { display: none }
+.lnav button { flex: none; height: 30px; padding: 0 12px; border-radius: 9999px; border: 0; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); transition: background .15s, color .15s }
+.lnav button:hover { color: var(--ink) } .lnav button.on { background: var(--sketch-soft); color: var(--sketch) }
+.learn-c { display: grid; gap: 34px; padding-top: 6px } .learn-c:empty { display: none }
+.ls { display: grid; gap: 12px; scroll-margin-top: 56px } .ls h4 { margin: 0; font: 400 26px/1.15 var(--font-serif) } .ls h5 { margin: 6px 0 0; font: 500 12px/16px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .05em }
+.lw { margin: 0; font: 400 17px/27px var(--font-sans) }
+.note1 { padding: 14px 16px; border-radius: 6px; background: #fff3bf; color: #1e1e1e; font: 400 20px/1.3 var(--font-hand); transform: rotate(-.6deg); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 14px rgba(0,0,0,.06) }
+.lwhy { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px } .lwhy li { position: relative; padding-left: 22px; font: 400 15px/23px var(--font-sans) } .lwhy li::before { content: ""; position: absolute; left: 4px; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--sketch) }
+.lsteps { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px }
+.lsteps button { width: 100%; display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 12px; border: 1px solid transparent; border-radius: var(--r-md); background: none; cursor: pointer; text-align: left; color: var(--ink); transition: background .15s, border-color .15s }
+.lsteps button:hover { background: var(--surface-sunk) } .lsteps button.on { background: var(--sketch-soft); border-color: transparent }
+.lsteps .k { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-sunk); font: 500 12px/1 var(--font-mono); color: var(--ink-muted) } .lsteps button.on .k { background: var(--sketch); color: #fff }
+.lsteps strong { display: block; font: 500 15px/21px var(--font-sans) } .lsteps span span { display: block; font: 400 14px/21px var(--font-sans); color: var(--ink-muted); margin-top: 2px }
+.lrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px }
+.num { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-sunk); text-decoration: none; color: var(--ink) } .num b { font: 400 26px/1.05 var(--font-serif) } .num span { font: 400 12px/17px var(--font-sans); color: var(--ink-muted) } .num:hover span { color: var(--ink) }
+.knobs { display: grid; gap: 0; border-top: 1px solid var(--hairline) } .knob { display: grid; gap: 3px; padding: 11px 0; border-bottom: 1px solid var(--hairline) } .knob b { font: 500 15px/21px var(--font-sans) } .knob span { font: 400 14px/21px var(--font-sans); color: var(--ink-muted) }
+.alts { display: grid; gap: 6px } .alt { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; text-align: left; color: var(--ink) } .alt:hover { border-color: var(--slate) }
+.alt img { width: 48px; height: 32px; object-fit: contain; border-radius: 6px; background: var(--thumb) } .alt b { display: block; font: 500 14px/19px var(--font-sans) } .alt small { font: 400 13px/18px var(--font-sans); color: var(--ink-muted) } .alt i { font-style: normal; color: var(--ink-muted) }
+.brk { display: grid; gap: 8px } .bk { padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-sunk); display: grid; gap: 6px } .bk b { font: 500 15px/21px var(--font-sans) } .bk p { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink-muted) }
+.bk dl { margin: 0; display: grid; grid-template-columns: 64px 1fr; gap: 4px 10px; font: 400 13px/19px var(--font-sans) } .bk dt { font: 500 11px/19px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .04em } .bk dd { margin: 0 }
+.roles { display: grid; gap: 6px } .role { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 11px 14px; border-radius: var(--r-md); border: 1px solid var(--hairline); text-decoration: none; color: var(--ink); background: var(--surface) } .role:hover { border-color: var(--sketch) }
+.role b { font: 500 14px/20px var(--font-sans) } .role b small { font: 400 12px/20px var(--font-mono); color: var(--ink-muted); margin-left: 6px } .role span { grid-column: 1; font: 400 13px/19px var(--font-sans); color: var(--ink-muted) } .role i { grid-row: 1 / 3; grid-column: 2; align-self: center; font-style: normal; font: 500 12px/1 var(--font-sans); color: var(--sketch) }
+.conn { font: 400 14px/21px var(--font-sans); color: var(--ink-muted) } .conn button { border: 0; padding: 0; background: none; cursor: pointer; font: 500 14px/21px var(--font-sans); color: var(--ink); text-decoration: underline; text-decoration-color: var(--hairline); text-underline-offset: 3px }
+.says { display: grid; gap: 8px } .say1 { margin: 0; padding: 12px 16px; border-left: 3px solid var(--sketch); border-radius: 0 var(--r-md) var(--r-md) 0; background: var(--surface-sunk); font: 400 15px/23px var(--font-sans) }
+.fu { border-bottom: 1px solid var(--hairline) } .fu summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; font: 500 15px/21px var(--font-sans) } .fu summary::-webkit-details-marker { display: none } .fu summary::after { content: "+"; color: var(--ink-muted); font: 400 18px/21px var(--font-sans) } .fu[open] summary::after { content: "−" } .fu p { margin: 0 0 14px; font: 400 14px/22px var(--font-sans); color: var(--ink-muted) }
+.today { margin: 0; padding: 12px 14px; border-radius: var(--r-md); background: #ebfbee; color: #2b8a3e; font: 400 14px/21px var(--font-sans) } .today b { font-weight: 600 }
+:root[data-theme="dark"] .today { background: #1b2e22; color: #8ce99a } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .today { background: #1b2e22; color: #8ce99a } }
+.ck { display: grid; gap: 10px; padding: 16px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface) } .ck p { margin: 0; font: 400 19px/1.3 var(--font-serif) }
+.ck .o { display: grid; grid-template-columns: 1fr 1fr; gap: 6px } .ck .o button { min-height: 44px; padding: 8px 12px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--ground); cursor: pointer; text-align: left; font: 500 14px/19px var(--font-sans); color: var(--ink) } .ck .o button:hover:not(:disabled) { border-color: var(--sketch) }
+.ck .o button.no { opacity: .45; text-decoration: line-through } .ck .o button.yes { border-color: #2f9e44; background: #ebfbee; color: #2b8a3e } .ck .why { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink-muted); animation: rise .25s ease-out } .ck .why b { color: var(--ink) }
+:root[data-theme="dark"] .ck .o button.yes { background: #1b2e22; color: #8ce99a } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ck .o button.yes { background: #1b2e22; color: #8ce99a } }
+@media (max-width: 520px) { .ck .o { grid-template-columns: 1fr } }
+.srcs { font: 400 12px/18px var(--font-sans); color: var(--ink-muted) } .srcs summary { cursor: pointer } .srcs a { color: inherit; display: block; margin-top: 4px }
+/* the cache playground */
+.tool1 { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-lg); border: 1px solid var(--hairline); background: var(--surface) }
+.tool1 .th { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; font: 400 13px/18px var(--font-sans); color: var(--ink-muted) }
+.tseg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk) } .tseg button { height: 28px; padding: 0 12px; border: 0; border-radius: 9999px; background: none; cursor: pointer; font: 500 12px/1 var(--font-sans); color: var(--ink-muted) } .tseg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12) }
+.keys2 { display: flex; flex-wrap: wrap; gap: 6px } .keys2 button { height: 34px; padding: 0 12px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--ground); cursor: pointer; font: 500 13px/1 var(--font-mono); color: var(--ink) } .keys2 button:hover { border-color: var(--sketch) }
+.slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px } .slot { height: 62px; border-radius: 10px; border: 2px dashed var(--hairline); display: grid; place-items: center; align-content: center; gap: 2px; font: 400 18px/1 var(--font-hand); color: #1e1e1e; transition: background .2s, border-color .2s }
+.slot.full { border: 2px solid #e03131; background: #ffc9c9 } .slot small { font: 400 10px/1 var(--font-mono); color: #5c6273 } .slot.hit { animation: hitp .5s ease-out } .slot.new { animation: land .45s cubic-bezier(.2,1.3,.4,1) }
+@keyframes hitp { 40% { transform: scale(1.06); box-shadow: 0 0 0 4px #b2f2bb } } @keyframes land { from { opacity: 0; transform: translateY(-10px) scale(.94) } }
+.tlog { min-height: 42px; margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink-muted) } .tlog b.h { color: #2b8a3e } .tlog b.m { color: #d9480f }
+.tstat { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px } .tstat div { padding: 10px 12px; border-radius: 10px; background: var(--surface-sunk); display: grid; gap: 2px } .tstat b { font: 400 22px/1.1 var(--font-serif) } .tstat span { font: 400 11px/15px var(--font-sans); color: var(--ink-muted) }
+/* phones: the picture stays small at the top while the column scrolls */
+@media (max-width: 899px) { .sheet.learn .sh-img { position: sticky; top: 0; z-index: 5; aspect-ratio: auto; height: 36vh; padding: 12px; transition: transform .3s ease-out, opacity .3s } .sheet.learn.quiet .sh-img { transform: translateY(-100%); opacity: 0; pointer-events: none } .sheet.learn .lnav { transition: top .3s ease-out } .sheet.learn.quiet .lnav { top: 0 } .sheet.learn .lnav { top: 36vh; margin: -6px -20px 0 } .sheet.learn .stg { padding: 8px } .sheet.learn .stg svg { max-height: 100% } }
+@media (prefers-reduced-motion: reduce) { .stg, .slot.hit, .slot.new { animation: none } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important } }
 
 .pg { background: radial-gradient(70% 60% at 50% 0%, var(--atmo-haze), transparent 70%), radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground); min-height: calc(100vh - 64px) }
@@ -497,6 +567,7 @@ a.card .open { cursor: pointer }
   <a class="pill ghost star" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener" aria-label="Star on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg><span class="lbl">Star</span><span class="cnt" id="stars" hidden></span></a>
   <a class="pill primary" href="../../#get">Get the kit</a>
 </div></header>
+<script>/* shared header: theme switch and the live star count, the same on every page */(()=>{const t=document.getElementById("theme");if(t)t.onclick=()=>{const d=document.documentElement,n=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=n;try{localStorage.setItem("sdk-theme",n)}catch(e){}};const show=n=>{const s=document.getElementById("stars");if(s&&n>0){s.textContent=n>=1000?(n/1000).toFixed(1)+"k":n;s.hidden=false}};let c=null;try{c=JSON.parse(sessionStorage.getItem("sdk-stars")||"null")}catch(e){}if(c&&Date.now()-c.t<36e5)show(c.n);else fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r=>r.ok?r.json():null).then(j=>{if(j){show(j.stargazers_count);try{sessionStorage.setItem("sdk-stars",JSON.stringify({t:Date.now(),n:j.stargazers_count}))}catch(e){}}}).catch(()=>{})})();</script>
 <main class="pg gut"><div class="wrap" id="app"><div class="ok" aria-hidden="true">✓</div>
 <h1>You're <i>in</i>. Thank you.</h1>
 <p class="lead" id="tl">Your payment went through. Here's what happens next. It's all automatic.</p>

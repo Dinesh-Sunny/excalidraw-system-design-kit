@@ -81,7 +81,7 @@ a { color: inherit }
   radial-gradient(45% 40% at 88% 18%, var(--atmo-lav-2), transparent 70%),
   radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px,
   var(--ground) }
-.hero .wrap { position: relative; z-index: 1; padding-block: 28px 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
+.hero .wrap { position: relative; z-index: 1; padding-block: 56px 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
 .hero .wrap > * { max-width: 100% }
 .island { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 10px; background: var(--surface); box-shadow: 0 0 0 1px var(--hairline), 0 2px 6px rgba(0,0,0,.06); margin-bottom: 18px }
 .island span { width: 32px; height: 32px; border-radius: 7px; display: grid; place-items: center; color: var(--ink) }
@@ -460,6 +460,16 @@ a.card { text-decoration: none; color: inherit; display: block }
 a.card .open { cursor: pointer }
 .uses { display: grid; gap: 8px } .uses .chips { display: flex; flex-wrap: wrap; gap: 6px } .uses .chip { height: 30px; font-size: 12px }
 .uses .chip .lvd { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-muted) } .lvd.Easy { background: #2f9e44 !important } .lvd.Medium { background: #e67700 !important } .lvd.Hard { background: #e03131 !important }
+/* block preview top: one primary action, practise for designs, the rest in More */
+.sacts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.sacts .pill { height: 40px; padding: 0 16px; font-size: 14px } .sacts .pill svg { width: 16px; height: 16px }
+.sacts .pill.primary.done .cl::after { content: " - copied"; opacity: .75 }
+.sacts #sprac { color: var(--sketch); border-color: transparent; background: var(--sketch-soft) } .sacts #sprac[hidden] { display: none }
+.smore summary { gap: 6px } .smore summary svg { width: 12px; height: 12px }
+.smore .mlist { min-width: 240px } .smore .mlist button { display: grid; gap: 1px } .smore .mlist small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) } .smore hr { border: 0; border-top: 1px solid var(--hairline); margin: 4px 6px }
+.sheet.learn .keys { display: none } .sheet.learn #srel { border-top: 1px solid var(--hairline); padding-top: 22px; margin-top: 10px }
+@media (max-width: 420px) { .sacts .pill { padding: 0 13px } }
+@media (max-width: 560px) { .smore .mlist { position: fixed; left: 12px; right: 12px; top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); min-width: 0; max-width: none } }
 /* ---------- learn: a calm reading column, the picture on the left follows what you read ---------- */
 .sheet.learn { width: min(1240px, calc(100vw - 32px)) }
 @media (min-width: 900px) { .sheet.learn .sh-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) } }
@@ -518,16 +528,12 @@ a.card .open { cursor: pointer }
 .tlog { min-height: 42px; margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink-muted) } .tlog b.h { color: #2b8a3e } .tlog b.m { color: #d9480f }
 .tstat { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px } .tstat div { padding: 10px 12px; border-radius: 10px; background: var(--surface-sunk); display: grid; gap: 2px } .tstat b { font: 400 22px/1.1 var(--font-serif) } .tstat span { font: 400 11px/15px var(--font-sans); color: var(--ink-muted) }
 /* phones: the picture stays small at the top while the column scrolls */
-@media (max-width: 899px) { .sheet.learn .sh-img { position: sticky; top: 0; z-index: 5; aspect-ratio: auto; height: 36vh; padding: 12px; transition: height .3s ease-out, padding .3s } .sheet.learn.quiet .sh-img { height: 0; padding: 0; border: 0 } .sheet.learn.quiet .lnav { top: 0 } .sheet.learn .lnav { top: 36vh; margin: -6px -20px 0 } .sheet.learn .stg { padding: 8px } .sheet.learn .stg svg { max-height: 100% } }
+@media (max-width: 899px) { .sheet.learn .sh-img { position: sticky; top: 0; z-index: 5; aspect-ratio: auto; height: 36vh; padding: 12px; transition: transform .3s ease-out, opacity .3s } .sheet.learn.quiet .sh-img { transform: translateY(-100%); opacity: 0; pointer-events: none } .sheet.learn .lnav { transition: top .3s ease-out } .sheet.learn.quiet .lnav { top: 0 } .sheet.learn .lnav { top: 36vh; margin: -6px -20px 0 } .sheet.learn .stg { padding: 8px } .sheet.learn .stg svg { max-height: 100% } }
 @media (prefers-reduced-motion: reduce) { .stg, .slot.hit, .slot.new { animation: none } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important } }
 
 [hidden] { display: none !important }
 /* ---------- picker ---------- */
-.px { background: radial-gradient(70% 60% at 50% 0%, var(--atmo-haze), transparent 70%), radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground); min-height: calc(100vh - 64px) }
-.px .wrap { padding-block: 44px 64px; display: grid; gap: 24px }
-.ph1 { margin: 0; font: 400 clamp(38px, 6vw, 60px)/1.02 var(--font-serif); text-wrap: balance; text-align: center } .ph1 i { font-style: italic }
-.plead { margin: -8px auto 0; max-width: 560px; text-align: center; color: var(--ink-muted); font: 400 17px/25px var(--font-sans) }
 .filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center }
 .seg2 { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk) }
 .seg2 button { height: 32px; padding: 0 14px; border: 0; border-radius: 9999px; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
@@ -654,7 +660,7 @@ body.run > header.nav, body.run > footer { display: none }
 .opt:hover { border-color: var(--sketch); background: var(--sketch-soft) }
 .fb { animation: rise .25s ease-out } .fb b { font: 600 15px/22px var(--font-sans) } .fb.ok b { color: #2f9e44 } .fb.no b { color: #e67700 } .fb span { color: var(--ink-muted); font: 400 15px/22px var(--font-sans) }
 .cap { flex-wrap: wrap } .cap .rate { width: 100%; margin-top: 4px }
-.cnt { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.9); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px; z-index: 1 }
+.canvas .cnt { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.9); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px; z-index: 1 }
 .tog { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); cursor: pointer; margin-right: 8px } .tog input { accent-color: var(--sketch) }
 .qn small { font: 400 16px/1 var(--font-sans); color: var(--ink-muted) }
 .scard { display: grid; gap: 4px } .srow { display: grid; grid-template-columns: 130px 1fr 80px; align-items: center; gap: 12px; padding: 10px 12px; border: 0; border-radius: 8px; background: none; cursor: pointer; text-align: left; font: 500 14px/1 var(--font-sans); color: var(--ink) } .srow:hover { background: var(--surface-sunk) }
@@ -751,6 +757,11 @@ body.run > header.nav, body.run > footer { display: none }
 .zc2 button { height: 30px; min-width: 30px; padding: 0 8px; border: 0; border-radius: 7px; background: none; cursor: pointer; font: 500 14px/1 var(--font-sans); color: #141414 } .zc2 button:hover { background: #f1f3f5 }
 .dz { position: relative }
 @media (max-width: 999px) { .zc2 { bottom: auto; top: 10px; left: 10px } }
+/* picker: the same hero as the blocks page */
+.pmain .wrap { padding-block: 36px 64px; display: grid; gap: 24px }
+.hero .filters .sel, .hero .filters .seg2 { height: 38px } .hero .filters .seg2 button { height: 32px }
+.hero .try.dice { display: inline-flex; align-items: center; gap: 6px; border-style: dashed } .hero .try.dice svg { width: 15px; height: 15px }
+.hero .wrap { padding-bottom: 8px }
 /* workspace never grows wider than the screen */
 .ws { grid-template-columns: minmax(0, 1fr) } .top { min-width: 0 } .top > * { min-width: 0 }
 .tabs { overflow: hidden }
@@ -770,9 +781,6 @@ body.run > header.nav, body.run > footer { display: none }
 .sstp { display: flex; align-items: center; gap: 4px } .sstp i { flex: 1; max-width: 36px; height: 6px; border-radius: 9999px; background: var(--hairline) } .sstp span { margin-left: 8px; font: 400 12px/1 var(--font-mono); color: var(--ink-muted); white-space: nowrap }
 @media (max-width: 560px) { .scard1 { padding: 16px; gap: 14px } .sc1 { padding: 16px 12px; place-items: start center } .pk .mlist { position: fixed; left: 12px; right: 12px; top: auto; bottom: 90px; max-height: 50vh } }
 /* blocks-site features inside practice */
-.pq { height: 44px; width: min(420px, 100%); padding: 0 16px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); font: 400 15px/1 var(--font-sans); color: var(--ink) }
-.pq:focus { outline: 0; border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
-.fwrap { display: grid; gap: 12px; justify-items: center }
 .dice { height: 38px; padding: 0 14px; border-radius: 9999px; border: 1px dashed var(--hairline); background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink) } .dice svg { width: 15px; height: 15px }
 .ufil { display: flex; justify-content: center } .ufil .chip { height: 34px }
 .qw { position: relative; min-width: 0; animation: rise .35s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0ms) }
@@ -795,18 +803,22 @@ body.run > header.nav, body.run > footer { display: none }
   <a class="pill ghost star" href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit" target="_blank" rel="noopener" aria-label="Star on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg><span class="lbl">Star</span><span class="cnt" id="stars" hidden></span></a>
   <a class="pill primary" href="../#get">Get the kit</a>
 </div></header>
+<script>/* shared header: theme switch and the live star count, the same on every page */(()=>{const t=document.getElementById("theme");if(t)t.onclick=()=>{const d=document.documentElement,n=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=n;try{localStorage.setItem("sdk-theme",n)}catch(e){}};const show=n=>{const s=document.getElementById("stars");if(s&&n>0){s.textContent=n>=1000?(n/1000).toFixed(1)+"k":n;s.hidden=false}};let c=null;try{c=JSON.parse(sessionStorage.getItem("sdk-stars")||"null")}catch(e){}if(c&&Date.now()-c.t<36e5)show(c.n);else fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r=>r.ok?r.json():null).then(j=>{if(j){show(j.stargazers_count);try{sessionStorage.setItem("sdk-stars",JSON.stringify({t:Date.now(),n:j.stargazers_count}))}catch(e){}}}).catch(()=>{})})();</script>
 
 <div id="vPick">
-<main class="px gut"><div class="wrap">
-  <h1 class="ph1">Practise the interview, <i>step by step</i>.</h1>
-  <p class="plead">Pick a question and answer it the way the interview runs: requirements, estimates, API, data, the design block by block, deep dives, wrap-up.</p>
-  <div class="fwrap"><input class="pq" id="pq" type="search" placeholder="Search questions, companies or blocks" autocomplete="off" aria-label="Search practice questions"><div class="ufil" id="ufil" hidden></div></div>
-  <div class="filters">
+<section class="hero gut" id="top"><div class="wrap">
+  <h1>Practise the <i>interview</i>.</h1>
+  <p id="plead">Real questions, answered the way the interview runs.</p>
+  <div class="sbox"><form class="search" role="search" id="psf"><input id="pq" type="search" placeholder="Search questions, companies or blocks" autocomplete="off" aria-label="Search practice questions"><kbd aria-hidden="true">/</kbd><button class="go" type="submit" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button></form></div>
+  <div class="tries filters">
     <div class="seg2" id="fTrack"><button type="button" data-v="all" aria-pressed="true">All</button><button type="button" data-v="Classic" aria-pressed="false">Classic</button><button type="button" data-v="AI" aria-pressed="false">AI</button></div>
     <select class="sel" id="fLevel" aria-label="Level"><option value="">Any level</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
     <select class="sel" id="fCo" aria-label="Company"><option value="">Any company</option></select>
-    <button class="dice" type="button" id="pRand"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="3"/><circle cx="7.3" cy="7.3" r=".9" fill="currentColor"/><circle cx="12.7" cy="12.7" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/></svg>Surprise me</button>
+    <button class="try dice" type="button" id="pRand"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="3"/><circle cx="7.3" cy="7.3" r=".9" fill="currentColor"/><circle cx="12.7" cy="12.7" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/></svg>surprise me</button>
   </div>
+  <div class="ufil" id="ufil" hidden></div>
+</div></section>
+<main class="gut pmain"><div class="wrap">
   <div class="qgrid" id="qgrid"></div>
   <p class="src">Company names come from public candidate reports. Every design is also in the <a href="../#tpl">blocks library</a>. <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a question</a></p>
 </div></main>
@@ -844,7 +856,7 @@ function boardToggle(s, label) { const b = LS("sdk-board"), on = b.includes(s); 
 function recentAdd(s) { LS("sdk-recent", [s, ...LS("sdk-recent").filter(x => x !== s)].slice(0, 12)); }
 function prog(qs) { const p = store.get(), r = Object.entries(p).filter(([k]) => k === qs || k.startsWith(qs + "~")).map(x => x[1]); if (!r.length) return null; const done = r.filter(x => x.done); return { done: done.length > 0, score: done.length ? Math.max(...done.map(x => x.score || 0)) : null }; }
 async function copyKit(id, label) { try { const p = fetch(`../e/${id}.json`).then(r => r.json()).then(els => new Blob([JSON.stringify({ type: "excalidraw/clipboard", elements: els, files: {} })], { type: "text/plain" })); if (window.ClipboardItem && navigator.clipboard.write) await navigator.clipboard.write([new ClipboardItem({ "text/plain": p })]); else await navigator.clipboard.writeText(await (await p).text()); say(`Copied${label ? " " + label : ""}. Paste in Excalidraw with ${MAC ? "⌘" : "Ctrl"} V`); ev("copy-excalidraw/" + id.replace(/^sdk-/, "")); } catch (e) { say("Copy didn't go through. Try the download"); } }
-fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r => r.ok ? r.json() : null).then(j => { const s = $("#stars"); if (s && j && j.stargazers_count >= 25) { s.textContent = j.stargazers_count; s.hidden = false; } }).catch(() => {});
+
 const GC = SP.goatcounter; if (GC) { const s = document.createElement("script"); s.async = true; s.src = "https://gc.zgo.at/count.js"; s.dataset.goatcounter = `https://${GC}.goatcounter.com/count`; document.head.append(s); }
 const ev = p => { try { if (window.goatcounter && goatcounter.count) goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} };
 const store = { get() { try { return JSON.parse(localStorage.getItem("sdk-practice") || "{}"); } catch (e) { return {}; } }, set(v) { try { localStorage.setItem("sdk-practice", JSON.stringify(v)); } catch (e) {} } };
@@ -877,7 +889,8 @@ function drawPick() {
   $("#ufil").hidden = !USES; if (USES) $("#ufil").innerHTML = `<button class="chip" type="button" id="ufx">Questions that use ${esc(USES.t)} <span aria-hidden="true">×</span></button>`;
   $("#qgrid").innerHTML = list.map((d, i) => { const g = prog(d.slug), badge = g ? (g.done ? `Done · ${g.score}%` : "In progress") : ""; return `<div class="qw" style="--d:${Math.min(i, 8) * 40}ms"><button class="q" type="button" data-q="${d.slug}"><div class="th"><img loading="lazy" alt="" src="../${d.thumb}">${badge ? `<span class="badge">${badge}</span>` : ""}</div><div class="tt">${esc(d.title)}</div><div class="mm"><span class="lv ${d.level}">${d.level}</span>${d.companies.length ? `<span>${esc(d.companies.slice(0, 3).join(", "))}${d.companies.length > 3 ? ` +${d.companies.length - 3}` : ""}</span>` : `<span>${d.track === "AI" ? "AI design" : "Classic"}</span>`}</div></button><div class="qa"><button type="button" data-pc="${d.kitId}" title="Copy the design to Excalidraw">${COPYI}<span class="lb">Copy</span></button><button type="button" data-ps="${d.kit}" class="${onBoard(d.kit) ? "saved" : ""}" title="Save the design to your board" aria-pressed="${onBoard(d.kit)}">${SAVEI}</button></div></div>`; }).join("") || `<p class="src">Nothing matches. Try another word or filter.</p>`;
 }
-$("#pq").addEventListener("input", drawPick);
+$("#pq").addEventListener("input", drawPick); $("#psf").addEventListener("submit", e => { e.preventDefault(); drawPick(); $("#qgrid").scrollIntoView({ behavior: "smooth", block: "start" }); });
+$("#plead").textContent = `${D.length} real questions, answered the way the interview runs.`;
 $("#pRand").onclick = () => { const pool = D.filter(d => !(prog(d.slug) || {}).done), d = (pool.length ? pool : D)[Math.floor(Math.random() * (pool.length || D.length))]; ev("practice-surprise"); location.hash = "q=" + d.slug; };
 $("#ufil").addEventListener("click", e => { if (e.target.closest("#ufx")) { USES = null; history.replaceState(null, "", location.pathname); drawPick(); } });
 document.addEventListener("keydown", e => { if (e.key === "/" && !Q && document.activeElement !== $("#pq")) { e.preventDefault(); $("#pq").focus(); } });

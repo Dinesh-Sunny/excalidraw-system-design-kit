@@ -10,10 +10,6 @@ __HEADINIT__
 __BASECSS__
 [hidden] { display: none !important }
 /* ---------- picker ---------- */
-.px { background: radial-gradient(70% 60% at 50% 0%, var(--atmo-haze), transparent 70%), radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground); min-height: calc(100vh - 64px) }
-.px .wrap { padding-block: 44px 64px; display: grid; gap: 24px }
-.ph1 { margin: 0; font: 400 clamp(38px, 6vw, 60px)/1.02 var(--font-serif); text-wrap: balance; text-align: center } .ph1 i { font-style: italic }
-.plead { margin: -8px auto 0; max-width: 560px; text-align: center; color: var(--ink-muted); font: 400 17px/25px var(--font-sans) }
 .filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center }
 .seg2 { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: var(--surface-sunk) }
 .seg2 button { height: 32px; padding: 0 14px; border: 0; border-radius: 9999px; background: none; cursor: pointer; font: 500 13px/1 var(--font-sans); color: var(--ink-muted) }
@@ -140,7 +136,7 @@ body.run > header.nav, body.run > footer { display: none }
 .opt:hover { border-color: var(--sketch); background: var(--sketch-soft) }
 .fb { animation: rise .25s ease-out } .fb b { font: 600 15px/22px var(--font-sans) } .fb.ok b { color: #2f9e44 } .fb.no b { color: #e67700 } .fb span { color: var(--ink-muted); font: 400 15px/22px var(--font-sans) }
 .cap { flex-wrap: wrap } .cap .rate { width: 100%; margin-top: 4px }
-.cnt { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.9); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px; z-index: 1 }
+.canvas .cnt { position: absolute; left: 14px; top: 12px; font: 400 11px/1 var(--font-mono); color: #5c6273; background: rgba(255,255,255,.9); border: 1px solid #e3e4e8; padding: 5px 8px; border-radius: 9999px; z-index: 1 }
 .tog { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink-muted); cursor: pointer; margin-right: 8px } .tog input { accent-color: var(--sketch) }
 .qn small { font: 400 16px/1 var(--font-sans); color: var(--ink-muted) }
 .scard { display: grid; gap: 4px } .srow { display: grid; grid-template-columns: 130px 1fr 80px; align-items: center; gap: 12px; padding: 10px 12px; border: 0; border-radius: 8px; background: none; cursor: pointer; text-align: left; font: 500 14px/1 var(--font-sans); color: var(--ink) } .srow:hover { background: var(--surface-sunk) }
@@ -237,6 +233,11 @@ body.run > header.nav, body.run > footer { display: none }
 .zc2 button { height: 30px; min-width: 30px; padding: 0 8px; border: 0; border-radius: 7px; background: none; cursor: pointer; font: 500 14px/1 var(--font-sans); color: #141414 } .zc2 button:hover { background: #f1f3f5 }
 .dz { position: relative }
 @media (max-width: 999px) { .zc2 { bottom: auto; top: 10px; left: 10px } }
+/* picker: the same hero as the blocks page */
+.pmain .wrap { padding-block: 36px 64px; display: grid; gap: 24px }
+.hero .filters .sel, .hero .filters .seg2 { height: 38px } .hero .filters .seg2 button { height: 32px }
+.hero .try.dice { display: inline-flex; align-items: center; gap: 6px; border-style: dashed } .hero .try.dice svg { width: 15px; height: 15px }
+.hero .wrap { padding-bottom: 8px }
 /* workspace never grows wider than the screen */
 .ws { grid-template-columns: minmax(0, 1fr) } .top { min-width: 0 } .top > * { min-width: 0 }
 .tabs { overflow: hidden }
@@ -256,9 +257,6 @@ body.run > header.nav, body.run > footer { display: none }
 .sstp { display: flex; align-items: center; gap: 4px } .sstp i { flex: 1; max-width: 36px; height: 6px; border-radius: 9999px; background: var(--hairline) } .sstp span { margin-left: 8px; font: 400 12px/1 var(--font-mono); color: var(--ink-muted); white-space: nowrap }
 @media (max-width: 560px) { .scard1 { padding: 16px; gap: 14px } .sc1 { padding: 16px 12px; place-items: start center } .pk .mlist { position: fixed; left: 12px; right: 12px; top: auto; bottom: 90px; max-height: 50vh } }
 /* blocks-site features inside practice */
-.pq { height: 44px; width: min(420px, 100%); padding: 0 16px; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--surface); font: 400 15px/1 var(--font-sans); color: var(--ink) }
-.pq:focus { outline: 0; border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
-.fwrap { display: grid; gap: 12px; justify-items: center }
 .dice { height: 38px; padding: 0 14px; border-radius: 9999px; border: 1px dashed var(--hairline); background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-sans); color: var(--ink) } .dice svg { width: 15px; height: 15px }
 .ufil { display: flex; justify-content: center } .ufil .chip { height: 34px }
 .qw { position: relative; min-width: 0; animation: rise .35s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0ms) }
@@ -275,16 +273,19 @@ body.run > header.nav, body.run > footer { display: none }
 __NAV__
 
 <div id="vPick">
-<main class="px gut"><div class="wrap">
-  <h1 class="ph1">Practise the interview, <i>step by step</i>.</h1>
-  <p class="plead">Pick a question and answer it the way the interview runs: requirements, estimates, API, data, the design block by block, deep dives, wrap-up.</p>
-  <div class="fwrap"><input class="pq" id="pq" type="search" placeholder="Search questions, companies or blocks" autocomplete="off" aria-label="Search practice questions"><div class="ufil" id="ufil" hidden></div></div>
-  <div class="filters">
+<section class="hero gut" id="top"><div class="wrap">
+  <h1>Practise the <i>interview</i>.</h1>
+  <p id="plead">Real questions, answered the way the interview runs.</p>
+  <div class="sbox"><form class="search" role="search" id="psf"><input id="pq" type="search" placeholder="Search questions, companies or blocks" autocomplete="off" aria-label="Search practice questions"><kbd aria-hidden="true">/</kbd><button class="go" type="submit" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button></form></div>
+  <div class="tries filters">
     <div class="seg2" id="fTrack"><button type="button" data-v="all" aria-pressed="true">All</button><button type="button" data-v="Classic" aria-pressed="false">Classic</button><button type="button" data-v="AI" aria-pressed="false">AI</button></div>
     <select class="sel" id="fLevel" aria-label="Level"><option value="">Any level</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
     <select class="sel" id="fCo" aria-label="Company"><option value="">Any company</option></select>
-    <button class="dice" type="button" id="pRand"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="3"/><circle cx="7.3" cy="7.3" r=".9" fill="currentColor"/><circle cx="12.7" cy="12.7" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/></svg>Surprise me</button>
+    <button class="try dice" type="button" id="pRand"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="3"/><circle cx="7.3" cy="7.3" r=".9" fill="currentColor"/><circle cx="12.7" cy="12.7" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/></svg>surprise me</button>
   </div>
+  <div class="ufil" id="ufil" hidden></div>
+</div></section>
+<main class="gut pmain"><div class="wrap">
   <div class="qgrid" id="qgrid"></div>
   <p class="src">Company names come from public candidate reports. Every design is also in the <a href="../#tpl">blocks library</a>. <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/issues/new?template=2-request.yml" target="_blank" rel="noopener">Request a question</a></p>
 </div></main>
@@ -322,7 +323,7 @@ function boardToggle(s, label) { const b = LS("sdk-board"), on = b.includes(s); 
 function recentAdd(s) { LS("sdk-recent", [s, ...LS("sdk-recent").filter(x => x !== s)].slice(0, 12)); }
 function prog(qs) { const p = store.get(), r = Object.entries(p).filter(([k]) => k === qs || k.startsWith(qs + "~")).map(x => x[1]); if (!r.length) return null; const done = r.filter(x => x.done); return { done: done.length > 0, score: done.length ? Math.max(...done.map(x => x.score || 0)) : null }; }
 async function copyKit(id, label) { try { const p = fetch(`../e/${id}.json`).then(r => r.json()).then(els => new Blob([JSON.stringify({ type: "excalidraw/clipboard", elements: els, files: {} })], { type: "text/plain" })); if (window.ClipboardItem && navigator.clipboard.write) await navigator.clipboard.write([new ClipboardItem({ "text/plain": p })]); else await navigator.clipboard.writeText(await (await p).text()); say(`Copied${label ? " " + label : ""}. Paste in Excalidraw with ${MAC ? "⌘" : "Ctrl"} V`); ev("copy-excalidraw/" + id.replace(/^sdk-/, "")); } catch (e) { say("Copy didn't go through. Try the download"); } }
-fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r => r.ok ? r.json() : null).then(j => { const s = $("#stars"); if (s && j && j.stargazers_count >= 25) { s.textContent = j.stargazers_count; s.hidden = false; } }).catch(() => {});
+
 const GC = SP.goatcounter; if (GC) { const s = document.createElement("script"); s.async = true; s.src = "https://gc.zgo.at/count.js"; s.dataset.goatcounter = `https://${GC}.goatcounter.com/count`; document.head.append(s); }
 const ev = p => { try { if (window.goatcounter && goatcounter.count) goatcounter.count({ path: p, title: p, event: true }); } catch (e) {} };
 const store = { get() { try { return JSON.parse(localStorage.getItem("sdk-practice") || "{}"); } catch (e) { return {}; } }, set(v) { try { localStorage.setItem("sdk-practice", JSON.stringify(v)); } catch (e) {} } };
@@ -355,7 +356,8 @@ function drawPick() {
   $("#ufil").hidden = !USES; if (USES) $("#ufil").innerHTML = `<button class="chip" type="button" id="ufx">Questions that use ${esc(USES.t)} <span aria-hidden="true">×</span></button>`;
   $("#qgrid").innerHTML = list.map((d, i) => { const g = prog(d.slug), badge = g ? (g.done ? `Done · ${g.score}%` : "In progress") : ""; return `<div class="qw" style="--d:${Math.min(i, 8) * 40}ms"><button class="q" type="button" data-q="${d.slug}"><div class="th"><img loading="lazy" alt="" src="../${d.thumb}">${badge ? `<span class="badge">${badge}</span>` : ""}</div><div class="tt">${esc(d.title)}</div><div class="mm"><span class="lv ${d.level}">${d.level}</span>${d.companies.length ? `<span>${esc(d.companies.slice(0, 3).join(", "))}${d.companies.length > 3 ? ` +${d.companies.length - 3}` : ""}</span>` : `<span>${d.track === "AI" ? "AI design" : "Classic"}</span>`}</div></button><div class="qa"><button type="button" data-pc="${d.kitId}" title="Copy the design to Excalidraw">${COPYI}<span class="lb">Copy</span></button><button type="button" data-ps="${d.kit}" class="${onBoard(d.kit) ? "saved" : ""}" title="Save the design to your board" aria-pressed="${onBoard(d.kit)}">${SAVEI}</button></div></div>`; }).join("") || `<p class="src">Nothing matches. Try another word or filter.</p>`;
 }
-$("#pq").addEventListener("input", drawPick);
+$("#pq").addEventListener("input", drawPick); $("#psf").addEventListener("submit", e => { e.preventDefault(); drawPick(); $("#qgrid").scrollIntoView({ behavior: "smooth", block: "start" }); });
+$("#plead").textContent = `${D.length} real questions, answered the way the interview runs.`;
 $("#pRand").onclick = () => { const pool = D.filter(d => !(prog(d.slug) || {}).done), d = (pool.length ? pool : D)[Math.floor(Math.random() * (pool.length || D.length))]; ev("practice-surprise"); location.hash = "q=" + d.slug; };
 $("#ufil").addEventListener("click", e => { if (e.target.closest("#ufx")) { USES = null; history.replaceState(null, "", location.pathname); drawPick(); } });
 document.addEventListener("keydown", e => { if (e.key === "/" && !Q && document.activeElement !== $("#pq")) { e.preventDefault(); $("#pq").focus(); } });

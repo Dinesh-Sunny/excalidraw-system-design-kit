@@ -29,7 +29,10 @@ def NAV(pre, active, spurl, kit_dialog=False):
       f'  <span class="sp"></span>\n  {THEMEBTN}\n'
       f'  <a class="pill ghost spon" href="{spurl}" aria-label="Sponsor this kit"{cur("sponsor")}>{HEART}<span class="lbl">Sponsor</span></a>\n'
       f'  <a class="pill ghost star" href="{REPO}" target="_blank" rel="noopener" aria-label="Star on GitHub">{GHSVG}<span class="lbl">Star</span><span class="cnt" id="stars" hidden></span></a>\n'
-      f'  {get}\n</div></header>')
+      f'  {get}\n</div></header>\n'
+      '<script>/* shared header: theme switch and the live star count, the same on every page */(()=>{const t=document.getElementById("theme");if(t)t.onclick=()=>{const d=document.documentElement,n=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=n;try{localStorage.setItem("sdk-theme",n)}catch(e){}};'
+      'const show=n=>{const s=document.getElementById("stars");if(s&&n>0){s.textContent=n>=1000?(n/1000).toFixed(1)+"k":n;s.hidden=false}};let c=null;try{c=JSON.parse(sessionStorage.getItem("sdk-stars")||"null")}catch(e){}'
+      'if(c&&Date.now()-c.t<36e5)show(c.n);else fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r=>r.ok?r.json():null).then(j=>{if(j){show(j.stargazers_count);try{sessionStorage.setItem("sdk-stars",JSON.stringify({t:Date.now(),n:j.stargazers_count}))}catch(e){}}}).catch(()=>{})})();</script>')
 def FOOT(pre, spurl, mail='Help'):
     """one footer for every page"""
     home=pre or './'

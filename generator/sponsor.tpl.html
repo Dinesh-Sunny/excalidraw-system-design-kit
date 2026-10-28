@@ -360,7 +360,7 @@ fetch("__SPJSON__", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).the
 
 /* theme + stars */
 $("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.theme === "dark" ? "light" : "dark"; d.dataset.theme = t; try { localStorage.setItem("sdk-theme", t); } catch (e) {} };
-fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r => r.ok ? r.json() : null).then(j => { if (j && j.stargazers_count) { const s = $("#stars"); s.textContent = j.stargazers_count; s.hidden = false; } }).catch(() => {});
+
 
 /* contact links: address assembled at runtime to keep scrapers off it */
 (() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();

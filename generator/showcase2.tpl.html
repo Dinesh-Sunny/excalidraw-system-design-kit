@@ -74,7 +74,7 @@ a { color: inherit }
   radial-gradient(45% 40% at 88% 18%, var(--atmo-lav-2), transparent 70%),
   radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px,
   var(--ground) }
-.hero .wrap { position: relative; z-index: 1; padding-block: 28px 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
+.hero .wrap { position: relative; z-index: 1; padding-block: 56px 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 18px }
 .hero .wrap > * { max-width: 100% }
 .island { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 10px; background: var(--surface); box-shadow: 0 0 0 1px var(--hairline), 0 2px 6px rgba(0,0,0,.06); margin-bottom: 18px }
 .island span { width: 32px; height: 32px; border-radius: 7px; display: grid; place-items: center; color: var(--ink) }
@@ -453,6 +453,16 @@ a.card { text-decoration: none; color: inherit; display: block }
 a.card .open { cursor: pointer }
 .uses { display: grid; gap: 8px } .uses .chips { display: flex; flex-wrap: wrap; gap: 6px } .uses .chip { height: 30px; font-size: 12px }
 .uses .chip .lvd { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-muted) } .lvd.Easy { background: #2f9e44 !important } .lvd.Medium { background: #e67700 !important } .lvd.Hard { background: #e03131 !important }
+/* block preview top: one primary action, practise for designs, the rest in More */
+.sacts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.sacts .pill { height: 40px; padding: 0 16px; font-size: 14px } .sacts .pill svg { width: 16px; height: 16px }
+.sacts .pill.primary.done .cl::after { content: " - copied"; opacity: .75 }
+.sacts #sprac { color: var(--sketch); border-color: transparent; background: var(--sketch-soft) } .sacts #sprac[hidden] { display: none }
+.smore summary { gap: 6px } .smore summary svg { width: 12px; height: 12px }
+.smore .mlist { min-width: 240px } .smore .mlist button { display: grid; gap: 1px } .smore .mlist small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) } .smore hr { border: 0; border-top: 1px solid var(--hairline); margin: 4px 6px }
+.sheet.learn .keys { display: none } .sheet.learn #srel { border-top: 1px solid var(--hairline); padding-top: 22px; margin-top: 10px }
+@media (max-width: 420px) { .sacts .pill { padding: 0 13px } }
+@media (max-width: 560px) { .smore .mlist { position: fixed; left: 12px; right: 12px; top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); min-width: 0; max-width: none } }
 /* ---------- learn: a calm reading column, the picture on the left follows what you read ---------- */
 .sheet.learn { width: min(1240px, calc(100vw - 32px)) }
 @media (min-width: 900px) { .sheet.learn .sh-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) } }
@@ -511,7 +521,7 @@ a.card .open { cursor: pointer }
 .tlog { min-height: 42px; margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink-muted) } .tlog b.h { color: #2b8a3e } .tlog b.m { color: #d9480f }
 .tstat { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px } .tstat div { padding: 10px 12px; border-radius: 10px; background: var(--surface-sunk); display: grid; gap: 2px } .tstat b { font: 400 22px/1.1 var(--font-serif) } .tstat span { font: 400 11px/15px var(--font-sans); color: var(--ink-muted) }
 /* phones: the picture stays small at the top while the column scrolls */
-@media (max-width: 899px) { .sheet.learn .sh-img { position: sticky; top: 0; z-index: 5; aspect-ratio: auto; height: 36vh; padding: 12px; transition: height .3s ease-out, padding .3s } .sheet.learn.quiet .sh-img { height: 0; padding: 0; border: 0 } .sheet.learn.quiet .lnav { top: 0 } .sheet.learn .lnav { top: 36vh; margin: -6px -20px 0 } .sheet.learn .stg { padding: 8px } .sheet.learn .stg svg { max-height: 100% } }
+@media (max-width: 899px) { .sheet.learn .sh-img { position: sticky; top: 0; z-index: 5; aspect-ratio: auto; height: 36vh; padding: 12px; transition: transform .3s ease-out, opacity .3s } .sheet.learn.quiet .sh-img { transform: translateY(-100%); opacity: 0; pointer-events: none } .sheet.learn .lnav { transition: top .3s ease-out } .sheet.learn.quiet .lnav { top: 0 } .sheet.learn .lnav { top: 36vh; margin: -6px -20px 0 } .sheet.learn .stg { padding: 8px } .sheet.learn .stg svg { max-height: 100% } }
 @media (prefers-reduced-motion: reduce) { .stg, .slot.hit, .slot.new { animation: none } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important } }
 </style>
@@ -519,7 +529,6 @@ a.card .open { cursor: pointer }
 __NAV__
 
 <section class="hero gut" id="top"><div class="wrap">
-  <div class="island" aria-hidden="true"><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.5V4.8a1.3 1.3 0 0 1 2.6 0V9M9.6 8.5V3.8a1.3 1.3 0 0 1 2.6 0V9M12.2 9V5a1.3 1.3 0 0 1 2.6 0v6c0 3.5-2.3 6-5.3 6-2.2 0-3.4-1.2-4.6-3.2L3.6 10.9a1.3 1.3 0 0 1 2.1-1.4L7 11"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5l10 6-4.6 1.2L8.4 15z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="13" height="11" rx="2"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3l7 7-7 7-7-7z"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4M10 4h6v6"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 16 4"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16c1-3 2.5-4 4-3s2 2.5 4 .5 2-5 4-8"/></svg></span><span class=""><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h10M10 5v11"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="13" height="12" rx="2"/><circle cx="7.5" cy="8" r="1.3"/><path d="m4 15 4.5-4.5 3 3 2-2 3 3"/></svg></span><span class="xs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16h8M4.5 12.5l6-7.5 5 4-6 7.5H6.5z"/></svg></span><span class="div"></span><span class="lib on"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h4.5v11H4zM8.5 4.5H13v11H8.5zM13.5 5l3.6-1 2.6 10.5-3.6 1z"/></svg>Library</span></div>
   <h1>Draw systems by <i>typing</i>.</h1>
   <p>__N__ Excalidraw blocks for system design and AI agents.</p>
   <div class="sbox">
@@ -584,15 +593,16 @@ __FOOT__
   <div class="sh-img" id="szoom"><img id="si" alt="" draggable="false"><div class="zc" role="group" aria-label="Zoom"><button type="button" data-z="-1" aria-label="Zoom out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9"/></svg></button><button type="button" data-z="0" class="zp" id="zpct" aria-label="Fit to view">100%</button><button type="button" data-z="1" aria-label="Zoom in"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9M8 3.5v9"/></svg></button><span class="zs"></span><button type="button" data-z="fs" aria-label="Full screen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button></div><span class="sh-pos" id="spos"></span><div class="stg" id="stg" hidden></div><button class="arr sh-prev" id="sprev" type="button" aria-label="Previous block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 4 7l5 5"/></svg></button><button class="arr sh-next" id="snext" type="button" aria-label="Next block"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2l5 5-5 5"/></svg></button></div>
   <div class="sh-body">
     <div class="sh-top"><div class="sh-tt"><span class="sub" id="scat"></span><h3 id="st" tabindex="-1" autofocus></h3></div><button class="ibtn" id="ssave" type="button" aria-label="Save to your board" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 3.5h9v13.5L10 13.5l-4.5 3.5z"/></svg></button><button class="ibtn" id="sshare" type="button" aria-label="Share this block"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5M5 9.5H4v7.5h12V9.5h-1"/></svg></button><button class="x" id="sx" type="button" aria-label="Close"><svg viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
-    <div class="cops">
-      <button class="cop main" type="button" data-copy="exc"><b>Copy to Excalidraw</b><small>Then <span class="mk">⌘</span> V on any Excalidraw canvas, Excalidraw+ or Obsidian</small></button>
-      <button class="cop" type="button" data-copy="png"><b>Copy image</b><small>Docs, Slides, Notion</small></button>
-      <button class="cop" type="button" data-copy="svg"><b>Copy SVG</b><small>Figma, Canva</small></button>
-      <details class="menu cop-more"><summary class="cop"><b>More</b><small>Download, name</small></summary><div class="mlist"><button type="button" data-dl="png">Download PNG</button><button type="button" data-dl="svg">Download SVG</button><button type="button" data-dl="excalidraw">Download .excalidraw</button><button type="button" id="sc">Copy library name</button></div></details>
+    <div class="sacts">
+      <button class="pill primary" type="button" data-copy="exc" title="Then paste on any Excalidraw canvas, Excalidraw+ or Obsidian"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M13 7V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13H7"/></svg><span class="cl">Copy to Excalidraw</span></button>
+      <a class="pill ghost" id="sprac" href="#" hidden></a>
+      <details class="menu smore"><summary class="pill ghost">More<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></summary><div class="mlist down">
+        <button type="button" data-copy="png">Copy image<small>Docs, Slides, Notion</small></button><button type="button" data-copy="svg">Copy SVG<small>Figma, Canva</small></button><hr>
+        <button type="button" data-dl="png">Download PNG</button><button type="button" data-dl="svg">Download SVG</button><button type="button" data-dl="excalidraw">Download .excalidraw</button><hr>
+        <button type="button" id="sc">Copy library name<small>Paste it in the library search</small></button></div></details>
     </div>
     <nav class="lnav" id="lnav" aria-label="On this block" hidden></nav>
     <div class="learn-c" id="learn"></div>
-    <a class="prac-l" id="sprac" href="#" hidden></a>
     <div class="uses" id="suses" hidden></div>
     <code id="sn" hidden></code>
     <div class="rel" id="srel"></div>
@@ -908,7 +918,7 @@ function open(i, list) {
   const k = ctx.indexOf(i); $("#spos").textContent = ctx.length > 1 && k > -1 ? `${k + 1} / ${ctx.length}` : "";
   $("#sprev").hidden = $("#snext").hidden = ctx.length < 2;
   $("#ssave").setAttribute("aria-pressed", inBoard(i));
-  sheet.querySelectorAll(".cop").forEach(b => b.classList.remove("done")); sheet.querySelectorAll(".fb .chip").forEach(b => b.classList.remove("on"));
+  sheet.querySelectorAll(".sacts .pill").forEach(b => b.classList.remove("done")); sheet.querySelectorAll("details.menu[open]").forEach(d => { d.open = false; }); sheet.querySelectorAll(".fb .chip").forEach(b => b.classList.remove("on"));
   /* related: same section, sharing the most tag words */
   const tw = new Set(words(i.name.split(" - ")[1] || "")), same = items.filter(x => x !== i && x.cat === i.cat).map(x => [x, words(x.name.split(" - ")[1] || "").filter(w => tw.has(w)).length]).sort((a, b) => b[1] - a[1]).map(x => x[0]).slice(0, 6);
   const inPacks = PACKS.filter(p => p.items.includes(i));
@@ -917,7 +927,7 @@ function open(i, list) {
   $("#sad").innerHTML = adHTML("sheet", i.cat, true); watchSponsors($("#sad"));
   renderLearn(i);
   const qs = BYKIT[slug(i)], pr = $("#sprac"), g = qs && prog(qs); pr.hidden = !qs;
-  if (qs) { pr.href = "practice/#q=" + qs; pr.innerHTML = `<span>${g ? (g.done ? "Practise again" : "Continue practising") : "Practise this question step by step, like the interview"} <small>· ${PQ[qs][1]}${g ? " · " + progLabel(g) : ""}</small></span><span>→</span>`; }
+  if (qs) { pr.href = "practice/#q=" + qs; pr.innerHTML = `${S(IC.prac)}${g ? (g.done ? "Practise again" : "Continue") : "Practise"}`; pr.title = `Practise ${i.title} step by step, like the interview · ${PQ[qs][1]}${g ? " · " + progLabel(g) : ""}`; }
   const hasReal = ((LEARN.R[slug(i)] || {}).roles || []).length > 0; // "In real systems" already lists them
   const us = hasReal ? [] : (PRACTICE.u[slug(i)] || []).filter(s => PQ[s] && s !== qs), ue = $("#suses"); ue.hidden = !us.length;
   ue.innerHTML = us.length ? `<span class="sub">Practise it in ${us.length} interview question${us.length > 1 ? "s" : ""}</span><div class="chips">${us.slice(0, 5).map(s => `<a class="chip" href="practice/#q=${s}"><i class="lvd ${PQ[s][1]}"></i>${esc(PQ[s][0])}</a>`).join("")}${us.length > 5 ? `<a class="chip" href="practice/#uses=${slug(i)}&t=${encodeURIComponent(i.title)}">+${us.length - 5} more</a>` : ""}</div>` : "";
@@ -942,7 +952,7 @@ sheet.addEventListener("click", e => {
 sheet.addEventListener("keydown", e => {
   if (e.target.closest("input, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === "ArrowRight") { e.preventDefault(); step(1); } else if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
-  else if (e.key.toLowerCase() === "c" && cur) copyExc([cur], sheet.querySelector(".cop.main"));
+  else if (e.key.toLowerCase() === "c" && cur) copyExc([cur], sheet.querySelector('.sacts [data-copy="exc"]'));
   else if (e.key.toLowerCase() === "s" && cur) toggleSave(cur);
 });
 let sx0 = null; sheet.querySelector(".sh-img").addEventListener("touchstart", e => { sx0 = e.touches[0].clientX; }, { passive: true });
@@ -996,7 +1006,7 @@ const LEARN = __LEARN__;
 const LC = { svc: ["#e5dbff", "#7048e8"], redis: ["#ffc9c9", "#e03131"], redis2: ["#ffe3e3", "#e03131"], edge: ["#c5f6fa", "#0c8599"], disk: ["#d3f9d8", "#2f9e44"], warn: ["#ffe8cc", "#e8590c"], base: ["#f8f9fa", "#495057"] };
 const CATC = { client: "edge", edge: "edge", svc: "svc", data: "disk", cache: "redis", msg: "warn", ai: "svc", rag: "svc", agent: "svc", llmops: "svc", ops: "base", ext: "base" };
 const ex = t => esc(t);
-let LST = { io: null, play: null, view: "block", hl: [], slug: "" };
+let LST = { io: null, play: null, view: "block", hl: [], slug: "", lock: 0 };
 function boxEdge(a, b) { // point on the border of box a, towards box b
   const ax = a.x + a.w / 2, ay = a.y + a.h / 2, bx = b.x + b.w / 2, by = b.y + b.h / 2, dx = bx - ax, dy = by - ay;
   const s = Math.min(Math.abs((a.w / 2 + 6) / (dx || 1e-9)), Math.abs((a.h / 2 + 6) / (dy || 1e-9))); return [ax + dx * s, ay + dy * s];
@@ -1050,7 +1060,7 @@ function learnHTML(i) {
 }
 function renderLearn(i) {
   const s = slug(i), S = learnHTML(i), L = LEARN.L[s], el = $("#learn"), nav = $("#lnav");
-  if (LST.io) LST.io.disconnect(); clearInterval(LST.play); LST = { io: null, play: null, view: "", hl: [], slug: s };
+  if (LST.io) LST.io.disconnect(); clearInterval(LST.play); LST = { io: null, play: null, view: "", hl: [], slug: s, lock: 0 };
   sheet.classList.toggle("learn", !!L); $("#stg").hidden = true; sheet.classList.remove("v-other", "quiet");
   el.innerHTML = S.map(([id, t, v, h]) => `<section class="ls" id="l-${id}" data-view="${v}"><h4>${id === "basics" ? "What it is" : id === "inside" ? "How it works inside" : id === "try" ? "Try it" : id === "choices" ? "Choices you'll make" : id === "real" ? "In real systems" : id === "interview" ? "In the interview" : "Check yourself"}</h4>${h}</section>`).join("");
   nav.hidden = !L || S.length < 3; nav.innerHTML = L ? S.map(([id, t], k) => `<button type="button" data-lgo="${id}" class="${k === 0 ? "on" : ""}">${t}</button>`).join("") : "";
@@ -1059,13 +1069,25 @@ function renderLearn(i) {
   const root = matchMedia("(min-width: 900px)").matches ? sheet.querySelector(".sh-body") : sheet;
   LST.io = new IntersectionObserver(es => { const vis = [...el.children].filter(x => { const r = x.getBoundingClientRect(), rr = root.getBoundingClientRect(); return r.top < rr.top + rr.height * .45 && r.bottom > rr.top + 80; });
     const sec = vis[vis.length - 1]; if (!sec) { setView("block"); return; } const id = sec.id.slice(2);
-    nav.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.lgo === id)); const ab = nav.querySelector(".on"); if (ab) ab.scrollIntoView({ block: "nearest", inline: "nearest" });
+    if (Date.now() - LST.lock < 1200) return; // a tab tap is scrolling us there; don't fight it
+    markTab(id);
     sheet.classList.toggle("quiet", sec.dataset.view === "block" && id !== "basics");
     if (sec.dataset.view !== "inside" || !LST.hl.length || LST.view !== "inside") setView(sec.dataset.view, sec.dataset.view === "inside" ? LST.hl : []); }, { root, threshold: [0, .25, .5, .75, 1], rootMargin: "0px" });
   [...el.children].forEach(x => LST.io.observe(x));
   if (L) gcEvent("learn-open/" + s);
 }
-$("#lnav").addEventListener("click", e => { const b = e.target.closest("[data-lgo]"); if (!b) return; const sec = $("#l-" + b.dataset.lgo); if (sec) sec.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); });
+function markTab(id) { const nav = $("#lnav"); nav.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.lgo === id)); const ab = nav.querySelector(".on"); if (ab) nav.scrollTo({ left: ab.offsetLeft - nav.clientWidth / 2 + ab.offsetWidth / 2, behavior: "smooth" }); } // moves only the bar sideways, never the page
+function goSection(id) {
+  const sec = $("#l-" + id); if (!sec) return;
+  const desk = matchMedia("(min-width: 900px)").matches, sc = desk ? sheet.querySelector(".sh-body") : sheet, nav = $("#lnav");
+  LST.lock = Date.now(); markTab(id);
+  const quiet = !desk && sec.dataset.view === "block" && id !== "basics"; sheet.classList.toggle("quiet", quiet);
+  setView(sec.dataset.view, sec.dataset.view === "inside" ? LST.hl : []);
+  const above = desk ? nav.offsetHeight : (quiet ? 0 : innerHeight * .36) + nav.offsetHeight; // what covers the top of the scroller
+  const y = sec.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - above - 12;
+  sc.scrollTo({ top: Math.max(0, y), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+}
+$("#lnav").addEventListener("click", e => { const b = e.target.closest("[data-lgo]"); if (b) goSection(b.dataset.lgo); });
 $("#learn").addEventListener("click", e => {
   const st = e.target.closest("[data-lstep]"); if (st) { clearInterval(LST.play); stepOn(+st.dataset.lstep); return; }
   if (e.target.closest("[data-lplay]")) { const L = LEARN.L[LST.slug]; clearInterval(LST.play); let k = 0; stepOn(0); gcEvent("learn-play/" + LST.slug); LST.play = setInterval(() => { k++; if (k >= L.inside.steps.length) { clearInterval(LST.play); return; } stepOn(k); }, 2200); return; }
