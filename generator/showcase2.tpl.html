@@ -531,6 +531,7 @@ a.card .open { cursor: pointer }
 .nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px }
 .num { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-sunk); text-decoration: none; color: var(--ink) } .num b { font: 400 26px/1.05 var(--font-serif) } .num span { font: 400 12px/17px var(--font-sans); color: var(--ink-muted) } .num:hover span { color: var(--ink) }
 .knobs { display: grid; gap: 0; border-top: 1px solid var(--hairline) } .knob { display: grid; gap: 3px; padding: 11px 0; border-bottom: 1px solid var(--hairline) } .knob b { font: 500 15px/21px var(--font-sans) } .knob span { font: 400 14px/21px var(--font-sans); color: var(--ink-muted) }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px } .tool1 { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 14px/20px var(--font-sans); text-decoration: none } .tool1:hover { border-color: var(--slate) }
 .alts { display: grid; gap: 6px } .alt { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); cursor: pointer; text-align: left; color: var(--ink) } .alt:hover { border-color: var(--slate) }
 .alt img { width: 48px; height: 32px; object-fit: contain; border-radius: 6px; background: var(--thumb) } .alt b { display: block; font: 500 14px/19px var(--font-sans) } .alt small { font: 400 13px/18px var(--font-sans); color: var(--ink-muted) } .alt i { font-style: normal; color: var(--ink-muted) }
 .brk { display: grid; gap: 8px } .bk { padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-sunk); display: grid; gap: 6px } .bk b { font: 500 15px/21px var(--font-sans) } .bk p { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink-muted) }
@@ -1079,6 +1080,7 @@ const open_ = url => { const a = document.createElement("a"); a.href = url; a.ta
 function surprise() { const t = items.filter(i => i.cat === "tpl"); const i = t[Math.floor(Math.random() * t.length)]; gcEvent("surprise"); open(i, t); }
 /* ---------- learn: deep dive for a block. Simple first, deeper as you scroll; the picture follows the reading ---------- */
 const LEARN = __LEARN__;
+const STACK = __STACK__; // real tools per block, example stack per design
 /* lesson diagrams speak the kit's visual language: the same 12 category colours (src/core.js T), the same legend names, an icon on every box */
 const KT = { client: ["#a5d8ff", "#1971c2"], edge: ["#99e9f2", "#0c8599"], svc: ["#d0bfff", "#6741d9"], data: ["#b2f2bb", "#2f9e44"], cache: ["#ffc9c9", "#e03131"], msg: ["#ffec99", "#e67700"], ai: ["#fcc2d7", "#c2255c"], ops: ["#e9ecef", "#495057"], ext: ["#ffd8a8", "#d9480f"], agent: ["#eebefa", "#9c36b5"], rag: ["#d8f5a2", "#5c940d"], llmops: ["#bac8ff", "#3b5bdb"] };
 const KLEG = { client: "Clients", edge: "Edge / network", svc: "Services", data: "Data stores", cache: "Caches", msg: "Messaging", ai: "AI models", agent: "Agents", rag: "RAG / knowledge", llmops: "LLMOps / safety", ops: "Ops / security", ext: "External" };
@@ -1172,6 +1174,9 @@ function learnHTML(i) {
     if (L.tool && TOOLS[L.tool]) S.push(["try", "Try it", "block", `<div id="ltool"></div>`]);
     S.push(["choices", "Trade-offs", "inside", `${(L.choices || []).length ? `<div class="knobs">${L.choices.map(c => `<div class="knob"><b>${ex(c.t)}</b><span>${ex(c.d)}</span></div>`).join("")}</div>` : ""}${(L.instead || []).filter(x => BYSLUG.has(x.slug)).length ? `<h5>Or use instead</h5><div class="alts">${L.instead.filter(x => BYSLUG.has(x.slug)).map(x => { const b = BYSLUG.get(x.slug); return `<button type="button" class="alt" data-open="${x.slug}"><img alt="" loading="lazy" src="${b.img}"><span><b>${ex(b.title)}</b><small>${ex(x.why)}</small></span><i>→</i></button>`; }).join("")}</div>` : ""}${(L.breaks || []).length ? `<h5>When it breaks</h5><div class="brk">${L.breaks.map(b => `<div class="bk"><b>${ex(b.t)}</b><p>${ex(b.d)}</p><dl><dt>Notice</dt><dd>${ex(b.see)}</dd><dt>Fix</dt><dd>${ex(b.fix)}</dd></dl></div>`).join("")}</div>` : ""}`]);
   }
+  const TB = STACK.b[s], TD = STACK.d[s];
+  if (TB) S.push(["tools", "Tools", "block", `<p class="lhint">Real products that do this job. Name one or two in the interview, then talk about the job itself.</p><div class="tools">${TB.map(x => `<a class="tool1" href="${ex(x[1])}" target="_blank" rel="noopener">${ex(x[0])}</a>`).join("")}</div>`]);
+  if (TD) S.push(["tools", "Stack", "block", `<p class="lhint">One real way to build it, block by block.</p><div class="knobs">${TD.map(x => `<div class="knob"><b>${ex(x[0])}</b><span>${ex(x[1])}</span></div>`).join("")}</div>`]);
   if (R && (R.roles.length || R.up.length || R.down.length)) {
     const nm = k => BYSLUG.has(k) ? `<button type="button" data-open="${k}">${ex(BYSLUG.get(k).title)}</button>` : "";
     const up = (R.up || []).map(nm).filter(Boolean), dn = (R.down || []).map(nm).filter(Boolean);
@@ -1187,7 +1192,7 @@ function renderLearn(i) {
   const s = slug(i), S = learnHTML(i), L = LEARN.L[s], el = $("#learn"), nav = $("#lnav");
   if (LST.io) LST.io.disconnect(); clearInterval(LST.play); LST = { io: null, play: null, view: "", hl: [], slug: s, lock: 0 };
   sheet.classList.toggle("learn", !!L); $("#stg").hidden = true; sheet.classList.remove("v-other", "quiet");
-  el.innerHTML = S.map(([id, t, v, h]) => `<section class="ls" id="l-${id}" data-view="${v}"><h4>${id === "basics" ? "What it is" : id === "inside" ? "How it works inside" : id === "try" ? "Try it" : id === "choices" ? "Choices you'll make" : id === "real" ? "In real systems" : id === "interview" ? "In the interview" : "Check yourself"}</h4>${h}</section>`).join("");
+  el.innerHTML = S.map(([id, t, v, h]) => `<section class="ls" id="l-${id}" data-view="${v}"><h4>${id === "basics" ? "What it is" : id === "inside" ? "How it works inside" : id === "try" ? "Try it" : id === "choices" ? "Choices you'll make" : id === "real" ? "In real systems" : id === "tools" ? (STACK.d[s] ? "Example stack" : "Tools you will meet") : id === "interview" ? "In the interview" : "Check yourself"}</h4>${h}</section>`).join("");
   nav.hidden = !L || S.length < 3; nav.innerHTML = L ? S.map(([id, t], k) => `<button type="button" data-lgo="${id}" class="${k === 0 ? "on" : ""}">${t}</button>`).join("") : "";
   if (L && L.tool && TOOLS[L.tool] && $("#ltool")) TOOLS[L.tool]($("#ltool"), s);
   setView("block"); if (!S.length || !L) return; // no lesson yet: the picture stays the block

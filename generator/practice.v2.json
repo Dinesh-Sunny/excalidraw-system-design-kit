@@ -3073,6 +3073,7 @@
      "Next: add connectors as tools grow; move to a dedicated index past a few million chunks."
     ]
    }
-  ]
+  ],
+  "stackNote": "How Atlassian Rovo does it (public engineering posts)"
  }
 }

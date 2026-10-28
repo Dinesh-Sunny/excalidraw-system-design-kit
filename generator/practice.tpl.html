@@ -150,7 +150,7 @@ body.run > header.nav, body.run > footer { display: none }
 .mh { display: grid; gap: 8px }
 .dots { display: flex; gap: 4px } .dots i { flex: 1; height: 6px; border-radius: 9999px; background: var(--hairline) } .dots i.ok { background: #2f9e44 } .dots i.hp { background: #e67700 } .dots i.now { background: var(--sketch) }
 .fb2 { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-sunk); font: 400 15px/22px var(--font-sans); color: var(--ink-muted); animation: rise .25s ease-out }
-.fb2 b { font: 600 15px/22px var(--font-sans); color: var(--ink) } .fb2.ok { background: #ebfbee } .fb2.ok b { color: #2b8a3e } .fb2.no { background: #fff4e6 } .fb2.no b { color: #d9480f }
+.fb2 b { font: 600 15px/22px var(--font-sans); color: var(--ink) } .fb2 .stl { font: 500 13px/19px var(--font-mono, monospace); color: var(--ink-muted) } .fb2.ok { background: #ebfbee } .fb2.ok b { color: #2b8a3e } .fb2.no { background: #fff4e6 } .fb2.no b { color: #d9480f }
 :root[data-theme="dark"] .fb2.ok { background: #1b2e22 } :root[data-theme="dark"] .fb2.no { background: #33261a }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fb2.ok { background: #1b2e22 } :root:not([data-theme="light"]) .fb2.no { background: #33261a } }
 .mq { margin: 4px 0 0; font: 400 22px/1.2 var(--font-serif) }
@@ -470,7 +470,8 @@ function renderMove() {
   const n = Q.nodes.length, mv = $("#mv"), picks = rec().picks || {};
   const dots = Q.nodes.map((x, i) => `<i class="${i < blk ? (picks[i] === false ? "hp" : "ok") : i === blk ? "now" : ""}"></i>`).join("");
   const fbl = last && last.k ? `<span class="fbl"><a href="../#i=${last.k}">Open in blocks</a><button type="button" data-savek="${last.k}" class="${onBoard(last.k) ? "on" : ""}">${SAVEI}${onBoard(last.k) ? "Saved" : "Save block"}</button><button type="button" data-copyk="${last.k}">${COPYI}Copy</button></span>` : "";
-  const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span>${last.ok ? fbl : ""}</div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") : "Tap any block on the canvas to see why it's there."}</span></div>`;
+  const stn = last && last.ok ? (Q.nodes.find(n => n.title === last.title) || {}) : {}, stl = stn.st || "";
+  const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span>${stl ? `<span class="stl">${stn.sd ? (Q.v2 && Q.v2.stackNote ? esc(Q.v2.stackNote) : "Built with") : "Tools"}: ${esc(stl)}</span>` : ""}${last.ok ? fbl : ""}</div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") + (Q.nodes[0].st ? `</span><span class="stl">${Q.nodes[0].sd ? "Built with" : "Tools"}: ${esc(Q.nodes[0].st)}` : "") : "Tap any block on the canvas to see why it's there."}</span></div>`;
   if (blk >= n) {
     const first = Object.values(picks).filter(v => v === true).length, total = n - 1;
     mv.innerHTML = `<div class="mh"><span class="gl">Design complete</span><div class="dots">${dots}</div></div>${fb}<p class="big2">${first} of ${total} <small>right first time</small></p>${rateHTML("hld")}`;

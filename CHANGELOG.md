@@ -3,6 +3,8 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Tools in every block: real products for 150 blocks (open source and managed, linked to official docs), so searching "supabase", "langsmith" or "sentry" finds the right block; designs show an example stack block by block (AI Voice Tutor, Workplace Knowledge Agent), and practice shows the tools as each block lands.
+- 6 new blocks: SSR Web App, Typed Classifier, Visual Renderer (2D / 3D), Agent Harness, Error Tracking and Uptime / Status.
 - Workplace Knowledge Agent: a new full design for permission-aware enterprise agents on a work graph (hybrid retrieval, rerank, permissions checked twice, model per stage, Read/Draft/Act skills with approval, audit + evals) with a practice question, 7 deep dives and three scenarios: Atlassian FDE engagement, regulated bank and startup on day one.
 - AI Voice Tutor: a new full design (voice, live canvas, router, learner model, spaced repetition, planner, evals) with a practice question at interview depth - latency budget, barge-in, generative UI, memory, consistent grading, Read/Draft/Act - and three scenarios: Atlassian onboarding tutor, exam prep at scale and kids mode.
 - 6 new blocks, each with its own icon and a sourced lesson: WebRTC SFU (LiveKit), Turn Detector (VAD), Realtime Sync (CRDT), Generative UI, Spaced Repetition (FSRS) and Learner Model.

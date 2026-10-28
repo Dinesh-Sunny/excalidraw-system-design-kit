@@ -82,6 +82,20 @@ if os.path.exists('out/practice.json'):
     for k,r in _R.items():
         LEARN['R'][k]={'roles':r['roles'],'up':sorted(r['up'],key=lambda x:-r['up'][x])[:4],'down':sorted(r['down'],key=lambda x:-r['down'][x])[:4]}
 LEARNJ=json.dumps(LEARN,separators=(',',':'),ensure_ascii=False)
+# real tools per block + example stack per design (stack.json); keys are slug prefixes so tag edits never break them
+_SJ=json.load(open('stack.json')); _slugs=[it['id'].replace('sdk-','') for it in lib]
+STACKB={}
+for _k,_v in _SJ['blocks'].items():
+    for _s in _slugs:
+        if _s.startswith(_k): STACKB[_s]=_v
+STACKD={}
+if os.path.exists('out/practice.json'):
+    for m in json.load(open('out/practice.json')):
+        dd=_SJ['designs'].get(m['slug'])
+        if not dd: continue
+        kid=next((it['id'] for it in lib if it['name']=='sd:tpl/ '+m['name']),None)
+        if kid: STACKD[kid.replace('sdk-','')]=[[n['title'].replace('\n',' '),dd[n['id']]] for n in m['nodes'] if n['id'] in dd]
+STACKJ=json.dumps({'b':STACKB,'d':STACKD},separators=(',',':'),ensure_ascii=False)
 # one search for every page: blocks, designs, practice questions, starter packs, sections
 _t=open('showcase2.tpl.html').read()
 _lab=dict(re.findall(r'(\w+): "([^"]+)"', _t[_t.index('const LABEL = {'):_t.index('};',_t.index('const LABEL = {'))]))
@@ -99,7 +113,7 @@ for it in lib:
     mm=re.match(r'^sd:([a-z]+)/\s(.*)$',it['name'])
     if not mm or ' SECTION - ' in it['name']: continue
     c=mm.group(1); rest=mm.group(2); ti=rest.split(' - ')[0]; tags=rest.split(' - ',1)[1] if ' - ' in rest else ''
-    _count[c]=_count.get(c,0)+1; _blocks.append({'id':it['id'],'t':ti,'c':c,'k':tags})
+    _count[c]=_count.get(c,0)+1; _blocks.append({'id':it['id'],'t':ti,'c':c,'k':(tags+' '+' '.join(x[0] for x in STACKB.get(it['id'].replace('sdk-',''),[]))).strip()})
 _pq=[]
 if os.path.exists('out/practice.json'):
     _pcd=json.load(open('practice.data.json'))
@@ -110,7 +124,7 @@ os.makedirs('out/pages',exist_ok=True)
 json.dump({'b':_blocks,'p':_pq,'k':_packs,'cats':{k:v for k,v in _lab.items()},'count':_count},open('out/pages/search-index.json','w'),separators=(',',':'),ensure_ascii=False)
 shutil.copy('search.js','out/pages/search.js')
 NEWS='Copy any block into Excalidraw, Figma or Docs, plus 12 starter packs'
-def fill(items): return tpl.replace('__NAV__',NAV('','blocks','__SPURL__',True,ph=f'Search {N} blocks')).replace('__FOOT__',FOOT('','__SPURL__')).replace('__PRACTICE__',PRACTICE).replace('__LEARN__',LEARNJ).replace('__NEWS__',NEWS).replace('__ITEMS__',json.dumps(items,separators=(',',':'))).replace('__SECTIONS__',json.dumps(secs)).replace('__VERSION__',VERSION).replace('__SIZE__',f"{os.path.getsize('out/System Design Kit.excalidrawlib')/1e6:.1f} MB").replace('__N__',str(len(items)))
+def fill(items): return tpl.replace('__NAV__',NAV('','blocks','__SPURL__',True,ph=f'Search {N} blocks')).replace('__FOOT__',FOOT('','__SPURL__')).replace('__PRACTICE__',PRACTICE).replace('__LEARN__',LEARNJ).replace('__STACK__',STACKJ).replace('__NEWS__',NEWS).replace('__ITEMS__',json.dumps(items,separators=(',',':'))).replace('__SECTIONS__',json.dumps(secs)).replace('__VERSION__',VERSION).replace('__SIZE__',f"{os.path.getsize('out/System Design Kit.excalidrawlib')/1e6:.1f} MB").replace('__N__',str(len(items)))
 art=fill(items_art).replace('__DATA__','https://dinesh-sunny.github.io/excalidraw-system-design-kit/'); open(f'{SP}/sd-kit-showcase.html','w').write(art)
 pg=fill(items_pages).replace('__DATA__','')
 pg=pg.replace('<title>System Design Kit</title>',f'<title>System Design Kit for Excalidraw</title>\n<meta name="description" content="{N} searchable Excalidraw blocks for system design interviews and agentic AI: building blocks, agents, RAG, UI screens and {sum(1 for x in items_pages if x['name'].startswith('sd:tpl/'))} full designs. Free, MIT.">\n<meta property="og:title" content="System Design Kit for Excalidraw">\n<meta property="og:description" content="Draw systems by typing. {N} Excalidraw blocks for system design and AI agents.">\n<meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="theme-color" content="#3f6c9f">\n<script type="application/ld+json">'+json.dumps({"@context":"https://schema.org","@type":"SoftwareApplication","name":"System Design Kit for Excalidraw","applicationCategory":"DesignApplication","operatingSystem":"Web","url":"https://dinesh-sunny.github.io/excalidraw-system-design-kit/","description":f"{N} Excalidraw blocks for system design interviews and agentic AI architecture.","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":True,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Dinesh Sunny","url":"https://github.com/Dinesh-Sunny"},"softwareVersion":VERSION,"codeRepository":"https://github.com/Dinesh-Sunny/excalidraw-system-design-kit"})+'</script>',1)
@@ -168,7 +182,7 @@ if os.path.exists('out/practice.json'):
     for m in PM:
         kid=byname.get('sd:tpl/ '+m['name'])
         c=PC[m['slug']]
-        P.append({'slug':m['slug'],'title':m['title'],'edges':m.get('edges',[]),'boxes':m.get('boxes',{}),'size':m.get('size'),'level':c['level'],'track':c['track'],'companies':c['companies'],'nodes':[{'id':n['id'],'title':n['title'],'k':(kitfind(n['title']) or '').replace('sdk-','')} for n in m['nodes']],
+        P.append({'slug':m['slug'],'title':m['title'],'edges':m.get('edges',[]),'boxes':m.get('boxes',{}),'size':m.get('size'),'level':c['level'],'track':c['track'],'companies':c['companies'],'nodes':[{'id':n['id'],'title':n['title'],'k':(kitfind(n['title']) or '').replace('sdk-',''),'sd':bool(_SJ['designs'].get(m['slug'],{}).get(n['id'])),'st':_SJ['designs'].get(m['slug'],{}).get(n['id']) or ', '.join(x[0] for x in STACKB.get((kitfind(n['title']) or '').replace('sdk-',''),[])[:3])} for n in m['nodes']],
                   'c':{k:c[k] for k in ('reqF','reqN','est','api','data','blocks','dives','wrap')},'v2':V2.get(m['slug'],{}),'variants':{vk:{**vv,'nodes':[{**n,'k':(kitfind(n['title']) or '').replace('sdk-','')} for n in vv.get('nodes',[])]} for vk,vv in m.get('variants',{}).items()},'kitId':kid,'kit':kid.replace('sdk-',''),'thumb':f"t/{kid}.webp"})
     P.sort(key=lambda d:(d['track']!='Classic',order[d['level']]))
     t=open('practice.tpl.html').read()
