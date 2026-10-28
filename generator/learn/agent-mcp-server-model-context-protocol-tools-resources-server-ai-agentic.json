@@ -1,0 +1,100 @@
+{
+ "family": "agent",
+ "reviewed": "Oct 2026",
+ "what": "An MCP server exposes tools, resources and prompts to AI apps through the Model Context Protocol, one open standard. Build it once and any MCP host - Claude, an IDE, your own agent - can use it.",
+ "like": "Like a USB-C port for AI: one standard plug, so any app can connect to any device without a custom cable for each pair.",
+ "why": [
+  "Write one integration instead of one per AI app and model",
+  "Tools, data and prompt templates arrive with names, descriptions and JSON schemas the model can read",
+  "Clear security edges: OAuth scopes, per-server isolation and a human who can say no"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "host", "t": "Host app|Claude, IDE, your agent", "x": 0, "y": 20, "w": 150, "h": 86, "c": "agent", "i": "agent"},
+   {"id": "llm", "t": "LLM|reads tool list, picks", "x": 265, "y": 20, "w": 170, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "auth", "t": "Auth server|OAuth 2.1 tokens", "x": 550, "y": 20, "w": 150, "h": 86, "c": "edge", "i": "shield"},
+   {"id": "client", "t": "MCP client|one per server", "x": 0, "y": 180, "w": 150, "h": 86, "c": "agent", "i": "router"},
+   {"id": "server", "t": "MCP server|tools, resources, prompts", "x": 265, "y": 180, "w": 170, "h": 86, "c": "agent", "i": "tool"},
+   {"id": "guard", "t": "Policy check|token, scope, rate limit", "x": 550, "y": 180, "w": 150, "h": 86, "c": "edge", "i": "lock"},
+   {"id": "pipe", "t": "Transport|stdio or Streamable HTTP", "x": 0, "y": 340, "w": 150, "h": 86, "c": "svc", "i": "globe"},
+   {"id": "api", "t": "Your API or DB|where work happens", "x": 265, "y": 340, "w": 170, "h": 86, "c": "data", "i": "db"},
+   {"id": "logs", "t": "Audit log|every tool call", "x": 550, "y": 340, "w": 150, "h": 86, "c": "ops", "i": "log"}
+  ],
+  "edges": [
+   ["host", "llm", "context"],
+   ["host", "client", ""],
+   ["client", "server", "tools/call"],
+   ["client", "pipe", "JSON-RPC"],
+   ["auth", "guard", "aud + scope"],
+   ["server", "guard", "allowed?"],
+   ["server", "api", "query"],
+   ["guard", "logs", "record"]
+  ],
+  "steps": [
+   {"t": "Host starts clients", "d": "The host app creates one MCP client per server and keeps the whole conversation. Each server sees only what it needs, never other servers or the full chat.", "hl": ["host", "client"]},
+   {"t": "Discover the tools", "d": "The client calls tools/list and gets each tool's name, description and input schema. These land in the model's context, so descriptions act like search snippets the model ranks.", "hl": ["client", "server", "llm"]},
+   {"t": "Pick a transport", "d": "stdio: the host runs the server as a subprocess and swaps newline-separated JSON-RPC messages. Streamable HTTP: one endpoint taking POST and GET, with optional SSE streaming.", "hl": ["client", "pipe"]},
+   {"t": "Get a scoped token", "d": "A remote server answers 401 and points to its metadata. The client runs OAuth 2.1 with PKCE, naming this server as the resource, and asks only for needed scopes.", "hl": ["auth", "guard"]},
+   {"t": "Call and check", "d": "On tools/call the server checks the token's audience and scope, validates inputs, applies rate limits, then does the real work against your API or database.", "hl": ["server", "guard", "api"]},
+   {"t": "Return and record", "d": "Results go back as text or structured content. Errors use isError so the model can fix its arguments and retry. Every call is logged for audit.", "hl": ["server", "llm", "logs"]}
+  ]
+ },
+ "numbers": [
+  {"v": "2", "l": "standard transports: stdio and Streamable HTTP", "s": "https://modelcontextprotocol.io/specification/2025-06-18/basic/transports.md"},
+  {"v": "1 : 1", "l": "each MCP client talks to exactly one server", "s": "https://modelcontextprotocol.io/specification/2026-07-28/architecture"},
+  {"v": "98.7%", "l": "tokens saved in Anthropic's code execution example: 150k to 2k", "s": "https://www.anthropic.com/engineering/code-execution-with-mcp"},
+  {"v": "401 / 403", "l": "missing or bad token vs missing scope (insufficient_scope)", "s": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization.md"},
+  {"v": "1-128", "l": "suggested length of a tool name, in characters", "s": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools"}
+ ],
+ "tool": "agent",
+ "choices": [
+  {"t": "Transport", "d": "stdio for a local server on the user's machine: simple, no network port. Streamable HTTP for a shared remote server with many users, sessions and OAuth."},
+  {"t": "Tool design", "d": "A few task-shaped tools beat one tool per API endpoint. Clear names and descriptions decide whether the model picks the right one."},
+  {"t": "How many tools load", "d": "Hundreds of definitions eat context. Load them on demand with a search_tools tool, or expose them as code files the agent reads and calls."},
+  {"t": "Scopes and tenants", "d": "Start with a small read-only scope and step up when a write is first needed. Check tenant id from the token on every call, never from tool arguments."},
+  {"t": "Limits and timeouts", "d": "Rate limit per user and per tool, cap result sizes, and set timeouts, so a looping agent cannot flood your backend."}
+ ],
+ "instead": [
+  {"slug": "agent-tools-function-calling-tool-use-api-ai-agentic", "why": "One app, a few tools: define them in code, no protocol needed"},
+  {"slug": "edge-api-gateway-auth-routing-throttling-bff-kong", "why": "Plain REST clients, not AI hosts: a normal gateway is enough"},
+  {"slug": "agent-code-sandbox-code-execution-e2b-container-isolated-ai-agentic", "why": "Let the agent write code that calls tools, saving tokens"},
+  {"slug": "agent-human-approval-human-in-the-loop-hitl-review-approve-ai-agentic", "why": "Risky actions get a person's yes before the tool runs"}
+ ],
+ "breaks": [
+  {"t": "Too many tools, wrong picks", "d": "Dozens of servers load hundreds of tool definitions, crowding context and confusing selection.", "see": "Large prompt tokens before any work; tool-selection accuracy falling in evals", "fix": "Load tools on demand (tool search), fewer task-shaped tools, sharper descriptions"},
+  {"t": "Tool poisoning", "d": "A tool description or result carries hidden instructions the model follows, such as sending data elsewhere.", "see": "Unexpected tool calls or data flowing to new destinations", "fix": "Allowlist servers, scan and pin descriptions, treat outputs as data, confirm sensitive calls"},
+  {"t": "Token passthrough", "d": "The server forwards the client's token to a downstream API instead of using its own.", "see": "Downstream logs cannot tell which client acted; audits get muddy", "fix": "Accept only tokens issued for this server (audience check); get separate downstream tokens"},
+  {"t": "Over-broad scopes", "d": "One token grants every tool, so a leak exposes everything.", "see": "Tokens carrying wildcard scopes like files:* or admin:*", "fix": "Minimal starting scopes, step-up on demand, tenant checks server-side"},
+  {"t": "Agent loop floods the API", "d": "A model retries a failing call again and again.", "see": "One session sending hundreds of identical tools/call requests", "fix": "Per-user rate limits, timeouts, clear isError messages so the model changes course"}
+ ],
+ "say": [
+  "I'll wrap our search API as a remote MCP server on Streamable HTTP, with a handful of task-shaped tools instead of one per endpoint.",
+  "Auth is OAuth 2.1: the server checks each token was issued for it, and tenant and scope come from the token, never from tool arguments.",
+  "Tool descriptions are effectively a retrieval corpus for the model, so I'll evaluate tool-selection accuracy and load tools on demand when the list grows.",
+  "Every call is rate limited and logged, and anything that writes or sends data asks a human first."
+ ],
+ "followups": [
+  {"q": "stdio or Streamable HTTP?", "a": "stdio for local tools: the host launches the server as a subprocess, credentials come from the environment. Streamable HTTP for shared remote servers: one endpoint, sessions via Mcp-Session-Id, OAuth, and Origin checks against DNS rebinding."},
+  {"q": "How would you pick the right tool among 500?", "a": "Treat it as retrieval: index tool names and descriptions with BM25 plus embeddings, give the model a search_tools tool, and load only the top few definitions. Measure tool-selection accuracy on a labelled set of tasks."},
+  {"q": "Why does code execution with MCP save tokens?", "a": "Tools become code files the agent reads only when needed, and big intermediate results stay in the sandbox. The model sees just the final summary, so a 150,000-token workflow dropped to about 2,000 in Anthropic's example."},
+  {"q": "How do you keep tenants apart?", "a": "Bind every request to the user and tenant in the validated token, scope data queries by that tenant id, key sessions as user plus session id, and never trust ids passed in tool arguments."}
+ ],
+ "today": "The 2026-07-28 MCP spec recommends Client ID Metadata Documents for registering clients and marks Dynamic Client Registration as deprecated, kept only for older authorization servers.",
+ "check": [
+  {"q": "Who decides when an MCP tool is called?", "a": "The model, with a human able to deny", "d": ["The MCP server, on a timer", "The auth server", "The transport layer"], "why": "Tools are model-controlled; the spec says a human should be able to refuse an invocation."},
+  {"q": "Your server receives a token issued for another API. What should it do?", "a": "Reject it", "d": ["Pass it through downstream", "Accept it if it has not expired", "Swap it for a session cookie"], "why": "Servers must only accept tokens issued for themselves; passthrough is forbidden."},
+  {"q": "Which transport fits a local server on the user's laptop?", "a": "stdio", "d": ["Streamable HTTP on 0.0.0.0", "WebSockets", "gRPC streaming"], "why": "The host launches it as a subprocess; nothing listens on a network port."},
+  {"q": "A tool fails because a date is in the wrong format. How should it report that?", "a": "A result with isError: true and a clear message", "d": ["A JSON-RPC protocol error", "An HTTP 500", "An empty result"], "why": "Tool execution errors reach the model so it can fix the arguments and retry."}
+ ],
+ "sources": [
+  {"t": "MCP spec: architecture (2026-07-28)", "u": "https://modelcontextprotocol.io/specification/2026-07-28/architecture"},
+  {"t": "MCP spec: transports (2025-06-18)", "u": "https://modelcontextprotocol.io/specification/2025-06-18/basic/transports.md"},
+  {"t": "MCP spec: tools (2025-11-25)", "u": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools"},
+  {"t": "MCP spec: authorization (2026-07-28)", "u": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization.md"},
+  {"t": "MCP: security best practices", "u": "https://modelcontextprotocol.io/specification/2025-11-25/basic/security_best_practices"},
+  {"t": "Anthropic: code execution with MCP", "u": "https://www.anthropic.com/engineering/code-execution-with-mcp"},
+  {"t": "CSA: MCP tool poisoning research note", "u": "https://labs.cloudsecurityalliance.org/research/csa-research-note-mcp-tool-poisoning-auto-execution-20260701/"}
+ ]
+}

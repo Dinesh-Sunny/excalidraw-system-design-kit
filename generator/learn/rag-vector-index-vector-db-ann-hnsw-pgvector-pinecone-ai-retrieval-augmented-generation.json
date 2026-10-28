@@ -1,0 +1,99 @@
+{
+ "family": "rag",
+ "reviewed": "Oct 2026",
+ "what": "A vector index finds the stored embeddings closest to a query embedding without comparing against every one. It trades a little accuracy (recall) for huge speed, using structures like HNSW graphs or IVF clusters.",
+ "like": "Like finding a friend's house by asking neighbours who live nearer and nearer, instead of knocking on every door in the city.",
+ "why": [
+  "Semantic search: finds passages that mean the same thing, even with different words",
+  "Answers in milliseconds over millions or billions of vectors (approximate nearest neighbour, ANN)",
+  "The first stage of RAG: a cheap wide net before an expensive reranker and the LLM"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "q", "t": "Query vector|from the embedding model", "x": 0, "y": 20, "w": 150, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "filt", "t": "Filter|tenant, language, date", "x": 265, "y": 20, "w": 170, "h": 86, "c": "svc", "i": "shield"},
+   {"id": "wal", "t": "Write log|new docs land here", "x": 550, "y": 20, "w": 150, "h": 86, "c": "data", "i": "log"},
+   {"id": "hnsw", "t": "HNSW graph|layers, M links per node", "x": 0, "y": 180, "w": 150, "h": 86, "c": "rag", "i": "vector"},
+   {"id": "quant", "t": "Quantised copies|int8 or 1-bit, in RAM", "x": 265, "y": 180, "w": 170, "h": 86, "c": "rag", "i": "memory"},
+   {"id": "seg", "t": "Segments|built and merged later", "x": 550, "y": 180, "w": 150, "h": 86, "c": "data", "i": "partition"},
+   {"id": "cand", "t": "Candidates|k x oversample", "x": 0, "y": 340, "w": 150, "h": 86, "c": "rag", "i": "loop"},
+   {"id": "resc", "t": "Rescore|exact distance, top k", "x": 265, "y": 340, "w": 170, "h": 86, "c": "rag", "i": "chart"},
+   {"id": "store", "t": "Full vectors|float32 on disk or S3", "x": 550, "y": 340, "w": 150, "h": 86, "c": "data", "i": "bucket"}
+  ],
+  "edges": [
+   ["q", "hnsw", "search"],
+   ["filt", "hnsw", "allowed ids"],
+   ["hnsw", "quant", "compare"],
+   ["hnsw", "cand", "shortlist"],
+   ["cand", "resc", ""],
+   ["store", "resc", "full floats"],
+   ["wal", "seg", "index"],
+   ["seg", "store", "flush"]
+  ],
+  "steps": [
+   {"t": "Embed the question", "d": "The same embedding model used for the documents turns the query into a vector. Mixing models breaks everything, because the two vector spaces do not line up.", "hl": ["q"]},
+   {"t": "Walk the graph", "d": "HNSW starts at a sparse top layer, hops greedily to closer neighbours, then drops a layer and repeats. ef_search sets how many candidates it keeps while walking.", "hl": ["q", "hnsw"]},
+   {"t": "Compare cheap copies", "d": "Distances during the walk use compressed vectors: int8, or 1-bit as in Elastic BBQ (32x smaller). They fit in RAM and are fast, but slightly blurry.", "hl": ["hnsw", "quant"]},
+   {"t": "Respect the filter", "d": "Post-filtering after the walk can leave fewer than k results. Better engines filter during the walk (ACORN) or keep scanning until enough matches appear.", "hl": ["filt", "hnsw"]},
+   {"t": "Rescore the shortlist", "d": "Oversample, for example 3x: ask for 30 candidates when k is 10, then re-rank them with the full float vectors. This wins back most of the lost recall.", "hl": ["cand", "resc", "store"]},
+   {"t": "Stay fresh", "d": "New vectors go to a write log, become searchable segments and are merged in the background. Deletes are marked first and cleaned up during merges.", "hl": ["wal", "seg", "store"]}
+  ]
+ },
+ "numbers": [
+  {"v": "16 / 64 / 40", "l": "pgvector HNSW defaults: m, ef_construction, ef_search", "s": "https://pgxn.org/dist/vector"},
+  {"v": "32x", "l": "smaller vectors with Elastic BBQ: float32 down to 1 bit", "s": "https://www.elastic.co/docs/reference/elasticsearch/mapping-reference/bbq"},
+  {"v": "3x", "l": "default BBQ oversample: k=10 fetches 30 to rescore", "s": "https://www.elastic.co/docs/reference/elasticsearch/mapping-reference/bbq"},
+  {"v": "2 billion", "l": "vectors allowed in one Amazon S3 Vectors index", "s": "https://docs.aws.amazon.com/en_us/AmazonS3/latest/userguide/s3-vectors-limitations.html"},
+  {"v": "~14 ms", "l": "turbopuffer warm query p50 at 1M docs; cold ~874 ms", "s": "https://turbopuffer.com/docs/architecture"}
+ ],
+ "tool": "vector",
+ "choices": [
+  {"t": "M and ef_construction", "d": "More links per node (M) and a wider build list give a better graph and higher recall, at the cost of slower builds and more memory."},
+  {"t": "ef_search", "d": "The main query-time knob. Raise it and recall@10 climbs while latency rises. Tune it against a labelled eval set, not by feel."},
+  {"t": "Quantisation level", "d": "float32 is exact but large. int8 is a safe default. 1-bit (BBQ, RaBitQ-style) saves the most memory but needs oversample plus rescore."},
+  {"t": "Filtering strategy", "d": "Pre-filter (search only allowed ids), post-filter (search then drop), or filter during the walk. Very selective filters need the last one or a separate index per tenant."},
+  {"t": "Where the index lives", "d": "All in RAM (fastest, priciest), on SSD (DiskANN, DiskBBQ), or on object storage with a cache (S3 Vectors, turbopuffer) for big, cold, cheap data."}
+ ],
+ "instead": [
+  {"slug": "rag-keyword-index-bm25-bm25-full-text-elasticsearch-ai-retrieval-augmented-generation", "why": "Exact words, names and codes: BM25 beats embeddings there"},
+  {"slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation", "why": "Run BM25 and vectors together and fuse the lists (RRF)"},
+  {"slug": "ai-reranker-rerank-cross-encoder-relevance-ai", "why": "Not a replacement: rescores the top 50 to 100 far more precisely"},
+  {"slug": "data-vector-db-pgvector-pinecone-weaviate-qdrant-embeddings-ann", "why": "The full database product around the index: storage, replicas, APIs"}
+ ],
+ "breaks": [
+  {"t": "Filtered search returns too few", "d": "The graph finds 40 neighbours, the filter drops 38, and only 2 results come back.", "see": "Result count below k for selective tenants or filters", "fix": "Filter during the walk (ACORN), pgvector iterative scans, or a partition per tenant"},
+  {"t": "Recall slips after quantising", "d": "Compressed distances reorder close neighbours, so true matches fall out of the top k.", "see": "recall@10 on the eval set drops after a mapping change", "fix": "Oversample and rescore with full vectors; raise ef_search"},
+  {"t": "Index outgrows memory", "d": "HNSW wants its graph and vectors in RAM; once it spills, latency jumps.", "see": "p99 latency rising with page faults or disk reads", "fix": "Quantise, use a disk-based index, or shard across nodes"},
+  {"t": "Stale or deleted results", "d": "Updates and deletes are marked but the graph is rebuilt lazily.", "see": "Deleted docs still appearing; recall drifting down over weeks", "fix": "Regular merges or reindex; filter deleted ids at query time"},
+  {"t": "Embedding model upgraded", "d": "New query vectors no longer match old document vectors.", "see": "Relevance falls sharply right after a model change", "fix": "Re-embed into a new index, dual-write, switch with an alias"}
+ ],
+ "say": [
+  "I'll embed chunks and put them in an HNSW index with int8 or binary quantisation, so the graph fits in RAM.",
+  "Retrieval is two stage: oversample about 3x from the ANN index, rescore with full vectors, then a cross-encoder reranks the top 50.",
+  "I'll tune ef_search on a labelled set, tracking recall@10 against p99 latency, and pick the cheapest point that meets the target.",
+  "For per-tenant filters I'd filter during the graph walk or give big tenants their own partition, so filtered queries still return k results."
+ ],
+ "followups": [
+  {"q": "HNSW or IVF?", "a": "HNSW gives great recall and latency but costs memory and slow builds. IVF clusters vectors and searches only the nearest lists (probes): cheaper to build and smaller, but recall depends on good clusters and enough probes."},
+  {"q": "Why does pre-filtering hurt HNSW?", "a": "The graph assumes every node is reachable. Removing most nodes breaks the paths, so the walk gets stuck or wanders. Engines fix this by filtering during the walk with extra hops, or falling back to exact search for tiny allowed sets."},
+  {"q": "What does late interaction (ColBERT) cost to store?", "a": "It keeps one vector per token instead of one per chunk, so storage grows with document length. Teams compress those token vectors hard, or keep them only for reranking a shortlist found by a single-vector index."},
+  {"q": "When would you use S3 Vectors or turbopuffer?", "a": "Large, mostly cold, many-tenant data where cost matters more than first-query latency. Data lives on object storage and hot namespaces get cached on SSD, so warm queries are fast and storage is cheap."}
+ ],
+ "today": "Elasticsearch 9.1 made BBQ the default quantisation for dense vectors of 384 dimensions or more, and added ACORN for filtered vector search, with typical speedups of about 5x.",
+ "check": [
+  {"q": "You raise ef_search from 40 to 200. What do you expect?", "a": "Higher recall, slower queries", "d": ["Lower recall, faster queries", "A smaller index on disk", "Faster index builds"], "why": "ef_search is the candidate list kept during the walk: bigger list, more checked, better recall, more time."},
+  {"q": "With 1-bit quantisation, how do you win recall back?", "a": "Oversample, then rescore with full vectors", "d": ["Lower M to 4", "Turn off the filter", "Use a smaller embedding model"], "why": "The cheap pass finds a wider shortlist; exact float distances then pick the true top k."},
+  {"q": "A tenant filter leaves only 3 results when you asked for 10. What happened?", "a": "The filter ran after the ANN search", "d": ["The embeddings were normalised", "ef_construction was too high", "The index used cosine distance"], "why": "Post-filtering throws away neighbours found by the walk, so fewer than k survive."},
+  {"q": "Which metric shows if your ANN index misses true neighbours?", "a": "recall@10 against exact search", "d": ["Queries per second", "Index size in GB", "CPU usage"], "why": "Recall compares ANN results to brute-force results on the same queries."}
+ ],
+ "sources": [
+  {"t": "pgvector README (PGXN)", "u": "https://pgxn.org/dist/vector"},
+  {"t": "Malkov and Yashunin: HNSW paper (arXiv)", "u": "https://arxiv.org/abs/1603.09320v1"},
+  {"t": "Elastic docs: BBQ", "u": "https://www.elastic.co/docs/reference/elasticsearch/mapping-reference/bbq"},
+  {"t": "Elastic: BBQ by default and ACORN in 9.1", "u": "https://www.elastic.co/search-labs/blog/elasticsearch-9-1-bbq-acorn-vector-search"},
+  {"t": "AWS docs: S3 Vectors limitations", "u": "https://docs.aws.amazon.com/en_us/AmazonS3/latest/userguide/s3-vectors-limitations.html"},
+  {"t": "turbopuffer: architecture", "u": "https://turbopuffer.com/docs/architecture"}
+ ]
+}

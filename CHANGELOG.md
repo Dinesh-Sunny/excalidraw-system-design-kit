@@ -3,6 +3,7 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Lessons: Vector Index (HNSW knobs, BBQ quantisation with oversample and rescore, filtered search, object-storage indexes) and MCP Server (transports, OAuth scopes, code execution with MCP, tool poisoning).
 - Two more sourced lessons: Guardrails (prompt injection, structured outputs, small classifiers first) and Semantic Cache (distance thresholds vs provider prompt caching).
 - 3 new blocks for AI search designs: AI Answer Engine, Late Interaction (ColBERT) and Headless Browser Farm.
 - 8 new AI search practice questions (new "AI search" filter) with requirements, estimates, APIs, data models, per-block notes and deep-dive answers. Six more sourced lessons: Keyword Index (BM25), Reranker, Offline Evals, LLM-as-Judge, OLAP DB (ClickHouse) and Bot / Crawler.
