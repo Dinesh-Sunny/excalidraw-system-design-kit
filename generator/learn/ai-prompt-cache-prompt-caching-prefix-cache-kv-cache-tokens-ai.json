@@ -1,0 +1,94 @@
+{
+ "family": "ai",
+ "reviewed": "Oct 2026",
+ "what": "A prompt cache lets the model provider keep the work it already did on the start of your prompt. When the next call begins with exactly the same tokens, that part is reused, so it costs less and answers sooner.",
+ "like": "Like a teacher who already read the textbook chapter: each new student question only needs the question read, not the whole chapter again.",
+ "why": [
+  "Long system prompts, tool lists and documents get billed at a small fraction of the normal input price",
+  "Faster time to first token, because the model skips re-reading the shared part",
+  "Makes agents, chat and RAG over one big document affordable at scale"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "app", "t": "Your app|same opening every call", "x": 0, "y": 20, "w": 150, "h": 86, "c": "svc", "i": "service"},
+   {"id": "prompt", "t": "Static prefix|tools, system, docs", "x": 0, "y": 180, "w": 150, "h": 86, "c": "ai", "i": "doc"},
+   {"id": "tail", "t": "Dynamic tail|user question last", "x": 0, "y": 340, "w": 150, "h": 86, "c": "client", "i": "user"},
+   {"id": "match", "t": "Prefix match|exact same tokens?", "x": 265, "y": 20, "w": 170, "h": 86, "c": "llmops", "i": "hash"},
+   {"id": "kv", "t": "KV cache|saved attention state", "x": 265, "y": 180, "w": 170, "h": 86, "c": "cache", "i": "memory"},
+   {"id": "ttl", "t": "Lifetime (TTL)|5 min default or 1 hour", "x": 265, "y": 340, "w": 170, "h": 86, "c": "ops", "i": "clock"},
+   {"id": "llm", "t": "LLM|reads only the new part", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "usage", "t": "Usage fields|cache read vs write", "x": 550, "y": 180, "w": 150, "h": 86, "c": "llmops", "i": "chart"}
+  ],
+  "edges": [
+   ["app", "prompt", "build"],
+   ["prompt", "tail", "then"],
+   ["prompt", "match", "prefix"],
+   ["match", "kv", "hit?"],
+   ["kv", "ttl", "expires"],
+   ["match", "llm", "send"],
+   ["kv", "llm", "reuse"],
+   ["llm", "usage", "report"]
+  ],
+  "steps": [
+   {"t": "Static content goes first", "d": "Put things that never change at the top: tools, system prompt, long documents, examples. The part that changes (user question, timestamps) goes at the very end.", "hl": ["app", "prompt", "tail"]},
+   {"t": "Exact prefix match", "d": "The provider checks whether the start of your prompt matches a saved prefix token for token. One changed character early on breaks the match for everything after it.", "hl": ["prompt", "match"]},
+   {"t": "Reuse the KV cache", "d": "The KV cache holds the keys and values the model computed while reading (prefill) those tokens. On a hit it loads them instead of recomputing.", "hl": ["match", "kv"]},
+   {"t": "Only the tail is processed", "d": "The model reads just the new tokens, then writes the answer (decode) as normal. Caching speeds up reading, not writing, so long answers gain less.", "hl": ["kv", "llm"]},
+   {"t": "Entries expire", "d": "Anthropic keeps an entry 5 minutes by default, refreshed free on each hit, with a paid 1 hour option. Quiet traffic means entries expire between calls.", "hl": ["ttl"]},
+   {"t": "Measure the hit rate", "d": "Each response reports cached tokens. Hit rate = cache read tokens / all input tokens. Track it per route on a dashboard like any other cache.", "hl": ["llm", "usage"]}
+  ]
+ },
+ "numbers": [
+  {"v": "0.1x", "l": "price of cached input reads vs normal input on most Claude models", "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching.md"},
+  {"v": "1.25x", "l": "price of writing the cache with the 5 minute lifetime", "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching.md"},
+  {"v": "2x", "l": "price of writing the cache with the 1 hour lifetime", "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching.md"},
+  {"v": "4", "l": "cache_control breakpoints allowed per Claude request", "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching.md"},
+  {"v": "1,024", "l": "minimum tokens before OpenAI caches a prompt (GPT-5.6 and later)", "s": "https://developers.openai.com/docs/guides/prompt-caching"}
+ ],
+ "tool": "llm",
+ "choices": [
+  {"t": "Prompt order", "d": "Tools, then system prompt, then shared documents, then conversation, then the new question. Keep timestamps, user ids and random ids out of the prefix."},
+  {"t": "Explicit or automatic", "d": "Anthropic: mark blocks with cache_control breakpoints (up to 4), or one top-level cache_control for automatic caching. OpenAI caches on its own; prompt_cache_key only nudges routing."},
+  {"t": "Lifetime (TTL)", "d": "5 minutes suits busy traffic, since every hit refreshes it. Pay 2x on the write for 1 hour when calls are minutes apart, such as batch jobs or slow agents."},
+  {"t": "Minimum length", "d": "Short prompts are never cached. Claude needs 512 to 4,096 tokens depending on the model; OpenAI needs 1,024 on newer models. Check both cache fields are not zero."},
+  {"t": "Hosted or self-hosted", "d": "On your own GPUs, vLLM automatic prefix caching does the same job: set enable_prefix_caching=True and requests sharing a prefix reuse KV blocks."}
+ ],
+ "instead": [
+  {"slug": "rag-semantic-cache-cache-similar-prompts-ai-retrieval-augmented-generation", "why": "Returns a stored answer for a similar question, skipping the model entirely"},
+  {"slug": "cache-cache-in-memory-read-through-cache-aside", "why": "Cache whole responses yourself when the exact same request repeats"},
+  {"slug": "ai-llm-large-language-model-gpt-claude-gemini-api-inference-ai", "why": "Plain calls are fine when prompts are short or rarely repeat"}
+ ],
+ "breaks": [
+  {"t": "Something dynamic in the prefix", "d": "A timestamp or request id near the top makes every prompt unique.", "see": "cache_read_input_tokens (or cached_tokens) stays at 0 on every call", "fix": "Move dynamic parts to the end; diff two raw prompts to find the change"},
+  {"t": "Unstable tool or JSON order", "d": "Tools or keys serialise in a different order each time, so the bytes differ.", "see": "Hit rate drops after a deploy with no prompt change", "fix": "Sort tools and keys, build the prefix with one deterministic function"},
+  {"t": "Prompt under the minimum", "d": "The marked block is shorter than the model's minimum, so nothing is stored.", "see": "Both cache creation and cache read fields are 0", "fix": "Put the breakpoint after more shared content, or accept no caching"},
+  {"t": "Paying for writes, never reading", "d": "Calls arrive further apart than the TTL, so every call writes again at 1.25x.", "see": "cache_creation high, cache_read low, input bill higher than before", "fix": "Use the 1 hour TTL, group calls closer together, or drop the breakpoint"},
+  {"t": "Cache spread too thin", "d": "Many prefix variants (per user, per language) each get few hits.", "see": "Low hit rate per prefix in usage logs", "fix": "Share one common prefix and push the variant parts later"}
+ ],
+ "say": [
+  "Our system prompt, tool definitions and the shared document are about 20k tokens, so I'll put them first and the user question last to get prompt cache hits.",
+  "With prompt caching the provider reuses the KV cache for that prefix, so those tokens are billed at roughly a tenth and time to first token drops.",
+  "I'd track cache hit rate from the usage fields, cache read tokens over total input tokens, and alert if it falls after a deploy.",
+  "This is different from a semantic cache: the model still runs and writes a fresh answer, we just skip re-reading the identical start."
+ ],
+ "followups": [
+  {"q": "Prompt cache vs semantic cache?", "a": "A prompt cache reuses the model's reading of an identical prefix; the answer is still generated fresh and is always correct for the new question. A semantic cache returns a saved answer for a similar question, so it saves more but can give a stale or wrong answer."},
+  {"q": "How do you measure if it works?", "a": "Read the usage on every response: cache_read_input_tokens and cache_creation_input_tokens on Claude, cached_tokens on OpenAI. Hit rate is cached reads over total input tokens. Watch it per route, plus cost per request and time to first token."},
+  {"q": "Why must the match be exact?", "a": "The saved KV values for each token depend on every token before it. If one early token changes, every later value is different, so the cache can only reuse up to the first difference."},
+  {"q": "How would you do this self-hosted?", "a": "vLLM automatic prefix caching keeps KV blocks from earlier requests and reuses them when a new request shares the prefix. It cuts prefill time only, so it helps most for long shared documents and multi-turn chat."}
+ ],
+ "today": "In 2026 caching is close to hands-off: Claude accepts one top-level cache_control for automatic caching, and OpenAI caches by default with a 30 minute minimum lifetime on GPT-5.6 and later.",
+ "check": [
+  {"q": "Where should the user's new question go in a cached prompt?", "a": "At the very end, after all static content", "d": ["At the very top, so the model sees it first", "Inside the system prompt", "Anywhere, caching ignores order"], "why": "Only an identical prefix is reused. Anything that changes must come after the shared part."},
+  {"q": "Both cache fields in the usage are 0. What is the most likely reason?", "a": "The prompt is shorter than the minimum cacheable length", "d": ["The cache hit perfectly", "The output was too long", "The model was overloaded"], "why": "Prompts under the model's minimum are never cached, even with cache_control set."},
+  {"q": "Calls come every 20 minutes with the same long prefix. Which setting helps?", "a": "The 1 hour cache lifetime", "d": ["The default 5 minute lifetime", "A higher temperature", "More breakpoints"], "why": "With 5 minutes the entry expires between calls, so you pay for a new write every time."},
+  {"q": "What does a prompt cache speed up?", "a": "Reading the prompt (prefill), not writing the answer", "d": ["Writing the answer (decode) only", "Network upload time only", "Both equally"], "why": "The saved KV cache replaces recomputing the prefix. Each output token is still generated as normal."}
+ ],
+ "sources": [
+  {"t": "Claude docs: prompt caching", "u": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching.md"},
+  {"t": "OpenAI docs: prompt caching", "u": "https://developers.openai.com/docs/guides/prompt-caching"},
+  {"t": "vLLM docs: automatic prefix caching", "u": "https://docs.vllm.ai/en/v0.8.5/_sources/features/automatic_prefix_caching.md"}
+ ]
+}

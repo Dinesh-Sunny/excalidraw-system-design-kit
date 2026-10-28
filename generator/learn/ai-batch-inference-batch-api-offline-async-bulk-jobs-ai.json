@@ -1,0 +1,98 @@
+{
+ "family": "ai",
+ "reviewed": "Oct 2026",
+ "what": "Batch inference sends thousands of model requests as one job that runs in the background. You get results later, usually within hours, at about half the normal price.",
+ "like": "Like dropping a big bag of laundry at the service wash: cheaper than the express counter, ready later, and every item comes back with its tag.",
+ "why": [
+  "Half price on OpenAI, Anthropic and Gemini batch APIs",
+  "Separate, larger limits, so bulk jobs never eat your live traffic quota",
+  "Perfect for overnight work: parsing millions of AI answers, evals, embedding backfills"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {"id": "job", "t": "Your job|nightly script", "x": 0, "y": 20, "w": 150, "h": 86, "c": "ops", "i": "clock"},
+   {"id": "jsonl", "t": "JSONL file|one request per line", "x": 0, "y": 180, "w": 150, "h": 86, "c": "data", "i": "doc"},
+   {"id": "store", "t": "Results store|DB or warehouse", "x": 0, "y": 340, "w": 150, "h": 86, "c": "data", "i": "db"},
+   {"id": "api", "t": "Batch API|validate and queue", "x": 265, "y": 20, "w": 170, "h": 86, "c": "msg", "i": "queue"},
+   {"id": "status", "t": "Status|poll or webhook", "x": 265, "y": 180, "w": 170, "h": 86, "c": "llmops", "i": "eye"},
+   {"id": "retry", "t": "Retry set|only failed custom_ids", "x": 265, "y": 340, "w": 170, "h": 86, "c": "ops", "i": "loop"},
+   {"id": "llm", "t": "Model fleet|spare capacity", "x": 550, "y": 20, "w": 150, "h": 86, "c": "ai", "i": "llm"},
+   {"id": "out", "t": "Output file|any order, by id", "x": 550, "y": 180, "w": 150, "h": 86, "c": "data", "i": "doc"},
+   {"id": "err", "t": "Errors|errored or expired", "x": 550, "y": 340, "w": 150, "h": 86, "c": "msg", "i": "log"}
+  ],
+  "edges": [
+   ["job", "jsonl", "build"],
+   ["jsonl", "api", "upload"],
+   ["api", "llm", "run"],
+   ["api", "status", "state"],
+   ["llm", "out", "results"],
+   ["out", "err", "failures"],
+   ["out", "store", "custom_id"],
+   ["err", "retry", "collect"],
+   ["retry", "jsonl", "resubmit"]
+  ],
+  "steps": [
+   {"t": "Build one JSONL file", "d": "Each line is one full request plus your own unique id (custom_id on OpenAI and Anthropic, key on Gemini). Use a stable id like doc-123-v2.", "hl": ["job", "jsonl"]},
+   {"t": "Submit the batch", "d": "Upload the file and create the job. The provider validates it, then queues it. Batch has its own rate limits, so live traffic is untouched.", "hl": ["jsonl", "api"]},
+   {"t": "Runs on spare capacity", "d": "The provider works through requests when it has room, within a 24 hour window. Many batches finish much sooner; Anthropic says most finish within an hour.", "hl": ["api", "llm"]},
+   {"t": "Poll or get notified", "d": "Poll the status every minute or so, or have OpenAI call your webhook when the batch completes. Then download the results file.", "hl": ["status"]},
+   {"t": "Match results by id", "d": "Results can come back in any order, so join each line to its input by custom_id, never by line number, and write to your store.", "hl": ["out", "store"]},
+   {"t": "Retry only the failures", "d": "Some requests error or expire while others succeed. Collect just those ids and send them in a new, smaller batch.", "hl": ["err", "retry", "jsonl"]}
+  ]
+ },
+ "numbers": [
+  {"v": "50%", "l": "discount vs normal API prices on Anthropic Message Batches", "s": "https://platform.claude.com/docs/build-with-claude/batch-processing"},
+  {"v": "24 h", "l": "OpenAI completion window; unfinished requests then expire", "s": "https://developers.openai.com/api/docs/guides/batch"},
+  {"v": "~1 h", "l": "time in which most Anthropic batches finish", "s": "https://platform.claude.com/docs/build-with-claude/batch-processing"},
+  {"v": "100,000", "l": "requests (or 256 MB) max in one Anthropic batch", "s": "https://platform.claude.com/docs/build-with-claude/batch-processing"},
+  {"v": "50,000", "l": "requests (or 200 MB file) max in one OpenAI batch", "s": "https://developers.openai.com/api/docs/guides/batch"}
+ ],
+ "tool": "",
+ "choices": [
+  {"t": "Batch size", "d": "Split big jobs into chunks under the limits (50,000 on OpenAI, 100,000 on Anthropic, 2 GB file on Gemini). Smaller chunks finish sooner and retry more cheaply."},
+  {"t": "Ids and idempotency", "d": "Make custom_id stable and meaningful (input id plus prompt version). Writing results as upserts by that id makes reruns safe."},
+  {"t": "Poll or webhook", "d": "Polling is simple and works everywhere. OpenAI webhooks push an event when a batch completes, which avoids a polling loop for many jobs."},
+  {"t": "Add prompt caching", "d": "Put the shared instructions first in every request. Anthropic says batch and cache discounts stack; use the 1 hour cache since batches can run past 5 minutes."},
+  {"t": "Hosted API or own GPUs", "d": "On your own GPUs, an engine like vLLM batches requests on the fly for high throughput. Worth it at steady huge volume with an open model."}
+ ],
+ "instead": [
+  {"slug": "ai-llm-large-language-model-gpt-claude-gemini-api-inference-ai", "why": "Normal live calls when a user is waiting for the answer"},
+  {"slug": "msg-message-queue-mq-async-buffer-decouple", "why": "Your own queue and workers when you need minutes, not hours"},
+  {"slug": "msg-batch-etl-spark-spark-airflow-etl-batch-pipeline-mapreduce", "why": "Orchestrate the whole nightly pipeline around the batch jobs"}
+ ],
+ "breaks": [
+  {"t": "Results joined by line number", "d": "Output order differs from input order, so answers land on the wrong rows.", "see": "Spot checks show answers that do not fit their inputs", "fix": "Always join on custom_id; reject duplicate ids before upload"},
+  {"t": "Partial failures ignored", "d": "A few requests error or expire, and the job is marked done anyway.", "see": "Row count in the store below the input count", "fix": "Read the error results, retry only those ids, alert on gaps"},
+  {"t": "Batch expires", "d": "A huge batch is not finished inside the window; the rest is cancelled.", "see": "Status expired, many batch_expired errors", "fix": "Smaller chunks, start earlier, resubmit the expired ids"},
+  {"t": "Bad input wastes a run", "d": "One wrong model name or field fails validation, or every line errors.", "see": "Batch failed at validating, or 100% errored results", "fix": "Send 10 lines as a test batch first, validate JSONL locally"},
+  {"t": "Used for user-facing work", "d": "A live feature waits on a batch that can take hours.", "see": "Users see spinners or stale data", "fix": "Live calls for users; batch only for offline work"}
+ ],
+ "say": [
+  "Scoring last night's 2 million AI answers for brand mentions doesn't need to be live, so I'd run it through the batch API at half price.",
+  "I'd write one JSONL file per 50k requests, each with a stable custom_id, then poll or take a webhook and join results back by that id.",
+  "Some lines will error or expire, so the job collects those ids and resubmits just them, and our writes are upserts so reruns are safe.",
+  "Every request starts with the same instructions, so prompt caching with the 1 hour lifetime stacks with the batch discount."
+ ],
+ "followups": [
+  {"q": "When would you not use a batch API?", "a": "Anything a person is waiting for: chat, search answers, live agents. Results can take up to 24 hours. Also small jobs where the saving is tiny and a simple loop is easier."},
+  {"q": "How do you handle partial failures?", "a": "Each result has a type: succeeded, errored, canceled or expired. Anthropic does not bill the non-succeeded ones. Collect their custom_ids, fix the cause if it's an invalid request, and resubmit just those in a new batch."},
+  {"q": "Batch API vs continuous batching in vLLM?", "a": "A batch API is a product: cheaper, slower, async jobs. Continuous batching is a serving trick: the engine keeps the GPU full by swapping requests in and out every step. vLLM reports up to 24x the throughput of plain HF Transformers."},
+  {"q": "How would you run an embedding backfill?", "a": "Chunk the corpus, build JSONL embedding requests keyed by chunk id, submit in chunks under the limits, upsert vectors by id. OpenAI and Gemini both accept embeddings in batch."}
+ ],
+ "today": "All three big providers now offer batch at 50% off: OpenAI Batch, Anthropic Message Batches and Gemini Batch Mode, which also supports embeddings and context caching.",
+ "check": [
+  {"q": "How do you match batch results to their inputs?", "a": "By the custom_id you set on each request", "d": ["By line number in the output file", "By the order they finish", "By the timestamp on each result"], "why": "Results can come back in any order. The id is the only safe join key."},
+  {"q": "Which job is a good fit for a batch API?", "a": "Re-scoring last month's 2 million AI answers overnight", "d": ["Answering a user's chat message", "Autocomplete as someone types", "A live agent booking a meeting"], "why": "Nobody is waiting, and it is big, so half price matters and hours are fine."},
+  {"q": "A batch ends with 3% expired requests. What next?", "a": "Resubmit only the expired ids in a new batch", "d": ["Rerun the whole batch", "Ignore them, they were billed anyway", "Switch every request to live calls"], "why": "Only the missing ones need work. Upserts by id keep the store clean."},
+  {"q": "Why use the 1 hour cache lifetime with batches?", "a": "Batches can run longer than 5 minutes, so the default cache may expire", "d": ["Batches do not allow caching", "It doubles the batch discount", "It makes results come back in order"], "why": "A longer lifetime keeps the shared prefix cached across the whole run."}
+ ],
+ "sources": [
+  {"t": "Claude docs: batch processing", "u": "https://platform.claude.com/docs/build-with-claude/batch-processing"},
+  {"t": "OpenAI docs: Batch API", "u": "https://developers.openai.com/api/docs/guides/batch"},
+  {"t": "OpenAI docs: webhooks", "u": "https://developers.openai.com/docs/guides/webhooks"},
+  {"t": "Gemini API docs: Batch Mode", "u": "https://ai.google.dev/gemini-api/docs/batch-mode"},
+  {"t": "vLLM blog: PagedAttention", "u": "https://vllm.ai/blog/vllm"}
+ ]
+}
