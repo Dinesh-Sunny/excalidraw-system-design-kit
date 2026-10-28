@@ -1,0 +1,361 @@
+{
+ "family": "rag",
+ "reviewed": "Oct 2026",
+ "what": "The context builder decides exactly what goes into the model's prompt: which passages, in what order, with what labels, cut to fit a token budget.",
+ "like": "Like packing a carry-on bag: limited space, so you pick the essentials, drop duplicates, and put what you need first on top.",
+ "why": [
+  "More context is not better - the right few passages beat a stuffed window",
+  "Token budget controls cost and latency on every call",
+  "Stable ordering lets prompt caching reuse the expensive prefix"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "cands",
+    "t": "Ranked passages|from retriever + reranker",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 86,
+    "c": "rag",
+    "i": "doc"
+   },
+   {
+    "id": "dedupe",
+    "t": "Dedupe + diversify|near-duplicate removal",
+    "x": 0,
+    "y": 180,
+    "w": 160,
+    "h": 86,
+    "c": "rag",
+    "i": "hash"
+   },
+   {
+    "id": "expand",
+    "t": "Chunk expansion|neighbours, parent section",
+    "x": 0,
+    "y": 340,
+    "w": 160,
+    "h": 86,
+    "c": "rag",
+    "i": "partition"
+   },
+   {
+    "id": "budget",
+    "t": "Token budget|count, rank, truncate",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "rag",
+    "i": "chart"
+   },
+   {
+    "id": "stable",
+    "t": "Stable prefix|tools, system, docs",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "cache"
+   },
+   {
+    "id": "order",
+    "t": "Order + label|best at start or end",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "rag",
+    "i": "router"
+   },
+   {
+    "id": "compact",
+    "t": "Compaction|summarise old turns",
+    "x": 550,
+    "y": 180,
+    "w": 160,
+    "h": 86,
+    "c": "agent",
+    "i": "memory"
+   },
+   {
+    "id": "llm",
+    "t": "LLM call|one packed prompt",
+    "x": 550,
+    "y": 20,
+    "w": 160,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   }
+  ],
+  "edges": [
+   [
+    "cands",
+    "dedupe",
+    ""
+   ],
+   [
+    "dedupe",
+    "expand",
+    ""
+   ],
+   [
+    "expand",
+    "order",
+    "fit"
+   ],
+   [
+    "order",
+    "budget",
+    ""
+   ],
+   [
+    "budget",
+    "stable",
+    ""
+   ],
+   [
+    "stable",
+    "llm",
+    "prompt"
+   ],
+   [
+    "compact",
+    "budget",
+    "history"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Start from a ranking",
+    "d": "Candidates arrive already scored by retrieval and reranking. Packing is ranking plus truncation: take the best until the budget is spent.",
+    "hl": [
+     "cands"
+    ]
+   },
+   {
+    "t": "Remove repeats",
+    "d": "Near-duplicate chunks (same page crawled twice, overlapping windows) waste tokens. Drop them and keep some variety across sources so one site does not crowd out the rest.",
+    "hl": [
+     "dedupe"
+    ]
+   },
+   {
+    "t": "Expand winning chunks",
+    "d": "A small chunk is good for matching but thin for answering. Pull in its neighbours or parent section so the model sees the full thought.",
+    "hl": [
+     "expand"
+    ]
+   },
+   {
+    "t": "Label and order",
+    "d": "Give each passage an id, title, URL and date (metadata). Models use the start and end of the context best, so put the strongest evidence there.",
+    "hl": [
+     "order"
+    ]
+   },
+   {
+    "t": "Fit the budget",
+    "d": "Count tokens for system prompt, tools, history, passages and room for the answer. Cut the lowest-ranked passages first, never the instructions.",
+    "hl": [
+     "budget",
+     "compact"
+    ]
+   },
+   {
+    "t": "Keep the prefix stable",
+    "d": "Put unchanging parts first - tools, system prompt, shared documents - then the per-question parts. A stable prefix can be cached and reused cheaply.",
+    "hl": [
+     "stable",
+     "llm"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "1M tokens",
+   "l": "default context window on current Claude Opus and Sonnet models",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/context-windows"
+  },
+  {
+   "v": "53.8%",
+   "l": "GPT-3.5 accuracy with answer mid-context, below 56.1% closed-book",
+   "s": "https://arxiv.org/abs/2307.03172"
+  },
+  {
+   "v": "0.1x",
+   "l": "cache read price vs base input tokens (some models lower)",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+  },
+  {
+   "v": "5 min",
+   "l": "default prompt cache lifetime, refreshed free on each hit",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+  },
+  {
+   "v": "4",
+   "l": "max cache breakpoints in one Claude request",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+  }
+ ],
+ "tool": "llm",
+ "choices": [
+  {
+   "t": "Token budget split",
+   "d": "Reserve fixed shares for instructions, history, retrieved passages and the answer (max output). Retrieval gets what is left, not whatever it returns."
+  },
+  {
+   "t": "How many passages",
+   "d": "Fewer, better passages after reranking usually beat many. Tune top-k against answer quality and citation recall on your eval set, not by gut feel."
+  },
+  {
+   "t": "Chunk window size",
+   "d": "Small chunks for matching, then expand to neighbours or the parent section for reading. Bigger windows mean more context per hit and fewer hits."
+  },
+  {
+   "t": "Ordering rule",
+   "d": "Best evidence first (and optionally a strong one last), with stable sections at the very top so caching works. Avoid burying key facts in the middle."
+  },
+  {
+   "t": "Long agent runs",
+   "d": "Use compaction (summarise older turns) and clear stale tool results instead of letting history grow until the window overflows."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "rag-hybrid-retriever-hybrid-search-retrieval-top-k-ai-retrieval-augmented-generation",
+   "why": "Better candidates upstream make packing easier"
+  },
+  {
+   "slug": "ai-reranker-rerank-cross-encoder-relevance-ai",
+   "why": "Sharper ranking so truncation cuts only weak passages"
+  },
+  {
+   "slug": "rag-semantic-cache-cache-similar-prompts-ai-retrieval-augmented-generation",
+   "why": "Skip building context for questions already answered"
+  },
+  {
+   "slug": "agent-ai-agent-agent-llm-loop-autonomous-ai-agentic",
+   "why": "Let the model fetch more context itself when one pass is not enough"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Lost in the middle",
+   "d": "The key passage sits in the middle of a long context and is overlooked.",
+   "see": "Answers ignore evidence that was in the prompt; accuracy drops as k grows",
+   "fix": "Fewer passages, best ones at the start or end, rerank before packing"
+  },
+  {
+   "t": "Context overflow",
+   "d": "History plus passages exceed the window or squeeze the answer.",
+   "see": "Token-limit errors or answers cut off mid-sentence",
+   "fix": "Count tokens up front, reserve output room, compact old turns"
+  },
+  {
+   "t": "Duplicate flooding",
+   "d": "Copies of one page fill most of the budget.",
+   "see": "Many passages from the same URL; low source variety",
+   "fix": "Near-duplicate removal and a per-source cap"
+  },
+  {
+   "t": "Cache keeps missing",
+   "d": "A timestamp or per-user detail sits early in the prompt.",
+   "see": "Cache read tokens near zero on repeated calls",
+   "fix": "Move changing parts after the stable prefix"
+  },
+  {
+   "t": "Stale or unlabeled facts",
+   "d": "Passages have no date or source, so the model mixes old and new.",
+   "see": "Answers quoting outdated numbers; citations hard to map",
+   "fix": "Add id, title, URL and date to every passage"
+  }
+ ],
+ "say": [
+  "After reranking, my context builder packs the top passages into a fixed token budget, keeping room for instructions and the answer.",
+  "I dedupe near-identical chunks, expand winning chunks to their surrounding section, and label each with an id, URL and date so the model can cite it.",
+  "Because of the lost-in-the-middle effect, I keep the passage count small and place the strongest evidence at the start of the context.",
+  "I order the prompt with stable parts first so prompt caching reuses them, and for long agent runs I rely on compaction rather than an ever-growing history."
+ ],
+ "followups": [
+  {
+   "q": "With a 1M-token window, why not send everything?",
+   "a": "Cost and latency grow with every token, and models use long contexts unevenly - evidence in the middle gets missed. A tight, well-ranked context usually answers better and cheaper."
+  },
+  {
+   "q": "How do you pick top-k?",
+   "a": "Empirically: run the eval set at several k values and plot answer correctness, citation recall and cost. Stop where quality flattens. Reranking lets you keep k small."
+  },
+  {
+   "q": "How does ordering interact with prompt caching?",
+   "a": "Claude caches the prefix in the order tools, system, messages. Any change invalidates that level and everything after, so put stable content first and per-request content last."
+  },
+  {
+   "q": "What about very long agent sessions?",
+   "a": "Use server-side compaction to summarise earlier turns and context editing to clear old tool results, so the agent keeps going without overflowing the window."
+  }
+ ],
+ "today": "Current Claude Opus and Sonnet models default to a 1M-token window, and Anthropic names server-side compaction as the main way to manage context in long agent runs.",
+ "check": [
+  {
+   "q": "Where do models tend to use evidence worst in a long context?",
+   "a": "In the middle",
+   "d": [
+    "At the very start",
+    "At the very end",
+    "Evenly everywhere"
+   ],
+   "why": "The Lost in the Middle paper found a U-shape: start and end are used best."
+  },
+  {
+   "q": "Your budget is tight. What do you cut first?",
+   "a": "The lowest-ranked passages",
+   "d": [
+    "The system instructions",
+    "The room for the answer",
+    "The passage labels"
+   ],
+   "why": "Packing is ranking plus truncation - weak evidence goes first."
+  },
+  {
+   "q": "Prompt cache hits fell to zero after a change. Likely cause?",
+   "a": "Something that changes each call moved into the prefix",
+   "d": [
+    "The answer got longer",
+    "Top-k dropped by one",
+    "Passages were deduped"
+   ],
+   "why": "Changes invalidate that level and everything after it."
+  },
+  {
+   "q": "Why expand a matched chunk to its neighbours?",
+   "a": "Small chunks match well but carry too little context",
+   "d": [
+    "It lowers token cost",
+    "It removes duplicates",
+    "It improves cache hits"
+   ],
+   "why": "Match small, read big: the model needs the surrounding thought."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Claude docs: Context windows",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/context-windows"
+  },
+  {
+   "t": "Claude docs: Prompt caching",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching"
+  },
+  {
+   "t": "Liu et al. 2023: Lost in the Middle",
+   "u": "https://arxiv.org/abs/2307.03172"
+  }
+ ]
+}

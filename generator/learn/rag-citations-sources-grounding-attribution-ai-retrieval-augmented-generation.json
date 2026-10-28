@@ -1,0 +1,358 @@
+{
+ "family": "rag",
+ "reviewed": "Oct 2026",
+ "what": "Citations link each sentence of an AI answer back to the exact passage it came from, so a reader (or a checker) can see where every claim was grounded.",
+ "like": "Like footnotes in a school essay: each fact points to the page in the book where you read it, so the teacher can check.",
+ "why": [
+  "Users can verify the answer instead of trusting it blindly",
+  "Makes hallucinations visible and measurable, sentence by sentence",
+  "Sends credit and clicks back to the sources - the heart of AI search visibility"
+ ],
+ "inside": {
+  "w": 700,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "ret",
+    "t": "Top passages|from retriever + reranker",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 86,
+    "c": "rag",
+    "i": "doc"
+   },
+   {
+    "id": "chunk",
+    "t": "Sentence chunks|smallest citable unit",
+    "x": 0,
+    "y": 180,
+    "w": 160,
+    "h": 86,
+    "c": "rag",
+    "i": "partition"
+   },
+   {
+    "id": "llm",
+    "t": "LLM writes answer|with citation markers",
+    "x": 265,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ai",
+    "i": "llm"
+   },
+   {
+    "id": "parse",
+    "t": "Citation parser|text span -> source span",
+    "x": 265,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "rag",
+    "i": "hash"
+   },
+   {
+    "id": "check",
+    "t": "Support checker|NLI or LLM judge",
+    "x": 265,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "llmops",
+    "i": "eye"
+   },
+   {
+    "id": "ui",
+    "t": "Answer + footnotes|links, quotes",
+    "x": 550,
+    "y": 20,
+    "w": 160,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "metrics",
+    "t": "Citation metrics|precision and recall",
+    "x": 550,
+    "y": 180,
+    "w": 160,
+    "h": 86,
+    "c": "llmops",
+    "i": "chart"
+   },
+   {
+    "id": "fix",
+    "t": "Drop or regenerate|unsupported claims",
+    "x": 550,
+    "y": 340,
+    "w": 160,
+    "h": 86,
+    "c": "llmops",
+    "i": "shield"
+   }
+  ],
+  "edges": [
+   [
+    "ret",
+    "chunk",
+    "split"
+   ],
+   [
+    "chunk",
+    "llm",
+    "numbered"
+   ],
+   [
+    "llm",
+    "parse",
+    ""
+   ],
+   [
+    "parse",
+    "ui",
+    "render"
+   ],
+   [
+    "parse",
+    "check",
+    "claim+src"
+   ],
+   [
+    "check",
+    "metrics",
+    "score"
+   ],
+   [
+    "check",
+    "fix",
+    "fails"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Number the evidence",
+    "d": "The best passages from retrieval and reranking go into the prompt, each with an id, title and URL, so the model has something concrete to point at.",
+    "hl": [
+     "ret",
+     "llm"
+    ]
+   },
+   {
+    "t": "Split into citable pieces",
+    "d": "Passages are chunked into sentences (or your own blocks). That chunk size is the finest thing a citation can point to - a passage-level citation.",
+    "hl": [
+     "chunk"
+    ]
+   },
+   {
+    "t": "Write with markers",
+    "d": "The model writes the answer and tags each claim with the chunk ids it used. Provider features return these as structured fields, not loose [1] text.",
+    "hl": [
+     "llm",
+     "parse"
+    ]
+   },
+   {
+    "t": "Map spans to sources",
+    "d": "The parser links each answer span to a source location - a character range, page range or block range - plus the exact quoted text for the footnote.",
+    "hl": [
+     "parse",
+     "ui"
+    ]
+   },
+   {
+    "t": "Check every claim",
+    "d": "A support checker asks: does the cited text actually entail this sentence? An NLI model (natural language inference) or an LLM judge says yes or no.",
+    "hl": [
+     "check"
+    ]
+   },
+   {
+    "t": "Score and repair",
+    "d": "Scores roll up into citation precision and recall. Unsupported sentences are removed, rewritten, or sent back for another pass before the user sees them.",
+    "hl": [
+     "metrics",
+     "fix"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "~50%",
+   "l": "of ELI5 answers lacked full citation support, even best models",
+   "s": "https://arxiv.org/abs/2305.14627"
+  },
+  {
+   "v": "3",
+   "l": "max citations per statement in ALCE - more rarely helped",
+   "s": "https://arxiv.org/abs/2305.14627"
+  },
+  {
+   "v": "0 tokens",
+   "l": "cited_text in Claude citations does not count as output tokens",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/citations"
+  },
+  {
+   "v": "3 types",
+   "l": "Claude citation locations: character, page and content block ranges",
+   "s": "https://platform.claude.com/docs/en/build-with-claude/citations"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Citation granularity",
+   "d": "Sentence chunks give precise footnotes; custom blocks (bullets, transcript lines) give you control. Too coarse and a citation proves little; too fine and answers fill up with markers."
+  },
+  {
+   "t": "Native API or prompt-based",
+   "d": "Use the provider feature where you can: Claude citations return guaranteed-valid pointers into your documents, OpenAI web search returns url_citation annotations with start and end indexes in the text."
+  },
+  {
+   "t": "How to check support",
+   "d": "A small NLI model is cheap and fast for every sentence; an LLM judge handles paraphrase and multi-source claims better. Many teams run NLI online and a judge offline."
+  },
+  {
+   "t": "What to do on failure",
+   "d": "Drop the sentence, soften it, regenerate with stricter instructions, or show it without a citation and a lower-confidence style. Pick per product risk."
+  },
+  {
+   "t": "How many to show",
+   "d": "Answer engines show a handful of sources, not every passage read. Cap citations per claim and prefer the most specific, most trusted source."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "llmops-llm-as-judge-online-eval-grading-judge-ai-observability",
+   "why": "Grades groundedness after the fact instead of per sentence inline"
+  },
+  {
+   "slug": "llmops-guardrails-safety-moderation-input-output-filter-ai-observability",
+   "why": "Blocks unsafe or ungrounded output without showing sources"
+  },
+  {
+   "slug": "ai-reranker-rerank-cross-encoder-relevance-ai",
+   "why": "Better evidence in the prompt means fewer weak citations to clean up"
+  },
+  {
+   "slug": "llmops-offline-evals-eval-dataset-benchmark-regression-ai-observability",
+   "why": "Track citation precision and recall over a fixed test set"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Made-up citation",
+   "d": "The model cites a source id or URL that was never in the context.",
+   "see": "Footnotes that 404 or ids outside the passage list",
+   "fix": "Use native citation APIs or validate every id against the context before rendering"
+  },
+  {
+   "t": "Real source, wrong claim",
+   "d": "The link exists but the passage does not say what the sentence says.",
+   "see": "Low citation recall from the NLI or judge check",
+   "fix": "Check entailment per sentence; drop or rewrite unsupported claims"
+  },
+  {
+   "t": "Citation padding",
+   "d": "Extra sources are attached that add nothing.",
+   "see": "Low citation precision; many sources per sentence",
+   "fix": "Cap citations per claim and score each one for its own support"
+  },
+  {
+   "t": "Answer from memory",
+   "d": "The model answers from training data and adds no citation.",
+   "see": "Sentences with zero citations in grounded mode",
+   "fix": "Instruct to answer only from sources, and flag uncited sentences"
+  },
+  {
+   "t": "Uncitable source",
+   "d": "Scanned PDFs or images have no text to point at.",
+   "see": "Documents that never get cited",
+   "fix": "Run OCR first, or pass text as custom content blocks"
+  }
+ ],
+ "say": [
+  "I'll put the reranked passages into the prompt as numbered documents and use the provider's citation feature, so every claim comes back with a pointer to an exact span.",
+  "Before showing the answer, a support check asks whether each cited passage actually entails its sentence, using a small NLI model online and an LLM judge offline.",
+  "I'll track citation recall - are claims backed - and citation precision - does each citation help - next to answer quality in our eval set.",
+  "For answer engines, the pages that get cited tend to be the ones with clear, self-contained factual sentences that are easy to quote."
+ ],
+ "followups": [
+  {
+   "q": "How do you measure citation quality?",
+   "a": "Citation recall: share of statements fully supported by their cited passages. Citation precision: share of citations that actually help support their statement. Both use an entailment check, as in the ALCE benchmark, alongside answer correctness."
+  },
+  {
+   "q": "Why not just ask the model to write [1] in its text?",
+   "a": "It works, but ids can be invented and quotes cost output tokens. Native features parse citations into structured fields: Claude guarantees valid pointers to supplied documents, and cited_text is not billed as output."
+  },
+  {
+   "q": "Why do some pages get cited by AI answer engines and others not?",
+   "a": "Engines retrieve, rerank, then quote passages that directly support a sentence. Pages with clear, specific, self-contained factual statements are easy to extract and entail, so they win the few citation slots."
+  },
+  {
+   "q": "Can you combine citations with JSON output?",
+   "a": "Not on Claude today: citations interleave citation blocks with text, so enabling them together with structured outputs returns a 400 error. Ask for citations first, then convert in a second step."
+  }
+ ],
+ "today": "Claude's citations feature is generally available on all active models and returns character, page or content block locations, while OpenAI's web search returns url_citation annotations with title, URL and text span.",
+ "check": [
+  {
+   "q": "A sentence has a citation, but the passage does not say that. Which metric drops?",
+   "a": "Citation recall",
+   "d": [
+    "Citation precision only",
+    "Retrieval recall@K",
+    "Latency p99"
+   ],
+   "why": "Recall asks whether each statement is fully supported by what it cites."
+  },
+  {
+   "q": "What usually checks if a passage supports a sentence?",
+   "a": "An entailment (NLI) model or LLM judge",
+   "d": [
+    "Cosine similarity above 0.5",
+    "BM25 score of the sentence",
+    "Counting shared words"
+   ],
+   "why": "Support is about meaning: does the passage logically back the claim?"
+  },
+  {
+   "q": "In Claude's citations, how is a plain text location given?",
+   "a": "0-indexed character range, end exclusive",
+   "d": [
+    "1-indexed line numbers",
+    "Page numbers",
+    "Byte offsets in UTF-8"
+   ],
+   "why": "Plain text uses char indexes; PDFs use 1-indexed page ranges."
+  },
+  {
+   "q": "Why do native citation APIs beat prompt-only [1] markers?",
+   "a": "Pointers are parsed and always valid",
+   "d": [
+    "They retrieve better passages",
+    "They remove the need for retrieval",
+    "They make answers shorter"
+   ],
+   "why": "The API extracts cited text from your documents, so ids cannot be invented."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Claude docs: Citations",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/citations"
+  },
+  {
+   "t": "Gao et al. 2023: Enabling LLMs to Generate Text with Citations (ALCE)",
+   "u": "https://arxiv.org/abs/2305.14627"
+  },
+  {
+   "t": "Koog API reference: OpenAI web url_citation fields",
+   "u": "https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-open-a-i-web-url-citation/index.html"
+  }
+ ]
+}
