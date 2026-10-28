@@ -1457,7 +1457,8 @@
    "3,000 projects x 300 prompts x 4 engines = 3.6M answers/day = ~40/s avg, spiky",
    "~3 KB per answer = ~10 GB/day raw, ~4 TB/year - S3 is cheap",
    "Pro plan: 100 prompts x 3 engines x 30 days = 9,000 answers/month",
-   "Revenue ~$14k/day at $5M ARR -> answers must cost far below 1 cent"
+   "Revenue ~$14k/day at $5M ARR -> answers must cost far below 1 cent",
+   "Official web-search API fees ~$10-25 per 1,000 calls: 3.6M/day would be $36k+/day before tokens - so dedupe, sample and pick cheaper collection paths"
   ],
   "api": [
    "POST /projects/{id}/prompts {text, topic, locale}",
@@ -1486,6 +1487,10 @@
    "ev": "Hand-labelled golden answers: precision/recall of mention and citation detection on every parser change."
   },
   "dives": [
+   [
+    "Do the unit economics work?",
+    "Search-enabled API calls cost about $10-25 per 1,000. At 3.6M answers/day that is $36k+/day, more than ~$14k/day revenue at $5M ARR. So: share runs across tenants, adaptive sampling, weekly cadence for the long tail, batch pricing for parsing, and compare API vs browser vs data-partner cost per answer."
+   ],
    [
     "How do you stop retries double counting?",
     "Idempotent job key = project + prompt + engine + region + day + run number, a unique constraint on run, and upserts into the facts table."

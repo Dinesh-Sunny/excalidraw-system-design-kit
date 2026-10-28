@@ -2642,5 +2642,140 @@
     ]
    ]
   }
+ },
+ "search-relevance-eval-loop": {
+  "modern": [
+   [
+    "LLM judges at scale",
+    "Calibrated LLM judges label thousands of query-document pairs cheaply, with humans auditing a sample."
+   ],
+   [
+    "Error analysis first",
+    "Read ~100 real failures, group them into a failure taxonomy, then build metrics for the biggest groups."
+   ]
+  ],
+  "extra": {
+   "t": "Metrics fluency",
+   "look": "A relevance engineer will test whether you pick the right metric for the stage.",
+   "rounds": [
+    [
+     "Metric for the first-stage retriever?",
+     "recall@100",
+     [
+      "nDCG@10",
+      "Click-through rate",
+      "BLEU"
+     ]
+    ],
+    [
+     "Metric for the final top 10 order?",
+     "nDCG@10",
+     [
+      "recall@1000",
+      "Latency",
+      "Index size"
+     ]
+    ],
+    [
+     "Why interleaving over A/B for rankers?",
+     "It needs much less traffic to see a difference",
+     [
+      "It measures revenue",
+      "It is easier to build",
+      "It needs no users"
+     ]
+    ]
+   ]
+  }
+ },
+ "agentic-search-loop": {
+  "modern": [
+   [
+    "Code mode",
+    "Agents write one small program that calls many tools - fewer turns, fewer tokens, higher recall."
+   ],
+   [
+    "Trained search agents",
+    "Models trained to search raise recall but can lower precision - keep a reranker."
+   ]
+  ],
+  "extra": {
+   "t": "Agent economics",
+   "look": "Turns, tokens and stopping rules.",
+   "rounds": [
+    [
+     "Why do fewer turns save money?",
+     "Each turn re-sends the growing context",
+     [
+      "Tools are free",
+      "Models are faster at night",
+      "Fewer citations"
+     ]
+    ],
+    [
+     "Best stopping rule?",
+     "Judge coverage of each sub-question plus hard caps",
+     [
+      "Always 10 turns",
+      "Stop at the first result",
+      "Let the user stop it"
+     ]
+    ],
+    [
+     "How do you test it?",
+     "Evidence recall on questions with known sources",
+     [
+      "Count words in the answer",
+      "Ask the agent",
+      "Latency only"
+     ]
+    ]
+   ]
+  }
+ },
+ "pipeline-migration": {
+  "modern": [
+   [
+    "Shadow traffic",
+    "Run the new pipeline on mirrored inputs with no customer impact before any cutover."
+   ],
+   [
+    "Feature flags per tenant",
+    "Cut over and roll back one tenant at a time."
+   ]
+  ],
+  "extra": {
+   "t": "Safe migrations",
+   "look": "They just bought a company - this may be live work.",
+   "rounds": [
+    [
+     "First step before comparing outputs?",
+     "Agree a tolerance per metric",
+     [
+      "Delete the old pipeline",
+      "Pick the bigger numbers",
+      "Ask customers"
+     ]
+    ],
+    [
+     "Old and new disagree. Who decides?",
+     "Hand-labelled samples of the raw answers",
+     [
+      "The newer pipeline",
+      "The older pipeline",
+      "The average of both"
+     ]
+    ],
+    [
+     "How to stop a cliff in customer charts?",
+     "Backfill history and annotate the cutover",
+     [
+      "Hide old data",
+      "Cut over all tenants at once",
+      "Smooth the line"
+     ]
+    ]
+   ]
+  }
  }
 }
