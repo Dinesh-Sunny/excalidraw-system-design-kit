@@ -11,6 +11,11 @@ __HEADINIT__
 /* walkthrough mode */
 .walk #rSetup, .walk #rTimer, .walk [data-x="share"], .walk [data-x="suggest"], .walk #mSave, .walk .fbrow, .walk .pbadge, .walk .src, .walk #fCo, .walk .nav .sw { display: none !important }
 .wk { display: grid; gap: 18px; max-width: 880px }
+.wk-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 12px } .wk-n { font: 500 12px/1 var(--font-mono); color: var(--ink-muted) }
+.wk-list { display: grid; gap: 10px } .wk-list h4 { margin: 8px 0 0 }
+.wk-li { padding: 13px 18px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); font: 400 17px/26px var(--font-sans); color: var(--ink); animation: rise .3s ease-out both }
+.wk-li code { font: 500 15px/24px var(--font-mono); white-space: pre-wrap }
+.wk-c { animation: rise .3s ease-out both } .wk-li.now, .wk-c.now { border-color: var(--sketch); box-shadow: 0 0 0 3px var(--sketch-soft) }
 .wk-l { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px }
 .wk-l li { padding: 12px 16px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); font: 400 16px/24px var(--font-sans); color: var(--ink) }
 .wk-l code { font: 500 14.5px/22px var(--font-mono); background: none; padding: 0; white-space: pre-wrap }
@@ -484,7 +489,7 @@ function renderDesign() {
   const n = Q.nodes.length, st = $("#stage");
   if (!$("#dz")) { st.innerHTML = `<div class="dz" id="dz"><div class="cvw"><div class="canvas" id="cv"></div><div class="zc2" role="group" aria-label="Zoom"><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="fit" aria-label="Fit">Fit</button><button type="button" data-z="in" aria-label="Zoom in">+</button></div></div><aside class="move" id="mv"></aside></div>`; cam = null; }
   renderMove(); loadSvg();
-  buttons(blk < n ? (WALK ? `Next block<span class="kbd">→</span>` : `Show me the next block<span class="kbd">→</span>`) : `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>`, blk >= n ? `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>` : "");
+  buttons(blk < n ? (WALK ? `Next block<span class="kbd">→</span>` : `Show me the next block<span class="kbd">→</span>`) : `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>`, blk >= n ? `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>` : WALK ? `<button class="link" type="button" data-x="wkall">Show all</button>` : "");
 }
 function renderMove() {
   const n = Q.nodes.length, mv = $("#mv"), picks = rec().picks || {};
@@ -738,23 +743,36 @@ function render() {
   buttons(!open_ ? `Compare<span class="lg">&nbsp;with a strong answer</span><span class="kbd">↵</span>` : step < LAST() ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your&nbsp;</span>scorecard<span class="kbd">↵</span>`, !open_ && S.k !== "est" && nh < ml ? `<button class="link" type="button" data-x="hint">Hint<span class="lg">&nbsp;(${ml - nh} left)</span></button>` : "", step > 0);
 }
 
-/* walkthrough: each step is the content itself, laid out to talk through */
-function renderWalk(k) {
-  const C = Q.c, V = Q.v2 || {}, st = $("#stage"), S = STEPS[step];
-  const list = (a, code) => `<ul class="wk-l">${a.map(x => `<li>${code ? `<code>${esc(x)}</code>` : esc(x)}</li>`).join("")}</ul>`;
-  const pairs = a => `<div class="wk-p">${a.map(([h, b]) => `<div class="wk-c"><b>${esc(h)}</b><p>${esc(b)}</p></div>`).join("")}</div>`;
-  let h = "";
-  if (k === "req") h = `<div class="wk-2"><section><h4>Functional</h4>${list(C.reqF)}</section><section><h4>Non-functional</h4>${list(C.reqN)}</section></div>`;
-  else if (k === "est") h = list(C.est);
-  else if (k === "api") h = list(C.api, true);
-  else if (k === "data") h = list(C.data, true);
-  else if (k === "modern") h = pairs(V.modern || []);
-  else if (k === "extra") h = pairs(((V.extra || {}).rounds || []).map(r => [r[0], r[1]]));
-  else if (k === "deep") h = pairs(C.dives);
-  else if (k === "wrap") h = list(C.wrap);
-  st.innerHTML = `<div class="col wk"><h3 class="qn">${esc(S.t)}</h3>${h}</div>`;
-  buttons(step < LAST() ? `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>` : `All designs`);
+/* walkthrough: one point at a time so each one gets discussed; "Show all" when time is short */
+const WKN = {};
+function wkItems(k) {
+  const C = Q.c, V = Q.v2 || {};
+  if (k === "req") return [...C.reqF.map(x => ({ g: "Functional", t: x })), ...C.reqN.map(x => ({ g: "Non-functional", t: x }))];
+  if (k === "est") return C.est.map(x => ({ t: x }));
+  if (k === "api") return C.api.map(x => ({ t: x, code: 1 }));
+  if (k === "data") return C.data.map(x => ({ t: x, code: 1 }));
+  if (k === "modern") return (V.modern || []).map(([h, b]) => ({ h, t: b }));
+  if (k === "extra") return ((V.extra || {}).rounds || []).map(r => ({ h: r[0], t: r[1] }));
+  if (k === "deep") return C.dives.map(([h, b]) => ({ h, t: b }));
+  if (k === "wrap") return C.wrap.map(x => ({ t: x }));
+  return [];
 }
+function renderWalk(k) {
+  const st = $("#stage"), S = STEPS[step], items = wkItems(k), total = items.length;
+  const n = Math.min(total, Math.max(1, WKN[step] || 1)); WKN[step] = n;
+  let html = "", g = null;
+  items.slice(0, n).forEach((x, i) => {
+    if (x.g && x.g !== g) { html += `<h4>${esc(x.g)}</h4>`; g = x.g; }
+    const now = i === n - 1 && n < total ? " now" : i === n - 1 && WKN["_new" + step] ? " now" : "";
+    html += x.h ? `<div class="wk-c${now}" data-wk="${i}"><b>${esc(x.h)}</b><p>${esc(x.t)}</p></div>` : `<div class="wk-li${now}" data-wk="${i}">${x.code ? `<code>${esc(x.t)}</code>` : esc(x.t)}</div>`;
+  });
+  st.innerHTML = `<div class="col wk"><div class="wk-hd"><h3 class="qn">${esc(S.t)}</h3><span class="wk-n">${n} of ${total}</span></div><div class="wk-list">${html}</div></div>`;
+  const nw = st.querySelector(".now") || st.querySelector(`[data-wk="${n - 1}"]`); if (nw && n > 1) requestAnimationFrame(() => nw.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
+  const more = n < total;
+  buttons(more ? `Next point<span class="kbd">→</span>` : step < LAST() ? `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>` : `All designs`, more ? `<button class="link" type="button" data-x="wkall">Show all</button>` : "");
+}
+function wkNext() { const k = STEPS[step].k, total = wkItems(k).length; if ((WKN[step] || 1) < total) { WKN[step] = (WKN[step] || 1) + 1; renderWalk(k); return true; } return false; }
+function wkBack() { if ((WKN[step] || 1) > 1) { WKN[step]--; renderWalk(STEPS[step].k); return true; } return false; }
 function renderDeep() {
   const C = Q.c, [q, a] = C.dives[dv], key = "deep" + dv, st = $("#stage");
   st.innerHTML = `<div class="col"><span class="dvn">The interviewer asks · ${dv + 1} of ${C.dives.length}</span><h3 class="qn">${esc(q)}</h3><textarea class="notes" id="nt" rows="3" placeholder="Say it out loud, then jot the key words">${esc((rec().notes || {})[key] || "")}</textarea>${open_ ? `<div class="ans"><div class="gl">A strong answer</div><p class="dva">${esc(a)}</p>${rateHTML(key)}</div>` : ""}</div>`;
@@ -799,7 +817,7 @@ function primary() {
   if ($("#bMain").dataset.next) { location.hash = "q=" + $("#bMain").dataset.next; return; }
   if (finished) return;
   if (S.k === "hld") { if (blk < Q.nodes.length) revealNext(); else setStep(step + 1); return; }
-  if (WALK) { if (step < LAST()) setStep(step + 1); else { history.pushState(null, "", location.pathname); route(); } return; }
+  if (WALK) { if (wkNext()) return; if (step < LAST()) setStep(step + 1); else { history.pushState(null, "", location.pathname); route(); } return; }
   if (!quizDone()) { quizReveal(); return; }
   if (step < LAST()) setStep(step + 1); else { finished = true; history.replaceState(null, "", "#q=" + Q.slug + "&s=done"); ev("practice-done/" + Q.slug); render(); }
 }
@@ -809,6 +827,8 @@ function back() {
   if (finished) { finished = false; open_ = true; render(); return; }
   if (S.k === "hld" && blk > 1) { blk--; tries = new Set(); last = null; put({ blk }); renderDesign(); return; }
   if (S.k !== "hld" && !WALK && quizBack()) return;
+  if (WALK && S.k !== "hld" && wkBack()) return;
+  if (WALK && step > 0 && STEPS[step - 1].k !== "hld") { setStep(step - 1); WKN[step] = wkItems(STEPS[step].k).length; render(); return; }
   if (step > 0 && STEPS[step - 1].k === "hld") { setStep(step - 1); blk = Q.nodes.length; render(); return; }
   setStep(step - 1);
 }
@@ -828,6 +848,7 @@ $("#vRun").addEventListener("click", e => {
   const ad = e.target.closest("[data-apidel]"); if (ad) { const rows = (rec().mine || {}).api || []; rows.splice(+ad.dataset.apidel, 1); sub("mine", { api: rows }); render(); return; }
   const ed = e.target.closest("[data-entdel]"); if (ed) { const rows = (rec().mine || {}).data || []; rows.splice(+ed.dataset.entdel, 1); sub("mine", { data: rows }); render(); return; }
   const x = e.target.closest("[data-x]"); if (x && x.tagName !== "INPUT") { const a = x.dataset.x;
+    if (a === "wkall") { if (STEPS[step].k === "hld") { blk = Q.nodes.length; last = null; put({ blk }); renderDesign(); } else { WKN[step] = wkItems(STEPS[step].k).length; renderWalk(STEPS[step].k); } return; }
     if (a === "hint") { const k = STEPS[step].k; sub("hints", { [k]: ((rec().hints || {})[k] || 0) + 1 }); render(); ev("practice-hint/" + k); }
     if (a === "apiadd") { sub("mine", { api: [...((rec().mine || {}).api || [{ m: "POST", p: "", r: "" }]), { m: "GET", p: "", r: "" }] }); render(); }
     if (a === "entadd") { sub("mine", { data: [...((rec().mine || {}).data || [{ n: "", f: "", s: "SQL", k: "" }]), { n: "", f: "", s: "SQL", k: "" }] }); render(); }
