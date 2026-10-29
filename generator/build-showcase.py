@@ -19,6 +19,7 @@ HEART='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="
 IBLK='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="5.5" height="5.5" rx="1.2"/><rect x="11" y="3.5" width="5.5" height="5.5" rx="1.2"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1.2"/><rect x="11" y="11" width="5.5" height="5.5" rx="1.2"/></svg>'
 IPRC='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r=".8" fill="currentColor"/></svg>'
 SRCH='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m16.5 16.5-3.5-3.5"/></svg>'
+IEXP='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="3"/><rect x="6" y="6" width="8" height="8" rx="2"/><rect x="8.6" y="8.6" width="2.8" height="2.8" rx=".8" fill="currentColor"/></svg>'
 def NAV(pre, active, spurl, kit_dialog=False, ph='Search blocks'):
     """one header for every page: Blocks | Practice switch, theme, Sponsor, Star, Get the kit"""
     cur=lambda k:' aria-current="page"' if k==active else ''
@@ -26,7 +27,7 @@ def NAV(pre, active, spurl, kit_dialog=False, ph='Search blocks'):
     get=f'<a class="pill ghost getk" href="{REPO}/releases/latest" data-kit>Get the kit</a>' if kit_dialog else f'<a class="pill ghost getk" href="{pre}#get">Get the kit</a>'
     return (f'<header class="nav gut"><div class="wrap">\n'
       f'  <a class="mark" href="{home}" aria-label="System design kit, home"><span class="long">System design <i>kit</i></span><span class="short">SD <i>kit</i></span></a>\n'
-      f'  <nav class="sw" aria-label="Site"><a href="{home}"{cur("blocks")}>{IBLK}<span>Blocks</span></a><a href="{pre}practice/"{cur("practice")}>{IPRC}<span>Practice</span></a></nav>\n'
+      f'  <nav class="sw" aria-label="Site"><a href="{home}"{cur("blocks")}>{IBLK}<span>Blocks</span></a><a href="{pre}practice/"{cur("practice")}>{IPRC}<span>Practice</span></a><a href="{pre}explore/"{cur("explore")}>{IEXP}<span>Explore</span></a></nav>\n'
       f'  <span class="sp"></span>\n  <button class="hsk" id="hsk" type="button" data-cmdk aria-label="Search the kit">{SRCH}<span>Search</span><kbd aria-hidden="true">⌘K</kbd></button>\n  {THEMEBTN}\n'
       f'  <a class="pill ghost star" href="{REPO}" target="_blank" rel="noopener" aria-label="Star on GitHub">{GHSVG}<span class="lbl">Star</span><span class="cnt" id="stars" hidden></span></a>\n'
       f'  {get}\n'
@@ -46,7 +47,7 @@ def FOOT(pre, spurl, mail='Help'):
     home=pre or './'
     return (f'<footer class="gut"><div class="wrap"><span><a href="{REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v{VERSION}</a> · MIT · free, no sign-up</span>'
       f'<span class="help">Happy to help: <a data-mail="{mail}" href="#contact">Email</a> · <a href="{REPO}/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="{REPO}/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span>'
-      f'<span class="fnav"><a href="{home}">Blocks</a> · <a href="{pre}practice/">Practice</a> · <a href="{REPO}/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="{spurl}">Sponsor</a></span></div></footer>')
+      f'<span class="fnav"><a href="{home}">Blocks</a> · <a href="{pre}practice/">Practice</a> · <a href="{pre}explore/">Explore</a> · <a href="{REPO}/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="{spurl}">Sponsor</a></span></div></footer>')
 # practice questions, and which questions use each block (both ways between Blocks and Practice)
 from kitmap import find as kitfind
 PQ={};USES={}
@@ -185,8 +186,63 @@ if os.path.exists('out/practice.json'):
         P.append({'slug':m['slug'],'title':m['title'],'edges':m.get('edges',[]),'boxes':m.get('boxes',{}),'size':m.get('size'),'level':c['level'],'track':c['track'],'companies':c['companies'],'nodes':[{'id':n['id'],'title':n['title'],'k':(kitfind(n['title']) or '').replace('sdk-',''),'sd':bool(_SJ['designs'].get(m['slug'],{}).get(n['id'])),'st':_SJ['designs'].get(m['slug'],{}).get(n['id']) or ', '.join(x[0] for x in STACKB.get((kitfind(n['title']) or '').replace('sdk-',''),[])[:3])} for n in m['nodes']],
                   'c':{k:c[k] for k in ('reqF','reqN','est','api','data','blocks','dives','wrap')},'v2':V2.get(m['slug'],{}),'variants':{vk:{**vv,'nodes':[{**n,'k':(kitfind(n['title']) or '').replace('sdk-','')} for n in vv.get('nodes',[])]} for vk,vv in m.get('variants',{}).items()},'kitId':kid,'kit':kid.replace('sdk-',''),'thumb':f"t/{kid}.webp"})
     P.sort(key=lambda d:(d['track']!='Classic',order[d['level']]))
-    t=open('practice.tpl.html').read()
+    t=open('practice.tpl.html').read().replace('/*__DRILLCSS__*/',open('drill.css').read()).replace('/*__DRILLJS__*/',open('drill.js').read())
     t=t.replace('__NAV__',NAV('../','practice','../sponsor/',ph='Search questions')).replace('__FOOT__',FOOT('../','../sponsor/','Practice'))
     for k,v in (('__HEADINIT__',headinit),('__BASECSS__',base),('__THEMEBTN__',themebtn),('__SPONSOR__',SPJ),('__PDATA__',json.dumps(P,separators=(',',':'),ensure_ascii=False)),('__LENSES__',json.dumps(V2['_lenses'],separators=(',',':'),ensure_ascii=False))): t=t.replace(k,v)
     os.makedirs('out/pages/practice',exist_ok=True); open('out/pages/practice/index.html','w').write(t)
     print('practice page',len(t)//1024,'KB',len(P),'questions')
+
+
+# ---- Explore: one tree of ideas, any depth (section -> block -> concept -> explanation) ----
+import re as _re
+def _sid(t, used):
+    b=_re.sub(r'[^a-z0-9]+','-',t.lower()).strip('-')[:40] or 'x'; i=b; n=2
+    while i in used: i=f'{b}-{n}'; n+=1
+    used.add(i); return i
+def _kids(items):
+    used=set(); out=[]
+    for it in items:
+        if not it: continue
+        x={'id':_sid(it['t'],used),'t':it['t']}
+        for k in ('s','d','img','l','sl','r'):
+            if it.get(k): x[k]=it[k]
+        if not x.get('s') and x.get('d'): x['s']=x['d'][:150]
+        if it.get('k'): x['k']=_kids(it['k'])
+        out.append(x)
+    return out
+_CON=json.load(open('concepts.json')) if os.path.exists('concepts.json') else {}
+_PCD=json.load(open('practice.data.json')); _PMs={m['slug']:m for m in json.load(open('out/practice.json'))} if os.path.exists('out/practice.json') else {}
+_kit2q={v[2]:k for k,v in PQ.items()}
+def _block(it):
+    mm=_re.match(r'^sd:([a-z]+)/\s(.*)$',it['name']); ti=mm.group(2).split(' - ')[0].replace('\n',' '); tags=mm.group(2).split(' - ',1)[1] if ' - ' in mm.group(2) else ''
+    sl=it['id'].replace('sdk-',''); L=LEARN['L'].get(sl); kids=[]
+    for k,v in _CON.items():
+        if k!='_what' and sl.startswith(k): kids+=v
+    wh=next((v for k,v in _CON.get('_what',{}).items() if sl.startswith(k)),None)
+    if L:
+        if L.get('inside',{}).get('steps'): kids.append({'t':'How it works inside','s':f"{len(L['inside']['steps'])} steps",'k':[{'t':x['t'],'d':x['d']} for x in L['inside']['steps']]})
+        if L.get('choices'): kids.append({'t':"Choices you'll make",'k':[{'t':x['t'],'d':x['d']} for x in L['choices']]})
+        if L.get('breaks'): kids.append({'t':'When it breaks','k':[{'t':x['t'],'d':x['d'],'s':'Fix: '+x.get('fix','')} for x in L['breaks']]})
+        iv=[{'t':'Say it like this','d':x} for x in L.get('say',[])][:1]+[{'t':f['q'],'d':f['a']} for f in L.get('followups',[])]
+        if iv: kids.append({'t':'In the interview','k':iv})
+    tb=STACKB.get(sl)
+    if tb: kids.append({'t':'Tools you will meet','k':[{'t':x[0],'l':[['Official site',x[1]]]} for x in tb]})
+    q=_kit2q.get(sl)
+    if q and q in _PMs:
+        m=_PMs[q]; c=_PCD[q]; dd=_SJ['designs'].get(q,{})
+        kids.append({'t':'Blocks in this design','s':f"{len(m['nodes'])} blocks, in build order",'k':[{'t':n['title'].replace('\n',' '),'d':c['blocks'].get(n['id'],''),'s':('Built with: '+dd[n['id']]) if n['id'] in dd else '','r':(kitfind(n['title']) or '').replace('sdk-','')} for n in m['nodes']]})
+        kids.append({'t':'Deep dives','k':[{'t':a,'d':b} for a,b in c['dives']]})
+    links=[['Open in blocks','../#i='+sl]]+([['Practise it','../practice/#q='+q]] if q else [])
+    return {'t':ti,'sl':sl,'s':(L['what'] if L else wh or tags),'img':'t/'+it['id']+'.webp','l':links,'k':kids}
+_secs=[]
+for c,lab in _lab.items():
+    if c in ('zone','link','frame','note','guide','ui'): continue
+    its=[it for it in lib if it['name'].startswith('sd:'+c+'/ ') and ' SECTION - ' not in it['name']]
+    if not its: continue
+    _secs.append({'t':lab,'s':', '.join(_re.match(r'^sd:[a-z]+/\s(.*?)( - |$)',x['name']).group(1).replace('\n',' ') for x in its[:4])+(' and more' if len(its)>4 else ''),'k':[_block(it) for it in its]})
+TREE={'id':'root','t':'Everything','d':'Pick an area to go in. Each card opens into the ideas inside it, down to plain explanations.','k':_kids(_secs)}
+os.makedirs('out/pages/explore',exist_ok=True)
+json.dump(TREE,open('out/pages/explore/tree.json','w'),separators=(',',':'),ensure_ascii=False)
+t=ptpl.replace('__NAV__',NAV('../','explore','../sponsor/')).replace('__FOOT__',FOOT('../','../sponsor/','Explore')).replace('__BASECSS__',base).replace('__HEADINIT__',headinit).replace('__THEMEBTN__',themebtn).replace('__SPONSOR__',SPJ).replace('__TITLE__','Explore - System Design Kit').replace('__ROBOTS__','index').replace('__BODY__',open('explore.body.html').read().replace('/*__DRILLCSS__*/',open('drill.css').read())).replace('__SCRIPT__',open('explore.js').read().replace('/*__DRILLJS__*/',open('drill.js').read()))
+open('out/pages/explore/index.html','w').write(t)
+print('explore', os.path.getsize('out/pages/explore/tree.json')//1024,'KB tree', len(_secs),'sections')

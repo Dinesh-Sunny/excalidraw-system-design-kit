@@ -3,6 +3,8 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Explore: a new page that turns the whole kit into one mind map you can walk into (area -> block -> concepts -> plain explanation), with gliding motion; double-click any block on the practice canvas (or tap Go inside) to walk its ideas the same way.
+- Production agents: Production Agent Platform design and practice question (8 deep dives, Atlassian FDE and AI Voice Tutor scenarios), 4 new agent patterns (Agent Harness, Context Engineering, Durable Human-in-the-Loop, Scoped Credentials) and 8 new blocks (Context Compaction, Agent Filesystem, Context Hub, Run Config, Agent Channels, Agent Auth Handler, Credential Broker, Agent Eval Harness), with sourced concept trees.
 - Tools in every block: real products for 150 blocks (open source and managed, linked to official docs), so searching "supabase", "langsmith" or "sentry" finds the right block; designs show an example stack block by block (AI Voice Tutor, Workplace Knowledge Agent), and practice shows the tools as each block lands.
 - 6 new blocks: SSR Web App, Typed Classifier, Visual Renderer (2D / 3D), Agent Harness, Error Tracking and Uptime / Status.
 - Workplace Knowledge Agent: a new full design for permission-aware enterprise agents on a work graph (hybrid retrieval, rerank, permissions checked twice, model per stage, Read/Draft/Act skills with approval, audit + evals) with a practice question, 7 deep dives and three scenarios: Atlassian FDE engagement, regulated bank and startup on day one.

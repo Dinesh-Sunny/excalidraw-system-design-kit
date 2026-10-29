@@ -7,6 +7,7 @@
 <meta property="og:image" content="https://dinesh-sunny.github.io/excalidraw-system-design-kit/og.png">
 __HEADINIT__
 <style>
+/*__DRILLCSS__*/
 __BASECSS__
 [hidden] { display: none !important }
 /* ---------- picker ---------- */
@@ -300,6 +301,7 @@ __NAV__
 __FOOT__
 
 <script>
+/*__DRILLJS__*/
 const SP = __SPONSOR__;
 const D = __PDATA__;
 const LENSES = __LENSES__;
@@ -472,10 +474,10 @@ function renderDesign() {
 function renderMove() {
   const n = Q.nodes.length, mv = $("#mv"), picks = rec().picks || {};
   const dots = Q.nodes.map((x, i) => `<i class="${i < blk ? (picks[i] === false ? "hp" : "ok") : i === blk ? "now" : ""}"></i>`).join("");
-  const fbl = last && last.k ? `<span class="fbl"><a href="../#i=${last.k}">Open in blocks</a><button type="button" data-savek="${last.k}" class="${onBoard(last.k) ? "on" : ""}">${SAVEI}${onBoard(last.k) ? "Saved" : "Save block"}</button><button type="button" data-copyk="${last.k}">${COPYI}Copy</button></span>` : "";
+  const fbl = last && last.k ? `<span class="fbl"><a href="../#i=${last.k}">Open in blocks</a><button type="button" data-savek="${last.k}" class="${onBoard(last.k) ? "on" : ""}">${SAVEI}${onBoard(last.k) ? "Saved" : "Save block"}</button><button type="button" data-copyk="${last.k}">${COPYI}Copy</button><button type="button" data-inside="${last.k}" title="Go inside this block (or double-click it on the canvas)">Go inside</button></span>` : "";
   const stn = last && last.ok ? (Q.nodes.find(n => n.title === last.title) || {}) : {}, stl = stn.st || "";
   const lone = last && last.ok && blk > 1 && blk < n && focusSet(blk).length === 1 ? (() => { const id = Q.nodes[blk - 1].id, later = Q.nodes.slice(blk).find(x => Q.edges.some(e => (e[0] === id && e[1] === x.id) || (e[1] === id && e[0] === x.id))); return later ? `<span class="stl">Links up once ${esc(later.title.replace(/\n/g, " "))} is in.</span>` : ""; })() : "";
-  const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span>${lone}${stl ? `<span class="stl">${stn.sd ? (Q.v2 && Q.v2.stackNote ? esc(Q.v2.stackNote) : "Built with") : "Tools"}: ${esc(stl)}</span>` : ""}${last.ok ? fbl : ""}</div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") + (Q.nodes[0].st ? `</span><span class="stl">${Q.nodes[0].sd ? "Built with" : "Tools"}: ${esc(Q.nodes[0].st)}` : "") : "Tap any block on the canvas to see why it's there."}</span></div>`;
+  const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span>${lone}${stl ? `<span class="stl">${stn.sd ? (Q.v2 && Q.v2.stackNote ? esc(Q.v2.stackNote) : "Built with") : "Tools"}: ${esc(stl)}</span>` : ""}${last.ok ? fbl : ""}</div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") + (Q.nodes[0].st ? `</span><span class="stl">${Q.nodes[0].sd ? "Built with" : "Tools"}: ${esc(Q.nodes[0].st)}` : "") : "Double-click any block to go inside it. Tap any block on the canvas to see why it's there."}</span></div>`;
   if (blk >= n) {
     const first = Object.values(picks).filter(v => v === true).length, total = n - 1;
     mv.innerHTML = `<div class="mh"><span class="gl">Design complete</span><div class="dots">${dots}</div></div>${fb}<p class="big2">${first} of ${total} <small>right first time</small></p>${rateHTML("hld")}`;
@@ -815,13 +817,30 @@ async function copyDesign() {
   } catch (e) { say("Copy didn't go through. Try Open in the kit"); }
 }
 document.addEventListener("keydown", e => {
-  if (!Q || e.altKey) return;
+  if (!Q || e.altKey || document.querySelector(".drov")) return;
   const typing = e.target.closest("textarea, input, select");
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); primary(); return; }
   if (typing || e.metaKey || e.ctrlKey) return;
   if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); primary(); } else if (e.key === "ArrowLeft") { e.preventDefault(); back(); }
   else if (/^[1-4]$/.test(e.key)) { const o = document.querySelectorAll(".opt2")[+e.key - 1]; if (o && !o.disabled) o.click(); }
 });
+
+/* go inside a block: double-click it on the canvas (or "Go inside") to walk its ideas as a mind map; right-click, Esc or Back comes out */
+let TREEP = null, DRP = null;
+function insideBlock(k, from) {
+  const host0 = document.querySelector(".cvw"); if (!host0 || !k) return;
+  (TREEP ? Promise.resolve(TREEP) : fetch("../explore/tree.json").then(r => r.json()).then(t => (TREEP = t))).then(t => {
+    const ov = document.createElement("div"); ov.className = "drov";
+    const hr = host0.getBoundingClientRect(); if (from) { ov.style.setProperty("--ox", (from.left + from.width / 2 - hr.left) + "px"); ov.style.setProperty("--oy", (from.top + from.height / 2 - hr.top) + "px"); }
+    host0.append(ov);
+    const close = () => { ov.classList.add("closing"); if (DRP) DRP.destroy(); DRP = null; setTimeout(() => ov.remove(), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 230); };
+    DRP = Drill(ov, t, { base: "../", onExit: close });
+    if (!DRP.openSlug(k, from)) { close(); say("Nothing deeper for this block yet"); return; }
+    ev("practice-inside/" + k);
+  }).catch(() => say("Couldn't open that. Try again"));
+}
+addEventListener("dblclick", e => { const h = e.target.closest && e.target.closest("#cv [data-node]"); if (!h || !Q) return; const x = Q.nodes.find(y => y.id === h.dataset.node); if (x && x.k) { e.preventDefault(); insideBlock(x.k, h.getBoundingClientRect()); } });
+addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-inside]"); if (b) insideBlock(b.dataset.inside, null); });
 /* 45-minute timer */
 let left = 45 * 60, tick = null;
 function fmt(s) { const a = Math.abs(s); return (s < 0 ? "-" : "") + String(Math.floor(a / 60)).padStart(2, "0") + ":" + String(a % 60).padStart(2, "0"); }

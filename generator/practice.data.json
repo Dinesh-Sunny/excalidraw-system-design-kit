@@ -2313,5 +2313,98 @@
    "Next: tenant-tuned embeddings, more event-triggered agents, connector kit for customers' own systems.",
    "Risks: stale ACLs, rate-limit bursts, over-eager write actions - each has a guard above."
   ]
+ },
+ "production-agent-platform": {
+  "level": "Hard",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Teams ship their own agents (instructions, skills, tools) without building infrastructure",
+   "Users reach agents where they work: Slack DMs, shared channels, or a plain HTTP channel",
+   "Agents act on a user's behalf (their CRM, their mail) or as a service account, depending on where they were called",
+   "Long runs survive crashes, wait for a person (approval or sign-in) for days, then carry on",
+   "Agents remember user preferences and learn better procedures over time",
+   "Agents can set their own schedules (\"every Monday 9:00, send my pipeline report\")"
+  ],
+  "reqN": [
+   "Multi-tenant: no data, memory or credentials leak across users, channels or teams",
+   "Durable: a crash or deploy never loses a run; resume from the last step",
+   "Fair: a burst from one team can't starve others (priorities, limits per tenant)",
+   "Safe: generated code runs only in a sandbox; risky actions need approval",
+   "Measured: every change to prompts, skills or models passes evals first"
+  ],
+  "est": [
+   "Assume 50 internal agents, 5k users, ~20 runs per user per day = ~100k runs/day, peak ~5 runs/s",
+   "A deep-agent run = tens of model calls and tool calls over minutes; at peak that's ~5 x 300 s = ~1,500 runs in flight -> queue + many workers, not one request thread each",
+   "Checkpoint after every step: ~30 steps x ~20 KB state = ~600 KB per run; 100k runs/day = ~60 GB/day -> keep recent checkpoints hot, expire old ones",
+   "Context window pressure: tool outputs over a size threshold go to the agent filesystem, not the prompt"
+  ],
+  "api": [
+   "POST /agents/:id/threads/:thread/runs {input, config} -> run id (streams events)",
+   "POST /runs/:id/resume {decision | oauth_result} (after an interrupt)",
+   "POST /channels/:kind/events (Slack, GitHub, HTTP webhooks -> auth handler)",
+   "PUT /agents/:id/context (instructions, skills - versioned in the context hub)"
+  ],
+  "data": [
+   "threads + runs (status, priority, principal, channel)",
+   "checkpoints per thread (state after each step: resume, rewind, human in the loop)",
+   "memory store namespaces: (agent) procedures, (agent, user) preferences",
+   "credentials per principal: user OAuth tokens or agent service accounts (never in prompts)",
+   "context versions: instructions, skills, promoted per workspace",
+   "traces + eval runs (dataset, environment, verifier, score)"
+  ],
+  "blocks": {
+   "ch": "Start where people work: Slack DMs and channels, or an HTTP channel for any custom surface (webhooks, GitHub, your app).",
+   "auth": "A central auth handler decides who is calling (a user or the agent itself) and puts that principal into the run's context.",
+   "q": "Runs go on a queue served by workers (Agent Server: workers x 10 jobs each), so bursts wait their turn and long runs don't hold a web request open.",
+   "sched": "Schedules are timed runs on the same queue (cron files), and the agent can create its own through a custom tool (\"every Monday 9:00\").",
+   "rt": "The harness runs the agent loop on a durable runtime: it checkpoints every step, so it can pause, crash, resume, or wait days for a person.",
+   "hub": "Instructions and skills live in a versioned context hub, so business experts edit them and promote good skills to the workspace.",
+   "gw": "One LLM gateway for every model call: quotas per team, fallbacks, cost and governance in one place.",
+   "obs": "Every run is traced; evals run agents in real environments with verifiers, and changes must climb the score before shipping.",
+   "mem": "Memory is split by scope: what the agent learns for everyone (procedures) and what it knows about one user (preferences).",
+   "sbx": "Generated code only runs inside a sandbox with no access to secrets or the network it doesn't need.",
+   "cred": "Tool calls go through a credential broker: user-scoped tokens in a DM, agent-scoped service accounts in shared places. If a user hasn't signed in yet, the run pauses until they do.",
+   "mcp": "Tools are mostly MCP servers (CRM, mail, search); the broker hands each call the right scoped token."
+  },
+  "dives": [
+   [
+    "What is an agent harness and why not just call the model in a loop?",
+    "Agent = model + harness. The harness is everything around the model that gets it the right context at the right time: instructions, skills loaded on demand, a filesystem to write notes and offload big outputs, a sandbox to run code, sub-agents with their own context windows, memory, and human-in-the-loop steering. A bare ReAct loop works for demos; long tasks fail without context management."
+   ],
+   [
+    "How do you manage the context window on long tasks?",
+    "Four moves: offload (tool results over ~20k tokens go to files with a short preview), compact (Deep Agents summarises at 85% of the input limit, keeps the newest 10%, saves the full history to disk), select (skills show only name + description until needed), isolate (sub-agents return only their final result)."
+   ],
+   [
+    "How does the agent act on my behalf without leaking my access?",
+    "The auth handler sets the principal for each run. The credential broker picks the token from that principal and channel: my own OAuth token in a DM, a service account in a shared channel. Tokens never enter the prompt; tools get them at call time. Memory follows the same scopes, so a shared channel never sees my private memories."
+   ],
+   [
+    "The agent needs me to sign in to the CRM halfway through. What happens?",
+    "The tool asks for a user connection; none exists, so the runtime raises one interrupt (credential_authorization_required) with a sign-in link sent only to me. The run is a checkpoint, so nothing waits. When I authorise - even days later - it resumes and re-runs that step from its start."
+   ],
+   [
+    "Why a task queue instead of running the agent in the request?",
+    "Agent runs last minutes, not milliseconds. A queue gives priorities, retries, fairness and back-pressure; concurrency = workers x jobs per worker (10 by default in Agent Server). Pick a double-texting strategy for a second message mid-run: reject, enqueue (default), interrupt or rollback."
+   ],
+   [
+    "How do business experts improve the agent without engineers?",
+    "Their knowledge goes into instructions and skills in a versioned context hub. They edit, review and promote skills; every version runs the eval suite before it reaches users."
+   ],
+   [
+    "How do you evaluate an agent, not just one answer?",
+    "Run the agent in a real environment on a task, then a verifier checks the end state - Harbor tasks have an instruction, a Docker environment, tests and a reward score. Keep a dataset of real tasks, hill-climb, gate releases, and feed production traces back in."
+   ],
+   [
+    "How would you build one internal agent fast for a team (FDE style)?",
+    "Start from the base harness, codify the team's expertise as skills with them, wire 2-3 tools with scoped credentials, ship to their Slack, and set up evals on their real tasks from day one. Measure one business metric against a baseline."
+   ]
+  ],
+  "wrap": [
+   "Recap: business logic (yours) + harness (context engineering) + infrastructure (auth, queue, durability, sandbox, gateway, evals).",
+   "Next: agent-created schedules, custom HTTP channels, per-run config for dynamic agents, A2A between agents.",
+   "Risks: credential leaks across channels, runaway cost, context rot on long runs, unsafe code - each has a guard above."
+  ]
  }
 }

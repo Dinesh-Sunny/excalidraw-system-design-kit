@@ -1,0 +1,46 @@
+/* Drill mind-map (shared by Explore and the practice canvas) */
+.drill { position: relative; display: grid; gap: 14px; --dr-accent: var(--sketch); --dr-soft: var(--sketch-soft) }
+.dr-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 36px }
+.dr-back { height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 14px/1 var(--font-sans); cursor: pointer }
+.dr-back:hover { border-color: var(--slate) }
+.dr-back[hidden] { display: none }
+.dr-trail { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; font: 500 14px/20px var(--font-sans); color: var(--ink-muted) }
+.dr-trail span { color: var(--hairline); padding: 0 2px }
+.dr-trail button { border: 0; background: none; padding: 5px 8px; border-radius: 8px; color: var(--ink-muted); font: inherit; cursor: pointer; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.dr-trail button:hover { background: var(--surface-sunk); color: var(--ink) }
+.dr-trail button[aria-current] { color: var(--ink); cursor: default; background: none }
+.dr-stage { position: relative; min-height: 200px; transition: height .35s cubic-bezier(.2,.8,.2,1) }
+.dr-wires { position: absolute; inset: 0; overflow: visible; pointer-events: none }
+.dr-wires path { fill: none; stroke: var(--sky-300); stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: 0; stroke-linecap: round }
+.dr-cards { position: absolute; inset: 0 }
+.dr-card { position: absolute; box-sizing: border-box; display: grid; gap: 4px; padding: 12px 14px 12px 16px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); text-align: left; cursor: zoom-in; box-shadow: 0 1px 2px rgba(0,0,0,.04); transition: border-color .2s, box-shadow .2s, translate .2s; will-change: transform }
+.dr-card::before { content: ""; position: absolute; left: -1px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: var(--dr-soft) }
+.dr-card.kid:hover { border-color: var(--dr-accent); box-shadow: var(--shadow-float); translate: 3px 0 }
+.dr-card:focus-visible { outline: 3px solid var(--dr-soft); outline-offset: 2px }
+.dr-card b { font: 600 15px/21px var(--font-sans); padding-right: 46px }
+.dr-card span { font: 400 13.5px/19px var(--font-sans); color: var(--ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
+.dr-card em { position: absolute; right: 12px; top: 13px; font: 500 11px/1 var(--font-mono); font-style: normal; color: var(--dr-accent); background: var(--dr-soft); padding: 4px 7px; border-radius: 999px }
+.dr-card.leaf { cursor: pointer }
+.dr-card.leaf::before { background: var(--hairline) }
+.dr-card img { width: 100%; max-height: 120px; object-fit: contain; background: var(--thumb); border-radius: 10px; margin-bottom: 4px }
+.dr-card.kid img { display: none }
+.dr-depth { position: absolute; right: 12px; bottom: 10px; display: flex; gap: 3px }
+.dr-depth i { width: 6px; height: 6px; border-radius: 50%; background: var(--dr-accent); opacity: calc(.85 - var(--j) * .28) }
+.dr-card.root { cursor: default; padding: 18px 18px 18px 20px; border-color: var(--dr-accent); box-shadow: 0 0 0 4px var(--dr-soft), var(--shadow-float); background: linear-gradient(180deg, var(--surface), var(--surface)) }
+.dr-card.root::before { background: var(--dr-accent) }
+.dr-card.root b { font: 400 26px/1.15 var(--font-serif); padding-right: 0 }
+.dr-card.root p { margin: 6px 0 0; font: 400 15px/23px var(--font-sans); color: var(--ink) }
+.dr-card.root .dr-depth { display: none }
+.drill.is-leaf .dr-card.root p { font-size: 17px; line-height: 27px }
+.dr-detail { display: flex; flex-wrap: wrap; gap: 8px }
+.dr-detail[hidden] { display: none }
+.dr-detail a { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 14px/20px var(--font-sans); text-decoration: none }
+.dr-sib { padding: 7px 14px; border-radius: 999px; border: 1px dashed var(--hairline); background: none; color: var(--ink-muted); font: 500 14px/20px var(--font-sans); cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .dr-sib:hover { color: var(--ink); border-color: var(--slate) }
+.dr-detail a.primary { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+@media (prefers-reduced-motion: reduce) { .dr-stage { transition: none } .dr-card.kid:hover { translate: none } }
+/* drill-in over the practice canvas */
+.drov { position: absolute; inset: 0; z-index: 5; background: radial-gradient(circle, var(--dot, #d3d6de) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground, #f9f9fa); overflow: auto; padding: 16px 18px 28px; animation: drovin .32s cubic-bezier(.2,.8,.2,1) both; transform-origin: var(--ox, 50%) var(--oy, 50%) }
+.drov.closing { animation: drovout .24s ease-in both }
+@keyframes drovin { from { opacity: 0; transform: scale(.6) } to { opacity: 1; transform: none } }
+@keyframes drovout { to { opacity: 0; transform: scale(.6) } }
+@media (prefers-reduced-motion: reduce) { .drov, .drov.closing { animation: none } }

@@ -1,0 +1,515 @@
+{
+ "agent-agent-harness": [
+  {
+   "t": "Agent = model + harness",
+   "s": "The definition that replaced the plain ReAct loop",
+   "k": [
+    {
+     "t": "ReAct loop",
+     "d": "The first idea of an agent: the model reasons, calls a tool, reads the result, and repeats until the task is done. Fine for short tasks; long tasks drift because the context fills with noise."
+    },
+    {
+     "t": "Harness",
+     "d": "Everything you put around the model: instructions, skills, tools, memory, a filesystem, sub-agents and approvals. Its job is to get the model the right context at the right time."
+    },
+    {
+     "t": "Why build one",
+     "d": "Models are only as good as the context they get. A harness built for your domain (your skills, your tools, your checks) beats a bigger model with a generic prompt."
+    }
+   ]
+  },
+  {
+   "t": "Three layers of a production agent",
+   "k": [
+    {
+     "t": "Business logic",
+     "d": "What you bring: the expertise, written as instructions, skills and evals. This is where most of the value is and where teams should spend their time."
+    },
+    {
+     "t": "Harness",
+     "d": "Where that expertise runs: the agent loop plus planning, files, sub-agents, memory and steering."
+    },
+    {
+     "t": "Infrastructure",
+     "d": "What makes it safe for many users: auth, multi-tenancy, durable execution, task queue, streaming, sandboxes, gateway, tracing and evals."
+    }
+   ]
+  },
+  {
+   "t": "Execution environment",
+   "k": [
+    {
+     "t": "Agent filesystem",
+     "d": "Models are good at reading and writing files, so the agent gets its own workspace for notes, plans and large tool outputs instead of keeping everything in the prompt."
+    },
+    {
+     "t": "Code sandbox",
+     "d": "When the agent writes code, it runs in an isolated sandbox with no secrets and limited network, so a mistake or an injection can't reach real systems."
+    }
+   ]
+  },
+  {
+   "t": "Context management",
+   "k": [
+    {
+     "t": "Skills, progressive disclosure",
+     "d": "Three levels: at start the agent sees only each skill's name and description; it reads the full SKILL.md when a task needs it; extra files load only when that body points to them. Deep Agents: name 1-64 lowercase characters, description up to 1,024; keep the body under ~500 lines."
+    },
+    {
+     "t": "Memory",
+     "d": "The agent manages its own memory: what it learns for everyone (procedures) and what it knows about one user (preferences)."
+    },
+    {
+     "t": "Summarise and compact",
+     "d": "Deep Agents summarises when the conversation reaches 85% of the model's input limit, keeps the most recent 10% word for word, and writes the full history to the filesystem so nothing is lost."
+    },
+    {
+     "t": "Offload big outputs",
+     "d": "In Deep Agents a tool result over 20,000 tokens is written to the backend and replaced by its file path plus a 10-line preview. The agent reads the parts it needs later."
+    }
+   ]
+  },
+  {
+   "t": "Delegation",
+   "k": [
+    {
+     "t": "Task decomposition",
+     "d": "The agent writes a plan (a todo list) and breaks the work into steps it can track and update."
+    },
+    {
+     "t": "Sub-agents",
+     "d": "The main agent hands work to a sub-agent through a task tool. The sub-agent works in its own context window (isolated by default) and the parent gets only the final result, not the dozens of tool calls. Anthropic suggests the summary back is often 1,000-2,000 tokens."
+    }
+   ]
+  },
+  {
+   "t": "Steering: human in the loop",
+   "k": [
+    {
+     "t": "Interrupts",
+     "d": "Mark risky tools (interrupt_on). The run pauses and a person approves, edits or rejects the call (or responds, for ask-the-user tools). This needs a checkpointer."
+    },
+    {
+     "t": "Why it can wait for days",
+     "d": "interrupt() saves the state and waits indefinitely; resuming with the person's decision on the same thread re-runs that step from its start. So keep side effects before an interrupt idempotent."
+    }
+   ]
+  },
+  {
+   "t": "Project structure",
+   "s": "How one agent is laid out as files",
+   "k": [
+    {
+     "t": "agent.py / agent.ts",
+     "d": "The agent loop itself."
+    },
+    {
+     "t": "Instructions",
+     "d": "The core behaviour: who the agent is and how it works."
+    },
+    {
+     "t": "Skills",
+     "d": "Playbooks for specific jobs, loaded on demand."
+    },
+    {
+     "t": "Tools",
+     "d": "Connections to systems, often MCP servers."
+    },
+    {
+     "t": "Auth",
+     "d": "Who can call the agent and which credentials each tool uses."
+    },
+    {
+     "t": "Memory",
+     "d": "What the agent remembers, for whom, and where it is stored."
+    }
+   ]
+  },
+  {
+   "t": "Durable runtime",
+   "s": "What makes the harness production-safe",
+   "k": [
+    {
+     "t": "Checkpointer",
+     "d": "Saves the thread's state after steps (Postgres in production). Pick durability: sync (save before the next step), async (save while the next step runs) or exit (save only at the end)."
+    },
+    {
+     "t": "Retries",
+     "d": "LangGraph retry defaults: 3 attempts, 0.5 s first wait, doubling, capped at 128 s, with jitter."
+    },
+    {
+     "t": "Graceful drain",
+     "d": "On deploy, workers stop at a step boundary, save a checkpoint and the run resumes on another worker."
+    }
+   ]
+  }
+ ],
+ "agent-context-compaction": [
+  {
+   "t": "Why context runs out",
+   "k": [
+    {
+     "t": "Finite window",
+     "d": "Every model call has a token budget. Long agent runs add tool results and turns until the budget is nearly gone."
+    },
+    {
+     "t": "Context rot",
+     "d": "Even before the limit, very long contexts make the model worse at finding what matters. Less, better context wins."
+    }
+   ]
+  },
+  {
+   "t": "Four moves",
+   "k": [
+    {
+     "t": "Offload",
+     "d": "Move large tool outputs to files and keep a pointer."
+    },
+    {
+     "t": "Compact",
+     "d": "Summarise older turns into a short state of play: decisions, open tasks, key facts."
+    },
+    {
+     "t": "Select",
+     "d": "Load skills, documents and memories just in time, not all up front."
+    },
+    {
+     "t": "Isolate",
+     "d": "Give noisy sub-tasks to sub-agents with their own window; take back a summary."
+    }
+   ]
+  },
+  {
+   "t": "What to keep when compacting",
+   "k": [
+    {
+     "t": "Keep",
+     "d": "The goal, decisions made, open todos, file paths and IDs, errors still unresolved, and the most recent turns word for word."
+    },
+    {
+     "t": "Drop",
+     "d": "Old raw tool output already saved to disk, repeated attempts, and chit-chat."
+    }
+   ]
+  },
+  {
+   "t": "Trade-offs",
+   "k": [
+    {
+     "t": "Summaries lose detail",
+     "d": "Keep the full history on disk so the agent can look something up again."
+    },
+    {
+     "t": "When to trigger",
+     "d": "Trigger below the limit so there is room to write the summary. Deep Agents uses 85% of the input limit and keeps the newest 10%; it also summarises and retries if a call overflows."
+    }
+   ]
+  },
+  {
+   "t": "Same idea, two vendors",
+   "k": [
+    {
+     "t": "Anthropic",
+     "d": "Treat context as a finite attention budget: just-in-time loading, compaction into a fresh window, clearing old tool results, structured notes outside the window, and sub-agents."
+    },
+    {
+     "t": "LangChain Deep Agents",
+     "d": "Summarisation at 85%, 20,000-token tool results offloaded with a preview, skills by progressive disclosure, and an optional compact_conversation tool the agent can call itself."
+    }
+   ]
+  }
+ ],
+ "agent-agent-filesystem": [
+  {
+   "t": "What it holds",
+   "k": [
+    {
+     "t": "Plans and notes",
+     "d": "The agent writes its todo list and working notes to files it can re-read later."
+    },
+    {
+     "t": "Large tool results",
+     "d": "Big outputs are saved as files so the prompt stays small."
+    },
+    {
+     "t": "Memories",
+     "d": "Long-term memory files (for example an AGENTS.md-style file) the agent reads at the start and updates over time."
+    }
+   ]
+  },
+  {
+   "t": "Backends",
+   "k": [
+    {
+     "t": "State (default)",
+     "d": "Files live in the thread's checkpointed state: per conversation."
+    },
+    {
+     "t": "Store",
+     "d": "Files in a LangGraph store, across conversations; a namespace per user or per agent."
+    },
+    {
+     "t": "Real disk",
+     "d": "Files under a root folder; virtual mode keeps paths inside it."
+    },
+    {
+     "t": "Sandbox",
+     "d": "Adds an execute tool that runs commands in isolation (e.g. LangSmith, Daytona)."
+    },
+    {
+     "t": "Composite",
+     "d": "Route by path prefix: /memories/ to the store, the rest to state."
+    }
+   ]
+  },
+  {
+   "t": "Tools the model gets",
+   "d": "List, read, write and edit files, plus glob and grep to search them, the same moves a developer makes."
+  }
+ ],
+ "agent-context-hub": [
+  {
+   "t": "What it is",
+   "d": "A shared, versioned home for an agent's instructions and skills, so business experts and engineers edit the same context."
+  },
+  {
+   "t": "Why it matters",
+   "k": [
+    {
+     "t": "Expertise lives with experts",
+     "d": "The people who know the domain write and review the skills; engineers don't have to be the bottleneck."
+    },
+    {
+     "t": "Version control",
+     "d": "Every change is a version you can diff, test and roll back."
+    },
+    {
+     "t": "Promote skills",
+     "d": "A good skill made for one agent can be promoted to the whole workspace."
+    }
+   ]
+  },
+  {
+   "t": "Guard rails",
+   "d": "Run evals on every new version before it reaches users, and keep who changed what in the history."
+  }
+ ],
+ "agent-run-config": [
+  {
+   "t": "What it is",
+   "d": "Settings passed with each run (model, tools, prompt variant, user or team) so one agent definition behaves differently depending on where it was called."
+  },
+  {
+   "t": "Uses",
+   "k": [
+    {
+     "t": "Dynamic agents",
+     "d": "Build the agent on the fly per run: a different tool set for a channel, a cheaper model for a simple request."
+    },
+    {
+     "t": "Runtime context",
+     "d": "Pass the caller's identity and channel so tools and memory use the right scope."
+    }
+   ]
+  }
+ ],
+ "agent-agent-channels": [
+  {
+   "t": "Where agents are called from",
+   "k": [
+    {
+     "t": "Chat (Slack, Teams)",
+     "d": "Private DMs and shared channels. The channel type changes which credentials and memories are safe to use."
+    },
+    {
+     "t": "Code (GitHub)",
+     "d": "Issues, pull requests and comments can start runs (shown in the talk; Managed Deep Agents docs list Slack and HTTP today)."
+    },
+    {
+     "t": "HTTP channel",
+     "d": "A plain API spec so you can plug in any custom surface."
+    },
+    {
+     "t": "Schedules",
+     "d": "Timed runs from schedule files (five-field cron, UTC unless set), and schedules the agent creates itself through a custom tool."
+    }
+   ]
+  },
+  {
+   "t": "Design points",
+   "k": [
+    {
+     "t": "One agent, many channels",
+     "d": "Normalise every channel into the same run request: who, where, what."
+    },
+    {
+     "t": "Reply where asked",
+     "d": "Stream progress back to the same place; send private prompts (like sign-in links) only to the person."
+    }
+   ]
+  }
+ ],
+ "agent-agent-auth-handler": [
+  {
+   "t": "Who can call the agent",
+   "d": "A central auth handler checks each request from any channel and sets the principal: a user, or the agent itself."
+  },
+  {
+   "t": "Principal in runtime context",
+   "d": "The principal travels with the run so every tool, memory and credential lookup knows who it is acting for."
+  },
+  {
+   "t": "Multi-tenancy",
+   "k": [
+    {
+     "t": "Authenticate",
+     "d": "Prove who is calling (SSO, signed webhooks, API keys)."
+    },
+    {
+     "t": "Authorise",
+     "d": "Decide which threads, agents and data that caller may touch; filter on the server, every time."
+    }
+   ]
+  },
+  {
+   "t": "In LangSmith Deployment",
+   "d": "An authenticate handler returns the caller's identity; authorization handlers (threads, assistants, store) tag owners on create and filter reads, returning 403 to deny. Identity keys a client tries to send are stripped."
+  }
+ ],
+ "agent-credential-broker": [
+  {
+   "t": "Two kinds of credentials",
+   "k": [
+    {
+     "t": "User-scoped",
+     "d": "The agent acts as you, with your own OAuth token: your CRM, your inbox. It can only see what you can see."
+    },
+    {
+     "t": "Agent-scoped",
+     "d": "The agent acts as itself with a service account. Use it in shared places so nobody's private access leaks."
+    }
+   ]
+  },
+  {
+   "t": "Choosing per call",
+   "d": "The broker picks the token from the principal and the channel: DM -> user token, shared channel -> agent token. Tokens never enter the prompt."
+  },
+  {
+   "t": "First-time sign-in",
+   "d": "In Managed Deep Agents a missing user grant raises one interrupt (credential_authorization_required) with a connect link; when the user finishes OAuth the run resumes. Slack and Studio show this for you."
+  },
+  {
+   "t": "Risks",
+   "k": [
+    {
+     "t": "Confused deputy",
+     "d": "An agent with broad access doing something for a user who shouldn't have it. Fix: user-scoped tokens and least privilege."
+    },
+    {
+     "t": "Token leaks",
+     "d": "Never put secrets in prompts, logs or memory; inject them at the tool boundary."
+    }
+   ]
+  },
+  {
+   "t": "How tools ask for a token",
+   "d": "A tool asks for a connection by name and owner type (user or agent) and never passes a user ID; the runtime works out who the caller is. Types: plain secret, OAuth, MCP OAuth."
+  }
+ ],
+ "llmops-agent-eval-harness": [
+  {
+   "t": "Why agent evals are different",
+   "d": "An agent takes many steps and changes things. You judge the end state and the path, not one reply."
+  },
+  {
+   "t": "Parts of an eval",
+   "k": [
+    {
+     "t": "Task",
+     "d": "An instruction like a real user's request."
+    },
+    {
+     "t": "Environment",
+     "d": "A container or sandbox with the files, tools and services the agent needs."
+    },
+    {
+     "t": "Verifier",
+     "d": "Code that checks the result: tests pass, the file is right, the ticket was updated."
+    },
+    {
+     "t": "Trajectory",
+     "d": "The steps, tool calls, tokens and time, for cost and behaviour checks."
+    }
+   ]
+  },
+  {
+   "t": "The flywheel",
+   "d": "Collect real tasks, build evals, change skills or prompts, hill-climb the score, ship, and feed production traces back into the dataset."
+  },
+  {
+   "t": "Harbor in practice",
+   "k": [
+    {
+     "t": "What it is",
+     "d": "A framework from the creators of Terminal-Bench for evaluating and optimising agents; the official harness for Terminal-Bench 2.0. It runs agents like Claude Code, OpenHands or Codex CLI."
+    },
+    {
+     "t": "A task",
+     "d": "instruction.md, task.toml, an environment folder (Dockerfile or compose), a reference solution and tests. The verifier writes a score to reward.txt."
+    },
+    {
+     "t": "A job",
+     "d": "A set of trials; one trial is one agent attempt at one task, run in Docker locally or cloud sandboxes."
+    }
+   ]
+  }
+ ],
+ "agent-agent-task-queue": [
+  {
+   "t": "Why a queue",
+   "d": "Agent runs take minutes. Put runs on a queue so web requests return fast, bursts wait, and workers scale on their own."
+  },
+  {
+   "t": "Capacity",
+   "d": "In LangSmith Agent Server, concurrent runs = queue workers x jobs per worker (default 10). Postgres holds runs, threads, checkpoints and memory; Redis streams output from workers to API servers."
+  },
+  {
+   "t": "Double texting",
+   "s": "A second message arrives while a run is going",
+   "k": [
+    {
+     "t": "Reject",
+     "d": "Refuse the new run."
+    },
+    {
+     "t": "Enqueue (default)",
+     "d": "Run it after the current one."
+    },
+    {
+     "t": "Interrupt",
+     "d": "Stop the current run, keep its progress, add the new input."
+    },
+    {
+     "t": "Rollback",
+     "d": "Stop, undo the current run's progress and start fresh."
+    }
+   ]
+  },
+  {
+   "t": "Background runs",
+   "d": "Create a run, get 'pending' back, then join, poll or stream it."
+  }
+ ],
+ "_what": {
+  "agent-agent-harness": "Everything you put around a model so it can do long, real tasks: instructions, skills, tools, a filesystem, sub-agents, memory and human steering. Agent = model + harness.",
+  "agent-context-compaction": "Keeps a long agent run inside its context budget by offloading, summarising, selecting and isolating context.",
+  "agent-agent-filesystem": "A workspace the agent reads and writes: plans, notes, memories and big tool outputs live in files instead of the prompt.",
+  "agent-context-hub": "A versioned, shared home for an agent's instructions and skills, edited by experts and promoted through staging to production.",
+  "agent-run-config": "Settings sent with each run (model, tools, variant) so one agent behaves right for each caller and channel.",
+  "agent-agent-channels": "The places an agent is called from - chat, webhooks, schedules - normalised into one run request.",
+  "agent-agent-auth-handler": "Decides who is calling the agent and carries that principal through the run so every tool and memory uses the right scope.",
+  "agent-credential-broker": "Hands each tool call the right token: the user's own (act as me) or the agent's service account (act as the agent).",
+  "llmops-agent-eval-harness": "Scores agents on real tasks in a sandboxed environment with a verifier, not on single answers.",
+  "agent-agent-task-queue": "Holds agent runs until a worker is free, so long runs scale, retry and stay fair."
+ }
+}

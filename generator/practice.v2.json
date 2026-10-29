@@ -3075,5 +3075,112 @@
    }
   ],
   "stackNote": "How Atlassian Rovo does it (public engineering posts)"
+ },
+ "production-agent-platform": {
+  "stackNote": "How LangChain's Managed Deep Agents does it (Interrupt London talk + docs)",
+  "modern": [
+   [
+    "Agent = model + harness",
+    "Frameworks now ship a base harness (planning, filesystem, sub-agents, skills, memory, approvals) that teams customise for their domain."
+   ],
+   [
+    "Context engineering over prompt engineering",
+    "Offload, compact, select and isolate context so long runs stay on track."
+   ],
+   [
+    "Durable runs with human steering",
+    "Checkpoints after each step let agents pause for approvals or sign-ins and resume days later."
+   ],
+   [
+    "Identity-aware agents",
+    "Who called the agent decides which credentials and memories it can use."
+   ],
+   [
+    "Evals in real environments",
+    "Agents are scored on tasks inside sandboxes with verifiers, not single prompts."
+   ],
+   [
+    "Agents that schedule themselves",
+    "Agents create their own recurring runs and work from many channels."
+   ]
+  ],
+  "extra": {
+   "t": "The harness",
+   "look": "They want you to separate business logic, harness and infrastructure, and explain context management and identity clearly.",
+   "rounds": [
+    [
+     "A tool returns 200k tokens of logs. What does the harness do?",
+     "Save it to the agent's filesystem and keep a short pointer in the prompt",
+     [
+      "Put it all in the prompt",
+      "Drop it silently",
+      "Ask a bigger model"
+     ]
+    ],
+    [
+     "The agent is used in a shared Slack channel. Which credentials?",
+     "Agent-scoped service account, and no private memories",
+     [
+      "The caller's personal token",
+      "Whoever set the agent up",
+      "The admin's token"
+     ]
+    ],
+    [
+     "A run waits 3 days for a user to approve. What holds it?",
+     "A saved checkpoint; no process is waiting",
+     [
+      "A long-lived worker thread",
+      "The user's browser tab",
+      "A cron job polling every second"
+     ]
+    ],
+    [
+     "Best first step to make a team's agent better?",
+     "Turn their expertise into skills and build evals on their real tasks",
+     [
+      "Switch to a bigger model",
+      "Add more tools",
+      "Make the system prompt longer"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "atlassian",
+    "name": "Atlassian FDE: internal agents for a customer",
+    "blurb": "Stand up agents for a large customer's teams on their Atlassian site.",
+    "lens": "Forward deployed: one team, one workflow, scoped identity, adoption.",
+    "reqF": [
+     "Agents live in Jira, Confluence and Slack where the team already works",
+     "Start from events (new ticket, incident) as well as chat"
+    ],
+    "dives": [
+     [
+      "How does this map to Rovo?",
+      "Rovo agents and skills are the harness, Forge is the runtime, Teamwork Graph is the context and permission layer, Automation is the trigger, and actions run as the user (asUser) or the app. Same principles: who is calling decides access, writes need approval."
+     ]
+    ],
+    "wrap": [
+     "Next: package the agent as a reusable template for the customer's next team."
+    ]
+   },
+   {
+    "id": "tutor",
+    "name": "The AI Voice Tutor's planner",
+    "blurb": "Background agents that build a learner's course while the voice tutor talks.",
+    "lens": "Background runs, per-learner memory, approvals from a teacher.",
+    "dives": [
+     [
+      "How does the planner run without slowing the voice turn?",
+      "It runs as a queued background run with its own checkpoints; the live tutor only reads the finished plan from memory. Teachers can approve the course through an interrupt."
+     ]
+    ],
+    "wrap": [
+     "Next: per-learner schedules created by the agent (\"review fractions on Friday\")."
+    ]
+   }
+  ]
  }
 }

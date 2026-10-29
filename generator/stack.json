@@ -1,156 +1,2234 @@
 {
  "_about": "Real tools for each block (block slug prefix -> [name, official url]) and the stack used in each practice design (design slug -> node id -> tools). Names only from official sites; no rankings.",
  "blocks": {
-  "edge-dns": [["Amazon Route 53","https://aws.amazon.com/route53/"],["Cloudflare DNS","https://www.cloudflare.com/application-services/products/dns/"],["Google Cloud DNS","https://cloud.google.com/dns"]],
-  "edge-cdn": [["Cloudflare CDN","https://www.cloudflare.com/application-services/products/cdn/"],["Amazon CloudFront","https://aws.amazon.com/cloudfront/"],["Vercel Edge Network","https://vercel.com/docs/edge-network"],["Fastly","https://www.fastly.com/"]],
-  "edge-load-balancer": [["AWS Elastic Load Balancing","https://aws.amazon.com/elasticloadbalancing/"],["Google Cloud Load Balancing","https://cloud.google.com/load-balancing"],["HAProxy","https://www.haproxy.org/"]],
-  "edge-api-gateway": [["Kong","https://konghq.com/"],["Amazon API Gateway","https://aws.amazon.com/api-gateway/"],["Envoy Gateway","https://gateway.envoyproxy.io/"]],
-  "edge-reverse-proxy": [["NGINX","https://nginx.org/"],["Envoy","https://www.envoyproxy.io/"],["Caddy","https://caddyserver.com/"]],
-  "edge-waf": [["Cloudflare WAF","https://www.cloudflare.com/application-services/products/waf/"],["AWS WAF","https://aws.amazon.com/waf/"],["Vercel Firewall","https://vercel.com/docs/vercel-firewall"]],
-  "edge-rate-limiter": [["Upstash Ratelimit","https://upstash.com/docs/redis/sdks/ratelimit-ts/overview"],["Cloudflare Rate Limiting","https://developers.cloudflare.com/waf/rate-limiting-rules/"],["Envoy rate limit","https://www.envoyproxy.io/docs/envoy/latest/configuration/other_features/global_rate_limiting"]],
-  "edge-edge-function": [["Cloudflare Workers","https://workers.cloudflare.com/"],["Vercel Functions","https://vercel.com/docs/functions"],["Lambda@Edge","https://aws.amazon.com/lambda/edge/"]],
-  "svc-service-microservice": [["Next.js Route Handlers","https://nextjs.org/docs/app/building-your-application/routing/route-handlers"],["FastAPI","https://fastapi.tiangolo.com/"],["Spring Boot","https://spring.io/projects/spring-boot"],["Go net/http","https://pkg.go.dev/net/http"]],
-  "svc-web-server": [["Next.js","https://nextjs.org/"],["Vercel","https://vercel.com/"],["Node.js","https://nodejs.org/"],["Amazon EC2","https://aws.amazon.com/ec2/"]],
-  "svc-worker-consumer": [["Vercel Workflow","https://vercel.com/docs/workflow"],["BullMQ","https://bullmq.io/"],["Celery","https://docs.celeryq.dev/"],["Sidekiq","https://sidekiq.org/"]],
-  "svc-headless-browser": [["Playwright","https://playwright.dev/"],["Puppeteer","https://pptr.dev/"],["Browserbase","https://www.browserbase.com/"]],
-  "svc-scheduler-cron": [["Vercel Cron Jobs","https://vercel.com/docs/cron-jobs"],["Cloudflare Cron Triggers","https://developers.cloudflare.com/workers/configuration/cron-triggers/"],["Kubernetes CronJob","https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/"]],
-  "svc-serverless-function": [["Vercel Functions","https://vercel.com/docs/functions"],["AWS Lambda","https://aws.amazon.com/lambda/"],["Google Cloud Run functions","https://cloud.google.com/functions"]],
-  "svc-container-pod": [["Docker","https://www.docker.com/"],["Kubernetes","https://kubernetes.io/"],["Amazon ECS","https://aws.amazon.com/ecs/"]],
-  "svc-auth-service": [["Better Auth","https://www.better-auth.com/"],["Auth.js","https://authjs.dev/"],["Supabase Auth","https://supabase.com/docs/guides/auth"],["Clerk","https://clerk.com/"]],
-  "svc-notification-service": [["Novu","https://novu.co/"],["Knock","https://knock.app/"],["OneSignal","https://onesignal.com/"]],
-  "svc-email-sms": [["Resend","https://resend.com/"],["Amazon SES","https://aws.amazon.com/ses/"],["Twilio","https://www.twilio.com/"],["Postmark","https://postmarkapp.com/"]],
-  "svc-chat-service": [["Stream Chat","https://getstream.io/chat/"],["Ably","https://ably.com/"],["Supabase Realtime","https://supabase.com/docs/guides/realtime"]],
-  "svc-websocket-server": [["Socket.IO","https://socket.io/"],["Cloudflare Durable Objects","https://developers.cloudflare.com/durable-objects/"],["Ably","https://ably.com/"],["PartyKit","https://www.partykit.io/"]],
-  "svc-webrtc-sfu": [["LiveKit","https://livekit.io/"],["mediasoup","https://mediasoup.org/"],["Daily","https://www.daily.co/"],["Janus","https://janus.conf.meetecho.com/"]],
-  "svc-realtime-sync": [["tldraw sync","https://tldraw.dev/docs/sync"],["Yjs","https://yjs.dev/"],["Liveblocks","https://liveblocks.io/"],["Automerge","https://automerge.org/"]],
-  "svc-spaced-repetition": [["ts-fsrs","https://github.com/open-spaced-repetition/ts-fsrs"],["FSRS (open-spaced-repetition)","https://github.com/open-spaced-repetition"],["Anki","https://apps.ankiweb.net/"]],
-  "svc-search-service": [["Elasticsearch","https://www.elastic.co/elasticsearch"],["OpenSearch","https://opensearch.org/"],["Algolia","https://www.algolia.com/"],["Typesense","https://typesense.org/"]],
-  "svc-payment-service": [["Stripe Billing","https://stripe.com/billing"],["Paddle","https://www.paddle.com/"],["Lemon Squeezy","https://www.lemonsqueezy.com/"]],
-  "svc-location-service": [["PostGIS","https://postgis.net/"],["H3","https://h3geo.org/"],["Redis geospatial","https://redis.io/docs/latest/develop/data-types/geospatial/"]],
-  "svc-media-service": [["Mux","https://www.mux.com/"],["Cloudinary","https://cloudinary.com/"],["FFmpeg","https://ffmpeg.org/"]],
-  "svc-id-generator": [["UUIDv7 (RFC 9562)","https://www.rfc-editor.org/rfc/rfc9562"],["ULID","https://github.com/ulid/spec"],["Snowflake IDs","https://en.wikipedia.org/wiki/Snowflake_ID"]],
-  "svc-ranking-recommendation": [["Vespa","https://vespa.ai/"],["Amazon Personalize","https://aws.amazon.com/personalize/"],["TensorFlow Recommenders","https://www.tensorflow.org/recommenders"]],
-  "svc-config-coord": [["etcd","https://etcd.io/"],["Apache ZooKeeper","https://zookeeper.apache.org/"],["Consul","https://www.consul.io/"]],
-  "svc-feature-flags": [["PostHog feature flags","https://posthog.com/feature-flags"],["LaunchDarkly","https://launchdarkly.com/"],["Vercel Flags","https://vercel.com/docs/feature-flags"],["Unleash","https://www.getunleash.io/"]],
-  "svc-circuit-breaker": [["Resilience4j","https://resilience4j.readme.io/"],["Polly (.NET)","https://www.pollydocs.org/"],["Envoy outlier detection","https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/outlier"]],
-  "svc-service-mesh": [["Istio","https://istio.io/"],["Linkerd","https://linkerd.io/"],["Cilium","https://cilium.io/"]],
-  "svc-distributed-lock": [["Redis (SET NX PX)","https://redis.io/docs/latest/commands/set/"],["etcd leases","https://etcd.io/docs/latest/learning/api/"],["Postgres advisory locks","https://www.postgresql.org/docs/current/explicit-locking.html"]],
-  "svc-autoscaler": [["Kubernetes HPA","https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"],["Karpenter","https://karpenter.sh/"],["KEDA","https://keda.sh/"]],
-  "svc-idempotency-store": [["Stripe idempotent requests","https://docs.stripe.com/api/idempotent_requests"],["Upstash Redis","https://upstash.com/docs/redis/overall/getstarted"],["Postgres unique keys","https://www.postgresql.org/docs/current/ddl-constraints.html"]],
-  "data-sql-database": [["PostgreSQL","https://www.postgresql.org/"],["MySQL","https://www.mysql.com/"],["SQLite","https://www.sqlite.org/"]],
-  "data-postgresql": [["Supabase","https://supabase.com/docs/guides/database/overview"],["Neon","https://neon.tech/"],["Amazon RDS / Aurora","https://aws.amazon.com/rds/postgresql/"],["Drizzle ORM","https://orm.drizzle.team/"]],
-  "data-mysql": [["Amazon Aurora MySQL","https://aws.amazon.com/rds/aurora/"],["PlanetScale","https://planetscale.com/"],["Vitess","https://vitess.io/"]],
-  "data-read-replica": [["Supabase read replicas","https://supabase.com/docs/guides/platform/read-replicas"],["Aurora replicas","https://aws.amazon.com/rds/aurora/"],["Postgres streaming replication","https://www.postgresql.org/docs/current/warm-standby.html"]],
-  "data-shard": [["Citus","https://www.citusdata.com/"],["Vitess","https://vitess.io/"],["MongoDB sharding","https://www.mongodb.com/docs/manual/sharding/"]],
-  "data-document-db": [["MongoDB Atlas","https://www.mongodb.com/atlas"],["Firestore","https://firebase.google.com/docs/firestore"],["Couchbase","https://www.couchbase.com/"]],
-  "data-wide-column": [["Apache Cassandra","https://cassandra.apache.org/"],["ScyllaDB","https://www.scylladb.com/"],["Google Bigtable","https://cloud.google.com/bigtable"]],
-  "data-key-value": [["Amazon DynamoDB","https://aws.amazon.com/dynamodb/"],["Cloudflare Workers KV","https://developers.cloudflare.com/kv/"],["Upstash Redis","https://upstash.com/"]],
-  "data-graph-db": [["Neo4j","https://neo4j.com/"],["Amazon Neptune","https://aws.amazon.com/neptune/"],["Apache AGE (Postgres)","https://age.apache.org/"]],
-  "data-time-series": [["TimescaleDB","https://www.timescale.com/"],["InfluxDB","https://www.influxdata.com/"],["Prometheus","https://prometheus.io/"]],
-  "data-search-index": [["Elasticsearch","https://www.elastic.co/elasticsearch"],["OpenSearch","https://opensearch.org/"],["Meilisearch","https://www.meilisearch.com/"]],
-  "data-object-storage": [["Amazon S3","https://aws.amazon.com/s3/"],["Cloudflare R2","https://developers.cloudflare.com/r2/"],["Supabase Storage","https://supabase.com/docs/guides/storage"],["Vercel Blob","https://vercel.com/docs/storage/vercel-blob"]],
-  "data-data-warehouse": [["Snowflake","https://www.snowflake.com/"],["Google BigQuery","https://cloud.google.com/bigquery"],["Amazon Redshift","https://aws.amazon.com/redshift/"]],
-  "data-learner-model": [["LangGraph Store","https://langchain-ai.github.io/langgraph/concepts/persistence/#memory-store"],["Postgres + pgvector","https://github.com/pgvector/pgvector"],["pyBKT","https://github.com/CAHLR/pyBKT"]],
-  "data-data-lake": [["Amazon S3","https://aws.amazon.com/s3/"],["Google Cloud Storage","https://cloud.google.com/storage"],["Azure Data Lake Storage","https://azure.microsoft.com/products/storage/data-lake-storage"]],
-  "data-lakehouse": [["Apache Iceberg","https://iceberg.apache.org/"],["Delta Lake","https://delta.io/"],["Databricks","https://www.databricks.com/"]],
-  "data-olap-db": [["ClickHouse","https://clickhouse.com/"],["Apache Druid","https://druid.apache.org/"],["Apache Pinot","https://pinot.apache.org/"]],
-  "data-vector-db": [["pgvector","https://github.com/pgvector/pgvector"],["Pinecone","https://www.pinecone.io/"],["Qdrant","https://qdrant.tech/"],["Weaviate","https://weaviate.io/"]],
-  "data-file-doc-store": [["Supabase Storage","https://supabase.com/docs/guides/storage"],["Amazon S3","https://aws.amazon.com/s3/"],["Google Drive API","https://developers.google.com/drive"]],
-  "cache-cache": [["Redis","https://redis.io/"],["Upstash Redis","https://upstash.com/"],["Vercel Data Cache","https://vercel.com/docs/infrastructure/data-cache"]],
-  "cache-redis": [["Upstash Redis","https://upstash.com/"],["Redis Cloud","https://redis.io/cloud/"],["Valkey","https://valkey.io/"],["Amazon ElastiCache","https://aws.amazon.com/elasticache/"]],
-  "cache-memcached": [["Memcached","https://memcached.org/"],["Amazon ElastiCache","https://aws.amazon.com/elasticache/"]],
-  "cache-local-cache": [["lru-cache (npm)","https://www.npmjs.com/package/lru-cache"],["Caffeine (Java)","https://github.com/ben-manes/caffeine"],["functools.lru_cache","https://docs.python.org/3/library/functools.html"]],
-  "cache-session-store": [["Upstash Redis","https://upstash.com/"],["Better Auth sessions","https://www.better-auth.com/docs/concepts/session-management"],["Redis","https://redis.io/"]],
-  "cache-bloom-filter": [["Redis Bloom","https://redis.io/docs/latest/develop/data-types/probabilistic/bloom-filter/"],["Guava BloomFilter","https://github.com/google/guava"]],
-  "msg-message-queue": [["Amazon SQS","https://aws.amazon.com/sqs/"],["Upstash QStash","https://upstash.com/docs/qstash/overall/getstarted"],["RabbitMQ","https://www.rabbitmq.com/"],["Cloudflare Queues","https://developers.cloudflare.com/queues/"]],
-  "msg-kafka": [["Apache Kafka","https://kafka.apache.org/"],["Confluent Cloud","https://www.confluent.io/"],["Redpanda","https://www.redpanda.com/"],["Amazon MSK","https://aws.amazon.com/msk/"]],
-  "msg-rabbitmq": [["RabbitMQ","https://www.rabbitmq.com/"],["CloudAMQP","https://www.cloudamqp.com/"]],
-  "msg-sqs": [["Amazon SQS","https://aws.amazon.com/sqs/"]],
-  "msg-pub-sub": [["Amazon SNS","https://aws.amazon.com/sns/"],["Google Pub/Sub","https://cloud.google.com/pubsub"],["Redis Pub/Sub","https://redis.io/docs/latest/develop/interact/pubsub/"]],
-  "msg-dead-letter-queue": [["SQS dead-letter queues","https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html"],["RabbitMQ dead lettering","https://www.rabbitmq.com/docs/dlx"]],
-  "msg-stream-processor": [["Apache Flink","https://flink.apache.org/"],["Spark Structured Streaming","https://spark.apache.org/streaming/"],["Kafka Streams","https://kafka.apache.org/documentation/streams/"]],
-  "msg-batch-etl": [["Apache Spark","https://spark.apache.org/"],["Apache Airflow","https://airflow.apache.org/"],["dbt","https://www.getdbt.com/"],["Dagster","https://dagster.io/"]],
-  "msg-cdc": [["Debezium","https://debezium.io/"],["Supabase Realtime (Postgres changes)","https://supabase.com/docs/guides/realtime/postgres-changes"],["AWS DMS","https://aws.amazon.com/dms/"]],
-  "ai-llm": [["Claude (Anthropic)","https://docs.claude.com/"],["OpenAI","https://platform.openai.com/docs"],["Gemini","https://ai.google.dev/"]],
-  "ai-small-local-model": [["Claude Haiku","https://docs.claude.com/en/docs/about-claude/models/overview"],["Llama","https://www.llama.com/"],["Ollama","https://ollama.com/"],["Gemma","https://ai.google.dev/gemma"]],
-  "ai-multimodal-model": [["Claude vision","https://docs.claude.com/en/docs/build-with-claude/vision"],["Gemini","https://ai.google.dev/"],["GPT vision","https://platform.openai.com/docs/guides/images-vision"]],
-  "ai-speech-to-text": [["AssemblyAI Universal Streaming","https://www.assemblyai.com/docs/speech-to-text/universal-streaming"],["Deepgram","https://deepgram.com/"],["OpenAI Whisper","https://github.com/openai/whisper"]],
-  "ai-text-to-speech": [["AssemblyAI","https://www.assemblyai.com/docs"],["ElevenLabs","https://elevenlabs.io/docs"],["Cartesia","https://cartesia.ai/"]],
-  "ai-turn-detector": [["LiveKit turn detector","https://docs.livekit.io/agents/build/turns/turn-detector/"],["Silero VAD","https://github.com/snakers4/silero-vad"],["AssemblyAI end-of-turn","https://www.assemblyai.com/docs/speech-to-text/universal-streaming"]],
-  "ai-generative-ui": [["tldraw agent kit","https://tldraw.dev/"],["AI SDK generative UI","https://ai-sdk.dev/docs/ai-sdk-ui/generative-user-interfaces"],["CopilotKit","https://www.copilotkit.ai/"]],
-  "ai-image-video-gen": [["Gemini image generation","https://ai.google.dev/gemini-api/docs/image-generation"],["Stable Diffusion","https://stability.ai/"],["Runway","https://runwayml.com/"]],
-  "ai-embedding-model": [["Gemini embeddings","https://ai.google.dev/gemini-api/docs/embeddings"],["Voyage AI","https://www.voyageai.com/"],["OpenAI embeddings","https://platform.openai.com/docs/guides/embeddings"],["EmbeddingGemma","https://ai.google.dev/gemma/docs/embeddinggemma"]],
-  "ai-reranker": [["Cohere Rerank","https://cohere.com/rerank"],["Voyage rerank","https://docs.voyageai.com/docs/reranker"],["ms-marco cross-encoders","https://www.sbert.net/docs/cross_encoder/pretrained_models.html"]],
-  "ai-model-serving": [["vLLM","https://docs.vllm.ai/"],["NVIDIA Triton","https://developer.nvidia.com/triton-inference-server"],["Modal","https://modal.com/"]],
-  "ai-ai-gateway": [["Vercel AI Gateway","https://vercel.com/docs/ai-gateway"],["LiteLLM","https://docs.litellm.ai/"],["OpenRouter","https://openrouter.ai/"],["Cloudflare AI Gateway","https://developers.cloudflare.com/ai-gateway/"]],
-  "ai-prompt-cache": [["Claude prompt caching","https://docs.claude.com/en/docs/build-with-claude/prompt-caching"],["OpenAI prompt caching","https://platform.openai.com/docs/guides/prompt-caching"],["vLLM prefix caching","https://docs.vllm.ai/en/latest/features/automatic_prefix_caching.html"]],
-  "ai-batch-inference": [["Claude Message Batches","https://docs.claude.com/en/docs/build-with-claude/batch-processing"],["OpenAI Batch API","https://platform.openai.com/docs/guides/batch"]],
-  "ai-fine-tuned-model": [["Amazon Bedrock fine-tuning","https://aws.amazon.com/bedrock/"],["Hugging Face PEFT (LoRA)","https://huggingface.co/docs/peft"],["Unsloth","https://unsloth.ai/"]],
-  "ai-training-pipeline": [["Kubeflow","https://www.kubeflow.org/"],["Amazon SageMaker","https://aws.amazon.com/sagemaker/"],["Weights & Biases","https://wandb.ai/"]],
-  "ai-feature-store": [["Feast","https://feast.dev/"],["Tecton","https://www.tecton.ai/"],["SageMaker Feature Store","https://aws.amazon.com/sagemaker/feature-store/"]],
-  "agent-ai-agent": [["LangGraph","https://langchain-ai.github.io/langgraph/"],["Claude Agent SDK","https://docs.claude.com/en/api/agent-sdk/overview"],["OpenAI Agents SDK","https://openai.github.io/openai-agents-python/"],["Mastra","https://mastra.ai/"]],
-  "agent-supervisor-agent": [["LangGraph Supervisor","https://github.com/langchain-ai/langgraph-supervisor-py"],["Deep Agents","https://github.com/langchain-ai/deepagents"],["CrewAI","https://www.crewai.com/"]],
-  "agent-sub-agent": [["Deep Agents sub-agents","https://github.com/langchain-ai/deepagents"],["Claude Code subagents","https://docs.claude.com/en/docs/claude-code/sub-agents"]],
-  "agent-planner": [["Deep Agents (write_todos)","https://github.com/langchain-ai/deepagents"],["LangGraph plan-and-execute","https://langchain-ai.github.io/langgraph/"]],
-  "agent-tools": [["Claude tool use","https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview"],["LangChain tools","https://docs.langchain.com/"],["Zod schemas","https://zod.dev/"]],
-  "agent-agent-skills": [["Agent Skills (Anthropic)","https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview"],["Deep Agents skills","https://github.com/langchain-ai/deepagents"]],
-  "agent-mcp-server": [["Model Context Protocol","https://modelcontextprotocol.io/"],["MCP TypeScript SDK","https://github.com/modelcontextprotocol/typescript-sdk"],["mcp-handler (Vercel)","https://github.com/vercel/mcp-handler"]],
-  "agent-a2a-protocol": [["A2A protocol","https://a2a-protocol.org/"]],
-  "agent-short-term-memory": [["LangGraph checkpointer","https://langchain-ai.github.io/langgraph/concepts/persistence/"],["Claude context editing","https://docs.claude.com/en/docs/build-with-claude/context-editing"]],
-  "agent-long-term-memory": [["LangGraph Store","https://langchain-ai.github.io/langgraph/concepts/persistence/#memory-store"],["Mem0","https://mem0.ai/"],["Zep","https://www.getzep.com/"]],
-  "agent-agent-state": [["LangGraph Postgres checkpointer","https://langchain-ai.github.io/langgraph/concepts/persistence/"],["Temporal","https://temporal.io/"]],
-  "agent-human-approval": [["LangGraph interrupts","https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/"],["LangChain HITL middleware","https://docs.langchain.com/"]],
-  "agent-code-sandbox": [["Vercel Sandbox","https://vercel.com/docs/vercel-sandbox"],["E2B","https://e2b.dev/"],["Modal Sandboxes","https://modal.com/docs/guide/sandbox"]],
-  "agent-computer-browser-use": [["Claude computer use","https://docs.claude.com/en/docs/agents-and-tools/tool-use/computer-use-tool"],["Browserbase Stagehand","https://www.stagehand.dev/"],["Playwright","https://playwright.dev/"]],
-  "agent-workflow-engine": [["LangGraph","https://langchain-ai.github.io/langgraph/"],["Vercel Workflow","https://vercel.com/docs/workflow"],["Temporal","https://temporal.io/"],["Inngest","https://www.inngest.com/"]],
-  "agent-agent-task-queue": [["Vercel Workflow","https://vercel.com/docs/workflow"],["Trigger.dev","https://trigger.dev/"],["Upstash QStash","https://upstash.com/docs/qstash/overall/getstarted"]],
-  "agent-trigger-scheduler": [["Vercel Cron Jobs","https://vercel.com/docs/cron-jobs"],["Jira Automation","https://www.atlassian.com/software/jira/features/automation"],["Zapier","https://zapier.com/"]],
-  "agent-agent-registry": [["MCP Registry","https://registry.modelcontextprotocol.io/"],["A2A Agent Cards","https://a2a-protocol.org/"]],
-  "rag-data-sources": [["Google Drive API","https://developers.google.com/drive"],["Confluence REST API","https://developer.atlassian.com/cloud/confluence/rest/"],["Notion API","https://developers.notion.com/"]],
-  "rag-loader-parser": [["Unstructured","https://unstructured.io/"],["Docling","https://github.com/docling-project/docling"],["LlamaParse","https://www.llamaindex.ai/llamaparse"]],
-  "rag-chunker": [["LangChain text splitters","https://docs.langchain.com/"],["Chonkie","https://github.com/chonkie-inc/chonkie"]],
-  "rag-embedding-pipeline": [["Cloudflare AI Search","https://developers.cloudflare.com/ai-search/"],["LangChain indexing","https://docs.langchain.com/"]],
-  "rag-vector-index": [["pgvector HNSW","https://github.com/pgvector/pgvector"],["FAISS","https://github.com/facebookresearch/faiss"],["Qdrant","https://qdrant.tech/"]],
-  "rag-keyword-index": [["Postgres full-text search","https://www.postgresql.org/docs/current/textsearch.html"],["Elasticsearch BM25","https://www.elastic.co/elasticsearch"],["Tantivy","https://github.com/quickwit-oss/tantivy"]],
-  "rag-hybrid-retriever": [["Supabase hybrid search","https://supabase.com/docs/guides/ai/hybrid-search"],["OpenSearch hybrid search","https://opensearch.org/docs/latest/search-plugins/hybrid-search/"],["Weaviate hybrid","https://weaviate.io/"]],
-  "rag-late-interaction": [["ColBERT","https://github.com/stanford-futuredata/ColBERT"],["Vespa","https://vespa.ai/"]],
-  "rag-knowledge-graph": [["Neo4j GraphRAG","https://neo4j.com/labs/genai-ecosystem/"],["Microsoft GraphRAG","https://microsoft.github.io/graphrag/"],["Atlassian Teamwork Graph","https://developer.atlassian.com/platform/teamwork-graph/"]],
-  "rag-context-builder": [["LangChain middleware","https://docs.langchain.com/"],["Claude context windows","https://docs.claude.com/en/docs/build-with-claude/context-windows"]],
-  "rag-semantic-cache": [["Upstash semantic cache","https://upstash.com/docs/vector/sdks/semantic-cache-js/getting-started"],["Redis LangCache","https://redis.io/langcache/"],["GPTCache","https://github.com/zilliztech/GPTCache"]],
-  "rag-citations": [["Claude citations","https://docs.claude.com/en/docs/build-with-claude/citations"],["Cloudflare AI Search","https://developers.cloudflare.com/ai-search/"]],
-  "llmops-guardrails": [["LangChain guardrail middleware","https://docs.langchain.com/"],["Llama Guard","https://www.llama.com/"],["NVIDIA NeMo Guardrails","https://github.com/NVIDIA/NeMo-Guardrails"]],
-  "llmops-pii-redaction": [["LangChain PII middleware","https://docs.langchain.com/"],["Microsoft Presidio","https://microsoft.github.io/presidio/"],["AssemblyAI PII redaction","https://www.assemblyai.com/docs"]],
-  "llmops-prompt-registry": [["LangSmith prompts","https://docs.smith.langchain.com/"],["Langfuse prompt management","https://langfuse.com/"]],
-  "llmops-offline-evals": [["Promptfoo","https://www.promptfoo.dev/"],["LangSmith evaluation","https://docs.smith.langchain.com/"],["Braintrust","https://www.braintrust.dev/"]],
-  "llmops-llm-as-judge": [["LangSmith online evaluators","https://docs.smith.langchain.com/"],["Promptfoo model-graded","https://www.promptfoo.dev/"],["TypeSafe Jev (typed scoring)","https://console.typesafe.ai/"]],
-  "llmops-tracing": [["LangSmith","https://docs.smith.langchain.com/"],["Langfuse","https://langfuse.com/"],["OpenTelemetry GenAI","https://opentelemetry.io/docs/specs/semconv/gen-ai/"]],
-  "llmops-token-cost-metering": [["PostHog LLM analytics","https://posthog.com/docs/llm-analytics"],["LangSmith cost tracking","https://docs.smith.langchain.com/"],["Helicone","https://www.helicone.ai/"]],
-  "llmops-user-feedback": [["LangSmith feedback","https://docs.smith.langchain.com/"],["PostHog surveys","https://posthog.com/surveys"]],
-  "llmops-red-teaming": [["Promptfoo red teaming","https://www.promptfoo.dev/docs/red-team/"],["garak","https://github.com/NVIDIA/garak"]],
-  "llmops-model-fallback": [["LangChain model fallback middleware","https://docs.langchain.com/"],["Vercel AI Gateway","https://vercel.com/docs/ai-gateway"],["LiteLLM fallbacks","https://docs.litellm.ai/"]],
-  "llmops-permissions-policy": [["Better Auth access control","https://www.better-auth.com/docs/plugins/access"],["Open Policy Agent","https://www.openpolicyagent.org/"],["Cedar","https://www.cedarpolicy.com/"]],
-  "ops-monitoring": [["Grafana","https://grafana.com/"],["Prometheus","https://prometheus.io/"],["Datadog","https://www.datadoghq.com/"]],
-  "ops-logging": [["Better Stack Logs","https://betterstack.com/logs"],["Axiom","https://axiom.co/"],["Grafana Loki","https://grafana.com/oss/loki/"],["Elastic","https://www.elastic.co/"]],
-  "ops-tracing": [["OpenTelemetry","https://opentelemetry.io/"],["Jaeger","https://www.jaegertracing.io/"],["Sentry tracing","https://docs.sentry.io/product/tracing/"]],
-  "ops-alerting": [["PagerDuty","https://www.pagerduty.com/"],["Better Stack on-call","https://betterstack.com/incident-management"],["Grafana Alerting","https://grafana.com/docs/grafana/latest/alerting/"]],
-  "ops-secrets-kms": [["Vercel environment variables","https://vercel.com/docs/environment-variables"],["HashiCorp Vault","https://www.vaultproject.io/"],["AWS KMS","https://aws.amazon.com/kms/"],["Doppler","https://www.doppler.com/"]],
-  "ops-identity-provider": [["Okta","https://www.okta.com/"],["Auth0","https://auth0.com/"],["Amazon Cognito","https://aws.amazon.com/cognito/"],["Microsoft Entra ID","https://www.microsoft.com/security/business/identity-access/microsoft-entra-id"]],
-  "ops-ci-cd-pipeline": [["GitHub Actions","https://github.com/features/actions"],["Vercel deployments","https://vercel.com/docs/deployments"],["Turborepo","https://turborepo.com/"]],
-  "ops-analytics": [["PostHog","https://posthog.com/"],["Amplitude","https://amplitude.com/"],["Vercel Web Analytics","https://vercel.com/docs/analytics"],["GoatCounter","https://www.goatcounter.com/"]],
-  "ops-error-tracking": [["Sentry","https://sentry.io/"],["Better Stack Errors","https://betterstack.com/"],["Bugsnag","https://www.bugsnag.com/"]],
-  "ops-uptime-status": [["Better Stack Uptime","https://betterstack.com/uptime"],["Atlassian Statuspage","https://www.atlassian.com/software/statuspage"],["UptimeRobot","https://uptimerobot.com/"]],
-  "svc-ssr-web-app": [["Next.js App Router","https://nextjs.org/docs/app"],["Remix / React Router","https://reactrouter.com/"],["SvelteKit","https://svelte.dev/docs/kit"],["Nuxt","https://nuxt.com/"]],
-  "ai-typed-classifier": [["TypeSafe Jev","https://console.typesafe.ai/"],["Claude structured outputs","https://docs.claude.com/en/docs/build-with-claude/structured-outputs"],["SetFit","https://github.com/huggingface/setfit"]],
-  "agent-agent-harness": [["Deep Agents","https://github.com/langchain-ai/deepagents"],["Claude Agent SDK","https://docs.claude.com/en/api/agent-sdk/overview"],["OpenAI Agents SDK","https://openai.github.io/openai-agents-python/"]],
-  "ai-visual-renderer": [["three.js","https://threejs.org/"],["React Three Fiber","https://r3f.docs.pmnd.rs/"],["JSXGraph","https://jsxgraph.org/"],["KaTeX","https://katex.org/"],["Mermaid","https://mermaid.js.org/"]],
-  "ext-payment-gateway": [["Stripe","https://stripe.com/"],["Adyen","https://www.adyen.com/"],["PayPal","https://developer.paypal.com/"]],
-  "ext-push-provider": [["Apple Push Notification service","https://developer.apple.com/documentation/usernotifications"],["Firebase Cloud Messaging","https://firebase.google.com/docs/cloud-messaging"]],
-  "ext-maps-api": [["Google Maps Platform","https://developers.google.com/maps"],["Mapbox","https://www.mapbox.com/"],["OpenStreetMap","https://www.openstreetmap.org/"]],
-  "ext-email-sms-provider": [["Resend","https://resend.com/"],["Twilio","https://www.twilio.com/"],["Amazon SES","https://aws.amazon.com/ses/"]],
-  "client-web-browser": [["Next.js + React","https://nextjs.org/"],["Tailwind CSS","https://tailwindcss.com/"],["shadcn/ui","https://ui.shadcn.com/"]],
-  "client-voice-ai": [["LiveKit client SDKs","https://docs.livekit.io/"],["LiveKit Agents UI","https://docs.livekit.io/"]],
-  "client-mcp-client": [["Claude Desktop","https://claude.ai/download"],["Cursor","https://cursor.com/"],["Claude Code","https://docs.claude.com/en/docs/claude-code/overview"]],
-  "client-ai-chat-app": [["AI SDK UI","https://ai-sdk.dev/"],["assistant-ui","https://www.assistant-ui.com/"],["Rovo Chat","https://www.atlassian.com/software/rovo"]]
+  "edge-dns": [
+   [
+    "Amazon Route 53",
+    "https://aws.amazon.com/route53/"
+   ],
+   [
+    "Cloudflare DNS",
+    "https://www.cloudflare.com/application-services/products/dns/"
+   ],
+   [
+    "Google Cloud DNS",
+    "https://cloud.google.com/dns"
+   ]
+  ],
+  "edge-cdn": [
+   [
+    "Cloudflare CDN",
+    "https://www.cloudflare.com/application-services/products/cdn/"
+   ],
+   [
+    "Amazon CloudFront",
+    "https://aws.amazon.com/cloudfront/"
+   ],
+   [
+    "Vercel Edge Network",
+    "https://vercel.com/docs/edge-network"
+   ],
+   [
+    "Fastly",
+    "https://www.fastly.com/"
+   ]
+  ],
+  "edge-load-balancer": [
+   [
+    "AWS Elastic Load Balancing",
+    "https://aws.amazon.com/elasticloadbalancing/"
+   ],
+   [
+    "Google Cloud Load Balancing",
+    "https://cloud.google.com/load-balancing"
+   ],
+   [
+    "HAProxy",
+    "https://www.haproxy.org/"
+   ]
+  ],
+  "edge-api-gateway": [
+   [
+    "Kong",
+    "https://konghq.com/"
+   ],
+   [
+    "Amazon API Gateway",
+    "https://aws.amazon.com/api-gateway/"
+   ],
+   [
+    "Envoy Gateway",
+    "https://gateway.envoyproxy.io/"
+   ]
+  ],
+  "edge-reverse-proxy": [
+   [
+    "NGINX",
+    "https://nginx.org/"
+   ],
+   [
+    "Envoy",
+    "https://www.envoyproxy.io/"
+   ],
+   [
+    "Caddy",
+    "https://caddyserver.com/"
+   ]
+  ],
+  "edge-waf": [
+   [
+    "Cloudflare WAF",
+    "https://www.cloudflare.com/application-services/products/waf/"
+   ],
+   [
+    "AWS WAF",
+    "https://aws.amazon.com/waf/"
+   ],
+   [
+    "Vercel Firewall",
+    "https://vercel.com/docs/vercel-firewall"
+   ]
+  ],
+  "edge-rate-limiter": [
+   [
+    "Upstash Ratelimit",
+    "https://upstash.com/docs/redis/sdks/ratelimit-ts/overview"
+   ],
+   [
+    "Cloudflare Rate Limiting",
+    "https://developers.cloudflare.com/waf/rate-limiting-rules/"
+   ],
+   [
+    "Envoy rate limit",
+    "https://www.envoyproxy.io/docs/envoy/latest/configuration/other_features/global_rate_limiting"
+   ]
+  ],
+  "edge-edge-function": [
+   [
+    "Cloudflare Workers",
+    "https://workers.cloudflare.com/"
+   ],
+   [
+    "Vercel Functions",
+    "https://vercel.com/docs/functions"
+   ],
+   [
+    "Lambda@Edge",
+    "https://aws.amazon.com/lambda/edge/"
+   ]
+  ],
+  "svc-service-microservice": [
+   [
+    "Next.js Route Handlers",
+    "https://nextjs.org/docs/app/building-your-application/routing/route-handlers"
+   ],
+   [
+    "FastAPI",
+    "https://fastapi.tiangolo.com/"
+   ],
+   [
+    "Spring Boot",
+    "https://spring.io/projects/spring-boot"
+   ],
+   [
+    "Go net/http",
+    "https://pkg.go.dev/net/http"
+   ]
+  ],
+  "svc-web-server": [
+   [
+    "Next.js",
+    "https://nextjs.org/"
+   ],
+   [
+    "Vercel",
+    "https://vercel.com/"
+   ],
+   [
+    "Node.js",
+    "https://nodejs.org/"
+   ],
+   [
+    "Amazon EC2",
+    "https://aws.amazon.com/ec2/"
+   ]
+  ],
+  "svc-worker-consumer": [
+   [
+    "Vercel Workflow",
+    "https://vercel.com/docs/workflow"
+   ],
+   [
+    "BullMQ",
+    "https://bullmq.io/"
+   ],
+   [
+    "Celery",
+    "https://docs.celeryq.dev/"
+   ],
+   [
+    "Sidekiq",
+    "https://sidekiq.org/"
+   ]
+  ],
+  "svc-headless-browser": [
+   [
+    "Playwright",
+    "https://playwright.dev/"
+   ],
+   [
+    "Puppeteer",
+    "https://pptr.dev/"
+   ],
+   [
+    "Browserbase",
+    "https://www.browserbase.com/"
+   ]
+  ],
+  "svc-scheduler-cron": [
+   [
+    "Vercel Cron Jobs",
+    "https://vercel.com/docs/cron-jobs"
+   ],
+   [
+    "Cloudflare Cron Triggers",
+    "https://developers.cloudflare.com/workers/configuration/cron-triggers/"
+   ],
+   [
+    "Kubernetes CronJob",
+    "https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/"
+   ]
+  ],
+  "svc-serverless-function": [
+   [
+    "Vercel Functions",
+    "https://vercel.com/docs/functions"
+   ],
+   [
+    "AWS Lambda",
+    "https://aws.amazon.com/lambda/"
+   ],
+   [
+    "Google Cloud Run functions",
+    "https://cloud.google.com/functions"
+   ]
+  ],
+  "svc-container-pod": [
+   [
+    "Docker",
+    "https://www.docker.com/"
+   ],
+   [
+    "Kubernetes",
+    "https://kubernetes.io/"
+   ],
+   [
+    "Amazon ECS",
+    "https://aws.amazon.com/ecs/"
+   ]
+  ],
+  "svc-auth-service": [
+   [
+    "Better Auth",
+    "https://www.better-auth.com/"
+   ],
+   [
+    "Auth.js",
+    "https://authjs.dev/"
+   ],
+   [
+    "Supabase Auth",
+    "https://supabase.com/docs/guides/auth"
+   ],
+   [
+    "Clerk",
+    "https://clerk.com/"
+   ]
+  ],
+  "svc-notification-service": [
+   [
+    "Novu",
+    "https://novu.co/"
+   ],
+   [
+    "Knock",
+    "https://knock.app/"
+   ],
+   [
+    "OneSignal",
+    "https://onesignal.com/"
+   ]
+  ],
+  "svc-email-sms": [
+   [
+    "Resend",
+    "https://resend.com/"
+   ],
+   [
+    "Amazon SES",
+    "https://aws.amazon.com/ses/"
+   ],
+   [
+    "Twilio",
+    "https://www.twilio.com/"
+   ],
+   [
+    "Postmark",
+    "https://postmarkapp.com/"
+   ]
+  ],
+  "svc-chat-service": [
+   [
+    "Stream Chat",
+    "https://getstream.io/chat/"
+   ],
+   [
+    "Ably",
+    "https://ably.com/"
+   ],
+   [
+    "Supabase Realtime",
+    "https://supabase.com/docs/guides/realtime"
+   ]
+  ],
+  "svc-websocket-server": [
+   [
+    "Socket.IO",
+    "https://socket.io/"
+   ],
+   [
+    "Cloudflare Durable Objects",
+    "https://developers.cloudflare.com/durable-objects/"
+   ],
+   [
+    "Ably",
+    "https://ably.com/"
+   ],
+   [
+    "PartyKit",
+    "https://www.partykit.io/"
+   ]
+  ],
+  "svc-webrtc-sfu": [
+   [
+    "LiveKit",
+    "https://livekit.io/"
+   ],
+   [
+    "mediasoup",
+    "https://mediasoup.org/"
+   ],
+   [
+    "Daily",
+    "https://www.daily.co/"
+   ],
+   [
+    "Janus",
+    "https://janus.conf.meetecho.com/"
+   ]
+  ],
+  "svc-realtime-sync": [
+   [
+    "tldraw sync",
+    "https://tldraw.dev/docs/sync"
+   ],
+   [
+    "Yjs",
+    "https://yjs.dev/"
+   ],
+   [
+    "Liveblocks",
+    "https://liveblocks.io/"
+   ],
+   [
+    "Automerge",
+    "https://automerge.org/"
+   ]
+  ],
+  "svc-spaced-repetition": [
+   [
+    "ts-fsrs",
+    "https://github.com/open-spaced-repetition/ts-fsrs"
+   ],
+   [
+    "FSRS (open-spaced-repetition)",
+    "https://github.com/open-spaced-repetition"
+   ],
+   [
+    "Anki",
+    "https://apps.ankiweb.net/"
+   ]
+  ],
+  "svc-search-service": [
+   [
+    "Elasticsearch",
+    "https://www.elastic.co/elasticsearch"
+   ],
+   [
+    "OpenSearch",
+    "https://opensearch.org/"
+   ],
+   [
+    "Algolia",
+    "https://www.algolia.com/"
+   ],
+   [
+    "Typesense",
+    "https://typesense.org/"
+   ]
+  ],
+  "svc-payment-service": [
+   [
+    "Stripe Billing",
+    "https://stripe.com/billing"
+   ],
+   [
+    "Paddle",
+    "https://www.paddle.com/"
+   ],
+   [
+    "Lemon Squeezy",
+    "https://www.lemonsqueezy.com/"
+   ]
+  ],
+  "svc-location-service": [
+   [
+    "PostGIS",
+    "https://postgis.net/"
+   ],
+   [
+    "H3",
+    "https://h3geo.org/"
+   ],
+   [
+    "Redis geospatial",
+    "https://redis.io/docs/latest/develop/data-types/geospatial/"
+   ]
+  ],
+  "svc-media-service": [
+   [
+    "Mux",
+    "https://www.mux.com/"
+   ],
+   [
+    "Cloudinary",
+    "https://cloudinary.com/"
+   ],
+   [
+    "FFmpeg",
+    "https://ffmpeg.org/"
+   ]
+  ],
+  "svc-id-generator": [
+   [
+    "UUIDv7 (RFC 9562)",
+    "https://www.rfc-editor.org/rfc/rfc9562"
+   ],
+   [
+    "ULID",
+    "https://github.com/ulid/spec"
+   ],
+   [
+    "Snowflake IDs",
+    "https://en.wikipedia.org/wiki/Snowflake_ID"
+   ]
+  ],
+  "svc-ranking-recommendation": [
+   [
+    "Vespa",
+    "https://vespa.ai/"
+   ],
+   [
+    "Amazon Personalize",
+    "https://aws.amazon.com/personalize/"
+   ],
+   [
+    "TensorFlow Recommenders",
+    "https://www.tensorflow.org/recommenders"
+   ]
+  ],
+  "svc-config-coord": [
+   [
+    "etcd",
+    "https://etcd.io/"
+   ],
+   [
+    "Apache ZooKeeper",
+    "https://zookeeper.apache.org/"
+   ],
+   [
+    "Consul",
+    "https://www.consul.io/"
+   ]
+  ],
+  "svc-feature-flags": [
+   [
+    "PostHog feature flags",
+    "https://posthog.com/feature-flags"
+   ],
+   [
+    "LaunchDarkly",
+    "https://launchdarkly.com/"
+   ],
+   [
+    "Vercel Flags",
+    "https://vercel.com/docs/feature-flags"
+   ],
+   [
+    "Unleash",
+    "https://www.getunleash.io/"
+   ]
+  ],
+  "svc-circuit-breaker": [
+   [
+    "Resilience4j",
+    "https://resilience4j.readme.io/"
+   ],
+   [
+    "Polly (.NET)",
+    "https://www.pollydocs.org/"
+   ],
+   [
+    "Envoy outlier detection",
+    "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/outlier"
+   ]
+  ],
+  "svc-service-mesh": [
+   [
+    "Istio",
+    "https://istio.io/"
+   ],
+   [
+    "Linkerd",
+    "https://linkerd.io/"
+   ],
+   [
+    "Cilium",
+    "https://cilium.io/"
+   ]
+  ],
+  "svc-distributed-lock": [
+   [
+    "Redis (SET NX PX)",
+    "https://redis.io/docs/latest/commands/set/"
+   ],
+   [
+    "etcd leases",
+    "https://etcd.io/docs/latest/learning/api/"
+   ],
+   [
+    "Postgres advisory locks",
+    "https://www.postgresql.org/docs/current/explicit-locking.html"
+   ]
+  ],
+  "svc-autoscaler": [
+   [
+    "Kubernetes HPA",
+    "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"
+   ],
+   [
+    "Karpenter",
+    "https://karpenter.sh/"
+   ],
+   [
+    "KEDA",
+    "https://keda.sh/"
+   ]
+  ],
+  "svc-idempotency-store": [
+   [
+    "Stripe idempotent requests",
+    "https://docs.stripe.com/api/idempotent_requests"
+   ],
+   [
+    "Upstash Redis",
+    "https://upstash.com/docs/redis/overall/getstarted"
+   ],
+   [
+    "Postgres unique keys",
+    "https://www.postgresql.org/docs/current/ddl-constraints.html"
+   ]
+  ],
+  "data-sql-database": [
+   [
+    "PostgreSQL",
+    "https://www.postgresql.org/"
+   ],
+   [
+    "MySQL",
+    "https://www.mysql.com/"
+   ],
+   [
+    "SQLite",
+    "https://www.sqlite.org/"
+   ]
+  ],
+  "data-postgresql": [
+   [
+    "Supabase",
+    "https://supabase.com/docs/guides/database/overview"
+   ],
+   [
+    "Neon",
+    "https://neon.tech/"
+   ],
+   [
+    "Amazon RDS / Aurora",
+    "https://aws.amazon.com/rds/postgresql/"
+   ],
+   [
+    "Drizzle ORM",
+    "https://orm.drizzle.team/"
+   ]
+  ],
+  "data-mysql": [
+   [
+    "Amazon Aurora MySQL",
+    "https://aws.amazon.com/rds/aurora/"
+   ],
+   [
+    "PlanetScale",
+    "https://planetscale.com/"
+   ],
+   [
+    "Vitess",
+    "https://vitess.io/"
+   ]
+  ],
+  "data-read-replica": [
+   [
+    "Supabase read replicas",
+    "https://supabase.com/docs/guides/platform/read-replicas"
+   ],
+   [
+    "Aurora replicas",
+    "https://aws.amazon.com/rds/aurora/"
+   ],
+   [
+    "Postgres streaming replication",
+    "https://www.postgresql.org/docs/current/warm-standby.html"
+   ]
+  ],
+  "data-shard": [
+   [
+    "Citus",
+    "https://www.citusdata.com/"
+   ],
+   [
+    "Vitess",
+    "https://vitess.io/"
+   ],
+   [
+    "MongoDB sharding",
+    "https://www.mongodb.com/docs/manual/sharding/"
+   ]
+  ],
+  "data-document-db": [
+   [
+    "MongoDB Atlas",
+    "https://www.mongodb.com/atlas"
+   ],
+   [
+    "Firestore",
+    "https://firebase.google.com/docs/firestore"
+   ],
+   [
+    "Couchbase",
+    "https://www.couchbase.com/"
+   ]
+  ],
+  "data-wide-column": [
+   [
+    "Apache Cassandra",
+    "https://cassandra.apache.org/"
+   ],
+   [
+    "ScyllaDB",
+    "https://www.scylladb.com/"
+   ],
+   [
+    "Google Bigtable",
+    "https://cloud.google.com/bigtable"
+   ]
+  ],
+  "data-key-value": [
+   [
+    "Amazon DynamoDB",
+    "https://aws.amazon.com/dynamodb/"
+   ],
+   [
+    "Cloudflare Workers KV",
+    "https://developers.cloudflare.com/kv/"
+   ],
+   [
+    "Upstash Redis",
+    "https://upstash.com/"
+   ]
+  ],
+  "data-graph-db": [
+   [
+    "Neo4j",
+    "https://neo4j.com/"
+   ],
+   [
+    "Amazon Neptune",
+    "https://aws.amazon.com/neptune/"
+   ],
+   [
+    "Apache AGE (Postgres)",
+    "https://age.apache.org/"
+   ]
+  ],
+  "data-time-series": [
+   [
+    "TimescaleDB",
+    "https://www.timescale.com/"
+   ],
+   [
+    "InfluxDB",
+    "https://www.influxdata.com/"
+   ],
+   [
+    "Prometheus",
+    "https://prometheus.io/"
+   ]
+  ],
+  "data-search-index": [
+   [
+    "Elasticsearch",
+    "https://www.elastic.co/elasticsearch"
+   ],
+   [
+    "OpenSearch",
+    "https://opensearch.org/"
+   ],
+   [
+    "Meilisearch",
+    "https://www.meilisearch.com/"
+   ]
+  ],
+  "data-object-storage": [
+   [
+    "Amazon S3",
+    "https://aws.amazon.com/s3/"
+   ],
+   [
+    "Cloudflare R2",
+    "https://developers.cloudflare.com/r2/"
+   ],
+   [
+    "Supabase Storage",
+    "https://supabase.com/docs/guides/storage"
+   ],
+   [
+    "Vercel Blob",
+    "https://vercel.com/docs/storage/vercel-blob"
+   ]
+  ],
+  "data-data-warehouse": [
+   [
+    "Snowflake",
+    "https://www.snowflake.com/"
+   ],
+   [
+    "Google BigQuery",
+    "https://cloud.google.com/bigquery"
+   ],
+   [
+    "Amazon Redshift",
+    "https://aws.amazon.com/redshift/"
+   ]
+  ],
+  "data-learner-model": [
+   [
+    "LangGraph Store",
+    "https://langchain-ai.github.io/langgraph/concepts/persistence/#memory-store"
+   ],
+   [
+    "Postgres + pgvector",
+    "https://github.com/pgvector/pgvector"
+   ],
+   [
+    "pyBKT",
+    "https://github.com/CAHLR/pyBKT"
+   ]
+  ],
+  "data-data-lake": [
+   [
+    "Amazon S3",
+    "https://aws.amazon.com/s3/"
+   ],
+   [
+    "Google Cloud Storage",
+    "https://cloud.google.com/storage"
+   ],
+   [
+    "Azure Data Lake Storage",
+    "https://azure.microsoft.com/products/storage/data-lake-storage"
+   ]
+  ],
+  "data-lakehouse": [
+   [
+    "Apache Iceberg",
+    "https://iceberg.apache.org/"
+   ],
+   [
+    "Delta Lake",
+    "https://delta.io/"
+   ],
+   [
+    "Databricks",
+    "https://www.databricks.com/"
+   ]
+  ],
+  "data-olap-db": [
+   [
+    "ClickHouse",
+    "https://clickhouse.com/"
+   ],
+   [
+    "Apache Druid",
+    "https://druid.apache.org/"
+   ],
+   [
+    "Apache Pinot",
+    "https://pinot.apache.org/"
+   ]
+  ],
+  "data-vector-db": [
+   [
+    "pgvector",
+    "https://github.com/pgvector/pgvector"
+   ],
+   [
+    "Pinecone",
+    "https://www.pinecone.io/"
+   ],
+   [
+    "Qdrant",
+    "https://qdrant.tech/"
+   ],
+   [
+    "Weaviate",
+    "https://weaviate.io/"
+   ]
+  ],
+  "data-file-doc-store": [
+   [
+    "Supabase Storage",
+    "https://supabase.com/docs/guides/storage"
+   ],
+   [
+    "Amazon S3",
+    "https://aws.amazon.com/s3/"
+   ],
+   [
+    "Google Drive API",
+    "https://developers.google.com/drive"
+   ]
+  ],
+  "cache-cache": [
+   [
+    "Redis",
+    "https://redis.io/"
+   ],
+   [
+    "Upstash Redis",
+    "https://upstash.com/"
+   ],
+   [
+    "Vercel Data Cache",
+    "https://vercel.com/docs/infrastructure/data-cache"
+   ]
+  ],
+  "cache-redis": [
+   [
+    "Upstash Redis",
+    "https://upstash.com/"
+   ],
+   [
+    "Redis Cloud",
+    "https://redis.io/cloud/"
+   ],
+   [
+    "Valkey",
+    "https://valkey.io/"
+   ],
+   [
+    "Amazon ElastiCache",
+    "https://aws.amazon.com/elasticache/"
+   ]
+  ],
+  "cache-memcached": [
+   [
+    "Memcached",
+    "https://memcached.org/"
+   ],
+   [
+    "Amazon ElastiCache",
+    "https://aws.amazon.com/elasticache/"
+   ]
+  ],
+  "cache-local-cache": [
+   [
+    "lru-cache (npm)",
+    "https://www.npmjs.com/package/lru-cache"
+   ],
+   [
+    "Caffeine (Java)",
+    "https://github.com/ben-manes/caffeine"
+   ],
+   [
+    "functools.lru_cache",
+    "https://docs.python.org/3/library/functools.html"
+   ]
+  ],
+  "cache-session-store": [
+   [
+    "Upstash Redis",
+    "https://upstash.com/"
+   ],
+   [
+    "Better Auth sessions",
+    "https://www.better-auth.com/docs/concepts/session-management"
+   ],
+   [
+    "Redis",
+    "https://redis.io/"
+   ]
+  ],
+  "cache-bloom-filter": [
+   [
+    "Redis Bloom",
+    "https://redis.io/docs/latest/develop/data-types/probabilistic/bloom-filter/"
+   ],
+   [
+    "Guava BloomFilter",
+    "https://github.com/google/guava"
+   ]
+  ],
+  "msg-message-queue": [
+   [
+    "Amazon SQS",
+    "https://aws.amazon.com/sqs/"
+   ],
+   [
+    "Upstash QStash",
+    "https://upstash.com/docs/qstash/overall/getstarted"
+   ],
+   [
+    "RabbitMQ",
+    "https://www.rabbitmq.com/"
+   ],
+   [
+    "Cloudflare Queues",
+    "https://developers.cloudflare.com/queues/"
+   ]
+  ],
+  "msg-kafka": [
+   [
+    "Apache Kafka",
+    "https://kafka.apache.org/"
+   ],
+   [
+    "Confluent Cloud",
+    "https://www.confluent.io/"
+   ],
+   [
+    "Redpanda",
+    "https://www.redpanda.com/"
+   ],
+   [
+    "Amazon MSK",
+    "https://aws.amazon.com/msk/"
+   ]
+  ],
+  "msg-rabbitmq": [
+   [
+    "RabbitMQ",
+    "https://www.rabbitmq.com/"
+   ],
+   [
+    "CloudAMQP",
+    "https://www.cloudamqp.com/"
+   ]
+  ],
+  "msg-sqs": [
+   [
+    "Amazon SQS",
+    "https://aws.amazon.com/sqs/"
+   ]
+  ],
+  "msg-pub-sub": [
+   [
+    "Amazon SNS",
+    "https://aws.amazon.com/sns/"
+   ],
+   [
+    "Google Pub/Sub",
+    "https://cloud.google.com/pubsub"
+   ],
+   [
+    "Redis Pub/Sub",
+    "https://redis.io/docs/latest/develop/interact/pubsub/"
+   ]
+  ],
+  "msg-dead-letter-queue": [
+   [
+    "SQS dead-letter queues",
+    "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html"
+   ],
+   [
+    "RabbitMQ dead lettering",
+    "https://www.rabbitmq.com/docs/dlx"
+   ]
+  ],
+  "msg-stream-processor": [
+   [
+    "Apache Flink",
+    "https://flink.apache.org/"
+   ],
+   [
+    "Spark Structured Streaming",
+    "https://spark.apache.org/streaming/"
+   ],
+   [
+    "Kafka Streams",
+    "https://kafka.apache.org/documentation/streams/"
+   ]
+  ],
+  "msg-batch-etl": [
+   [
+    "Apache Spark",
+    "https://spark.apache.org/"
+   ],
+   [
+    "Apache Airflow",
+    "https://airflow.apache.org/"
+   ],
+   [
+    "dbt",
+    "https://www.getdbt.com/"
+   ],
+   [
+    "Dagster",
+    "https://dagster.io/"
+   ]
+  ],
+  "msg-cdc": [
+   [
+    "Debezium",
+    "https://debezium.io/"
+   ],
+   [
+    "Supabase Realtime (Postgres changes)",
+    "https://supabase.com/docs/guides/realtime/postgres-changes"
+   ],
+   [
+    "AWS DMS",
+    "https://aws.amazon.com/dms/"
+   ]
+  ],
+  "ai-llm": [
+   [
+    "Claude (Anthropic)",
+    "https://docs.claude.com/"
+   ],
+   [
+    "OpenAI",
+    "https://platform.openai.com/docs"
+   ],
+   [
+    "Gemini",
+    "https://ai.google.dev/"
+   ]
+  ],
+  "ai-small-local-model": [
+   [
+    "Claude Haiku",
+    "https://docs.claude.com/en/docs/about-claude/models/overview"
+   ],
+   [
+    "Llama",
+    "https://www.llama.com/"
+   ],
+   [
+    "Ollama",
+    "https://ollama.com/"
+   ],
+   [
+    "Gemma",
+    "https://ai.google.dev/gemma"
+   ]
+  ],
+  "ai-multimodal-model": [
+   [
+    "Claude vision",
+    "https://docs.claude.com/en/docs/build-with-claude/vision"
+   ],
+   [
+    "Gemini",
+    "https://ai.google.dev/"
+   ],
+   [
+    "GPT vision",
+    "https://platform.openai.com/docs/guides/images-vision"
+   ]
+  ],
+  "ai-speech-to-text": [
+   [
+    "AssemblyAI Universal Streaming",
+    "https://www.assemblyai.com/docs/speech-to-text/universal-streaming"
+   ],
+   [
+    "Deepgram",
+    "https://deepgram.com/"
+   ],
+   [
+    "OpenAI Whisper",
+    "https://github.com/openai/whisper"
+   ]
+  ],
+  "ai-text-to-speech": [
+   [
+    "AssemblyAI",
+    "https://www.assemblyai.com/docs"
+   ],
+   [
+    "ElevenLabs",
+    "https://elevenlabs.io/docs"
+   ],
+   [
+    "Cartesia",
+    "https://cartesia.ai/"
+   ]
+  ],
+  "ai-turn-detector": [
+   [
+    "LiveKit turn detector",
+    "https://docs.livekit.io/agents/build/turns/turn-detector/"
+   ],
+   [
+    "Silero VAD",
+    "https://github.com/snakers4/silero-vad"
+   ],
+   [
+    "AssemblyAI end-of-turn",
+    "https://www.assemblyai.com/docs/speech-to-text/universal-streaming"
+   ]
+  ],
+  "ai-generative-ui": [
+   [
+    "tldraw agent kit",
+    "https://tldraw.dev/"
+   ],
+   [
+    "AI SDK generative UI",
+    "https://ai-sdk.dev/docs/ai-sdk-ui/generative-user-interfaces"
+   ],
+   [
+    "CopilotKit",
+    "https://www.copilotkit.ai/"
+   ]
+  ],
+  "ai-image-video-gen": [
+   [
+    "Gemini image generation",
+    "https://ai.google.dev/gemini-api/docs/image-generation"
+   ],
+   [
+    "Stable Diffusion",
+    "https://stability.ai/"
+   ],
+   [
+    "Runway",
+    "https://runwayml.com/"
+   ]
+  ],
+  "ai-embedding-model": [
+   [
+    "Gemini embeddings",
+    "https://ai.google.dev/gemini-api/docs/embeddings"
+   ],
+   [
+    "Voyage AI",
+    "https://www.voyageai.com/"
+   ],
+   [
+    "OpenAI embeddings",
+    "https://platform.openai.com/docs/guides/embeddings"
+   ],
+   [
+    "EmbeddingGemma",
+    "https://ai.google.dev/gemma/docs/embeddinggemma"
+   ]
+  ],
+  "ai-reranker": [
+   [
+    "Cohere Rerank",
+    "https://cohere.com/rerank"
+   ],
+   [
+    "Voyage rerank",
+    "https://docs.voyageai.com/docs/reranker"
+   ],
+   [
+    "ms-marco cross-encoders",
+    "https://www.sbert.net/docs/cross_encoder/pretrained_models.html"
+   ]
+  ],
+  "ai-model-serving": [
+   [
+    "vLLM",
+    "https://docs.vllm.ai/"
+   ],
+   [
+    "NVIDIA Triton",
+    "https://developer.nvidia.com/triton-inference-server"
+   ],
+   [
+    "Modal",
+    "https://modal.com/"
+   ]
+  ],
+  "ai-ai-gateway": [
+   [
+    "Vercel AI Gateway",
+    "https://vercel.com/docs/ai-gateway"
+   ],
+   [
+    "LiteLLM",
+    "https://docs.litellm.ai/"
+   ],
+   [
+    "OpenRouter",
+    "https://openrouter.ai/"
+   ],
+   [
+    "Cloudflare AI Gateway",
+    "https://developers.cloudflare.com/ai-gateway/"
+   ]
+  ],
+  "ai-prompt-cache": [
+   [
+    "Claude prompt caching",
+    "https://docs.claude.com/en/docs/build-with-claude/prompt-caching"
+   ],
+   [
+    "OpenAI prompt caching",
+    "https://platform.openai.com/docs/guides/prompt-caching"
+   ],
+   [
+    "vLLM prefix caching",
+    "https://docs.vllm.ai/en/latest/features/automatic_prefix_caching.html"
+   ]
+  ],
+  "ai-batch-inference": [
+   [
+    "Claude Message Batches",
+    "https://docs.claude.com/en/docs/build-with-claude/batch-processing"
+   ],
+   [
+    "OpenAI Batch API",
+    "https://platform.openai.com/docs/guides/batch"
+   ]
+  ],
+  "ai-fine-tuned-model": [
+   [
+    "Amazon Bedrock fine-tuning",
+    "https://aws.amazon.com/bedrock/"
+   ],
+   [
+    "Hugging Face PEFT (LoRA)",
+    "https://huggingface.co/docs/peft"
+   ],
+   [
+    "Unsloth",
+    "https://unsloth.ai/"
+   ]
+  ],
+  "ai-training-pipeline": [
+   [
+    "Kubeflow",
+    "https://www.kubeflow.org/"
+   ],
+   [
+    "Amazon SageMaker",
+    "https://aws.amazon.com/sagemaker/"
+   ],
+   [
+    "Weights & Biases",
+    "https://wandb.ai/"
+   ]
+  ],
+  "ai-feature-store": [
+   [
+    "Feast",
+    "https://feast.dev/"
+   ],
+   [
+    "Tecton",
+    "https://www.tecton.ai/"
+   ],
+   [
+    "SageMaker Feature Store",
+    "https://aws.amazon.com/sagemaker/feature-store/"
+   ]
+  ],
+  "agent-ai-agent": [
+   [
+    "LangGraph",
+    "https://langchain-ai.github.io/langgraph/"
+   ],
+   [
+    "Claude Agent SDK",
+    "https://docs.claude.com/en/api/agent-sdk/overview"
+   ],
+   [
+    "OpenAI Agents SDK",
+    "https://openai.github.io/openai-agents-python/"
+   ],
+   [
+    "Mastra",
+    "https://mastra.ai/"
+   ]
+  ],
+  "agent-supervisor-agent": [
+   [
+    "LangGraph Supervisor",
+    "https://github.com/langchain-ai/langgraph-supervisor-py"
+   ],
+   [
+    "Deep Agents",
+    "https://github.com/langchain-ai/deepagents"
+   ],
+   [
+    "CrewAI",
+    "https://www.crewai.com/"
+   ]
+  ],
+  "agent-sub-agent": [
+   [
+    "Deep Agents sub-agents",
+    "https://github.com/langchain-ai/deepagents"
+   ],
+   [
+    "Claude Code subagents",
+    "https://docs.claude.com/en/docs/claude-code/sub-agents"
+   ]
+  ],
+  "agent-planner": [
+   [
+    "Deep Agents (write_todos)",
+    "https://github.com/langchain-ai/deepagents"
+   ],
+   [
+    "LangGraph plan-and-execute",
+    "https://langchain-ai.github.io/langgraph/"
+   ]
+  ],
+  "agent-tools": [
+   [
+    "Claude tool use",
+    "https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview"
+   ],
+   [
+    "LangChain tools",
+    "https://docs.langchain.com/"
+   ],
+   [
+    "Zod schemas",
+    "https://zod.dev/"
+   ]
+  ],
+  "agent-agent-skills": [
+   [
+    "Agent Skills (Anthropic)",
+    "https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview"
+   ],
+   [
+    "Deep Agents skills",
+    "https://github.com/langchain-ai/deepagents"
+   ]
+  ],
+  "agent-mcp-server": [
+   [
+    "Model Context Protocol",
+    "https://modelcontextprotocol.io/"
+   ],
+   [
+    "MCP TypeScript SDK",
+    "https://github.com/modelcontextprotocol/typescript-sdk"
+   ],
+   [
+    "mcp-handler (Vercel)",
+    "https://github.com/vercel/mcp-handler"
+   ]
+  ],
+  "agent-a2a-protocol": [
+   [
+    "A2A protocol",
+    "https://a2a-protocol.org/"
+   ]
+  ],
+  "agent-short-term-memory": [
+   [
+    "LangGraph checkpointer",
+    "https://langchain-ai.github.io/langgraph/concepts/persistence/"
+   ],
+   [
+    "Claude context editing",
+    "https://docs.claude.com/en/docs/build-with-claude/context-editing"
+   ]
+  ],
+  "agent-long-term-memory": [
+   [
+    "LangGraph Store",
+    "https://langchain-ai.github.io/langgraph/concepts/persistence/#memory-store"
+   ],
+   [
+    "Mem0",
+    "https://mem0.ai/"
+   ],
+   [
+    "Zep",
+    "https://www.getzep.com/"
+   ]
+  ],
+  "agent-agent-state": [
+   [
+    "LangGraph Postgres checkpointer",
+    "https://langchain-ai.github.io/langgraph/concepts/persistence/"
+   ],
+   [
+    "Temporal",
+    "https://temporal.io/"
+   ]
+  ],
+  "agent-human-approval": [
+   [
+    "LangGraph interrupts",
+    "https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/"
+   ],
+   [
+    "LangChain HITL middleware",
+    "https://docs.langchain.com/"
+   ]
+  ],
+  "agent-code-sandbox": [
+   [
+    "Vercel Sandbox",
+    "https://vercel.com/docs/vercel-sandbox"
+   ],
+   [
+    "E2B",
+    "https://e2b.dev/"
+   ],
+   [
+    "Modal Sandboxes",
+    "https://modal.com/docs/guide/sandbox"
+   ]
+  ],
+  "agent-computer-browser-use": [
+   [
+    "Claude computer use",
+    "https://docs.claude.com/en/docs/agents-and-tools/tool-use/computer-use-tool"
+   ],
+   [
+    "Browserbase Stagehand",
+    "https://www.stagehand.dev/"
+   ],
+   [
+    "Playwright",
+    "https://playwright.dev/"
+   ]
+  ],
+  "agent-workflow-engine": [
+   [
+    "LangGraph",
+    "https://langchain-ai.github.io/langgraph/"
+   ],
+   [
+    "Vercel Workflow",
+    "https://vercel.com/docs/workflow"
+   ],
+   [
+    "Temporal",
+    "https://temporal.io/"
+   ],
+   [
+    "Inngest",
+    "https://www.inngest.com/"
+   ]
+  ],
+  "agent-agent-task-queue": [
+   [
+    "LangSmith Agent Server scaling",
+    "https://docs.langchain.com/langsmith/agent-server-scale"
+   ],
+   [
+    "Vercel Workflow",
+    "https://vercel.com/docs/workflow"
+   ],
+   [
+    "Trigger.dev",
+    "https://trigger.dev/"
+   ]
+  ],
+  "agent-trigger-scheduler": [
+   [
+    "Vercel Cron Jobs",
+    "https://vercel.com/docs/cron-jobs"
+   ],
+   [
+    "Jira Automation",
+    "https://www.atlassian.com/software/jira/features/automation"
+   ],
+   [
+    "Zapier",
+    "https://zapier.com/"
+   ]
+  ],
+  "agent-agent-registry": [
+   [
+    "MCP Registry",
+    "https://registry.modelcontextprotocol.io/"
+   ],
+   [
+    "A2A Agent Cards",
+    "https://a2a-protocol.org/"
+   ]
+  ],
+  "rag-data-sources": [
+   [
+    "Google Drive API",
+    "https://developers.google.com/drive"
+   ],
+   [
+    "Confluence REST API",
+    "https://developer.atlassian.com/cloud/confluence/rest/"
+   ],
+   [
+    "Notion API",
+    "https://developers.notion.com/"
+   ]
+  ],
+  "rag-loader-parser": [
+   [
+    "Unstructured",
+    "https://unstructured.io/"
+   ],
+   [
+    "Docling",
+    "https://github.com/docling-project/docling"
+   ],
+   [
+    "LlamaParse",
+    "https://www.llamaindex.ai/llamaparse"
+   ]
+  ],
+  "rag-chunker": [
+   [
+    "LangChain text splitters",
+    "https://docs.langchain.com/"
+   ],
+   [
+    "Chonkie",
+    "https://github.com/chonkie-inc/chonkie"
+   ]
+  ],
+  "rag-embedding-pipeline": [
+   [
+    "Cloudflare AI Search",
+    "https://developers.cloudflare.com/ai-search/"
+   ],
+   [
+    "LangChain indexing",
+    "https://docs.langchain.com/"
+   ]
+  ],
+  "rag-vector-index": [
+   [
+    "pgvector HNSW",
+    "https://github.com/pgvector/pgvector"
+   ],
+   [
+    "FAISS",
+    "https://github.com/facebookresearch/faiss"
+   ],
+   [
+    "Qdrant",
+    "https://qdrant.tech/"
+   ]
+  ],
+  "rag-keyword-index": [
+   [
+    "Postgres full-text search",
+    "https://www.postgresql.org/docs/current/textsearch.html"
+   ],
+   [
+    "Elasticsearch BM25",
+    "https://www.elastic.co/elasticsearch"
+   ],
+   [
+    "Tantivy",
+    "https://github.com/quickwit-oss/tantivy"
+   ]
+  ],
+  "rag-hybrid-retriever": [
+   [
+    "Supabase hybrid search",
+    "https://supabase.com/docs/guides/ai/hybrid-search"
+   ],
+   [
+    "OpenSearch hybrid search",
+    "https://opensearch.org/docs/latest/search-plugins/hybrid-search/"
+   ],
+   [
+    "Weaviate hybrid",
+    "https://weaviate.io/"
+   ]
+  ],
+  "rag-late-interaction": [
+   [
+    "ColBERT",
+    "https://github.com/stanford-futuredata/ColBERT"
+   ],
+   [
+    "Vespa",
+    "https://vespa.ai/"
+   ]
+  ],
+  "rag-knowledge-graph": [
+   [
+    "Neo4j GraphRAG",
+    "https://neo4j.com/labs/genai-ecosystem/"
+   ],
+   [
+    "Microsoft GraphRAG",
+    "https://microsoft.github.io/graphrag/"
+   ],
+   [
+    "Atlassian Teamwork Graph",
+    "https://developer.atlassian.com/platform/teamwork-graph/"
+   ]
+  ],
+  "rag-context-builder": [
+   [
+    "LangChain middleware",
+    "https://docs.langchain.com/"
+   ],
+   [
+    "Claude context windows",
+    "https://docs.claude.com/en/docs/build-with-claude/context-windows"
+   ]
+  ],
+  "rag-semantic-cache": [
+   [
+    "Upstash semantic cache",
+    "https://upstash.com/docs/vector/sdks/semantic-cache-js/getting-started"
+   ],
+   [
+    "Redis LangCache",
+    "https://redis.io/langcache/"
+   ],
+   [
+    "GPTCache",
+    "https://github.com/zilliztech/GPTCache"
+   ]
+  ],
+  "rag-citations": [
+   [
+    "Claude citations",
+    "https://docs.claude.com/en/docs/build-with-claude/citations"
+   ],
+   [
+    "Cloudflare AI Search",
+    "https://developers.cloudflare.com/ai-search/"
+   ]
+  ],
+  "llmops-guardrails": [
+   [
+    "LangChain guardrail middleware",
+    "https://docs.langchain.com/"
+   ],
+   [
+    "Llama Guard",
+    "https://www.llama.com/"
+   ],
+   [
+    "NVIDIA NeMo Guardrails",
+    "https://github.com/NVIDIA/NeMo-Guardrails"
+   ]
+  ],
+  "llmops-pii-redaction": [
+   [
+    "LangChain PII middleware",
+    "https://docs.langchain.com/"
+   ],
+   [
+    "Microsoft Presidio",
+    "https://microsoft.github.io/presidio/"
+   ],
+   [
+    "AssemblyAI PII redaction",
+    "https://www.assemblyai.com/docs"
+   ]
+  ],
+  "llmops-prompt-registry": [
+   [
+    "LangSmith prompts",
+    "https://docs.smith.langchain.com/"
+   ],
+   [
+    "Langfuse prompt management",
+    "https://langfuse.com/"
+   ]
+  ],
+  "llmops-offline-evals": [
+   [
+    "Promptfoo",
+    "https://www.promptfoo.dev/"
+   ],
+   [
+    "LangSmith evaluation",
+    "https://docs.smith.langchain.com/"
+   ],
+   [
+    "Braintrust",
+    "https://www.braintrust.dev/"
+   ]
+  ],
+  "llmops-llm-as-judge": [
+   [
+    "LangSmith online evaluators",
+    "https://docs.smith.langchain.com/"
+   ],
+   [
+    "Promptfoo model-graded",
+    "https://www.promptfoo.dev/"
+   ],
+   [
+    "TypeSafe Jev (typed scoring)",
+    "https://console.typesafe.ai/"
+   ]
+  ],
+  "llmops-tracing": [
+   [
+    "LangSmith",
+    "https://docs.smith.langchain.com/"
+   ],
+   [
+    "Langfuse",
+    "https://langfuse.com/"
+   ],
+   [
+    "OpenTelemetry GenAI",
+    "https://opentelemetry.io/docs/specs/semconv/gen-ai/"
+   ]
+  ],
+  "llmops-token-cost-metering": [
+   [
+    "PostHog LLM analytics",
+    "https://posthog.com/docs/llm-analytics"
+   ],
+   [
+    "LangSmith cost tracking",
+    "https://docs.smith.langchain.com/"
+   ],
+   [
+    "Helicone",
+    "https://www.helicone.ai/"
+   ]
+  ],
+  "llmops-user-feedback": [
+   [
+    "LangSmith feedback",
+    "https://docs.smith.langchain.com/"
+   ],
+   [
+    "PostHog surveys",
+    "https://posthog.com/surveys"
+   ]
+  ],
+  "llmops-red-teaming": [
+   [
+    "Promptfoo red teaming",
+    "https://www.promptfoo.dev/docs/red-team/"
+   ],
+   [
+    "garak",
+    "https://github.com/NVIDIA/garak"
+   ]
+  ],
+  "llmops-model-fallback": [
+   [
+    "LangChain model fallback middleware",
+    "https://docs.langchain.com/"
+   ],
+   [
+    "Vercel AI Gateway",
+    "https://vercel.com/docs/ai-gateway"
+   ],
+   [
+    "LiteLLM fallbacks",
+    "https://docs.litellm.ai/"
+   ]
+  ],
+  "llmops-permissions-policy": [
+   [
+    "Better Auth access control",
+    "https://www.better-auth.com/docs/plugins/access"
+   ],
+   [
+    "Open Policy Agent",
+    "https://www.openpolicyagent.org/"
+   ],
+   [
+    "Cedar",
+    "https://www.cedarpolicy.com/"
+   ]
+  ],
+  "ops-monitoring": [
+   [
+    "Grafana",
+    "https://grafana.com/"
+   ],
+   [
+    "Prometheus",
+    "https://prometheus.io/"
+   ],
+   [
+    "Datadog",
+    "https://www.datadoghq.com/"
+   ]
+  ],
+  "ops-logging": [
+   [
+    "Better Stack Logs",
+    "https://betterstack.com/logs"
+   ],
+   [
+    "Axiom",
+    "https://axiom.co/"
+   ],
+   [
+    "Grafana Loki",
+    "https://grafana.com/oss/loki/"
+   ],
+   [
+    "Elastic",
+    "https://www.elastic.co/"
+   ]
+  ],
+  "ops-tracing": [
+   [
+    "OpenTelemetry",
+    "https://opentelemetry.io/"
+   ],
+   [
+    "Jaeger",
+    "https://www.jaegertracing.io/"
+   ],
+   [
+    "Sentry tracing",
+    "https://docs.sentry.io/product/tracing/"
+   ]
+  ],
+  "ops-alerting": [
+   [
+    "PagerDuty",
+    "https://www.pagerduty.com/"
+   ],
+   [
+    "Better Stack on-call",
+    "https://betterstack.com/incident-management"
+   ],
+   [
+    "Grafana Alerting",
+    "https://grafana.com/docs/grafana/latest/alerting/"
+   ]
+  ],
+  "ops-secrets-kms": [
+   [
+    "Vercel environment variables",
+    "https://vercel.com/docs/environment-variables"
+   ],
+   [
+    "HashiCorp Vault",
+    "https://www.vaultproject.io/"
+   ],
+   [
+    "AWS KMS",
+    "https://aws.amazon.com/kms/"
+   ],
+   [
+    "Doppler",
+    "https://www.doppler.com/"
+   ]
+  ],
+  "ops-identity-provider": [
+   [
+    "Okta",
+    "https://www.okta.com/"
+   ],
+   [
+    "Auth0",
+    "https://auth0.com/"
+   ],
+   [
+    "Amazon Cognito",
+    "https://aws.amazon.com/cognito/"
+   ],
+   [
+    "Microsoft Entra ID",
+    "https://www.microsoft.com/security/business/identity-access/microsoft-entra-id"
+   ]
+  ],
+  "ops-ci-cd-pipeline": [
+   [
+    "GitHub Actions",
+    "https://github.com/features/actions"
+   ],
+   [
+    "Vercel deployments",
+    "https://vercel.com/docs/deployments"
+   ],
+   [
+    "Turborepo",
+    "https://turborepo.com/"
+   ]
+  ],
+  "ops-analytics": [
+   [
+    "PostHog",
+    "https://posthog.com/"
+   ],
+   [
+    "Amplitude",
+    "https://amplitude.com/"
+   ],
+   [
+    "Vercel Web Analytics",
+    "https://vercel.com/docs/analytics"
+   ],
+   [
+    "GoatCounter",
+    "https://www.goatcounter.com/"
+   ]
+  ],
+  "ops-error-tracking": [
+   [
+    "Sentry",
+    "https://sentry.io/"
+   ],
+   [
+    "Better Stack Errors",
+    "https://betterstack.com/"
+   ],
+   [
+    "Bugsnag",
+    "https://www.bugsnag.com/"
+   ]
+  ],
+  "ops-uptime-status": [
+   [
+    "Better Stack Uptime",
+    "https://betterstack.com/uptime"
+   ],
+   [
+    "Atlassian Statuspage",
+    "https://www.atlassian.com/software/statuspage"
+   ],
+   [
+    "UptimeRobot",
+    "https://uptimerobot.com/"
+   ]
+  ],
+  "svc-ssr-web-app": [
+   [
+    "Next.js App Router",
+    "https://nextjs.org/docs/app"
+   ],
+   [
+    "Remix / React Router",
+    "https://reactrouter.com/"
+   ],
+   [
+    "SvelteKit",
+    "https://svelte.dev/docs/kit"
+   ],
+   [
+    "Nuxt",
+    "https://nuxt.com/"
+   ]
+  ],
+  "ai-typed-classifier": [
+   [
+    "TypeSafe Jev",
+    "https://console.typesafe.ai/"
+   ],
+   [
+    "Claude structured outputs",
+    "https://docs.claude.com/en/docs/build-with-claude/structured-outputs"
+   ],
+   [
+    "SetFit",
+    "https://github.com/huggingface/setfit"
+   ]
+  ],
+  "agent-agent-harness": [
+   [
+    "Deep Agents",
+    "https://docs.langchain.com/oss/python/deepagents/overview"
+   ],
+   [
+    "Managed Deep Agents",
+    "https://docs.langchain.com/langsmith/managed-deep-agents-overview"
+   ],
+   [
+    "Claude Agent SDK",
+    "https://code.claude.com/docs/en/agent-sdk/overview"
+   ],
+   [
+    "OpenAI Agents SDK",
+    "https://openai.github.io/openai-agents-python/"
+   ]
+  ],
+  "ai-visual-renderer": [
+   [
+    "three.js",
+    "https://threejs.org/"
+   ],
+   [
+    "React Three Fiber",
+    "https://r3f.docs.pmnd.rs/"
+   ],
+   [
+    "JSXGraph",
+    "https://jsxgraph.org/"
+   ],
+   [
+    "KaTeX",
+    "https://katex.org/"
+   ],
+   [
+    "Mermaid",
+    "https://mermaid.js.org/"
+   ]
+  ],
+  "ext-payment-gateway": [
+   [
+    "Stripe",
+    "https://stripe.com/"
+   ],
+   [
+    "Adyen",
+    "https://www.adyen.com/"
+   ],
+   [
+    "PayPal",
+    "https://developer.paypal.com/"
+   ]
+  ],
+  "ext-push-provider": [
+   [
+    "Apple Push Notification service",
+    "https://developer.apple.com/documentation/usernotifications"
+   ],
+   [
+    "Firebase Cloud Messaging",
+    "https://firebase.google.com/docs/cloud-messaging"
+   ]
+  ],
+  "ext-maps-api": [
+   [
+    "Google Maps Platform",
+    "https://developers.google.com/maps"
+   ],
+   [
+    "Mapbox",
+    "https://www.mapbox.com/"
+   ],
+   [
+    "OpenStreetMap",
+    "https://www.openstreetmap.org/"
+   ]
+  ],
+  "ext-email-sms-provider": [
+   [
+    "Resend",
+    "https://resend.com/"
+   ],
+   [
+    "Twilio",
+    "https://www.twilio.com/"
+   ],
+   [
+    "Amazon SES",
+    "https://aws.amazon.com/ses/"
+   ]
+  ],
+  "client-web-browser": [
+   [
+    "Next.js + React",
+    "https://nextjs.org/"
+   ],
+   [
+    "Tailwind CSS",
+    "https://tailwindcss.com/"
+   ],
+   [
+    "shadcn/ui",
+    "https://ui.shadcn.com/"
+   ]
+  ],
+  "client-voice-ai": [
+   [
+    "LiveKit client SDKs",
+    "https://docs.livekit.io/"
+   ],
+   [
+    "LiveKit Agents UI",
+    "https://docs.livekit.io/"
+   ]
+  ],
+  "client-mcp-client": [
+   [
+    "Claude Desktop",
+    "https://claude.ai/download"
+   ],
+   [
+    "Cursor",
+    "https://cursor.com/"
+   ],
+   [
+    "Claude Code",
+    "https://docs.claude.com/en/docs/claude-code/overview"
+   ]
+  ],
+  "client-ai-chat-app": [
+   [
+    "AI SDK UI",
+    "https://ai-sdk.dev/"
+   ],
+   [
+    "assistant-ui",
+    "https://www.assistant-ui.com/"
+   ],
+   [
+    "Rovo Chat",
+    "https://www.atlassian.com/software/rovo"
+   ]
+  ],
+  "agent-context-compaction": [
+   [
+    "Deep Agents context engineering",
+    "https://docs.langchain.com/oss/python/deepagents/context-engineering"
+   ],
+   [
+    "Anthropic: effective context engineering",
+    "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+   ],
+   [
+    "Claude context editing",
+    "https://docs.claude.com/en/docs/build-with-claude/context-editing"
+   ]
+  ],
+  "agent-agent-filesystem": [
+   [
+    "Deep Agents backends",
+    "https://docs.langchain.com/oss/python/deepagents/backends"
+   ],
+   [
+    "Claude memory tool",
+    "https://docs.claude.com/en/docs/agents-and-tools/tool-use/memory-tool"
+   ]
+  ],
+  "agent-context-hub": [
+   [
+    "LangSmith Context Hub",
+    "https://docs.langchain.com/langsmith/use-the-context-hub"
+   ],
+   [
+    "Langfuse prompt management",
+    "https://langfuse.com/"
+   ]
+  ],
+  "agent-run-config": [
+   [
+    "Managed Deep Agents runtime context",
+    "https://docs.langchain.com/langsmith/python/managed-deep-agents-runtime"
+   ],
+   [
+    "LangGraph runtime",
+    "https://docs.langchain.com/oss/python/langgraph/overview"
+   ]
+  ],
+  "agent-agent-channels": [
+   [
+    "Managed Deep Agents channels (Slack, HTTP)",
+    "https://docs.langchain.com/langsmith/python/managed-deep-agents-channels"
+   ],
+   [
+    "Slack Bolt",
+    "https://slack.dev/bolt-js/"
+   ],
+   [
+    "GitHub Apps",
+    "https://docs.github.com/en/apps"
+   ]
+  ],
+  "agent-agent-auth-handler": [
+   [
+    "LangSmith custom auth",
+    "https://docs.langchain.com/langsmith/custom-auth"
+   ],
+   [
+    "Resource-level authorization",
+    "https://docs.langchain.com/langsmith/resource-auth"
+   ],
+   [
+    "Managed Deep Agents identity",
+    "https://docs.langchain.com/langsmith/python/managed-deep-agents-identity"
+   ]
+  ],
+  "agent-credential-broker": [
+   [
+    "Managed Deep Agents connections",
+    "https://docs.langchain.com/langsmith/python/managed-deep-agents-connections"
+   ],
+   [
+    "LangSmith Agent Auth",
+    "https://docs.langchain.com/langsmith/agent-auth"
+   ],
+   [
+    "Arcade",
+    "https://www.arcade.dev/"
+   ],
+   [
+    "MCP authorization",
+    "https://modelcontextprotocol.io/specification/draft/basic/authorization"
+   ]
+  ],
+  "llmops-agent-eval-harness": [
+   [
+    "Harbor",
+    "https://github.com/harbor-framework/harbor"
+   ],
+   [
+    "Harbor docs",
+    "https://docs.harborframework.com/"
+   ],
+   [
+    "Terminal-Bench",
+    "https://www.tbench.ai/"
+   ],
+   [
+    "Managed Deep Agents evals",
+    "https://docs.langchain.com/langsmith/python/managed-deep-agents-evals"
+   ]
+  ]
  },
  "designs": {
   "ai-voice-tutor": {
@@ -184,6 +2262,20 @@
    "appr": "Plan for approval",
    "tools": "Rovo skills / Forge rovo:action",
    "obs": "Audit log + query success rate + LLM judge"
+  },
+  "production-agent-platform": {
+   "ch": "Slack + HTTP channels (one module per channel)",
+   "auth": "identity.py: JWT provider (e.g. Supabase) -> user id; custom auth handler",
+   "q": "Agent Server queue workers (x 10 jobs each) + double-texting strategy",
+   "sched": "schedules/ files (cron) + runtime.schedules in custom tools",
+   "rt": "Deep Agents on the LangGraph runtime (checkpoints, interrupts)",
+   "hub": "LangSmith Context Hub (instructions.md, skills/, tagged staging/production)",
+   "gw": "LangSmith LLM Gateway (routes, fallbacks, spend limits)",
+   "obs": "LangSmith tracing + Harbor evals (evals/)",
+   "mem": "memory.py: /memories/agent/ and /memories/user/",
+   "sbx": "LangSmith Sandboxes (one per thread)",
+   "cred": "Connections: owner user or agent; interrupt for OAuth consent",
+   "mcp": "MCP connectors (tools/mcp.py)"
   }
  }
 }
