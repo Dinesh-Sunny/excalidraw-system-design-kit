@@ -2260,6 +2260,57 @@
    "sbx": "LangSmith Sandboxes (one per thread)",
    "cred": "Connections: owner user or agent; interrupt for OAuth consent",
    "mcp": "MCP connectors (tools/mcp.py)"
+  },
+  "ai-interview-research-platform": {
+   "app": "React Router v7 + TypeScript",
+   "pg": "PostgreSQL with row-level security",
+   "rtc": "MediaRecorder + resumable S3 multipart",
+   "mod": "Node.js worker per session (LangGraph or a plain state machine)",
+   "llm": "OpenAI / Claude / Gemini per job via an AI gateway",
+   "s3": "Amazon S3 or Google Cloud Storage",
+   "q": "SQS, Cloud Tasks or BullMQ",
+   "mp": "FFmpeg or AWS Elemental MediaConvert + AssemblyAI / Deepgram",
+   "syn": "Small model with structured outputs + pgvector",
+   "ev": "Promptfoo or LangSmith evals in CI",
+   "kb": "pgvector + Postgres full-text search",
+   "rep": "Server-rendered report + clip player"
+  },
+  "live-ai-moderator": {
+   "sfu": "LiveKit Cloud",
+   "vad": "Silero VAD",
+   "stt": "Deepgram / AssemblyAI streaming",
+   "mod": "LiveKit Agents worker",
+   "probe": "Small model with structured output",
+   "llm": "Fast LLM via AI gateway",
+   "tts": "ElevenLabs / Cartesia",
+   "chk": "Postgres or Redis checkpoint",
+   "qa": "Guardrail classifier"
+  },
+  "interview-media-pipeline": {
+   "up": "S3 presigned multipart upload",
+   "raw": "Amazon S3",
+   "q": "S3 event -> SQS",
+   "tc": "FFmpeg or AWS Elemental MediaConvert",
+   "dlq": "SQS dead-letter queue",
+   "asr": "AssemblyAI / Deepgram batch",
+   "dia": "Speaker labels + PII redaction from the speech API",
+   "tr": "PostgreSQL JSONB",
+   "cdn": "CloudFront signed URLs"
+  },
+  "insight-synthesis-engine": {
+   "code": "Small model with structured outputs (batch API)",
+   "emb": "OpenAI / Voyage embeddings",
+   "cl": "HDBSCAN or agglomerative clustering (scikit-learn)",
+   "ev": "Promptfoo / LangSmith with a golden set",
+   "st": "SQL + Wilson intervals"
+  },
+  "research-knowledge-base": {
+   "ask": "LangGraph agent",
+   "hr": "pgvector + Postgres full-text (RRF)",
+   "rr": "Cohere Rerank / cross-encoder",
+   "llm": "Claude / GPT per job",
+   "mcp": "MCP server (TypeScript SDK)",
+   "wf": "Cron + workflow engine (Temporal / Inngest)"
   }
  }
 }

@@ -5,6 +5,7 @@ import { diagram } from "./diagram.js";
 import { TEMPLATES, PATTERNS } from "./templates.js";
 import { AGENTIC, AI_TEMPLATES } from "./agentic.js";
 import { AEO_TEMPLATES } from "./aeo.js";
+import { RESEARCH_TEMPLATES } from "./research.js";
 import { UI, FRAMES, SCREENS } from "./ui.js";
 
 const items = []; // {name, section, skel}
@@ -131,7 +132,7 @@ for (const p of PATTERNS) add("pattern", p.name, diagram(p.spec));
 section("agentic", "20", "Agentic patterns", "agent", "Anthropic: building effective agents");
 for (const p of AGENTIC) add("agentic", p.name + " ai agent", diagram(p.spec));
 section("tpl", "21", "Full interview designs", "ai", "classic questions, ready to adapt");
-for (const p of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES]) add("tpl", p.name, diagram(p.spec));
+for (const p of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES, ...RESEARCH_TEMPLATES]) add("tpl", p.name, diagram(p.spec));
 
 // ================= build =================
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -193,7 +194,7 @@ async function practiceBuild(spec) {
 const pslug = (name) => name.toLowerCase().split(" - ")[0].replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 window.PRACTICE = async () => {
   const out = [];
-  for (const t of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES]) {
+  for (const t of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES, ...RESEARCH_TEMPLATES]) {
     const spec = t.spec, base = await practiceBuild(spec), variants = {}, v2 = V2[pslug(t.name)] || {};
     for (const sc of v2.scenarios || []) {
       if (!sc.add || !sc.add.nodes || !sc.add.nodes.length) continue;

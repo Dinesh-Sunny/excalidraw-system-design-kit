@@ -3156,5 +3156,457 @@
     ]
    }
   ]
+ },
+ "ai-interview-research-platform": {
+  "modern": [
+   [
+    "AI moderators at scale",
+    "Products now run 1,000s of 1:1 video interviews in parallel, in dozens of languages, with adaptive follow-ups - qualitative depth at survey speed."
+   ],
+   [
+    "Evidence-linked insights",
+    "Every chart and theme links back to the verbatim and the clip, so stakeholders trust AI-made reports."
+   ],
+   [
+    "Always-on research",
+    "Instead of one-off projects, scheduled waves feed a growing knowledge base that teams query in plain English."
+   ],
+   [
+    "MCP for research data",
+    "Research tools expose MCP servers so assistants like Claude can query interview data directly."
+   ],
+   [
+    "Enterprise AI hosting",
+    "Big customers ask for EU hosting, dedicated model deployments and a promise that their data never trains models."
+   ]
+  ],
+  "extra": {
+   "t": "Trust in the insights",
+   "look": "They want to see how a stakeholder can check any claim, and how the system avoids invented quotes and shaky numbers.",
+   "rounds": [
+    [
+     "How should the coder return a quote?",
+     "As a span (offsets) inside the transcript, verified before use",
+     [
+      "As free text the model writes",
+      "As a summary of the answer",
+      "As a screenshot of the transcript"
+     ]
+    ],
+    [
+     "A theme shows '58%' from 12 people. Best fix?",
+     "Show the count with a range and flag the small base",
+     [
+      "Round it to 60%",
+      "Hide the number",
+      "Ask the model for a better number"
+     ]
+    ],
+    [
+     "Where should the interview flow live?",
+     "In code as a state machine; the model only phrases and decides to probe",
+     [
+      "In one long prompt",
+      "In the participant's browser",
+      "In the report writer"
+     ]
+    ],
+    [
+     "A prompt change might shift old results. What do you store?",
+     "The prompt and model version on every result",
+     [
+      "Nothing - always re-run everything",
+      "Only the latest prompt",
+      "A screenshot of the report"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "global",
+    "name": "Global brand, many markets",
+    "blurb": "A consumer brand runs the same study in 7 markets and 10 languages.",
+    "lens": "Languages, translation and comparable results across markets.",
+    "reqF": [
+     "Interview in the participant's language; report in the team's language"
+    ],
+    "reqN": [
+     "Same guide, comparable codes in every market"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "tl",
+       "Translation\n(original + report language)",
+       "globe",
+       "ai",
+       "syn"
+      ]
+     ],
+     "edges": [
+      [
+       "mp",
+       "tl",
+       "transcript"
+      ]
+     ]
+    },
+    "blocks": {
+     "tl": "Store the original transcript and a translation into the reporting language; code on the translation, quote the original."
+    },
+    "dives": [
+     [
+      "Code in the original language or the translation?",
+      "Code on one reporting language so codes compare across markets, but always keep and show the original quote next to the translation."
+     ]
+    ],
+    "wrap": [
+     "Next: per-market evals and local panel partners."
+    ]
+   },
+   {
+    "id": "startup",
+    "name": "First version in 6 weeks",
+    "blurb": "A small team ships the first paying version.",
+    "lens": "Managed services, simple choices, fast iteration.",
+    "est": [
+     "10 customers, 2k interviews/month: one Postgres, one queue, managed transcription"
+    ],
+    "dives": [
+     [
+      "What would you not build yet?",
+      "Live streaming voice, custom models and multi-region. Start with record-per-answer, managed speech-to-text, Postgres + a job queue, and one region."
+     ]
+    ],
+    "wrap": [
+     "Next: add the knowledge base once customers have run several studies."
+    ]
+   },
+   {
+    "id": "regulated",
+    "name": "Health and pharma research",
+    "blurb": "Patients and doctors interviewed about treatments.",
+    "lens": "Consent, PII and audit.",
+    "reqN": [
+     "Consent recorded before any recording",
+     "Audit log of every view of a recording"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "red",
+       "PII Redaction\n(before analysis)",
+       "redact",
+       "llmops",
+       "mp"
+      ]
+     ],
+     "edges": [
+      [
+       "mp",
+       "red",
+       "transcript"
+      ]
+     ]
+    },
+    "blocks": {
+     "red": "Redact names, numbers and health details before any model sees the transcript; raw media locked down with short retention."
+    },
+    "dives": [
+     [
+      "What changes for health research?",
+      "Explicit consent capture, redaction before analysis, stricter retention, access logs on media, region-locked processing and a DPIA before launch."
+     ]
+    ],
+    "wrap": [
+     "Next: adverse-event detection that alerts a human."
+    ]
+   }
+  ]
+ },
+ "live-ai-moderator": {
+  "modern": [
+   [
+    "Cascaded voice with streaming",
+    "Streaming speech-to-text, a model and text-to-speech give control and debuggability; frameworks such as LiveKit Agents handle turns and interruptions."
+   ],
+   [
+    "Small models for decisions",
+    "A fast classifier decides 'probe or move on' with a confidence; bigger models only phrase."
+   ],
+   [
+    "Simulated participants for testing",
+    "Persona-driven synthetic participants test a guide before real people see it."
+   ],
+   [
+    "Real people on camera, no avatars",
+    "Showing the question as text and voice often feels more natural than an animated face."
+   ]
+  ],
+  "extra": {
+   "t": "Probing well",
+   "look": "They want a clear rule for when to dig deeper and when to move on, within the time budget.",
+   "rounds": [
+    [
+     "The answer is 'it was fine'. What next?",
+     "Probe once with a neutral open question about why",
+     [
+      "Move to the next question",
+      "Ask three follow-ups in a row",
+      "Suggest an answer for them"
+     ]
+    ],
+    [
+     "The section is out of time. What wins?",
+     "The guide's time budget: move on",
+     [
+      "The model's wish to probe",
+      "The participant's mood",
+      "The longest answer"
+     ]
+    ],
+    [
+     "Where does 'probe or not' get decided?",
+     "A small classifier with a typed yes/no and a reason",
+     [
+      "The biggest model on every turn",
+      "A random number",
+      "The participant"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "async",
+    "name": "Answer any time (async)",
+    "blurb": "People record each answer when it suits them, on a phone.",
+    "lens": "Simplicity and reliability over real-time feel.",
+    "reqN": [
+     "Works on weak mobile data",
+     "Next question within ~2 s of upload"
+    ],
+    "dives": [
+     [
+      "What changes without live streaming?",
+      "Each answer is recorded and uploaded in chunks; the moderator decides the next question after the upload; there is no barge-in, and speech-to-text runs on the finished answer."
+     ]
+    ],
+    "wrap": [
+     "Next: add live mode for methods that need conversation."
+    ]
+   },
+   {
+    "id": "screen",
+    "name": "Usability with screen share",
+    "blurb": "Participants try a prototype while talking.",
+    "lens": "What is on screen shapes the follow-up.",
+    "add": {
+     "nodes": [
+      [
+       "scr",
+       "Screen Events\n(clicks, page)",
+       "eye",
+       "client",
+       "stim"
+      ]
+     ],
+     "edges": [
+      [
+       "stim",
+       "scr",
+       "events"
+      ]
+     ]
+    },
+    "blocks": {
+     "scr": "Screen events (page, clicks, time stuck) give the moderator context for the next question."
+    },
+    "dives": [
+     [
+      "How does the moderator use the screen?",
+      "Send compact events (page, element, time on step) - not video frames - to the decider, so it can ask 'what did you expect when you clicked that?'"
+     ]
+    ],
+    "wrap": [
+     "Next: vision model summaries of key moments."
+    ]
+   }
+  ]
+ },
+ "interview-media-pipeline": {
+  "modern": [
+   [
+    "Direct-to-storage uploads",
+    "Presigned multipart uploads keep app servers out of the byte path."
+   ],
+   [
+    "Managed media services",
+    "Managed transcoding and transcription replace self-run GPU and FFmpeg fleets for most teams."
+   ],
+   [
+    "Word-level timestamps everywhere",
+    "Modern speech-to-text returns word timings and speakers, so every quote is instantly a clip."
+   ]
+  ],
+  "extra": {
+   "t": "Reliability",
+   "look": "They want retries that never double-process and a clear story for bad files.",
+   "rounds": [
+    [
+     "A transcode job runs twice. What keeps it safe?",
+     "A unique job key and deterministic output keys",
+     [
+      "Hope it doesn't",
+      "A bigger server",
+      "Deleting the second output by hand"
+     ]
+    ],
+    [
+     "One corrupt file keeps failing. What happens?",
+     "After a few tries it goes to a dead letter queue with an alert",
+     [
+      "It retries forever",
+      "The whole queue stops",
+      "It is silently skipped"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "residency",
+    "name": "EU data residency",
+    "blurb": "An EU customer needs media to stay in the EU.",
+    "lens": "Regions and processing location.",
+    "reqN": [
+     "Storage and processing in the EU region only"
+    ],
+    "dives": [
+     [
+      "How do you keep media in-region?",
+      "Per-tenant region in config, a bucket and worker pool per region, routing by tenant, and transcription vendors with EU processing."
+     ]
+    ],
+    "wrap": [
+     "Next: per-tenant encryption keys."
+    ]
+   }
+  ]
+ },
+ "insight-synthesis-engine": {
+  "modern": [
+   [
+    "Typed outputs",
+    "Structured outputs and schemas make model results checkable and stable."
+   ],
+   [
+    "Batch APIs and prompt caching",
+    "Coding thousands of answers runs at batch prices with the codebook cached."
+   ],
+   [
+    "LLM-as-judge, calibrated",
+    "A judge model scales evaluation only after it agrees with human coders."
+   ]
+  ],
+  "extra": {
+   "t": "Qualitative rigour",
+   "look": "They want codes you can audit and counts you can defend.",
+   "rounds": [
+    [
+     "How do you check the coder before shipping?",
+     "Measure it against a golden set coded by researchers",
+     [
+      "Ask it if it is confident",
+      "Read one transcript",
+      "Use a bigger model"
+     ]
+    ],
+    [
+     "Theme names change on every re-run. Fix?",
+     "Match themes to the last run by members and keep ids stable",
+     [
+      "Rename them by hand each time",
+      "Never re-run",
+      "Use random ids"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "waves",
+    "name": "Weekly waves",
+    "blurb": "The same study runs every week for a year.",
+    "lens": "Comparable themes over time.",
+    "dives": [
+     [
+      "How do themes stay comparable week to week?",
+      "Freeze the codebook, code new answers against it, propose new codes separately for review, and show changes only beyond the sample-size range."
+     ]
+    ],
+    "wrap": [
+     "Next: alerts when a theme grows."
+    ]
+   }
+  ]
+ },
+ "research-knowledge-base": {
+  "modern": [
+   [
+    "Agentic retrieval",
+    "Agents plan sub-queries and choose between search and structured queries."
+   ],
+   [
+    "MCP servers",
+    "Products expose read-only tools so customers' own assistants can ask questions."
+   ],
+   [
+    "Evidence over eloquence",
+    "Answers show the quotes and the base size, and say when evidence is thin."
+   ]
+  ],
+  "extra": {
+   "t": "Permissions and grounding",
+   "look": "They want permission checks inside retrieval and a plan for counting questions.",
+   "rounds": [
+    [
+     "Where do you apply study permissions?",
+     "Inside the search query, from the session identity",
+     [
+      "After the model answers",
+      "In the prompt text",
+      "In the browser"
+     ]
+    ],
+    [
+     "'How many mentioned price?' - best tool?",
+     "A query over the coded theme counts",
+     [
+      "Vector search and let the model count",
+      "Read every transcript",
+      "Ask the model to estimate"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "agents",
+    "name": "Customers' agents ask too",
+    "blurb": "Customer AI assistants query research through MCP.",
+    "lens": "Scoped access, limits and metering.",
+    "dives": [
+     [
+      "How do you open this safely to other agents?",
+      "Per-customer scoped tokens, read-only tools, the same permission filters, rate limits and usage metering, and citations in every answer."
+     ]
+    ],
+    "wrap": [
+     "Next: webhooks when new evidence arrives."
+    ]
+   }
+  ]
  }
 }
