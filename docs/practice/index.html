@@ -10,52 +10,76 @@
 <link rel="preload" href="../fonts/Geist-Regular.woff2" as="font" type="font/woff2" crossorigin>
 
 <style>
-/* Drill mind-map (shared by Explore and the practice canvas) */
-.drill { position: relative; display: grid; gap: 14px; --dr-accent: var(--sketch); --dr-soft: var(--sketch-soft) }
-.dr-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 36px }
-.dr-back { height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 14px/1 var(--font-sans); cursor: pointer }
-.dr-back:hover { border-color: var(--slate) }
-.dr-back[hidden] { display: none }
-.dr-trail { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; font: 500 14px/20px var(--font-sans); color: var(--ink-muted) }
-.dr-trail span { color: var(--hairline); padding: 0 2px }
-.dr-trail button { border: 0; background: none; padding: 5px 8px; border-radius: 8px; color: var(--ink-muted); font: inherit; cursor: pointer; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+/* Drill: column view (shared by Explore and the practice canvas) */
+.drill { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; min-height: 0; position: relative; --dr-a: var(--sketch); --dr-s: var(--sketch-soft) }
+.dr-top { display: flex; align-items: center; gap: 8px; min-width: 0 }
+.dr-back { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 16px/1 var(--font-sans); cursor: pointer }
+.dr-back:hover:not(:disabled) { border-color: var(--slate) } .dr-back:disabled { opacity: .35; cursor: default }
+.dr-trail { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; font: 500 14px/20px var(--font-sans); color: var(--ink-muted); white-space: nowrap }
+.dr-trail::-webkit-scrollbar { display: none }
+.dr-trail span { color: var(--slate); padding: 0 1px }
+.dr-trail button { border: 0; background: none; padding: 6px 8px; border-radius: 8px; color: var(--ink-muted); font: inherit; cursor: pointer; max-width: 200px; overflow: hidden; text-overflow: ellipsis }
 .dr-trail button:hover { background: var(--surface-sunk); color: var(--ink) }
-.dr-trail button[aria-current] { color: var(--ink); cursor: default; background: none }
-.dr-stage { position: relative; min-height: 200px; transition: height .35s cubic-bezier(.2,.8,.2,1) }
-.dr-wires { position: absolute; inset: 0; overflow: visible; pointer-events: none }
-.dr-wires path { fill: none; stroke: var(--sky-300); stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: 0; stroke-linecap: round }
-.dr-cards { position: absolute; inset: 0 }
-.dr-card { position: absolute; box-sizing: border-box; display: grid; gap: 4px; padding: 12px 14px 12px 16px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); text-align: left; cursor: zoom-in; box-shadow: 0 1px 2px rgba(0,0,0,.04); transition: border-color .2s, box-shadow .2s, translate .2s; will-change: transform }
-.dr-card::before { content: ""; position: absolute; left: -1px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: var(--dr-soft) }
-.dr-card.kid:hover { border-color: var(--dr-accent); box-shadow: var(--shadow-float); translate: 3px 0 }
-.dr-card:focus-visible { outline: 3px solid var(--dr-soft); outline-offset: 2px }
-.dr-card b { font: 600 15px/21px var(--font-sans); padding-right: 46px }
-.dr-card span { font: 400 13.5px/19px var(--font-sans); color: var(--ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
-.dr-card em { position: absolute; right: 12px; top: 13px; font: 500 11px/1 var(--font-mono); font-style: normal; color: var(--dr-accent); background: var(--dr-soft); padding: 4px 7px; border-radius: 999px }
-.dr-card.leaf { cursor: pointer }
-.dr-card.leaf::before { background: var(--hairline) }
-.dr-card img { width: 100%; max-height: 120px; object-fit: contain; background: var(--thumb); border-radius: 10px; margin-bottom: 4px }
-.dr-card.kid img { display: none }
-.dr-depth { position: absolute; right: 12px; bottom: 10px; display: flex; gap: 3px }
-.dr-depth i { width: 6px; height: 6px; border-radius: 50%; background: var(--dr-accent); opacity: calc(.85 - var(--j) * .28) }
-.dr-card.root { cursor: default; padding: 18px 18px 18px 20px; border-color: var(--dr-accent); box-shadow: 0 0 0 4px var(--dr-soft), var(--shadow-float); background: linear-gradient(180deg, var(--surface), var(--surface)) }
-.dr-card.root::before { background: var(--dr-accent) }
-.dr-card.root b { font: 400 26px/1.15 var(--font-serif); padding-right: 0 }
-.dr-card.root p { margin: 6px 0 0; font: 400 15px/23px var(--font-sans); color: var(--ink) }
-.dr-card.root .dr-depth { display: none }
-.drill.is-leaf .dr-card.root p { font-size: 17px; line-height: 27px }
-.dr-detail { display: flex; flex-wrap: wrap; gap: 8px }
-.dr-detail[hidden] { display: none }
-.dr-detail a { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 14px/20px var(--font-sans); text-decoration: none }
-.dr-sib { padding: 7px 14px; border-radius: 999px; border: 1px dashed var(--hairline); background: none; color: var(--ink-muted); font: 500 14px/20px var(--font-sans); cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .dr-sib:hover { color: var(--ink); border-color: var(--slate) }
-.dr-detail a.primary { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
-@media (prefers-reduced-motion: reduce) { .dr-stage { transition: none } .dr-card.kid:hover { translate: none } }
-/* drill-in over the practice canvas */
-.drov { position: absolute; inset: 0; z-index: 5; background: radial-gradient(circle, var(--dot, #d3d6de) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground, #f9f9fa); overflow: auto; padding: 16px 18px 28px; animation: drovin .32s cubic-bezier(.2,.8,.2,1) both; transform-origin: var(--ox, 50%) var(--oy, 50%) }
-.drov.closing { animation: drovout .24s ease-in both }
-@keyframes drovin { from { opacity: 0; transform: scale(.6) } to { opacity: 1; transform: none } }
-@keyframes drovout { to { opacity: 0; transform: scale(.6) } }
-@media (prefers-reduced-motion: reduce) { .drov, .drov.closing { animation: none } }
+.dr-trail button[aria-current] { color: var(--ink); font-weight: 600; cursor: default; background: none }
+.dr-find { flex: none; display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); width: 220px }
+.dr-find svg { width: 16px; height: 16px; fill: none; stroke: var(--ink-muted); stroke-width: 1.6; stroke-linecap: round; flex: none }
+.dr-find input { border: 0; outline: 0; background: none; color: var(--ink); font: 400 14px/20px var(--font-sans); width: 100%; min-width: 0 }
+.dr-find:focus-within { border-color: var(--dr-a); box-shadow: 0 0 0 3px var(--dr-s) }
+.dr-hits { position: absolute; z-index: 6; right: 0; top: 44px; width: min(420px, 100%); max-height: 60vh; overflow: auto; padding: 6px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); box-shadow: var(--shadow-float) }
+.dr-hits[hidden] { display: none }
+.dr-hits button { display: grid; gap: 2px; width: 100%; text-align: left; padding: 9px 12px; border: 0; border-radius: 10px; background: none; color: var(--ink); cursor: pointer }
+.dr-hits button:hover, .dr-hits button:focus-visible { background: var(--surface-sunk) }
+.dr-hits b { font: 500 14px/20px var(--font-sans) } .dr-hits span { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+.dr-hits p { margin: 8px 12px; color: var(--ink-muted); font: 400 14px/20px var(--font-sans) }
+/* the columns */
+.dr-cols { display: flex; min-height: 0; overflow-x: auto; overflow-y: hidden; border: 1px solid var(--hairline); border-radius: var(--r-lg); background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.04); scroll-snap-type: x proximity }
+.dr-col { flex: none; width: 272px; display: flex; flex-direction: column; gap: 2px; padding: 10px 8px 14px; overflow-y: auto; border-right: 1px solid var(--hairline); scroll-snap-align: start; min-height: 0 }
+.dr-col:last-child { border-right: 0 }
+.dr-ch { flex: none; padding: 6px 10px 8px; font: 500 11px/16px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.dr-row { flex: none; position: relative; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 2px 8px; width: 100%; text-align: left; padding: 9px 10px; border: 0; border-radius: 10px; background: none; color: var(--ink); cursor: pointer; font: inherit }
+.dr-row .t { font: 500 14.5px/20px var(--font-sans); grid-column: 1 }
+.dr-row .s { grid-column: 1 / -1; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
+.dr-row .c { font: 500 11px/1 var(--font-mono); color: var(--ink-muted); background: var(--surface-sunk); padding: 4px 6px; border-radius: 999px; grid-row: 1; grid-column: 2 }
+.dr-row .ch { width: 14px; height: 14px; fill: none; stroke: var(--ink-muted); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; grid-row: 1; grid-column: 3; transition: transform .2s }
+.dr-row:hover { background: var(--surface-sunk) }
+.dr-row:focus-visible { outline: 2px solid var(--dr-a); outline-offset: -2px }
+.dr-row.on { background: var(--dr-s); }
+.dr-row.on .t { font-weight: 600 } .dr-row.on .c { background: var(--surface); color: var(--dr-a) } .dr-row.on .ch { stroke: var(--dr-a); transform: translateX(2px) }
+.dr-row.leaf .t { font-weight: 400 } .dr-row.leaf.on .t { font-weight: 600 }
+/* the explanation column */
+.dr-col.det { flex: 1 1 auto; width: auto; min-width: 300px; background: var(--ground); padding: 22px 26px 28px }
+.dr-det { display: grid; gap: 12px; max-width: 640px; align-content: start }
+.dr-det img { width: 100%; max-width: 320px; max-height: 160px; object-fit: contain; background: var(--thumb); border-radius: 12px; border: 1px solid var(--hairline) }
+.dr-det h3 { margin: 0; font: 400 30px/1.12 var(--font-serif) }
+.dr-det p { margin: 0; font: 400 16px/26px var(--font-sans); color: var(--ink) }
+.dr-det p.m { color: var(--ink-muted); font-size: 15px; line-height: 23px }
+.dr-col.peek .dr-det p { color: var(--ink-muted) }
+.dr-links { display: flex; flex-wrap: wrap; gap: 8px }
+.dr-links a { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 14px/20px var(--font-sans); text-decoration: none }
+.dr-links a.primary { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+.dr-sibs { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--hairline) }
+.dr-sibs button { min-width: 0; max-width: 48%; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink-muted); font: 500 13px/18px var(--font-sans); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.dr-sibs button:hover { color: var(--ink); border-color: var(--slate) }
+/* phone: one column at a time, like an app */
+.dr-cols.phone { overflow: hidden; border-radius: var(--r-md) }
+.dr-cols.phone .dr-col { width: 100%; border-right: 0 }
+.dr-cols.phone .dr-col.det { min-width: 0; padding: 18px }
+.dr-cols.phone .dr-row { padding: 12px 10px }
+@media (max-width: 720px) { .dr-find { width: 40px; padding: 0 11px } .dr-find:focus-within { width: 100%; position: absolute; right: 0; left: 0; z-index: 7 } .dr-find input::placeholder { color: transparent } .dr-find:focus-within input::placeholder { color: var(--ink-muted) } }
+/* go inside over the practice canvas */
+.drov { position: absolute; inset: 0; z-index: 5; display: grid; background: var(--ground, #f9f9fa); padding: 14px; animation: drovin .3s cubic-bezier(.2,.8,.2,1) both; transform-origin: var(--ox, 50%) var(--oy, 50%) }
+.drov .drill { min-height: 0 } .drov .dr-cols { height: 100% }
+.drov.closing { animation: drovout .22s ease-in both }
+@keyframes drovin { from { opacity: 0; transform: scale(.7) } to { opacity: 1; transform: none } }
+@keyframes drovout { to { opacity: 0; transform: scale(.7) } }
+@media (prefers-reduced-motion: reduce) { .drov, .drov.closing { animation: none } .dr-row .ch { transition: none } }
+.dr-sums { display: grid; gap: 8px }
+.dr-sum { display: grid; gap: 3px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; position: relative }
+.dr-sum:hover { border-color: var(--dr-a); box-shadow: var(--shadow-float) }
+.dr-sum b { font: 600 14.5px/20px var(--font-sans); padding-right: 70px }
+.dr-sum span { font: 400 14px/21px var(--font-sans); color: var(--ink-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden }
+.dr-sum em { position: absolute; right: 12px; top: 13px; font: 500 11px/1 var(--font-mono); font-style: normal; color: var(--dr-a); background: var(--dr-s); padding: 4px 7px; border-radius: 999px }
+.dr-col.det { overflow-y: auto }
 
 
 @font-face { font-family: "Geist"; src: url(../fonts/Geist-Regular.woff2) format("woff2"); font-weight: 400; font-display: swap }
@@ -950,82 +974,84 @@ body.run > header.nav, body.run > footer { display: none }
 <footer class="gut"><div class="wrap"><span><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v1.5.0</a> · MIT · free, no sign-up</span><span class="help">Happy to help: <a data-mail="Practice" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span class="fnav"><a href="../">Blocks</a> · <a href="../practice/">Practice</a> · <a href="../explore/">Explore</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="../sponsor/">Sponsor</a></span></div></footer>
 
 <script>
-/* Drill: a mind-map you can walk into. The current idea sits on the left, the ideas inside it branch out
-   to the right with drawn connectors; each branch previews how deep it goes. Go in with a tap or double-click,
-   come out with right-click, Esc, Back or the trail. Cards glide between levels (FLIP), so you never lose your place.
-   Shared by the Explore page and the practice canvas. Needs TREE nodes {id, t, s?, d?, img?, l?, k?, r?, sl?}. */
+/* Drill: walk a tree of ideas the way Finder's column view works.
+   Every level you opened stays visible as a column, so you always see where you are and can jump back
+   to any level with one click. The last column explains the chosen idea. On phones it becomes one
+   column that slides in and out like an app. Keys: up/down move, right/Enter go in, left/Esc come out;
+   right-click also comes out. Search finds any idea and jumps there.
+   Shared by Explore and the practice canvas. Nodes: {id, t, s?, d?, img?, l?, k?, r?, sl?}. */
 function Drill(host, tree, o) {
   o = o || {};
-  const RM = matchMedia("(prefers-reduced-motion: reduce)").matches, NS = "http://www.w3.org/2000/svg";
+  const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const E = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-  const BY = {}; (function idx(n) { if (n.sl) BY[n.sl] = n; (n.k || []).forEach(idx); })(tree);
-  const kids = n => (n.k && n.k.length ? n.k : n.r && BY[n.r] ? BY[n.r].k || [] : []);
-  const depth = n => { const k = kids(n); return k.length ? 1 + Math.max(...k.slice(0, 12).map(x => (x.k || []).length ? 1 + Math.min(2, Math.max(...x.k.map(y => (y.k || []).length ? 1 : 0))) : 0)) : 0; };
-  let stack = [tree], busy = false;
+  const BY = {}; (function idx(n) { if (n.sl && !BY[n.sl]) BY[n.sl] = n; (n.k || []).forEach(idx); })(tree);
+  const resolve = n => (n && n.r && !(n.k && n.k.length) && BY[n.r] ? Object.assign({}, BY[n.r], { id: n.id, t: n.t, s: n.s || BY[n.r].s, d: n.d || BY[n.r].d }) : n);
+  const kids = n => (n && n.k ? n.k : []).map(resolve);
+  let stack = [tree], sel = 0, root = tree;
   host.classList.add("drill");
-  host.innerHTML = `<div class="dr-top"><button type="button" class="dr-back" hidden>← Back</button><nav class="dr-trail" aria-label="Where you are"></nav></div><div class="dr-stage"><svg class="dr-wires" aria-hidden="true"></svg><div class="dr-cards"></div></div><div class="dr-detail" hidden></div>`;
-  const $q = s => host.querySelector(s), stage = $q(".dr-stage"), wires = $q(".dr-wires"), cards = $q(".dr-cards"), trail = $q(".dr-trail"), backB = $q(".dr-back"), detail = $q(".dr-detail");
-  const narrow = () => (stage.clientWidth || host.clientWidth) < 640;
-  function cardHTML(n, role, i) {
-    const k = kids(n), dp = depth(n);
-    const dots = k.length ? `<span class="dr-depth" title="${dp} level${dp > 1 ? "s" : ""} inside">${Array.from({ length: Math.min(dp, 3) }, (_, j) => `<i style="--j:${j}"></i>`).join("")}</span>` : "";
-    return `<div class="dr-card ${role}${k.length ? "" : " leaf"}" data-id="${E(n.id)}" data-i="${i}" tabindex="0" role="button" aria-label="${E(n.t)}${k.length ? ", " + k.length + " inside" : ""}">
-      ${n.img ? `<img alt="" loading="lazy" src="${E((o.base || "") + n.img)}">` : ""}
-      <b>${E(n.t)}</b>${role === "root" ? (n.d ? `<p>${E(n.d)}</p>` : n.s ? `<p>${E(n.s)}</p>` : "") : n.s ? `<span>${E(n.s)}</span>` : ""}
-      ${k.length && role !== "root" ? `<em>${k.length} inside</em>` : ""}${dots}</div>`;
+  host.innerHTML = `<div class="dr-top"><button type="button" class="dr-back" aria-label="Back">←</button><nav class="dr-trail" aria-label="Where you are"></nav>${o.search === false ? "" : `<label class="dr-find"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m16.5 16.5-3.5-3.5"/></svg><input type="search" placeholder="Find an idea" aria-label="Find an idea"></label>`}</div>
+    <div class="dr-cols" role="tree"></div><div class="dr-hits" hidden></div>`;
+  const q = s => host.querySelector(s), cols = q(".dr-cols"), trail = q(".dr-trail"), backB = q(".dr-back"), find = q(".dr-find input"), hits = q(".dr-hits");
+  const phone = () => host.clientWidth < 720;
+  const rowHTML = (n, i, on) => { const k = (n.k || []).length || (n.r && BY[n.r] ? (BY[n.r].k || []).length : 0);
+    return `<button type="button" class="dr-row${on ? " on" : ""}${k ? "" : " leaf"}" data-i="${i}" role="treeitem" aria-expanded="${k ? !!on : "false"}" aria-selected="${!!on}">
+      <span class="t">${E(n.t)}</span>${n.s && !phone() ? "" : n.s ? `<span class="s">${E(n.s)}</span>` : ""}${k ? `<span class="c">${k}</span><svg class="ch" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg>` : ""}</button>`; };
+  function detailHTML(n) {
+    const sib = stack.length > 1 ? kids(stack[stack.length - 2]) : [], at = sib.findIndex(x => x.id === n.id);
+    const links = (n.l || []).map((x, i) => `<a class="${i ? "" : "primary"}" href="${E(x[1])}"${/^https?:/.test(x[1]) ? ' target="_blank" rel="noopener"' : ""}>${E(x[0])}</a>`).join("");
+    return `<div class="dr-det">${n.img ? `<img alt="" loading="lazy" src="${E((o.base || "") + n.img)}">` : ""}<h3>${E(n.t)}</h3>${n.d ? `<p>${E(n.d)}</p>` : ""}${n.s && n.s !== n.d && !(n.d || "").startsWith(n.s) ? `<p class="m">${E(n.s)}</p>` : ""}
+      ${links ? `<div class="dr-links">${links}</div>` : ""}
+      ${sib.length > 1 ? `<div class="dr-sibs">${at > 0 ? `<button type="button" data-sib="${at - 1}">← ${E(sib[at - 1].t)}</button>` : "<span></span>"}${at < sib.length - 1 ? `<button type="button" data-sib="${at + 1}">${E(sib[at + 1].t)} →</button>` : ""}</div>` : ""}</div>`;
   }
-  function layout() {
-    const cur = stack[stack.length - 1], k = kids(cur), W = stage.clientWidth || host.clientWidth, nar = narrow();
-    const els = [...cards.children], root = els[0], ch = els.slice(1);
-    const rw = nar ? W : !k.length ? Math.min(W, 760) : Math.min(340, Math.max(240, W * 0.3)), cx = nar ? 0 : rw + 90, cw = nar ? W - 22 : W - cx;
-    root.style.width = rw + "px"; root.style.left = "0px"; root.style.top = "0px";
-    let y = nar ? root.offsetHeight + 28 : 0; const gap = 12;
-    ch.forEach(c => { c.style.width = cw + "px"; c.style.left = (nar ? 22 : cx) + "px"; c.style.top = y + "px"; y += c.offsetHeight + gap; });
-    const H = Math.max(y - gap, root.offsetHeight); if (!nar) root.style.top = Math.max(0, Math.min(H - root.offsetHeight, (ch.length ? (parseFloat(ch[0].style.top) + parseFloat(ch[ch.length - 1].style.top) + ch[ch.length - 1].offsetHeight) / 2 : 0) - root.offsetHeight / 2)) + "px";
-    stage.style.height = H + "px"; wires.setAttribute("width", W); wires.setAttribute("height", H); wires.setAttribute("viewBox", `0 0 ${W} ${H}`);
-    const rt = parseFloat(root.style.top), sx = nar ? 10 : rw, sy = nar ? root.offsetHeight : rt + root.offsetHeight / 2;
-    wires.innerHTML = ch.map((c, i) => { const ty = parseFloat(c.style.top) + Math.min(28, c.offsetHeight / 2), tx = parseFloat(c.style.left);
-      const d = nar ? `M ${sx} ${sy} L ${sx} ${ty} L ${tx} ${ty}` : `M ${sx} ${sy} C ${sx + 50} ${sy}, ${tx - 50} ${ty}, ${tx} ${ty}`;
-      return `<path d="${d}" style="--i:${i}" pathLength="1"/>`; }).join("");
-    return k;
+  /* columns: one per open level; on a phone only the deepest one shows */
+  function draw(dir) {
+    const cur = stack[stack.length - 1], k = kids(cur), nar = phone();
+    const tv = nar ? stack.slice(-2) : stack, off = stack.length - tv.length;
+    trail.innerHTML = (off ? '<span aria-hidden="true">…</span>' : "") + tv.map((n, j) => { const i = j + off; return `${j ? '<span aria-hidden="true">›</span>' : ""}<button type="button" data-up="${i}"${i === stack.length - 1 ? ' aria-current="true"' : ""}>${E(n.t)}</button>`; }).join("");
+    backB.disabled = stack.length < 2 && !o.onExit;
+    const levels = [];
+    for (let i = 0; i < stack.length; i++) { const kk = kids(stack[i]); if (!kk.length) break; levels.push({ i, kk, on: stack[i + 1] ? stack[i + 1].id : null }); }
+    const fit = Math.max(1, Math.floor((cols.clientWidth - (k.length ? 340 : 380)) / 272)); /* keep the explanation in view; older levels stay in the trail */
+    const showLv = nar ? levels.slice(-1) : levels.slice(-fit);
+    let html = showLv.map(L => `<div class="dr-col" data-lv="${L.i}"><div class="dr-ch">${E(stack[L.i].t)}</div>${L.kk.map((n, j) => rowHTML(n, j, n.id === L.on)).join("")}</div>`).join("");
+    if (!k.length) html = (nar ? "" : html) + `<div class="dr-col det">${detailHTML(cur)}</div>`;
+    else if (!nar && stack.length === 1 && root.d) html += `<div class="dr-col det intro"><div class="dr-det"><h3>${E(root.t)}</h3><p>${E(root.d)}</p></div></div>`;
+    else if (!nar) { html += `<div class="dr-col det peek"><div class="dr-det">${cur.img ? `<img alt="" loading="lazy" src="${E((o.base || "") + cur.img)}">` : ""}<h3>${E(cur.t)}</h3>${cur.d || cur.s ? `<p class="m">${E(cur.d || cur.s)}</p>` : ""}<div class="dr-sums">${k.map((n, j) => `<button type="button" class="dr-sum" data-sum="${j}"><b>${E(n.t)}</b>${n.d || n.s ? `<span>${E(n.d || n.s)}</span>` : ""}${(n.k || []).length ? `<em>${n.k.length} inside</em>` : ""}</button>`).join("")}</div>${(cur.l || []).length ? `<div class="dr-links">${cur.l.map((x, i) => `<a class="${i ? "" : "primary"}" href="${E(x[1])}"${/^https?:/.test(x[1]) ? ' target="_blank" rel="noopener"' : ""}>${E(x[0])}</a>`).join("")}</div>` : ""}</div></div>`; }
+    cols.innerHTML = html; cols.classList.toggle("phone", nar);
+    const last = cols.lastElementChild; if (!RM && last) last.animate(nar ? [{ opacity: 0, transform: `translateX(${dir === "out" ? -24 : 24}px)` }, { opacity: 1, transform: "none" }] : [{ opacity: 0, transform: "translateX(16px)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
+    requestAnimationFrame(() => { cols.scrollTo({ left: cols.scrollWidth, behavior: RM ? "auto" : "smooth" }); const on = cols.querySelectorAll(".dr-row.on"); on.forEach(r => r.scrollIntoView({ block: "nearest" })); });
+    o.onMove && o.onMove(stack);
   }
-  function draw(dir, from) {
-    const cur = stack[stack.length - 1], k = kids(cur);
-    const old = {}; [...cards.children].forEach(c => old[c.dataset.id] = c.getBoundingClientRect());
-    trail.innerHTML = stack.map((n, i) => `${i ? '<span aria-hidden="true">/</span>' : ""}<button type="button" data-up="${i}"${i === stack.length - 1 ? ' aria-current="true"' : ""}>${E(n.t)}</button>`).join("");
-    backB.hidden = stack.length < 2 && !o.onExit;
-    cards.innerHTML = cardHTML(cur, "root", -1) + k.map((n, i) => cardHTML(n, "kid", i)).join("");
-    detail.hidden = true; let dh = "";
-    if (cur.l && cur.l.length) dh += cur.l.map((x, i) => `<a class="${i ? "" : "primary"}" href="${E(x[1])}"${/^https?:/.test(x[1]) ? ' target="_blank" rel="noopener"' : ""}>${E(x[0])}</a>`).join("");
-    if (!k.length && stack.length > 1) { const sib = kids(stack[stack.length - 2]), at = sib.findIndex(x => x.id === cur.id); /* read the next idea without going back out */
-      if (at > 0) dh += `<button type="button" class="dr-sib" data-sib="${at - 1}">← ${E(sib[at - 1].t)}</button>`; if (at > -1 && at < sib.length - 1) dh += `<button type="button" class="dr-sib" data-sib="${at + 1}">${E(sib[at + 1].t)} →</button>`; }
-    if (dh) { detail.hidden = false; detail.innerHTML = dh; }
-    host.classList.toggle("is-leaf", !k.length);
-    layout();
-    if (RM) return;
-    /* FLIP: a card that was on screen glides from where it was to where it is now */
-    [...cards.children].forEach((c, i) => {
-      const was = old[c.dataset.id] || (from && i === 0 ? from : null), now = c.getBoundingClientRect();
-      if (was) { const dx = was.left - now.left, dy = was.top - now.top, s = Math.max(.4, Math.min(2.5, was.width / now.width)); c.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${s})`, transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }], { duration: 420, easing: "cubic-bezier(.2,.8,.2,1)" }); }
-      else c.animate([{ opacity: 0, transform: `translateX(${dir === "out" ? -16 : 24}px) scale(.97)` }, { opacity: 1, transform: "none" }], { duration: 360, delay: 60 + Math.min(i, 10) * 35, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" });
-    });
-    wires.querySelectorAll("path").forEach((p, i) => p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 420, delay: 120 + Math.min(i, 10) * 35, easing: "ease-out", fill: "backwards" }));
+  function openAt(lv, j) { const kk = kids(stack[lv]); if (!kk[j]) return; stack = stack.slice(0, lv + 1).concat([kk[j]]); draw("in"); focusRow(); }
+  function out(to) { if (stack.length < 2) { o.onExit && o.onExit(); return; } stack = stack.slice(0, to == null ? -1 : to + 1); draw("out"); focusRow(); }
+  function focusRow() { requestAnimationFrame(() => { const c = [...cols.querySelectorAll(".dr-col:not(.det)")].pop(); const r = c && (c.querySelector(".dr-row.on") || c.querySelector(".dr-row")); if (r && host.contains(document.activeElement)) r.focus({ preventScroll: true }); }); }
+  cols.addEventListener("click", e => { const r = e.target.closest(".dr-row"); if (r) { openAt(+r.closest(".dr-col").dataset.lv, +r.dataset.i); return; } const sm = e.target.closest("[data-sum]"); if (sm) { openAt(stack.length - 1, +sm.dataset.sum); return; } const s = e.target.closest("[data-sib]"); if (s) { const lv = stack.length - 2; openAt(lv, +s.dataset.sib); } });
+  cols.addEventListener("keydown", e => {
+    const r = e.target.closest(".dr-row"); if (!r) return; const col = r.closest(".dr-col"), rows = [...col.querySelectorAll(".dr-row")], i = rows.indexOf(r);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); const n = rows[Math.max(0, Math.min(rows.length - 1, i + (e.key === "ArrowDown" ? 1 : -1)))]; n.focus(); openAt(+col.dataset.lv, +n.dataset.i); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); const nx = col.nextElementSibling && col.nextElementSibling.querySelector(".dr-row"); if (nx) { nx.focus(); openAt(+nx.closest(".dr-col").dataset.lv, 0); } }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); const pv = col.previousElementSibling && col.previousElementSibling.querySelector(".dr-row.on"); if (pv) pv.focus(); else out(); }
+  });
+  host.addEventListener("contextmenu", e => { if (e.target.closest("a, input")) return; if (stack.length > 1 || o.onExit) { e.preventDefault(); out(); } });
+  trail.addEventListener("click", e => { const b = e.target.closest("[data-up]"); if (b && !b.hasAttribute("aria-current")) out(+b.dataset.up); });
+  backB.onclick = () => out();
+  /* search: every idea, with its path, one tap to jump there */
+  let flat = null;
+  const buildFlat = () => { flat = []; (function walk(n, p) { kids(n).forEach(c => { const pp = p.concat(c.id); flat.push({ p: pp, t: c.t, x: (c.t + " " + (c.s || "") + " " + (c.d || "")).toLowerCase(), where: p.length ? pathTitles(p) : "" }); if (pp.length < 6 && !c.r) walk(c, pp); }); })(root, []); };
+  const pathTitles = p => { let n = root; return p.map(id => (n = kids(n).find(x => x.id === id) || n).t).join(" › "); };
+  if (find) {
+    find.addEventListener("input", () => { const v = find.value.trim().toLowerCase(); if (!v) { hits.hidden = true; return; } if (!flat) buildFlat();
+      const w = v.split(/\s+/), res = flat.filter(f => w.every(x => f.x.includes(x))).sort((a, b) => (b.t.toLowerCase().includes(v) - a.t.toLowerCase().includes(v)) || a.p.length - b.p.length).slice(0, 12);
+      hits.hidden = false; hits.innerHTML = res.length ? res.map((f, i) => `<button type="button" data-hit="${i}"><b>${E(f.t)}</b><span>${E(f.where)}</span></button>`).join("") : `<p>Nothing yet for "${E(v)}". Try a shorter word.</p>`; hits._r = res; });
+    hits.addEventListener("click", e => { const b = e.target.closest("[data-hit]"); if (!b) return; api.open(hits._r[+b.dataset.hit].p); find.value = ""; hits.hidden = true; });
+    find.addEventListener("keydown", e => { if (e.key === "Enter") { const b = hits.querySelector("[data-hit]"); if (b) b.click(); } if (e.key === "Escape") { find.value = ""; hits.hidden = true; e.stopPropagation(); } });
   }
-  function goIn(i, el) { const cur = stack[stack.length - 1], n = kids(cur)[i]; if (!n || busy) return; const r = n.r && BY[n.r] && !n.k ? Object.assign({}, BY[n.r], { id: n.id, t: n.t, s: n.s || BY[n.r].s }) : n; if (!kids(r).length && !(r.l || []).length && !r.d) return; busy = true; stack.push(r); draw("in", el && el.getBoundingClientRect()); busy = false; o.onMove && o.onMove(stack); }
-  function goOut(to) { if (busy) return; if (stack.length < 2) { o.onExit && o.onExit(); return; } stack = stack.slice(0, to == null ? -1 : to + 1); draw("out"); o.onMove && o.onMove(stack); }
-  cards.addEventListener("click", e => { const c = e.target.closest(".dr-card.kid"); if (c) goIn(+c.dataset.i, c); });
-  cards.addEventListener("dblclick", e => { if (e.target.closest(".dr-card.root")) goOut(); });
-  cards.addEventListener("keydown", e => { const c = e.target.closest(".dr-card.kid"); if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); goIn(+c.dataset.i, c); } });
-  host.addEventListener("contextmenu", e => { if (e.target.closest("a")) return; if (stack.length > 1 || o.onExit) { e.preventDefault(); goOut(); } });
-  trail.addEventListener("click", e => { const b = e.target.closest("[data-up]"); if (b && !b.hasAttribute("aria-current")) goOut(+b.dataset.up); });
-  backB.onclick = () => goOut();
-  detail.addEventListener("click", e => { const b = e.target.closest("[data-sib]"); if (!b || busy) return; const sib = kids(stack[stack.length - 2]); stack[stack.length - 1] = sib[+b.dataset.sib]; draw("in"); o.onMove && o.onMove(stack); });
-  const onKey = e => { if (e.key === "Escape" && host.isConnected && host.offsetParent !== null && !document.querySelector("dialog[open]")) { e.preventDefault(); goOut(); } };
+  const onKey = e => { if (e.key === "Escape" && host.isConnected && host.offsetParent !== null && !document.querySelector("dialog[open]") && document.activeElement !== find) { e.preventDefault(); out(); } };
   addEventListener("keydown", onKey);
-  let rz; const onRz = () => { clearTimeout(rz); rz = setTimeout(() => host.isConnected && layout(), 120); }; addEventListener("resize", onRz);
+  let rz, wasPhone = phone(); const onRz = () => { clearTimeout(rz); rz = setTimeout(() => { if (host.isConnected && phone() !== wasPhone) { wasPhone = phone(); draw(); } }, 150); }; addEventListener("resize", onRz);
   const api = {
-    open(ids) { stack = [tree]; for (const id of ids || []) { const n = kids(stack[stack.length - 1]).find(x => x.id === id); if (!n) break; stack.push(n.r && BY[n.r] && !n.k ? Object.assign({}, BY[n.r], { id: n.id, t: n.t }) : n); } draw("in"); },
-    openSlug(sl, from) { const n = BY[sl]; if (!n) return false; stack = [n]; draw("in", from); return true; },
+    open(ids) { root = tree; flat = null; stack = [tree]; for (const id of ids || []) { const n = kids(stack[stack.length - 1]).find(x => x.id === id); if (!n) break; stack.push(n); } draw("in"); },
+    openSlug(sl) { const n = BY[sl]; if (!n) return false; root = n; flat = null; stack = [n]; draw("in"); return true; },
     path: () => stack.slice(1).map(n => n.id), has: sl => !!BY[sl],
     destroy() { removeEventListener("keydown", onKey); removeEventListener("resize", onRz); }
   };

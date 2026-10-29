@@ -240,7 +240,7 @@ for c,lab in _lab.items():
     its=[it for it in lib if it['name'].startswith('sd:'+c+'/ ') and ' SECTION - ' not in it['name']]
     if not its: continue
     _secs.append({'t':lab,'s':', '.join(_re.match(r'^sd:[a-z]+/\s(.*?)( - |$)',x['name']).group(1).replace('\n',' ') for x in its[:4])+(' and more' if len(its)>4 else ''),'k':[_block(it) for it in its]})
-TREE={'id':'root','t':'Everything','d':'Pick an area to go in. Each card opens into the ideas inside it, down to plain explanations.','k':_kids(_secs)}
+TREE={'id':'root','t':'Everything','d':'Pick an area on the left. Each level opens the ideas inside it, down to a plain explanation, and the levels you came through stay in view.','k':_kids(_secs)}
 os.makedirs('out/pages/explore',exist_ok=True)
 json.dump(TREE,open('out/pages/explore/tree.json','w'),separators=(',',':'),ensure_ascii=False)
 t=ptpl.replace('__NAV__',NAV('../','explore','../sponsor/')).replace('__FOOT__',FOOT('../','../sponsor/','Explore')).replace('__BASECSS__',base).replace('__HEADINIT__',headinit).replace('__THEMEBTN__',themebtn).replace('__SPONSOR__',SPJ).replace('__TITLE__','Explore - System Design Kit').replace('__ROBOTS__','index').replace('__BODY__',open('explore.body.html').read().replace('/*__DRILLCSS__*/',open('drill.css').read())).replace('__SCRIPT__',open('explore.js').read().replace('/*__DRILLJS__*/',open('drill.js').read()))

@@ -1,46 +1,70 @@
-/* Drill mind-map (shared by Explore and the practice canvas) */
-.drill { position: relative; display: grid; gap: 14px; --dr-accent: var(--sketch); --dr-soft: var(--sketch-soft) }
-.dr-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 36px }
-.dr-back { height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 14px/1 var(--font-sans); cursor: pointer }
-.dr-back:hover { border-color: var(--slate) }
-.dr-back[hidden] { display: none }
-.dr-trail { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; font: 500 14px/20px var(--font-sans); color: var(--ink-muted) }
-.dr-trail span { color: var(--hairline); padding: 0 2px }
-.dr-trail button { border: 0; background: none; padding: 5px 8px; border-radius: 8px; color: var(--ink-muted); font: inherit; cursor: pointer; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+/* Drill: column view (shared by Explore and the practice canvas) */
+.drill { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; min-height: 0; position: relative; --dr-a: var(--sketch); --dr-s: var(--sketch-soft) }
+.dr-top { display: flex; align-items: center; gap: 8px; min-width: 0 }
+.dr-back { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 16px/1 var(--font-sans); cursor: pointer }
+.dr-back:hover:not(:disabled) { border-color: var(--slate) } .dr-back:disabled { opacity: .35; cursor: default }
+.dr-trail { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; font: 500 14px/20px var(--font-sans); color: var(--ink-muted); white-space: nowrap }
+.dr-trail::-webkit-scrollbar { display: none }
+.dr-trail span { color: var(--slate); padding: 0 1px }
+.dr-trail button { border: 0; background: none; padding: 6px 8px; border-radius: 8px; color: var(--ink-muted); font: inherit; cursor: pointer; max-width: 200px; overflow: hidden; text-overflow: ellipsis }
 .dr-trail button:hover { background: var(--surface-sunk); color: var(--ink) }
-.dr-trail button[aria-current] { color: var(--ink); cursor: default; background: none }
-.dr-stage { position: relative; min-height: 200px; transition: height .35s cubic-bezier(.2,.8,.2,1) }
-.dr-wires { position: absolute; inset: 0; overflow: visible; pointer-events: none }
-.dr-wires path { fill: none; stroke: var(--sky-300); stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: 0; stroke-linecap: round }
-.dr-cards { position: absolute; inset: 0 }
-.dr-card { position: absolute; box-sizing: border-box; display: grid; gap: 4px; padding: 12px 14px 12px 16px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); text-align: left; cursor: zoom-in; box-shadow: 0 1px 2px rgba(0,0,0,.04); transition: border-color .2s, box-shadow .2s, translate .2s; will-change: transform }
-.dr-card::before { content: ""; position: absolute; left: -1px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: var(--dr-soft) }
-.dr-card.kid:hover { border-color: var(--dr-accent); box-shadow: var(--shadow-float); translate: 3px 0 }
-.dr-card:focus-visible { outline: 3px solid var(--dr-soft); outline-offset: 2px }
-.dr-card b { font: 600 15px/21px var(--font-sans); padding-right: 46px }
-.dr-card span { font: 400 13.5px/19px var(--font-sans); color: var(--ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
-.dr-card em { position: absolute; right: 12px; top: 13px; font: 500 11px/1 var(--font-mono); font-style: normal; color: var(--dr-accent); background: var(--dr-soft); padding: 4px 7px; border-radius: 999px }
-.dr-card.leaf { cursor: pointer }
-.dr-card.leaf::before { background: var(--hairline) }
-.dr-card img { width: 100%; max-height: 120px; object-fit: contain; background: var(--thumb); border-radius: 10px; margin-bottom: 4px }
-.dr-card.kid img { display: none }
-.dr-depth { position: absolute; right: 12px; bottom: 10px; display: flex; gap: 3px }
-.dr-depth i { width: 6px; height: 6px; border-radius: 50%; background: var(--dr-accent); opacity: calc(.85 - var(--j) * .28) }
-.dr-card.root { cursor: default; padding: 18px 18px 18px 20px; border-color: var(--dr-accent); box-shadow: 0 0 0 4px var(--dr-soft), var(--shadow-float); background: linear-gradient(180deg, var(--surface), var(--surface)) }
-.dr-card.root::before { background: var(--dr-accent) }
-.dr-card.root b { font: 400 26px/1.15 var(--font-serif); padding-right: 0 }
-.dr-card.root p { margin: 6px 0 0; font: 400 15px/23px var(--font-sans); color: var(--ink) }
-.dr-card.root .dr-depth { display: none }
-.drill.is-leaf .dr-card.root p { font-size: 17px; line-height: 27px }
-.dr-detail { display: flex; flex-wrap: wrap; gap: 8px }
-.dr-detail[hidden] { display: none }
-.dr-detail a { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 14px/20px var(--font-sans); text-decoration: none }
-.dr-sib { padding: 7px 14px; border-radius: 999px; border: 1px dashed var(--hairline); background: none; color: var(--ink-muted); font: 500 14px/20px var(--font-sans); cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap } .dr-sib:hover { color: var(--ink); border-color: var(--slate) }
-.dr-detail a.primary { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
-@media (prefers-reduced-motion: reduce) { .dr-stage { transition: none } .dr-card.kid:hover { translate: none } }
-/* drill-in over the practice canvas */
-.drov { position: absolute; inset: 0; z-index: 5; background: radial-gradient(circle, var(--dot, #d3d6de) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground, #f9f9fa); overflow: auto; padding: 16px 18px 28px; animation: drovin .32s cubic-bezier(.2,.8,.2,1) both; transform-origin: var(--ox, 50%) var(--oy, 50%) }
-.drov.closing { animation: drovout .24s ease-in both }
-@keyframes drovin { from { opacity: 0; transform: scale(.6) } to { opacity: 1; transform: none } }
-@keyframes drovout { to { opacity: 0; transform: scale(.6) } }
-@media (prefers-reduced-motion: reduce) { .drov, .drov.closing { animation: none } }
+.dr-trail button[aria-current] { color: var(--ink); font-weight: 600; cursor: default; background: none }
+.dr-find { flex: none; display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); width: 220px }
+.dr-find svg { width: 16px; height: 16px; fill: none; stroke: var(--ink-muted); stroke-width: 1.6; stroke-linecap: round; flex: none }
+.dr-find input { border: 0; outline: 0; background: none; color: var(--ink); font: 400 14px/20px var(--font-sans); width: 100%; min-width: 0 }
+.dr-find:focus-within { border-color: var(--dr-a); box-shadow: 0 0 0 3px var(--dr-s) }
+.dr-hits { position: absolute; z-index: 6; right: 0; top: 44px; width: min(420px, 100%); max-height: 60vh; overflow: auto; padding: 6px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); box-shadow: var(--shadow-float) }
+.dr-hits[hidden] { display: none }
+.dr-hits button { display: grid; gap: 2px; width: 100%; text-align: left; padding: 9px 12px; border: 0; border-radius: 10px; background: none; color: var(--ink); cursor: pointer }
+.dr-hits button:hover, .dr-hits button:focus-visible { background: var(--surface-sunk) }
+.dr-hits b { font: 500 14px/20px var(--font-sans) } .dr-hits span { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
+.dr-hits p { margin: 8px 12px; color: var(--ink-muted); font: 400 14px/20px var(--font-sans) }
+/* the columns */
+.dr-cols { display: flex; min-height: 0; overflow-x: auto; overflow-y: hidden; border: 1px solid var(--hairline); border-radius: var(--r-lg); background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.04); scroll-snap-type: x proximity }
+.dr-col { flex: none; width: 272px; display: flex; flex-direction: column; gap: 2px; padding: 10px 8px 14px; overflow-y: auto; border-right: 1px solid var(--hairline); scroll-snap-align: start; min-height: 0 }
+.dr-col:last-child { border-right: 0 }
+.dr-ch { flex: none; padding: 6px 10px 8px; font: 500 11px/16px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.dr-row { flex: none; position: relative; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 2px 8px; width: 100%; text-align: left; padding: 9px 10px; border: 0; border-radius: 10px; background: none; color: var(--ink); cursor: pointer; font: inherit }
+.dr-row .t { font: 500 14.5px/20px var(--font-sans); grid-column: 1 }
+.dr-row .s { grid-column: 1 / -1; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
+.dr-row .c { font: 500 11px/1 var(--font-mono); color: var(--ink-muted); background: var(--surface-sunk); padding: 4px 6px; border-radius: 999px; grid-row: 1; grid-column: 2 }
+.dr-row .ch { width: 14px; height: 14px; fill: none; stroke: var(--ink-muted); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; grid-row: 1; grid-column: 3; transition: transform .2s }
+.dr-row:hover { background: var(--surface-sunk) }
+.dr-row:focus-visible { outline: 2px solid var(--dr-a); outline-offset: -2px }
+.dr-row.on { background: var(--dr-s); }
+.dr-row.on .t { font-weight: 600 } .dr-row.on .c { background: var(--surface); color: var(--dr-a) } .dr-row.on .ch { stroke: var(--dr-a); transform: translateX(2px) }
+.dr-row.leaf .t { font-weight: 400 } .dr-row.leaf.on .t { font-weight: 600 }
+/* the explanation column */
+.dr-col.det { flex: 1 1 auto; width: auto; min-width: 300px; background: var(--ground); padding: 22px 26px 28px }
+.dr-det { display: grid; gap: 12px; max-width: 640px; align-content: start }
+.dr-det img { width: 100%; max-width: 320px; max-height: 160px; object-fit: contain; background: var(--thumb); border-radius: 12px; border: 1px solid var(--hairline) }
+.dr-det h3 { margin: 0; font: 400 30px/1.12 var(--font-serif) }
+.dr-det p { margin: 0; font: 400 16px/26px var(--font-sans); color: var(--ink) }
+.dr-det p.m { color: var(--ink-muted); font-size: 15px; line-height: 23px }
+.dr-col.peek .dr-det p { color: var(--ink-muted) }
+.dr-links { display: flex; flex-wrap: wrap; gap: 8px }
+.dr-links a { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); font: 500 14px/20px var(--font-sans); text-decoration: none }
+.dr-links a.primary { background: var(--pill); color: var(--on-ink); border-color: var(--pill) }
+.dr-sibs { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--hairline) }
+.dr-sibs button { min-width: 0; max-width: 48%; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink-muted); font: 500 13px/18px var(--font-sans); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.dr-sibs button:hover { color: var(--ink); border-color: var(--slate) }
+/* phone: one column at a time, like an app */
+.dr-cols.phone { overflow: hidden; border-radius: var(--r-md) }
+.dr-cols.phone .dr-col { width: 100%; border-right: 0 }
+.dr-cols.phone .dr-col.det { min-width: 0; padding: 18px }
+.dr-cols.phone .dr-row { padding: 12px 10px }
+@media (max-width: 720px) { .dr-find { width: 40px; padding: 0 11px } .dr-find:focus-within { width: 100%; position: absolute; right: 0; left: 0; z-index: 7 } .dr-find input::placeholder { color: transparent } .dr-find:focus-within input::placeholder { color: var(--ink-muted) } }
+/* go inside over the practice canvas */
+.drov { position: absolute; inset: 0; z-index: 5; display: grid; background: var(--ground, #f9f9fa); padding: 14px; animation: drovin .3s cubic-bezier(.2,.8,.2,1) both; transform-origin: var(--ox, 50%) var(--oy, 50%) }
+.drov .drill { min-height: 0 } .drov .dr-cols { height: 100% }
+.drov.closing { animation: drovout .22s ease-in both }
+@keyframes drovin { from { opacity: 0; transform: scale(.7) } to { opacity: 1; transform: none } }
+@keyframes drovout { to { opacity: 0; transform: scale(.7) } }
+@media (prefers-reduced-motion: reduce) { .drov, .drov.closing { animation: none } .dr-row .ch { transition: none } }
+.dr-sums { display: grid; gap: 8px }
+.dr-sum { display: grid; gap: 3px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; position: relative }
+.dr-sum:hover { border-color: var(--dr-a); box-shadow: var(--shadow-float) }
+.dr-sum b { font: 600 14.5px/20px var(--font-sans); padding-right: 70px }
+.dr-sum span { font: 400 14px/21px var(--font-sans); color: var(--ink-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden }
+.dr-sum em { position: absolute; right: 12px; top: 13px; font: 500 11px/1 var(--font-mono); font-style: normal; color: var(--dr-a); background: var(--dr-s); padding: 4px 7px; border-radius: 999px }
+.dr-col.det { overflow-y: auto }
