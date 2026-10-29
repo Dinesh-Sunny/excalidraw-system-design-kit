@@ -190,6 +190,7 @@ if os.path.exists('out/practice.json'):
     t=t.replace('__NAV__',NAV('../','practice','../sponsor/',ph='Search questions')).replace('__FOOT__',FOOT('../','../sponsor/','Practice'))
     for k,v in (('__HEADINIT__',headinit),('__BASECSS__',base),('__THEMEBTN__',themebtn),('__SPONSOR__',SPJ),('__PDATA__',json.dumps(P,separators=(',',':'),ensure_ascii=False)),('__LENSES__',json.dumps(V2['_lenses'],separators=(',',':'),ensure_ascii=False))): t=t.replace(k,v)
     os.makedirs('out/pages/practice',exist_ok=True); open('out/pages/practice/index.html','w').write(t)
+    os.makedirs('out/pages/walkthrough',exist_ok=True); open('out/pages/walkthrough/index.html','w').write(t.replace('<title>Practice system design interviews','<meta name="robots" content="noindex"><title>System designs',1).replace(' aria-current="page"',''))
     print('practice page',len(t)//1024,'KB',len(P),'questions')
 
 

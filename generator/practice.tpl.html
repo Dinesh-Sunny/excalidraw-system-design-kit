@@ -8,6 +8,19 @@
 __HEADINIT__
 <style>
 /*__DRILLCSS__*/
+/* walkthrough mode */
+.walk #rSetup, .walk #rTimer, .walk [data-x="share"], .walk [data-x="suggest"], .walk #mSave, .walk .fbrow, .walk .pbadge, .walk .src, .walk #fCo, .walk .nav .sw { display: none !important }
+.wk { display: grid; gap: 18px; max-width: 880px }
+.wk-l { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px }
+.wk-l li { padding: 12px 16px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); font: 400 16px/24px var(--font-sans); color: var(--ink) }
+.wk-l code { font: 500 14.5px/22px var(--font-mono); background: none; padding: 0; white-space: pre-wrap }
+.wk-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px }
+.wk-2 h4, .wk h4 { margin: 0 0 10px; font: 500 12px/16px var(--font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--ink-muted) }
+.wk-p { display: grid; gap: 10px }
+.wk-c { padding: 14px 18px; border-radius: var(--r-md); border: 1px solid var(--hairline); background: var(--surface); display: grid; gap: 6px }
+.wk-c b { font: 600 16px/23px var(--font-sans) } .wk-c p { margin: 0; font: 400 15px/24px var(--font-sans); color: var(--ink-muted) }
+.fb2.wkb { background: var(--surface-sunk) } .fb2.wkb b { font: 600 17px/24px var(--font-sans) }
+
 __BASECSS__
 [hidden] { display: none !important }
 /* ---------- picker ---------- */
@@ -302,6 +315,8 @@ __FOOT__
 
 <script>
 /*__DRILLJS__*/
+/* Walkthrough mode (/walkthrough/): the same designs as a clean, step-by-step presentation - no quiz, no score, no timer */
+const WALK = /\/walkthrough\//.test(location.pathname); if (WALK) { document.documentElement.classList.add("walk"); addEventListener("DOMContentLoaded", () => { const h = document.querySelector(".hero h1"), l = document.getElementById("plead"), i = document.getElementById("pq"); if (h) h.innerHTML = "System <i>designs</i>."; if (l) l.textContent = "Each design, step by step: requirements, numbers, API, data, the design block by block, and the deep dives."; if (i) i.placeholder = "Search designs or blocks"; const qh = document.getElementById("qh"); if (qh && qh.firstChild) qh.firstChild.textContent = "Designs "; }); }
 const SP = __SPONSOR__;
 const D = __PDATA__;
 const LENSES = __LENSES__;
@@ -391,13 +406,13 @@ let setupMode = false;
 function route() {
   const h = new URLSearchParams(location.hash.slice(1)), q = BY[h.get("q")];
   if (h.get("uses")) { const k = h.get("uses"); USES = { k, t: h.get("t") || (D.flatMap(d => d.nodes).find(n => n.k === k) || {}).title || "this block" }; }
-  if (!q) { Q = null; document.body.classList.remove("run"); $("#vRun").hidden = true; $("#vPick").hidden = false; stopClock(); drawPick(); document.title = "Practice system design interviews - System Design Kit"; return; }
-  const su = SETUP.get(q.slug); setupMode = !su || h.get("s") === "setup";
+  if (!q) { Q = null; document.body.classList.remove("run"); $("#vRun").hidden = true; $("#vPick").hidden = false; stopClock(); drawPick(); document.title = WALK ? "System designs - System Design Kit" : "Practice system design interviews - System Design Kit"; return; }
+  const su = WALK ? { sc: "classic", lens: "", mode: "learn" } : SETUP.get(q.slug); setupMode = !WALK && (!su || h.get("s") === "setup");
   if (!Q || Q.slug !== q.slug || (su && Q.rid !== effective(q, su).rid) || (su && Q.su.lens !== su.lens)) { $("#stage").innerHTML = ""; tries = new Set(); last = null; cam = null; qtries = new Set(); qlast = null; Q = effective(q, su || { sc: "classic", lens: "", mode: "learn" }); STEPS = buildSteps(Q); const st = store.get()[Q.rid] || {}; step = st.done ? 0 : Math.min(st.step || 0, LAST()); blk = st.blk || 1; dv = 0; resetClock(); ev("practice-start/" + q.slug); }
   if (h.get("s") && h.get("s") !== "done" && h.get("s") !== "setup") step = Math.max(0, Math.min(LAST(), +h.get("s") - 1));
   open_ = false; finished = h.get("s") === "done"; pick = null;
   document.body.classList.add("run"); $("#vPick").hidden = true; $("#vRun").hidden = false;
-  $("#rTitle").textContent = q.title; document.title = q.title + " - Practice"; recentAdd(q.kit); $("#mKit").href = "../#i=" + q.kit; $("#mSave").textContent = onBoard(q.kit) ? "Remove design from my board" : "Save design to my board"; $("#rMenu").open = false;
+  $("#rTitle").textContent = q.title; document.title = q.title + (WALK ? "" : " - Practice"); recentAdd(q.kit); $("#mKit").href = "../#i=" + q.kit; $("#mSave").textContent = onBoard(q.kit) ? "Remove design from my board" : "Save design to my board"; $("#rMenu").open = false;
   $("#rSetup").textContent = setupMode ? "" : [Q.scen ? Q.scen.name : "Classic", Q.su.lens || ""].filter(Boolean).join(" · "); $("#rSetup").hidden = setupMode;
   render();
 }
@@ -469,7 +484,7 @@ function renderDesign() {
   const n = Q.nodes.length, st = $("#stage");
   if (!$("#dz")) { st.innerHTML = `<div class="dz" id="dz"><div class="cvw"><div class="canvas" id="cv"></div><div class="zc2" role="group" aria-label="Zoom"><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="fit" aria-label="Fit">Fit</button><button type="button" data-z="in" aria-label="Zoom in">+</button></div></div><aside class="move" id="mv"></aside></div>`; cam = null; }
   renderMove(); loadSvg();
-  buttons(blk < n ? `Show me the next block<span class="kbd">→</span>` : `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>`, blk >= n ? `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>` : "");
+  buttons(blk < n ? (WALK ? `Next block<span class="kbd">→</span>` : `Show me the next block<span class="kbd">→</span>`) : `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>`, blk >= n ? `<button class="link" type="button" data-x="copy">Copy to Excalidraw</button>` : "");
 }
 function renderMove() {
   const n = Q.nodes.length, mv = $("#mv"), picks = rec().picks || {};
@@ -478,6 +493,12 @@ function renderMove() {
   const stn = last && last.ok ? (Q.nodes.find(n => n.title === last.title) || {}) : {}, stl = stn.st || "";
   const lone = last && last.ok && blk > 1 && blk < n && focusSet(blk).length === 1 ? (() => { const id = Q.nodes[blk - 1].id, later = Q.nodes.slice(blk).find(x => Q.edges.some(e => (e[0] === id && e[1] === x.id) || (e[1] === id && e[0] === x.id))); return later ? `<span class="stl">Links up once ${esc(later.title.replace(/\n/g, " "))} is in.</span>` : ""; })() : "";
   const fb = last ? `<div class="fb2 ${last.ok ? "ok" : "no"}" role="status"><b>${last.ok ? "✓ " + esc(last.title) : "Not yet"}</b><span>${esc(last.text)}</span>${lone}${stl ? `<span class="stl">${stn.sd ? (Q.v2 && Q.v2.stackNote ? esc(Q.v2.stackNote) : "Built with") : "Tools"}: ${esc(stl)}</span>` : ""}${last.ok ? fbl : ""}</div>` : `<div class="fb2"><span>${blk === 1 ? "The first block is in: " + esc(Q.nodes[0].title) + ". " + esc(Q.c.blocks[Q.nodes[0].id] || "") + (Q.nodes[0].st ? `</span><span class="stl">${Q.nodes[0].sd ? "Built with" : "Tools"}: ${esc(Q.nodes[0].st)}` : "") : "Double-click any block to go inside it. Tap any block on the canvas to see why it's there."}</span></div>`;
+  if (WALK) {
+    const x = Q.nodes[blk - 1], st2 = x.st ? `<span class="stl">${x.sd ? "Built with" : "Tools"}: ${esc(x.st)}</span>` : "";
+    mv.innerHTML = `<div class="mh"><span class="gl">${blk} of ${n}</span><div class="dots">${Q.nodes.map((y, i) => `<i class="${i < blk ? "ok" : ""}"></i>`).join("")}</div></div>
+      <div class="fb2 wkb"><b>${esc(x.title.replace(/\n/g, " "))}</b><span>${esc(Q.c.blocks[x.id] || "")}</span>${st2}${x.k ? `<span class="fbl"><button type="button" data-inside="${x.k}">Go inside</button></span>` : ""}</div>`;
+    return;
+  }
   if (blk >= n) {
     const first = Object.values(picks).filter(v => v === true).length, total = n - 1;
     mv.innerHTML = `<div class="mh"><span class="gl">Design complete</span><div class="dots">${dots}</div></div>${fb}<p class="big2">${first} of ${total} <small>right first time</small></p>${rateHTML("hld")}`;
@@ -701,9 +722,9 @@ function startFromSetup() { const su = $("#stage")._su; SETUP.set(Q.slug, su); c
 function render() {
   if (setupMode) return renderSetup();
   tabs(); const S = STEPS[step], C = Q.c, st = $("#stage"); st.scrollTop = 0; $("#bMain").dataset.next = "";
-  if (finished) return renderScore();
+  if (finished) return WALK ? renderWalk(S.k) : renderScore();
   if (S.k === "hld") return renderDesign();
-  return renderQuiz(S.k);
+  return WALK ? renderWalk(S.k) : renderQuiz(S.k);
   let tool = "", cmp = "";
   if (S.k === "req") { tool = chipsTool("req", [["f", "Functional: what it does", "Type a requirement, press Enter"], ["n", "Non-functional: how well", "e.g. p99 under 100 ms, press Enter"]]); cmp = compareHTML("req", [["Functional", C.reqF], ["Non-functional", C.reqN]]); }
   if (S.k === "est") { tool = calcHTML() + `<textarea class="notes" id="nt" rows="2" placeholder="Your numbers and what they mean for the design">${esc((rec().notes || {}).est || "")}</textarea>`; cmp = `<ul class="cmp">${C.est.map(x => `<li><span class="mk">·</span>${esc(x)}</li>`).join("")}</ul>`; }
@@ -715,6 +736,24 @@ function render() {
   hookNotes(S.k); hookTools();
   const nh = (rec().hints || {})[S.k] || 0, ml = modelList(S.k).length;
   buttons(!open_ ? `Compare<span class="lg">&nbsp;with a strong answer</span><span class="kbd">↵</span>` : step < LAST() ? `Next: ${STEPS[step + 1].t}<span class="kbd">↵</span>` : `<span class="lg">See your&nbsp;</span>scorecard<span class="kbd">↵</span>`, !open_ && S.k !== "est" && nh < ml ? `<button class="link" type="button" data-x="hint">Hint<span class="lg">&nbsp;(${ml - nh} left)</span></button>` : "", step > 0);
+}
+
+/* walkthrough: each step is the content itself, laid out to talk through */
+function renderWalk(k) {
+  const C = Q.c, V = Q.v2 || {}, st = $("#stage"), S = STEPS[step];
+  const list = (a, code) => `<ul class="wk-l">${a.map(x => `<li>${code ? `<code>${esc(x)}</code>` : esc(x)}</li>`).join("")}</ul>`;
+  const pairs = a => `<div class="wk-p">${a.map(([h, b]) => `<div class="wk-c"><b>${esc(h)}</b><p>${esc(b)}</p></div>`).join("")}</div>`;
+  let h = "";
+  if (k === "req") h = `<div class="wk-2"><section><h4>Functional</h4>${list(C.reqF)}</section><section><h4>Non-functional</h4>${list(C.reqN)}</section></div>`;
+  else if (k === "est") h = list(C.est);
+  else if (k === "api") h = list(C.api, true);
+  else if (k === "data") h = list(C.data, true);
+  else if (k === "modern") h = pairs(V.modern || []);
+  else if (k === "extra") h = pairs(((V.extra || {}).rounds || []).map(r => [r[0], r[1]]));
+  else if (k === "deep") h = pairs(C.dives);
+  else if (k === "wrap") h = list(C.wrap);
+  st.innerHTML = `<div class="col wk"><h3 class="qn">${esc(S.t)}</h3>${h}</div>`;
+  buttons(step < LAST() ? `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>` : `All designs`);
 }
 function renderDeep() {
   const C = Q.c, [q, a] = C.dives[dv], key = "deep" + dv, st = $("#stage");
@@ -760,6 +799,7 @@ function primary() {
   if ($("#bMain").dataset.next) { location.hash = "q=" + $("#bMain").dataset.next; return; }
   if (finished) return;
   if (S.k === "hld") { if (blk < Q.nodes.length) revealNext(); else setStep(step + 1); return; }
+  if (WALK) { if (step < LAST()) setStep(step + 1); else { history.pushState(null, "", location.pathname); route(); } return; }
   if (!quizDone()) { quizReveal(); return; }
   if (step < LAST()) setStep(step + 1); else { finished = true; history.replaceState(null, "", "#q=" + Q.slug + "&s=done"); ev("practice-done/" + Q.slug); render(); }
 }
@@ -768,7 +808,7 @@ function back() {
   const S = STEPS[step];
   if (finished) { finished = false; open_ = true; render(); return; }
   if (S.k === "hld" && blk > 1) { blk--; tries = new Set(); last = null; put({ blk }); renderDesign(); return; }
-  if (S.k !== "hld" && quizBack()) return;
+  if (S.k !== "hld" && !WALK && quizBack()) return;
   if (step > 0 && STEPS[step - 1].k === "hld") { setStep(step - 1); blk = Q.nodes.length; render(); return; }
   setStep(step - 1);
 }
