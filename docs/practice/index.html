@@ -81,6 +81,13 @@
 .dr-sum em { position: absolute; right: 12px; top: 13px; font: 500 11px/1 var(--font-mono); font-style: normal; color: var(--dr-a); background: var(--dr-s); padding: 4px 7px; border-radius: 999px }
 .dr-col.det { overflow-y: auto }
 
+.sdots button { box-sizing: content-box; padding: 9px 3px; background-clip: content-box; transition: background-color .2s, width .2s }
+.sdots button:hover { background-color: var(--slate) } .sdots button.on:hover { background-color: var(--sketch) }
+.stip { position: fixed; z-index: 50; pointer-events: none; padding: 6px 10px; border-radius: 8px; background: var(--ink); color: var(--ground); font: 500 12.5px/16px var(--font-sans); white-space: nowrap; box-shadow: var(--shadow-float); opacity: 0; transform: translate(-50%, 4px); transition: opacity .12s, transform .12s }
+.stip.on { opacity: 1; transform: translate(-50%, 0) }
+.stip::before { content: ""; position: absolute; left: 50%; top: -4px; width: 8px; height: 8px; background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 2px }
+@media (max-width: 420px) { .sdots { display: inline-flex } .sdots button { width: 9px; padding: 9px 2px } .sdots button.on { width: 16px } }
+
 /* walkthrough mode */
 .disc #rSetup, .disc #rTimer, .disc .fbrow, .walk [data-x="share"], .walk [data-x="suggest"], .walk #mSave, .walk .pbadge, .walk .src, .walk #fCo, .walk .nav .sw { display: none !important }
 .wk { display: grid; gap: 18px; max-width: 880px }
@@ -923,7 +930,7 @@ body.run > header.nav, body.run > footer { display: none }
 .tabs .sm { display: none; align-items: center; gap: 10px; min-width: 0 } .tabs .sm b { font: 500 13px/1 var(--font-sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .sdots { display: inline-flex; gap: 3px; flex: none } .sdots button { width: 14px; height: 6px; padding: 0; border: 0; border-radius: 9999px; background: var(--hairline); cursor: pointer } .sdots button.done { background: var(--slate) } .sdots button.on { background: var(--sketch); width: 22px }
 @media (max-width: 900px) { .tabs > button { display: none } .tabs .sm { display: flex } }
-@media (max-width: 420px) { .sdots { display: none } }
+@media (max-width: 420px) { .sdots { display: inline-flex } .tabs .sm b { display: none } }
 /* start card: one sentence, three choices */
 .sc1 { min-height: 100%; display: grid; place-items: center; padding: 32px 20px; background: radial-gradient(circle, var(--dot) 1.1px, transparent 1.3px) 0 0 / 22px 22px, var(--ground) }
 .scard1 { width: min(560px, 100%); display: grid; gap: 18px; padding: 24px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--hairline); box-shadow: var(--shadow-float); animation: rise .35s cubic-bezier(.2,.8,.2,1) }
@@ -1317,7 +1324,7 @@ function camFor(k, mode) {
   const [x0, y0, x1, y1] = ub(fb), m = 40;
   const fit = (c, lo, hi, half) => hi - lo + 2 * m > 2 * half ? (lo + hi) / 2 : Math.min(Math.max(c, hi + m - half), lo - m + half);
   cx = fit(cx, x0, x1, w / 2); cy = fit(cy, y0, y1, h / 2);
-  let top = cy - h / 2; if (top > 0 && top < ty - 24) top = ty - 24; // never cut the title in half
+  let top = cy - h / 2; if ((top > 0 || cx - w / 2 > 20) && top < ty - 24) top = ty - 24; // never cut the title in half (top or left edge)
   return [cx - w / 2, top, w, h];
 }
 function glide(svg, to) {
@@ -1460,10 +1467,10 @@ function buttons(main, extra = "", prevVisible = true) { $("#bMain").innerHTML =
 function tabs() {
   const r = rec().rate || {}, el = $("#rTabs");
   el.innerHTML = STEPS.map((x, i) => `<button type="button" data-step="${i}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}">${x.t}${(r[x.k] || (x.k === "deep" && r.deep0)) ? `<i class="dot ${r[x.k] || r.deep0}"></i>` : ""}</button>`).join("")
-    + `<span class="sm"><b>${finished ? "Scorecard" : esc(STEPS[step].t)}</b><span class="sdots">${STEPS.map((x, i) => `<button type="button" data-step="${i}" title="${esc(x.t)}" aria-label="${esc(x.t)}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}"></button>`).join("")}</span></span>`;
+    + `<span class="sm"><b>${finished ? "Scorecard" : esc(STEPS[step].t)}</b><span class="sdots">${STEPS.map((x, i) => `<button type="button" data-step="${i}" aria-label="${esc(x.t)}" data-tip="${i + 1} · ${esc(x.t)}" class="${i === step && !finished ? "on" : i < step || finished ? "done" : ""}"></button>`).join("")}</span></span>`;
   fitTabs();
 }
-function fitTabs() { const el = $("#rTabs"); if (!el) return; el.classList.remove("compact"); if (el.scrollWidth > el.clientWidth + 1) el.classList.add("compact"); }
+function fitTabs() { const el = $("#rTabs"); if (el) el.classList.add("compact"); } /* the calm header: current step + dots; hover a dot to see where it goes */
 addEventListener("resize", fitTabs);
 function renderSetup() { // one start card: a sentence with three choices, sensible defaults, one tap to start
   const d = Q, su = SETUP.get(d.slug) || { sc: "classic", lens: "", mode: "learn" };
@@ -1660,6 +1667,14 @@ function insideBlock(k, from) {
 }
 addEventListener("dblclick", e => { const h = e.target.closest && e.target.closest("#cv [data-node]"); if (!h || !Q) return; const x = Q.nodes.find(y => y.id === h.dataset.node); if (x && x.k) { e.preventDefault(); insideBlock(x.k, h.getBoundingClientRect()); } });
 addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-inside]"); if (b) insideBlock(b.dataset.inside, null); });
+
+/* step dots: a small label shows which step each dot opens */
+(() => { const tip = document.createElement("div"); tip.className = "stip"; tip.setAttribute("role", "tooltip"); document.body.append(tip);
+  const show = b => { tip.textContent = b.dataset.tip; const r = b.getBoundingClientRect(); tip.style.left = Math.min(innerWidth - 80, Math.max(80, r.left + r.width / 2)) + "px"; tip.style.top = (r.bottom + 6) + "px"; tip.classList.add("on"); };
+  const hide = () => tip.classList.remove("on");
+  addEventListener("pointerover", e => { const b = e.target.closest && e.target.closest(".sdots [data-tip]"); b ? show(b) : hide(); });
+  addEventListener("focusin", e => { const b = e.target.closest && e.target.closest(".sdots [data-tip]"); b ? show(b) : hide(); });
+  addEventListener("click", hide); addEventListener("scroll", hide, true); })();
 /* 45-minute timer */
 let left = 45 * 60, tick = null;
 function fmt(s) { const a = Math.abs(s); return (s < 0 ? "-" : "") + String(Math.floor(a / 60)).padStart(2, "0") + ":" + String(a % 60).padStart(2, "0"); }
