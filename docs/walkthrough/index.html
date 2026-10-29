@@ -81,6 +81,13 @@
 .dr-sum em { position: absolute; right: 12px; top: 13px; font: 500 11px/1 var(--font-mono); font-style: normal; color: var(--dr-a); background: var(--dr-s); padding: 4px 7px; border-radius: 999px }
 .dr-col.det { overflow-y: auto }
 
+#qgrid.rowsv { display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px }
+.qrow { display: grid; gap: 12px; min-width: 0 }
+.qrow h3 { margin: 0; font: 400 26px/1.15 var(--font-serif) } .qrow h3 .n { font: 500 12px/1 var(--font-mono); color: var(--ink-muted); margin-left: 6px }
+.qscroll { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 280px); gap: 16px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding: 4px 2px 14px; scrollbar-width: thin }
+.qscroll > .card { scroll-snap-align: start; min-width: 0 }
+@media (max-width: 560px) { .qscroll { grid-auto-columns: 78% } .qrow h3 { font-size: 22px } }
+
 .sdots button { box-sizing: content-box; padding: 9px 3px; background-clip: content-box; transition: background-color .2s, width .2s }
 .sdots button:hover { background-color: var(--slate) } .sdots button.on:hover { background-color: var(--sketch) }
 .stip { position: fixed; z-index: 50; pointer-events: none; padding: 6px 10px; border-radius: 8px; background: var(--ink); color: var(--ground); font: 500 12.5px/16px var(--font-sans); white-space: nowrap; box-shadow: var(--shadow-float); opacity: 0; transform: translate(-50%, 4px); transition: opacity .12s, transform .12s }
@@ -1138,7 +1145,19 @@ function drawPick() {
   const filtering = !!(w.length || lv || co || fTrack !== "all" || USES);
   $("#qh").innerHTML = `${filtering ? "Results" : "Questions"} <span class="n">${list.length}</span>`;
   const VIEWI = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10s2.8-5.5 7.5-5.5 7.5 5.5 7.5 5.5-2.8 5.5-7.5 5.5S2.5 10 2.5 10z"/><circle cx="10" cy="10" r="2.3"/></svg>';
-  $("#qgrid").innerHTML = list.map((d, i) => { const g = prog(d.slug), badge = g ? (g.done ? `Done ${g.score}%` : "In progress") : ""; return `<div class="card" data-q="${d.slug}" style="--d:${Math.min(i, 8) * 40}ms"><button class="open" type="button" data-q="${d.slug}"><div class="ph"><img loading="lazy" decoding="async" width="480" height="320" alt="" src="../${d.thumb}">${badge ? `<span class="pbadge">${badge}</span>` : ""}</div><div class="ct">${esc(d.title)}</div><div class="cm"><span class="lv ${d.level}">${d.level}</span> ${d.companies.length ? esc(d.companies.slice(0, 3).join(", ")) + (d.companies.length > 3 ? ` +${d.companies.length - 3}` : "") : d.track === "AI" ? "AI design" : "Classic"}</div></button><div class="qa"><button type="button" data-pc="${d.kitId}" title="Copy the design to Excalidraw">${COPYI}<span class="lb">Copy</span></button><button type="button" data-pv="${d.kit}" title="View the design in the blocks">${VIEWI}<span class="lb">View</span></button><button type="button" data-ps="${d.kit}" class="${onBoard(d.kit) ? "saved" : ""}" title="Save the design to your board" aria-pressed="${onBoard(d.kit)}">${SAVEI}</button></div></div>`; }).join("") || `<div class="empty" style="grid-column:1/-1"><b>Nothing yet</b>Try a shorter word, or clear the filters.<div class="chips" style="justify-content:center;margin-top:14px"><button class="chip" type="button" data-clear>Clear filters</button></div></div>`;
+  const card = (d, i) => { const g = prog(d.slug), badge = g ? (g.done ? `Done ${g.score}%` : "In progress") : ""; return `<div class="card" data-q="${d.slug}" style="--d:${Math.min(i, 8) * 40}ms"><button class="open" type="button" data-q="${d.slug}"><div class="ph"><img loading="lazy" decoding="async" width="480" height="320" alt="" src="../${d.thumb}">${badge ? `<span class="pbadge">${badge}</span>` : ""}</div><div class="ct">${esc(d.title)}</div><div class="cm"><span class="lv ${d.level}">${d.level}</span> ${d.companies.length ? esc(d.companies.slice(0, 3).join(", ")) + (d.companies.length > 3 ? ` +${d.companies.length - 3}` : "") : d.track === "AI" ? "AI design" : "Classic"}</div></button><div class="qa"><button type="button" data-pc="${d.kitId}" title="Copy the design to Excalidraw">${COPYI}<span class="lb">Copy</span></button><button type="button" data-pv="${d.kit}" title="View the design in the blocks">${VIEWI}<span class="lb">View</span></button><button type="button" data-ps="${d.kit}" class="${onBoard(d.kit) ? "saved" : ""}" title="Save the design to your board" aria-pressed="${onBoard(d.kit)}">${SAVEI}</button></div></div>`; };
+  /* no search or filter: rows like the Blocks home - what you practised last, then one row per kind of design */
+  if (!filtering) {
+    const st = store.get(), seen = {}; Object.entries(st).forEach(([k, v]) => { const s = k.split("~")[0]; if (BY[s] && (!seen[s] || (v.at || 0) > seen[s])) seen[s] = v.at || 0; });
+    const recent = Object.keys(seen).sort((a, b) => seen[b] - seen[a]).slice(0, 8).map(s => BY[s]);
+    const agent = d => d.track === "AI" && /agent|tutor|platform/.test(d.slug);
+    const groups = [["Practised recently", recent], ["Agents and agent platforms", D.filter(agent)], ["AI products", D.filter(d => d.track === "AI" && !agent(d))], ["AI search", D.filter(d => d.track === "AI search")], ["Classic system design", D.filter(d => d.track === "Classic")]].filter(g => g[1].length);
+    $("#qgrid").classList.add("rowsv"); $("#qh").hidden = true;
+    $("#qgrid").innerHTML = groups.map(([h, a]) => `<section class="qrow"><h3>${esc(h)} <span class="n">${a.length}</span></h3><div class="qscroll">${a.map(card).join("")}</div></section>`).join("");
+    return;
+  }
+  $("#qgrid").classList.remove("rowsv"); $("#qh").hidden = false;
+  $("#qgrid").innerHTML = list.map(card).join("") || `<div class="empty" style="grid-column:1/-1"><b>Nothing yet</b>Try a shorter word, or clear the filters.<div class="chips" style="justify-content:center;margin-top:14px"><button class="chip" type="button" data-clear>Clear filters</button></div></div>`;
 }
 $("#pq").addEventListener("input", drawPick);
 addEventListener("sdk-home", () => { $("#pq").value = ""; USES = null; fTrack = "all"; $("#fLevel").value = ""; $("#fCo").value = ""; [...$("#fTrack").children].forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === "all"))); if (Q) { Q = null; route(); } else drawPick(); });
@@ -1185,6 +1204,7 @@ function route() {
   document.body.classList.add("run"); $("#vPick").hidden = true; $("#vRun").hidden = false;
   $("#rTitle").textContent = q.title; document.title = q.title + (WALK ? "" : " - Practice"); recentAdd(q.kit); $("#mKit").href = "../#i=" + q.kit; $("#mSave").textContent = onBoard(q.kit) ? "Remove design from my board" : "Save design to my board"; $("#rMenu").open = false;
   $("#rSetup").textContent = setupMode ? "" : [Q.scen ? Q.scen.name : "Classic", Q.su.lens || ""].filter(Boolean).join(" · "); $("#rSetup").hidden = setupMode;
+  if (!setupMode) put({}); // remembers the visit for "Practised recently"
   render();
 }
 addEventListener("hashchange", route);
