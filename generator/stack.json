@@ -1481,10 +1481,6 @@
     "https://vercel.com/docs/cron-jobs"
    ],
    [
-    "Jira Automation",
-    "https://www.atlassian.com/software/jira/features/automation"
-   ],
-   [
     "Zapier",
     "https://zapier.com/"
    ]
@@ -1503,10 +1499,6 @@
    [
     "Google Drive API",
     "https://developers.google.com/drive"
-   ],
-   [
-    "Confluence REST API",
-    "https://developer.atlassian.com/cloud/confluence/rest/"
    ],
    [
     "Notion API",
@@ -1607,10 +1599,6 @@
    [
     "Microsoft GraphRAG",
     "https://microsoft.github.io/graphrag/"
-   ],
-   [
-    "Atlassian Teamwork Graph",
-    "https://developer.atlassian.com/platform/teamwork-graph/"
    ]
   ],
   "rag-context-builder": [
@@ -1937,7 +1925,7 @@
     "https://betterstack.com/uptime"
    ],
    [
-    "Atlassian Statuspage",
+    "Statuspage",
     "https://www.atlassian.com/software/statuspage"
    ],
    [
@@ -2115,10 +2103,6 @@
    [
     "assistant-ui",
     "https://www.assistant-ui.com/"
-   ],
-   [
-    "Rovo Chat",
-    "https://www.atlassian.com/software/rovo"
    ]
   ],
   "agent-context-compaction": [
@@ -2248,19 +2232,19 @@
    "obs": "LangSmith + Promptfoo in CI, Sentry, PostHog"
   },
   "workplace-knowledge-agent": {
-   "u": "Rovo Chat, Jira, Slack",
-   "trig": "Jira Automation (\"Use agent\" action)",
-   "ag": "Rovo agent on Forge",
-   "rt": "Intent classifiers + small model query rewrite",
+   "u": "Chat, ticket tracker, Slack",
+   "trig": "Automation rule with a \"use agent\" step",
+   "ag": "Agent on the company's app platform",
+   "rt": "Intent classifiers + small-model query rewrite",
    "srch": "OpenSearch (BM25 + kNN)",
    "rr": "Fine-tuned cross-encoder",
    "perm": "Source-system permission check",
-   "kg": "Teamwork Graph",
-   "con": "Teamwork Graph connectors (Forge)",
-   "gw": "Atlassian AI Gateway",
-   "llm": "Model per pipeline stage (hybrid LLM)",
+   "kg": "Work graph (objects + ACLs)",
+   "con": "Connectors (full sync, light sync, federated)",
+   "gw": "Internal AI gateway",
+   "llm": "Model per pipeline stage",
    "appr": "Plan for approval",
-   "tools": "Rovo skills / Forge rovo:action",
+   "tools": "Skills as typed actions",
    "obs": "Audit log + query success rate + LLM judge"
   },
   "production-agent-platform": {

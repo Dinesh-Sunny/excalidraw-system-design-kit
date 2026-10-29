@@ -76,7 +76,6 @@
   "track": "Classic",
   "companies": [
    "Amazon",
-   "Atlassian",
    "Uber",
    "Patreon"
   ],
@@ -493,8 +492,7 @@
   "companies": [
    "Amazon",
    "Google",
-   "Meta",
-   "Atlassian"
+   "Meta"
   ],
   "reqF": [
    "Crawl the web from seed URLs",
@@ -2229,7 +2227,7 @@
   "track": "AI",
   "companies": [],
   "reqF": [
-   "Employee asks in chat, Jira or Slack and gets a cited answer from the company's tools",
+   "Employee asks in chat, the ticket tracker or Slack and gets a cited answer from the company's tools",
    "Agent can draft and act (create a ticket, update a page) with a person's OK",
    "Agents start on events too: a new hire, a Sev-1 incident, a deal moving stage",
    "Connect 3rd-party tools (Drive, Slack, GitHub, Salesforce) alongside the company's own",
@@ -2245,7 +2243,7 @@
   "est": [
    "Assume a 10k-employee tenant: ~50M objects (pages, tickets, messages) and ~5 queries per person per day = ~50k queries/day, peak ~5/s",
    "Index: 50M objects x ~3 chunks x 768-dim vectors (~3 KB) = ~450 GB of vectors per large tenant - shard by tenant",
-   "ACLs ride with each object: up to 500 principals across its access controls (Teamwork Graph limit)",
+   "ACLs ride with each object: some platforms cap principals per object (around 500), so model groups, not long user lists",
    "Only natural-language questions need full RAG; person, team and bookmark lookups return near-instantly - most traffic never touches the big model",
    "Event-triggered agents can burst (a reorg creates 1,000 tickets): queue and throttle per tenant, never fire 1,000 LLM calls at once"
   ],
@@ -2263,7 +2261,7 @@
    "agent runs: plan, tool calls, approvals, results (append-only audit log)"
   ],
   "blocks": {
-   "u": "Start from the employee: they ask where they already work - chat, a Jira ticket, Slack - and expect a cited answer.",
+   "u": "Start from the employee: they ask where they already work - chat, a ticket, Slack - and expect a cited answer.",
    "trig": "Agents also start on events (new hire, Sev-1, deal stage). Same agent, different entry, so the design must handle bursts.",
    "ag": "The agent plans the steps, retrieves context, and calls skills. Writes go through approval; reads don't.",
    "rt": "Small, fast classifiers pick the intent (person, team, bookmark or a real question) and rewrite the query. Big models stay off this hop.",
@@ -2397,7 +2395,7 @@
     "Run the agent in a real environment on a task, then a verifier checks the end state - Harbor tasks have an instruction, a Docker environment, tests and a reward score. Keep a dataset of real tasks, hill-climb, gate releases, and feed production traces back in."
    ],
    [
-    "How would you build one internal agent fast for a team (FDE style)?",
+    "How would you build one internal agent fast for a team for a customer team?",
     "Start from the base harness, codify the team's expertise as skills with them, wire 2-3 tools with scoped credentials, ship to their Slack, and set up evals on their real tasks from day one. Measure one business metric against a baseline."
    ]
   ],

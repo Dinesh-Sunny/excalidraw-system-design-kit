@@ -90,31 +90,6 @@
      "Collect the minimum, encrypt in transit and at rest, end-to-end where possible, and keep identifiers out of logs and analytics."
     ]
    ]
-  },
-  "Atlassian": {
-   "cares": "Governance as architecture and adoption, not demos. Say what the agent can see, which permissions it inherits, what it may do on its own (Read, Draft, Act), and how you'll prove business value after launch.",
-   "dives": [
-    [
-     "What can this agent see, and whose permissions does it use?",
-     "Only what the signed-in user can see: permissions travel with the data and are checked at retrieval time and again before the answer (Rovo checks twice). No identity mapping means no access - fail closed. Never take identity from model output."
-    ],
-    [
-     "Which actions may it take on its own?",
-     "Use the Read -> Draft -> Act ladder: start read-only, then drafts a person approves, and only then automatic actions for low-risk, reversible steps - every action logged with who approved it."
-    ],
-    [
-     "Nobody uses the agent after launch. What do you change?",
-     "Trigger it from real events (a new hire, a Sev-1, a due review) instead of waiting for prompts - Atlassian reports event-triggered agents are 12x more likely to stick - embed it where people already work, and measure outcomes, not output."
-    ],
-    [
-     "How would you choose models for each step?",
-     "Model per stage for quality, latency and cost - a small model to classify and route, a stronger one where reasoning earns its cost - behind one gateway with fallbacks, as in Atlassian's Hybrid LLM write-up."
-    ],
-    [
-     "How do you roll this out at a customer in 12 weeks?",
-     "Discover (map workflows, systems and permissions), Build (agents and integrations with governance from day one), Adopt (rollout, training, event triggers), Value (measure impact) - and leave the customer's own engineers able to run it."
-    ]
-   ]
   }
  },
  "url-shortener": {
@@ -2874,22 +2849,22 @@
   },
   "scenarios": [
    {
-    "id": "atlassian",
-    "name": "Atlassian onboarding tutor",
-    "blurb": "Teach a new hire a team's own systems inside Jira and Confluence.",
-    "lens": "Permissions, grounding and adoption inside a customer's Atlassian site.",
+    "id": "onboarding",
+    "name": "Onboarding tutor at work",
+    "blurb": "Teach a new hire a team's own systems from its docs and tickets.",
+    "lens": "Permissions, grounding and adoption inside a company's own tools.",
     "reqF": [
-     "Answer from the team's Confluence and Jira with citations",
+     "Answer from the team's docs and tickets with citations",
      "Start automatically on a new-hire event"
     ],
     "reqN": [
      "Never show a page the learner can't open",
-     "Writes to Jira only as drafts a person approves"
+     "Writes to tickets only as drafts a person approves"
     ],
     "dives": [
      [
-      "How do you ground lessons in the customer's knowledge?",
-      "A Forge app with a Rovo agent; context from the Teamwork Graph with the user's own permissions (asUser), cited back to the real pages."
+      "How do you ground lessons in the company's knowledge?",
+      "Search the company's own docs and tickets with the learner's own permissions, and cite the real pages so the learner can check them."
      ],
      [
       "How do you prove value after 12 weeks?",
@@ -3010,13 +2985,13 @@
   },
   "scenarios": [
    {
-    "id": "atlassian",
-    "name": "Atlassian FDE engagement",
-    "blurb": "Deploy an agent for one big customer on their Jira and Confluence in 12 weeks.",
-    "lens": "Forward deployed: one workflow, a baseline metric, adoption and a reusable pattern.",
+    "id": "rollout",
+    "name": "Rollout for one big customer",
+    "blurb": "Deploy the agent for one customer's teams in 12 weeks.",
+    "lens": "One workflow, a baseline metric, adoption and a reusable pattern.",
     "reqF": [
      "Pick one high-value workflow with the customer (e.g. incident triage)",
-     "Connect the customer's own system with a Forge connector"
+     "Connect the customer's own system with a custom connector"
     ],
     "reqN": [
      "Ship value in 12 weeks with a measured baseline",
@@ -3073,8 +3048,7 @@
      "Next: add connectors as tools grow; move to a dedicated index past a few million chunks."
     ]
    }
-  ],
-  "stackNote": "How Atlassian Rovo does it (public engineering posts)"
+  ]
  },
  "production-agent-platform": {
   "stackNote": "How LangChain's Managed Deep Agents does it (Interrupt London talk + docs)",
@@ -3148,18 +3122,18 @@
   },
   "scenarios": [
    {
-    "id": "atlassian",
-    "name": "Atlassian FDE: internal agents for a customer",
-    "blurb": "Stand up agents for a large customer's teams on their Atlassian site.",
-    "lens": "Forward deployed: one team, one workflow, scoped identity, adoption.",
+    "id": "customer",
+    "name": "Internal agents for a customer",
+    "blurb": "Stand up agents for a large customer's teams in the tools they already use.",
+    "lens": "One team, one workflow, scoped identity, adoption.",
     "reqF": [
-     "Agents live in Jira, Confluence and Slack where the team already works",
+     "Agents live in the ticket tracker, the wiki and chat where the team already works",
      "Start from events (new ticket, incident) as well as chat"
     ],
     "dives": [
      [
-      "How does this map to Rovo?",
-      "Rovo agents and skills are the harness, Forge is the runtime, Teamwork Graph is the context and permission layer, Automation is the trigger, and actions run as the user (asUser) or the app. Same principles: who is calling decides access, writes need approval."
+      "How do you map this onto a customer's own platform?",
+      "Find their equivalents: their agent framework is the harness, their app platform is the runtime, their search or work graph is the context and permission layer, their automation is the trigger, and actions run as the user or as an app. The principles stay: who is calling decides access, and writes need approval."
      ]
     ],
     "wrap": [
