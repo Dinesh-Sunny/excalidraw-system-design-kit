@@ -3,6 +3,11 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+
+## [1.6.0] - 2026-10-31
+The library now has 371 items (up from 314), plus Practice, Explore and a lesson in many blocks on the site.
+- 4 new starter packs: Realtime apps (sockets, fan-out, calls, shared editing and push), Payments (idempotency, sagas, the outbox and a ledger), Data pipeline (change capture, streams, batch jobs and the lakehouse) and AI interview research (the five new research designs with the blocks they lean on). 17 packs in all.
+- A pack that holds a full design now has a Practise button that opens that design's interview question, so Payments takes you straight to practising the Payment System, and Realtime apps to the Chat System.
 - AI interview research: 5 new full designs with practice questions - AI Interview Research Platform, Live AI Moderator, Interview Media Pipeline, Insight Synthesis Engine and Research Knowledge Base - covering AI-moderated video interviews, adaptive probing, resumable uploads, grounded quotes, theme clustering and cited answers across studies, with scenarios for global brands, startups, health research, async answers, screen share, EU residency, weekly waves and MCP access.
 - Explore: a new page that turns the whole kit into one mind map you can walk into (area -> block -> concepts -> plain explanation), with gliding motion; double-click any block on the practice canvas (or tap Go inside) to walk its ideas the same way.
 - Production agents: Production Agent Platform design and practice question (8 deep dives, customer rollout and AI Voice Tutor scenarios), 4 new agent patterns (Agent Harness, Context Engineering, Durable Human-in-the-Loop, Scoped Credentials) and 8 new blocks (Context Compaction, Agent Filesystem, Context Hub, Run Config, Agent Channels, Agent Auth Handler, Credential Broker, Agent Eval Harness), with sourced concept trees.

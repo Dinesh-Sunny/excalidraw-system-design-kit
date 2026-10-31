@@ -314,6 +314,7 @@ Details and how to add items: [generator/README.md](generator/README.md).
 - [x] `sd:` namespace and public release (v1.3)
 - [x] A distinct icon for every block, new site with install guide (v1.4)
 - [x] Canvas fit: compact groups and flows, notes below, 20 px grid (v1.5)
+- [x] Practice mode, Explore map, lessons and real tools in blocks, AI search, voice tutor, agent and interview research designs, 17 starter packs (v1.6)
 - [ ] Listed on libraries.excalidraw.com ([#2967](https://github.com/excalidraw/excalidraw-libraries/pull/2967))
 - [ ] Cloud-provider variants (AWS / GCP / Azure names on the same cards)
 - [ ] More AI designs: eval pipeline, fine-tuning platform, agent marketplace

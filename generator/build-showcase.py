@@ -11,7 +11,7 @@ for it,r in zip(lib,rep):
     items_art.append({'id':it['id'],'name':it['name'],'section':r['section'],'img':thumbs[it['name']]})
 N=len(items_pages)
 tpl=open('showcase2.tpl.html').read().replace('/*__LEARN_TOOLS__*/',open('learn-tools.js').read())
-VERSION='1.5.0'
+VERSION='1.6.0'
 REPO='https://github.com/Dinesh-Sunny/excalidraw-system-design-kit'
 THEMEBTN='<button class="ibtn" id="theme" type="button" aria-label="Switch theme"><svg class="i-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 12.5A6.5 6.5 0 0 1 7.5 4a6.5 6.5 0 1 0 8.5 8.5z"/></svg><svg class="i-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.6M10 15.9v1.6M2.5 10h1.6M15.9 10h1.6M4.7 4.7l1.1 1.1M14.2 14.2l1.1 1.1M4.7 15.3l1.1-1.1M14.2 5.8l1.1-1.1"/></svg></button>'
 GHSVG='<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>'
@@ -124,7 +124,7 @@ if os.path.exists('out/practice.json'):
 os.makedirs('out/pages',exist_ok=True)
 json.dump({'b':_blocks,'p':_pq,'k':_packs,'cats':{k:v for k,v in _lab.items()},'count':_count},open('out/pages/search-index.json','w'),separators=(',',':'),ensure_ascii=False)
 shutil.copy('search.js','out/pages/search.js')
-NEWS='Copy any block into Excalidraw, Figma or Docs, plus 12 starter packs'
+NEWS=f'Copy any block into Excalidraw, Figma or Docs, plus {len(_packs)} starter packs'
 def fill(items): return tpl.replace('__NAV__',NAV('','blocks','__SPURL__',True,ph=f'Search {N} blocks')).replace('__FOOT__',FOOT('','__SPURL__')).replace('__PRACTICE__',PRACTICE).replace('__LEARN__',LEARNJ).replace('__STACK__',STACKJ).replace('__NEWS__',NEWS).replace('__ITEMS__',json.dumps(items,separators=(',',':'))).replace('__SECTIONS__',json.dumps(secs)).replace('__VERSION__',VERSION).replace('__SIZE__',f"{os.path.getsize('out/System Design Kit.excalidrawlib')/1e6:.1f} MB").replace('__N__',str(len(items)))
 art=fill(items_art).replace('__DATA__','https://dinesh-sunny.github.io/excalidraw-system-design-kit/'); open(f'{SP}/sd-kit-showcase.html','w').write(art)
 pg=fill(items_pages).replace('__DATA__','')

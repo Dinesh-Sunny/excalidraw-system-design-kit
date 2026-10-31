@@ -9,7 +9,7 @@ import { RESEARCH_TEMPLATES } from "./research.js";
 import { UI, FRAMES, SCREENS } from "./ui.js";
 
 const items = []; // {name, section, skel}
-export const KIT = "sd", KIT_VERSION = "1.5.0";
+export const KIT = "sd", KIT_VERSION = "1.6.0";
 const add = (cat, label, skel, section) => items.push({ name: `${KIT}:${cat}/ ${label}`, section: section || cat, skel });
 const one = (s) => s.replace(/\n/g, " ");
 
