@@ -3758,5 +3758,174 @@
    "Bottleneck: heavy map bundle and result images. Fix: lazy map chunk, responsive images, caching by filter key and prefetching the next page.",
    "Next: saved searches and price alerts, flexible dates, and personalised ranking."
   ]
+ },
+ "fe-mobile-money-app": {
+  "level": "Hard",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "See the available balance and recent activity",
+   "Withdraw money: pick an amount, see the fee and net amount, confirm",
+   "Track a withdrawal from pending to paid, with a push when it lands",
+   "Log in fast with PIN or biometrics; stay signed in safely",
+   "Works in several countries: language, currency and rules per country"
+  ],
+  "reqN": [
+   "Low-end Android on patchy mobile data is the main device",
+   "Never pay twice: retries, double taps and lost replies are safe",
+   "Fast start and smooth taps (Core Web Vitals good: LCP <= 2.5 s, INP <= 200 ms at p75)",
+   "Accessible: large touch targets (WCAG 2.2 minimum 24 x 24 CSS px), readable text, screen reader labels",
+   "Secure: no tokens in localStorage, screen blur in app switcher, session timeout"
+  ],
+  "est": [
+   "Assume a small JS budget per route on low-end phones (lazy load everything after the home screen)",
+   "Assume most users open the app around payday: plan for a spike of balance reads and withdrawals",
+   "Balance can be a few minutes stale if labelled; the withdraw confirm step always re-checks with the server",
+   "Assume 1 withdraw = 1 request + status updates by push, not polling"
+  ],
+  "api": [
+   "GET /balance -> {available, currency, asOf}",
+   "POST /withdrawals  Idempotency-Key: <uuid>  {amountMinor, currency} -> {id, status: pending, fee, net}",
+   "GET /withdrawals/{id} -> {status: pending | paid | failed, reason}",
+   "GET /config?country=TH -> {flags, limits, copy, minAppVersion}",
+   "<AmountInput currency locale min max onChange />  <WithdrawSheet balance fee onConfirm />"
+  ],
+  "data": [
+   "Server state (balance, history, withdrawals) in a query cache with an asOf time",
+   "Money as integer minor units + ISO currency; format only at the edge with Intl.NumberFormat",
+   "Pending withdrawals in an outbox (IndexedDB / Capacitor Preferences) with their idempotency key",
+   "Tokens in secure native storage (Keychain / Keystore via a plugin), never localStorage",
+   "Remote config per country cached on device with a safe default"
+  ],
+  "blocks": {
+   "u": "A worker on a low-end Android phone with patchy data.",
+   "shell": "A hybrid app shell (Capacitor WebView) with lazy routes and a tiny first screen.",
+   "auth": "PIN or biometric unlock; the session token lives in secure native storage.",
+   "bal": "Shows the cached balance at once with an 'updated 2m ago' label, then refreshes.",
+   "api": "A BFF that returns screen-shaped data and owns the real money checks.",
+   "wd": "Amount, fee and net amount shown before a clear confirm step.",
+   "idem": "Creates one idempotency key per withdraw and keeps the request in an outbox until the server answers.",
+   "st": "Shows pending until the server says paid or failed; never fakes success for money.",
+   "push": "FCM push tells the app the money landed, so it does not poll.",
+   "rc": "Remote config and flags per country: limits, copy, kill switches.",
+   "loc": "Language, currency and number formats from the locale (Intl APIs).",
+   "ota": "Live updates ship web-bundle fixes without a store release, behind a channel.",
+   "rum": "Real user metrics and crash reports, watched at p75 on low-end devices."
+  },
+  "dives": [
+   [
+    "The user taps Withdraw, the network drops, they tap again. What happens?",
+    "The same idempotency key is reused for that withdraw, so the server returns the first result instead of paying twice. The button disables while a request is in flight."
+   ],
+   [
+    "Optimistic UI for a withdrawal?",
+    "No. Show a pending state and wait for the server. Optimistic is fine for likes, not for money."
+   ],
+   [
+    "How do you store and show money?",
+    "Integer minor units plus currency code; format with Intl.NumberFormat for the user's locale; never use floats for amounts."
+   ],
+   [
+    "How do you make it fast on a cheap Android phone?",
+    "Small first route, lazy everything else, avoid big libraries, cut re-renders (OnPush / signals or memo), virtualize long lists, measure INP and startup on a real low-end device."
+   ],
+   [
+    "Patchy network: what does the user see?",
+    "Cached balance with its time, a clear offline banner, queued actions marked pending, and retry with backoff when back online."
+   ],
+   [
+    "Where do tokens live in a hybrid app?",
+    "In secure native storage through a plugin, not localStorage; short-lived access token, refresh handled carefully, lock after inactivity."
+   ],
+   [
+    "How do you ship a fix without a store release?",
+    "Live updates of the web bundle on a channel, behind flags, with a minimum native version check for anything that needs new native code."
+   ],
+   [
+    "How do you roll out per country?",
+    "Remote config per country (limits, copy, features) with safe defaults cached on device and kill switches for risky flows."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: payday spikes and flaky networks. Fix: cached reads, idempotent writes, push instead of polling.",
+   "Next: offline-safe history, accessibility audit on real devices, and an INP budget in CI."
+  ]
+ },
+ "fe-admin-dashboard": {
+  "level": "Medium",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "List thousands of employees with search, sort and filters",
+   "Edit a record with validation",
+   "Bulk upload a CSV and see row errors before import",
+   "Roles: viewers, editors, admins see different actions",
+   "Export a filtered list"
+  ],
+  "reqN": [
+   "Tables stay fast with large data (server-side paging)",
+   "Safe changes: confirm risky actions, audit every change",
+   "Accessible tables and forms (keyboard, labels)",
+   "Views are shareable by URL"
+  ],
+  "est": [
+   "Assume tens of thousands of rows per employer: page on the server (e.g. 50 rows a page)",
+   "Assume CSV files with thousands of rows: parse in a Web Worker so the page stays responsive",
+   "Long imports run as background jobs with progress"
+  ],
+  "api": [
+   "GET /employees?cursor=&limit=50&sort=name&filter=dept:ops -> {items, nextCursor, total}",
+   "PATCH /employees/{id} {fields} -> 200 | 409 (version conflict)",
+   "POST /imports (CSV) -> {jobId}; GET /imports/{jobId}/events (SSE progress)",
+   "<DataTable columns query onSort onFilter onRowAction />"
+  ],
+  "data": [
+   "Table view state (sort, filters, page) in the URL",
+   "Rows in a query cache keyed by the URL view",
+   "Form state local to the edit form, validated by a shared schema",
+   "Role and permissions from the session; the server re-checks every action"
+  ],
+  "blocks": {
+   "u": "An HR admin on a desktop browser.",
+   "shell": "App shell with lazy routes and role guards on routes and buttons.",
+   "auth": "SSO login; the session is an HttpOnly cookie.",
+   "tbl": "Data table with server-side sort, filters and paging; the view lives in the URL.",
+   "qc": "Query cache keyed by the table view; invalidated after edits.",
+   "api": "Admin API with cursor paging and role checks on every call.",
+   "form": "Edit forms with schema validation and clear field errors.",
+   "audit": "Every change is logged with who, what and when.",
+   "bulk": "Parses and validates the CSV in a Web Worker and shows row errors first.",
+   "job": "The server runs the import as a job and streams progress over SSE."
+  },
+  "dives": [
+   [
+    "Client-side or server-side table?",
+    "Server-side sort, filter and paging once data is large; client-side is fine for a few hundred rows."
+   ],
+   [
+    "Two admins edit the same row. What happens?",
+    "Send a version with the update; the server returns 409 on conflict and the UI shows the newer data to merge."
+   ],
+   [
+    "How do you keep a 10,000-row CSV upload smooth?",
+    "Parse and validate in a Web Worker, show the first errors with row numbers, then upload and run the import as a job."
+   ],
+   [
+    "Roles in the frontend?",
+    "Hide or disable actions the role cannot use for clarity, but the server is the real check."
+   ],
+   [
+    "How do you make the table accessible?",
+    "Real table semantics or the ARIA grid pattern, sortable headers announced with aria-sort, keyboard navigation and visible focus."
+   ],
+   [
+    "Shareable views?",
+    "Sort, filters and page in the URL, so the back button and links work."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: huge exports and imports. Fix: background jobs with progress and download links.",
+   "Next: saved views, column settings, and audit search."
+  ]
  }
 }

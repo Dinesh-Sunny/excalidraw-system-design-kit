@@ -2233,6 +2233,10 @@
    [
     "TanStack Query",
     "https://tanstack.com/query/latest"
+   ],
+   [
+    "Angular",
+    "https://angular.dev/"
    ]
   ],
   "fe-ssg-static-pages": [
@@ -2291,6 +2295,10 @@
    [
     "TanStack Start",
     "https://tanstack.com/start/latest"
+   ],
+   [
+    "Angular SSR",
+    "https://angular.dev/guide/ssr"
    ]
   ],
   "fe-react-server-components": [
@@ -2331,6 +2339,10 @@
    [
     "React hydrateRoot",
     "https://react.dev/reference/react-dom/client/hydrateRoot"
+   ],
+   [
+    "Angular incremental hydration",
+    "https://angular.dev/guide/incremental-hydration"
    ]
   ],
   "fe-app-shell-router": [
@@ -2353,6 +2365,14 @@
    [
     "MDN History API",
     "https://developer.mozilla.org/en-US/docs/Web/API/History_API"
+   ],
+   [
+    "Angular Router",
+    "https://angular.dev/guide/routing"
+   ],
+   [
+    "Ionic Framework",
+    "https://ionicframework.com/"
    ]
   ],
   "fe-micro-frontend-host": [
@@ -2375,6 +2395,10 @@
    [
     "Webpack Module Federation",
     "https://webpack.js.org/concepts/module-federation/"
+   ],
+   [
+    "Native Federation (Angular)",
+    "https://www.npmjs.com/package/@angular-architects/native-federation"
    ]
   ],
   "fe-design-system": [
@@ -2419,6 +2443,14 @@
    [
     "React Context",
     "https://react.dev/learn/passing-data-deeply-with-context"
+   ],
+   [
+    "NgRx Store / SignalStore",
+    "https://ngrx.io/"
+   ],
+   [
+    "Angular signals",
+    "https://angular.dev/guide/signals"
    ]
   ],
   "fe-server-state-cache-tanstack-query": [
@@ -2437,6 +2469,10 @@
    [
     "Apollo Client",
     "https://www.apollographql.com/docs/react"
+   ],
+   [
+    "TanStack Query (Angular)",
+    "https://tanstack.com/query/latest/docs/framework/angular/overview"
    ]
   ],
   "fe-normalized-cache-entities-by-id": [
@@ -2503,6 +2539,10 @@
    [
     "React useActionState",
     "https://react.dev/reference/react/useActionState"
+   ],
+   [
+    "Angular Reactive Forms",
+    "https://angular.dev/guide/forms/reactive-forms"
    ]
   ],
   "fe-url-state": [
@@ -2569,6 +2609,10 @@
    [
     "MDN: AbortController",
     "https://developer.mozilla.org/en-US/docs/Web/API/AbortController"
+   ],
+   [
+    "Angular HttpClient + interceptors",
+    "https://angular.dev/guide/http"
    ]
   ],
   "fe-websocket-client": [
@@ -2591,6 +2635,10 @@
    [
     "Pusher Channels",
     "https://pusher.com/channels/"
+   ],
+   [
+    "RxJS webSocket",
+    "https://rxjs.dev/api/webSocket/webSocket"
    ]
   ],
   "fe-sse-client-eventsource": [
@@ -2671,6 +2719,10 @@
    [
     "Lighthouse",
     "https://developer.chrome.com/docs/lighthouse"
+   ],
+   [
+    "Angular CDK a11y",
+    "https://material.angular.dev/cdk/a11y/overview"
    ]
   ],
   "fe-i18n-l10n": [
@@ -2693,6 +2745,10 @@
    [
     "MDN Intl API",
     "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl"
+   ],
+   [
+    "Angular i18n",
+    "https://angular.dev/guide/i18n"
    ]
   ],
   "fe-csp-xss-defence": [
@@ -2759,6 +2815,10 @@
    [
     "GrowthBook",
     "https://www.growthbook.io/"
+   ],
+   [
+    "Firebase Remote Config",
+    "https://firebase.google.com/docs/remote-config"
    ]
   ],
   "fe-service-worker": [
@@ -2817,6 +2877,10 @@
    [
     "OWASP HTML5 Security Cheat Sheet",
     "https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html"
+   ],
+   [
+    "Capacitor Preferences",
+    "https://capacitorjs.com/docs/apis/preferences"
    ]
   ],
   "fe-web-worker": [
@@ -2875,6 +2939,14 @@
    [
     "Rolldown",
     "https://rolldown.rs/"
+   ],
+   [
+    "Angular CLI (esbuild builder)",
+    "https://angular.dev/tools/cli/build-system-migration"
+   ],
+   [
+    "Angular @defer",
+    "https://angular.dev/guide/templates/defer"
    ]
   ],
   "fe-virtualized-list": [
@@ -2893,6 +2965,10 @@
    [
     "CSS content-visibility (MDN)",
     "https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility"
+   ],
+   [
+    "Angular CDK Virtual Scroll",
+    "https://material.angular.dev/cdk/scrolling/overview"
    ]
   ],
   "fe-infinite-scroll": [
@@ -2981,6 +3057,10 @@
    [
     "AbortController (MDN)",
     "https://developer.mozilla.org/en-US/docs/Web/API/AbortController"
+   ],
+   [
+    "RxJS debounceTime",
+    "https://rxjs.dev/api/operators/debounceTime"
    ]
   ],
   "fe-core-web-vitals-lcp-inp-cls": [
@@ -3025,6 +3105,10 @@
    [
     "OpenTelemetry JS",
     "https://opentelemetry.io/docs/languages/js/"
+   ],
+   [
+    "Firebase Performance Monitoring",
+    "https://firebase.google.com/docs/perf-mon"
    ]
   ]
  },
@@ -3222,6 +3306,21 @@
    "pay": "Stripe Elements + Adyen Web Drop-in",
    "book": "React Hook Form + Zod",
    "auth": "Auth.js + OWASP Session Management Cheat Sheet"
+  },
+  "fe-mobile-money-app": {
+   "shell": "Capacitor + Ionic Framework",
+   "auth": "Capacitor Preferences",
+   "bal": "TanStack Query + Angular signals",
+   "push": "Firebase Cloud Messaging",
+   "rc": "Firebase Remote Config",
+   "loc": "Intl.NumberFormat",
+   "rum": "Firebase Crashlytics + Sentry"
+  },
+  "fe-admin-dashboard": {
+   "tbl": "TanStack Table + AG Grid",
+   "qc": "TanStack Query",
+   "form": "Zod + Angular Reactive Forms",
+   "bulk": "Papa Parse"
   }
  }
 }

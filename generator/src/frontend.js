@@ -101,6 +101,27 @@ export const FE_TEMPLATES = [
     edges: [["u", "ssr", "search"], ["ssr", "url", "hydrate"], ["url", "qc", "key"], ["qc", "api", "fetch", B], ["qc", "list", "results"], ["qc", "map", "pins"], ["list", "map", "hover sync", B], ["url", "dp", "dates", D],
       ["list", "book", "reserve"], ["book", "pay", "pay"], ["book", "auth", "sign in"]],
     notes: "Key decisions (RADIO)\n- Every filter lives in the URL: shareable,\n  back button, SSR can read it\n- Map is a lazy chunk; list and map share\n  one result set (hover sync)\n- Debounce map moves before searching\n- Dates: locale aware, keyboard friendly\n- Idempotency key on the booking submit" } },
+  { name: "FE Mobile Money App - fintech wallet withdraw payout hybrid ionic capacitor offline low-end android frontend", spec: {
+    title: "Mobile Money App (Frontend)", sub: "A wallet that works on cheap phones and patchy data · show money right, never pay twice",
+    nodes: [["u", "User\n(low-end Android)", "mobile", "client", 0, 0, 160], ["shell", "Hybrid App Shell\n(Capacitor /\nWebView)", "router", "client", 1.4, 0, 170], ["auth", "Login + Biometrics\n(secure storage)", "tokenauth", "client", 2.8, 0, 170],
+      ["bal", "Balance Screen\n(cached, shows\n\"updated 2m ago\")", "querycache", "client", 4.2, 0, 170], ["api", "Wallet API\n(BFF)", "gateway", "edge", 5.6, 0], ["wd", "Withdraw Flow\n(fee, net amount,\nconfirm)", "form", "client", 4.2, 1.3, 170],
+      ["idem", "Idempotency Key\n+ Outbox\n(retry safe)", "offlineq", "client", 5.6, 1.3, 170], ["st", "Status Tracker\n(pending -> paid)", "optimistic", "client", 2.8, 1.3, 170], ["push", "Push (FCM)", "bell", "svc", 2.8, 2.6],
+      ["rc", "Remote Config\n+ Flags\n(per country)", "flags", "client", 1.4, 1.3, 160], ["loc", "Locale\n(language,\ncurrency, numbers)", "i18n", "client", 0, 1.3, 160], ["ota", "Live Updates\n(OTA web bundle)", "bundle", "client", 1.4, 2.6, 160],
+      ["rum", "RUM + Crashes\n(p75 on low-end)", "rum", "ops", 4.2, 2.6, 160]],
+    edges: [["u", "shell", "open"], ["shell", "auth", "unlock"], ["auth", "bal", "session"], ["bal", "api", "GET /balance", B], ["bal", "wd", "withdraw"], ["wd", "idem", "submit"], ["idem", "api", "POST + key"], ["wd", "st", "pending"],
+      ["push", "st", "paid"], ["shell", "rc", "on start"], ["rc", "loc", "country"], ["rc", "ota", "channel"], ["st", "rum", "", DOT]],
+    notes: "Key decisions (RADIO)\n- One idempotency key per withdraw tap:\n  retries and double taps never pay twice\n- Money as integer minor units + Intl\n- Cached balance with a clear \"as of\" time\n- Pending state until the server says paid\n- Budget for low-end Android: small JS,\n  lazy routes, few re-renders" } },
+
+  { name: "FE Admin Dashboard - employer hr portal back office data table bulk upload roles frontend", spec: {
+    title: "Admin Dashboard (Frontend)", sub: "Big tables, bulk actions and roles · quick to scan, safe to change",
+    nodes: [["u", "Admin\n(desktop)", "admin", "client", 0, 0], ["shell", "App Shell\n(lazy routes,\nrole guards)", "router", "client", 1.4, 0, 160], ["auth", "Auth\n(SSO, HttpOnly\ncookie)", "tokenauth", "client", 1.4, 1.3, 160],
+      ["tbl", "Data Table\n(server sort, filters\nin URL, paging)", "virtual", "client", 2.8, 0, 180], ["qc", "Query Cache", "querycache", "client", 4.2, 0], ["api", "Admin API\n(cursor, RBAC)", "gateway", "edge", 5.6, 0, 160],
+      ["form", "Edit Forms\n(schema\nvalidation)", "form", "client", 2.8, 1.3, 160], ["audit", "Audit Trail\n(who changed\nwhat)", "doc", "ops", 2.8, 2.6, 160], ["bulk", "Bulk Upload\n(parse CSV in a\nWeb Worker)", "webworker", "client", 4.2, 1.3, 170],
+      ["job", "Import Job\n(progress via\nSSE)", "sse", "client", 5.6, 1.3, 160]],
+    edges: [["u", "shell", "open"], ["shell", "auth", "guard"], ["shell", "tbl", "/employees"], ["tbl", "qc", "page key"], ["qc", "api", "fetch", B], ["tbl", "form", "edit row"], ["form", "qc", "mutate, invalidate"],
+      ["form", "audit", "logged"], ["bulk", "job", "upload"], ["job", "api", "status", B], ["bulk", "qc", "refresh when done", D]],
+    notes: "Key decisions (RADIO)\n- Server-side sort, filter, paging; the\n  URL holds the view (shareable)\n- Validate CSV in a Web Worker, show row\n  errors before upload\n- Long imports run as jobs with progress\n- Role guards in the UI, real checks on\n  the server\n- Every change is audited" } },
+
 ];
 
 // ---- 22 frontend building blocks (groups share one section) ----

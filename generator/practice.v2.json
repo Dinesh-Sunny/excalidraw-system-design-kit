@@ -5069,5 +5069,199 @@
     ]
    }
   ]
+ },
+ "fe-mobile-money-app": {
+  "modern": [
+   [
+    "Signals and fine-grained reactivity",
+    "Modern frameworks (Angular signals, Preact/Solid signals, React Compiler) cut needless re-renders, which matters most on low-end phones."
+   ],
+   [
+    "Zoneless and OnPush change detection",
+    "Angular now supports zoneless change detection, so updates run only where state changed."
+   ],
+   [
+    "Live updates for hybrid apps",
+    "Capacitor-based apps can ship web-bundle fixes over the air on channels, keeping store releases for native changes."
+   ],
+   [
+    "INP as the speed metric",
+    "Interaction to Next Paint replaced FID as a Core Web Vital in 2024, so tap-to-response time is what gets measured."
+   ],
+   [
+    "Passkeys and biometrics",
+    "Phone unlock (biometrics, passkeys) replaces passwords for quick, safe sign-in."
+   ]
+  ],
+  "extra": {
+   "t": "Money flows",
+   "look": "They want correctness first: no double payments, honest states, clear amounts.",
+   "rounds": [
+    [
+     "The withdraw request times out. What do you do?",
+     "Retry with the same idempotency key, show pending, and confirm the final state from the server",
+     [
+      "Show success anyway",
+      "Send a new request with a new key",
+      "Ask the user to tap again"
+     ]
+    ],
+    [
+     "How do you represent 1,250.50 THB in code?",
+     "125050 minor units plus 'THB', formatted with Intl.NumberFormat",
+     [
+      "1250.5 as a float",
+      "The string '1,250.50'",
+      "A number rounded to whole baht"
+     ]
+    ],
+    [
+     "When is optimistic UI a bad idea?",
+     "When the action moves money or cannot be undone",
+     [
+      "When the user is on Wi-Fi",
+      "When the list is long",
+      "Never"
+     ]
+    ],
+    [
+     "The balance is 3 minutes old. What do you show?",
+     "The cached balance with an 'updated 3 min ago' label while refreshing",
+     [
+      "A blank screen until fresh",
+      "The cached number with no label",
+      "An error"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "offline",
+    "name": "Very patchy network",
+    "blurb": "Users often have weak or no signal.",
+    "lens": "Cached reads, queued writes, honest states.",
+    "dives": [
+     [
+      "What works with no network?",
+      "Reading cached balance and history; new withdrawals are not sent offline, they wait in the outbox only if the product allows it, otherwise a clear 'you are offline' message."
+     ]
+    ],
+    "wrap": [
+     "Watch: stale data shown as fresh. Always show the time."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first",
+    "blurb": "Many users with low vision or low digital literacy.",
+    "lens": "Large targets, plain language, screen reader labels.",
+    "dives": [
+     [
+      "How do you make the amount input accessible?",
+      "A labelled input with the currency announced, error text linked with aria-describedby, and large tap targets."
+     ]
+    ],
+    "wrap": [
+     "Test with TalkBack on a real Android phone."
+    ]
+   },
+   {
+    "id": "multi",
+    "name": "New country launch",
+    "blurb": "Launch in a new country with a new language and currency.",
+    "lens": "Config, copy and formats per country.",
+    "dives": [
+     [
+      "What changes per country?",
+      "Language, currency, number and date formats, limits and fees, legal copy; all from remote config and Intl, not hard-coded."
+     ]
+    ],
+    "wrap": [
+     "Next: translation workflow and right-to-left readiness if a market needs it."
+    ]
+   }
+  ]
+ },
+ "fe-admin-dashboard": {
+  "modern": [
+   [
+    "Server-driven tables",
+    "Headless table libraries pair with server-side sort and filter so the UI stays light."
+   ],
+   [
+    "Signals for local UI state",
+    "Fine-grained reactivity keeps big forms and tables from re-rendering everything."
+   ],
+   [
+    "Streaming progress",
+    "SSE progress for long jobs instead of polling."
+   ]
+  ],
+  "extra": {
+   "t": "Tables at scale",
+   "look": "They want sensible paging, safe edits and a smooth bulk import.",
+   "rounds": [
+    [
+     "The table has 50,000 rows. Where do you sort?",
+     "On the server, with paging",
+     [
+      "In the browser after loading all rows",
+      "In a Web Worker with all rows",
+      "In the CSS"
+     ]
+    ],
+    [
+     "Where does the current filter live?",
+     "In the URL",
+     [
+      "Only in component state",
+      "In localStorage",
+      "In a cookie"
+     ]
+    ],
+    [
+     "Who enforces that a viewer cannot delete?",
+     "The server, with the UI hiding the button too",
+     [
+      "Only the UI",
+      "Only the database",
+      "The CSS class"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "huge",
+    "name": "Very large employers",
+    "blurb": "One employer has hundreds of thousands of staff.",
+    "lens": "Paging, search and exports.",
+    "dives": [
+     [
+      "Exports of the full list?",
+      "Run as a background job and email or show a download link when ready."
+     ]
+    ],
+    "wrap": [
+     "Watch: total counts can be slow; show 'many' or estimate."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first",
+    "blurb": "Keyboard and screen reader users must manage staff.",
+    "lens": "Grid semantics and forms.",
+    "dives": [
+     [
+      "Keyboard in the table?",
+      "Tab into the grid, arrow keys between cells, Enter to act, with visible focus."
+     ]
+    ],
+    "wrap": [
+     "Test with a screen reader on the main flows."
+    ]
+   }
+  ]
  }
 }
