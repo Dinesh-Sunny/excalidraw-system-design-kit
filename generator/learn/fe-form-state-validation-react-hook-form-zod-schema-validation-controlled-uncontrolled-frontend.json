@@ -1,0 +1,284 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Form state is the values, errors, touched and submitting flags of a form. A form library such as React Hook Form keeps values in the inputs themselves (uncontrolled) so typing does not re-render the page, and a schema library such as Zod checks the data and gives you types from the same definition.",
+ "like": "Like a paper form with a checker at the desk: you fill it in at your own pace, the checker reads the whole form against one rule sheet, and tells you exactly which boxes to fix.",
+ "why": [
+  "Typing stays fast because only the changed field updates",
+  "One schema validates the data and defines its TypeScript type",
+  "Clear, accessible error messages next to each field"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 300,
+  "nodes": [
+   {
+    "id": "in",
+    "t": "Inputs|uncontrolled, refs",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "form"
+   },
+   {
+    "id": "fs",
+    "t": "Form state|values, errors, touched",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "store"
+   },
+   {
+    "id": "zs",
+    "t": "Schema (Zod)|one source of truth",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "check"
+   },
+   {
+    "id": "er",
+    "t": "Error UI|aria-live messages",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "bell"
+   },
+   {
+    "id": "sb",
+    "t": "Submit handler|typed valid values",
+    "x": 275,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "send"
+   },
+   {
+    "id": "ap",
+    "t": "Server action or API|validates again",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "in",
+    "fs",
+    "register"
+   ],
+   [
+    "fs",
+    "zs",
+    "resolver"
+   ],
+   [
+    "fs",
+    "er",
+    "errors"
+   ],
+   [
+    "fs",
+    "sb",
+    "valid only"
+   ],
+   [
+    "sb",
+    "ap",
+    "POST"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Register uncontrolled inputs",
+    "d": "register connects a native input by name and reads its value from the DOM, so keystrokes do not re-render the whole form. Controlled UI components go through Controller.",
+    "hl": [
+     "in",
+     "fs"
+    ]
+   },
+   {
+    "t": "Pick when to validate",
+    "d": "mode decides the first check: onSubmit by default, or onBlur, onChange, onTouched, all. After a failed submit, fields re-validate on change by default.",
+    "hl": [
+     "fs"
+    ]
+   },
+   {
+    "t": "Plug in a schema",
+    "d": "A resolver runs the schema (Zod, Valibot, Yup...) against the whole form data and returns typed values or errors keyed by field name.",
+    "hl": [
+     "fs",
+     "zs"
+    ]
+   },
+   {
+    "t": "Show errors accessibly",
+    "d": "Render messages beside fields and announce them to screen readers; move focus to the first invalid field on submit.",
+    "hl": [
+     "er"
+    ]
+   },
+   {
+    "t": "Submit, then validate again on the server",
+    "d": "Only valid values reach the handler. The server must re-validate with the same schema because client checks can be bypassed.",
+    "hl": [
+     "sb",
+     "ap"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "onSubmit",
+   "l": "React Hook Form's default validation mode",
+   "s": "https://react-hook-form.com/docs/useform"
+  },
+  {
+   "v": "onChange",
+   "l": "default reValidateMode: fields with errors re-check on every change after a submit",
+   "s": "https://react-hook-form.com/docs/useform"
+  },
+  {
+   "v": "5.36 kB",
+   "l": "gzipped core size of Zod 4, versus 12.47 kB for Zod 3 (author's measurement)",
+   "s": "https://zod.dev/v4"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Controlled or uncontrolled",
+   "d": "Controlled inputs keep every value in React state and re-render per keystroke; uncontrolled ones leave the value in the DOM and read it on demand, which is faster for big forms. React Hook Form is built on the uncontrolled model."
+  },
+  {
+   "t": "When to validate",
+   "d": "onSubmit is calm but late; onChange is instant but noisy and the docs warn it can hurt performance; onTouched (first blur, then every change) is a common friendly middle."
+  },
+  {
+   "t": "One schema, two places",
+   "d": "Share the Zod schema between client and server so rules never drift. The client copy is for UX; the server copy is the real gate."
+  },
+  {
+   "t": "React 19 form actions",
+   "d": "With Server Functions, useActionState returns server-side validation errors as state and can work before JavaScript loads. Use it for simple forms; keep a form library for complex client-side behaviour."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-optimistic-update-optimistic-ui-rollback-pending-mutation-useoptimistic-frontend",
+   "why": "After submit, show the result instantly while the save is still in flight"
+  },
+  {
+   "slug": "fe-global-store-zustand-redux-client-state-redux-zustand-signals-context-ui-state-frontend",
+   "why": "For multi-step wizard state shared across routes rather than one form's field state"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Client-only validation",
+   "d": "The server trusts what the browser checked.",
+   "see": "Bad data in the database from direct API calls",
+   "fix": "Re-validate on the server with the same schema"
+  },
+  {
+   "t": "Validate on every keystroke",
+   "d": "mode: onChange on a large form.",
+   "see": "Janky typing and a wall of red errors",
+   "fix": "Use onTouched or onBlur; re-validate on change only after an error"
+  },
+  {
+   "t": "Errors not accessible",
+   "d": "Messages are only red text.",
+   "see": "Screen reader users do not know what failed",
+   "fix": "Associate messages with inputs, announce via live region, focus first invalid field"
+  }
+ ],
+ "say": [
+  "I use uncontrolled inputs through React Hook Form so typing does not re-render the form, with a Zod schema as the single source of truth for rules and types.",
+  "Validation runs onTouched or onBlur for friendly feedback, and the server re-validates with the same schema because client checks are only UX.",
+  "Errors are tied to inputs and announced to assistive tech, and focus moves to the first invalid field."
+ ],
+ "followups": [
+  {
+   "q": "Why uncontrolled?",
+   "a": "The browser already holds the input's value, so we skip a React state update per keystroke. Fewer re-renders on large forms."
+  },
+  {
+   "q": "Where do server errors go?",
+   "a": "Back into the form as field errors (setError) or, with React 19 form actions, returned as state from useActionState."
+  },
+  {
+   "q": "Zod versus hand-written checks?",
+   "a": "A schema is declarative, reusable on the server, and z.infer gives the TypeScript type from the same definition."
+  }
+ ],
+ "today": "React Hook Form v7 accepts any Standard Schema validator through resolvers, Zod 4 is stable and much smaller than v3, and React 19 added useActionState so server validation errors can flow straight back into a form.",
+ "check": [
+  {
+   "q": "What does React Hook Form's register mostly rely on?",
+   "a": "Uncontrolled native inputs",
+   "d": [
+    "A re-render per keystroke",
+    "A global store",
+    "Server round trips"
+   ],
+   "why": "Values stay in the DOM, so fewer re-renders."
+  },
+  {
+   "q": "Why validate on the server too?",
+   "a": "Client checks can be bypassed",
+   "d": [
+    "Servers are faster at regex",
+    "Browsers cannot validate",
+    "It is required by React"
+   ],
+   "why": "The server is the real gate; client validation is user experience."
+  },
+  {
+   "q": "What is a resolver?",
+   "a": "An adapter that runs a schema against the form data",
+   "d": [
+    "A router plugin",
+    "A CSS-in-JS helper",
+    "A network retry policy"
+   ],
+   "why": "It returns typed values or errors keyed by field name."
+  }
+ ],
+ "sources": [
+  {
+   "t": "React Hook Form: get started",
+   "u": "https://react-hook-form.com/get-started"
+  },
+  {
+   "t": "React Hook Form: useForm",
+   "u": "https://react-hook-form.com/docs/useform"
+  },
+  {
+   "t": "Zod: introduction",
+   "u": "https://zod.dev/"
+  },
+  {
+   "t": "Zod 4 release notes",
+   "u": "https://zod.dev/v4"
+  },
+  {
+   "t": "react.dev: useActionState",
+   "u": "https://react.dev/reference/react/useActionState"
+  }
+ ]
+}

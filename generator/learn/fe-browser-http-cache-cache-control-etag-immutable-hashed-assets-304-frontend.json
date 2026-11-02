@@ -1,0 +1,268 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "The browser HTTP cache stores responses and reuses them, guided by headers such as Cache-Control and ETag. Give hashed asset files a one-year immutable lifetime and make HTML revalidate, and repeat visits are fast while deploys still show up at once.",
+ "like": "Like keeping a printed timetable in your bag: fine until it expires, then you ask the office 'has it changed?' and they just say 'no, same one' instead of reprinting it.",
+ "why": [
+  "Repeat visits load assets from disk with no network",
+  "Revalidation with a 304 saves bandwidth when nothing changed",
+  "Hashed filenames let you cache for a year yet ship fixes instantly"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "br",
+    "t": "Browser|HTTP cache",
+    "x": 0,
+    "y": 105,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "html",
+    "t": "index.html|no-cache + ETag",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "httpcache"
+   },
+   {
+    "id": "js",
+    "t": "app.3f9a.js|1 year, immutable",
+    "x": 275,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "bundle"
+   },
+   {
+    "id": "cdn",
+    "t": "CDN|shared cache",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "globe"
+   },
+   {
+    "id": "org",
+    "t": "Origin|200 or 304",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "br",
+    "html",
+    "revalidate each visit"
+   ],
+   [
+    "br",
+    "js",
+    "served from disk"
+   ],
+   [
+    "html",
+    "cdn",
+    "If-None-Match"
+   ],
+   [
+    "cdn",
+    "org",
+    "miss"
+   ],
+   [
+    "org",
+    "js",
+    "new hash on deploy"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Hash the asset names",
+    "d": "The build puts a content hash in the filename (app.3f9a.js). When the content changes the URL changes, so the old cache entry is simply never asked for again.",
+    "hl": [
+     "js"
+    ]
+   },
+   {
+    "t": "Cache assets for a year",
+    "d": "Send Cache-Control: public, max-age=31536000, immutable. The browser reuses the file without even asking the server.",
+    "hl": [
+     "br",
+     "js"
+    ]
+   },
+   {
+    "t": "Make HTML revalidate",
+    "d": "The HTML name never changes, so use Cache-Control: no-cache (often with private). The browser stores it but checks before each reuse.",
+    "hl": [
+     "html",
+     "br"
+    ]
+   },
+   {
+    "t": "Validate with ETag",
+    "d": "The request carries If-None-Match with the stored ETag. If nothing changed the server answers 304 Not Modified with no body, and the cached copy is fresh again.",
+    "hl": [
+     "html",
+     "cdn",
+     "org"
+    ]
+   },
+   {
+    "t": "Deploy safely",
+    "d": "A deploy changes the hashes inside the new HTML, so users get new files at once while unchanged files stay cached.",
+    "hl": [
+     "org",
+     "js"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 300
+ },
+ "numbers": [
+  {
+   "v": "31536000",
+   "l": "seconds (one year) in max-age for hashed static assets, with immutable",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching"
+  },
+  {
+   "v": "304",
+   "l": "Not Modified: a body-less reply that marks the cached copy fresh again",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching"
+  },
+  {
+   "v": "10%",
+   "l": "of the time since Last-Modified is the typical heuristic freshness when no explicit lifetime is given",
+   "s": "https://www.rfc-editor.org/rfc/rfc9111"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "no-cache or no-store",
+   "d": "no-cache stores the response but must revalidate before reuse. no-store forbids storing and also loses benefits like the back/forward cache. MDN prefers no-cache with private for personalised pages."
+  },
+  {
+   "t": "Hashed assets vs HTML",
+   "d": "Long max-age with immutable only works when the URL changes with the content. HTML cannot be cache-busted, so it revalidates."
+  },
+  {
+   "t": "private or public",
+   "d": "private keeps a response to the user's own browser cache; public allows storing even with an Authorization header. Use private for user-specific data."
+  },
+  {
+   "t": "stale-while-revalidate",
+   "d": "max-age=1, stale-while-revalidate=59 serves a stale copy at once and refreshes in the background. Browsers without support ignore it and use max-age."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-service-worker-pwa-offline-cache-storage-fetch-interception-workbox-push-frontend",
+   "why": "When you need offline support or full control of caching in code"
+  },
+  {
+   "slug": "edge-cdn-cloudfront-akamai-edge-cache-static-assets",
+   "why": "To cache at the edge, closer to many users, on top of the browser cache"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "No Cache-Control header",
+   "d": "The browser guesses freshness from Last-Modified.",
+   "see": "Users see stale content for unpredictable times",
+   "fix": "Set Cache-Control explicitly on every response"
+  },
+  {
+   "t": "Long cache on a fixed filename",
+   "d": "app.js has max-age of a year but the name never changes.",
+   "see": "Users stay on an old build after deploy",
+   "fix": "Content-hash filenames for long-lived assets; revalidate everything else"
+  },
+  {
+   "t": "HTML cached too long",
+   "d": "An old HTML page points at asset hashes that no longer exist.",
+   "see": "404s or a broken page right after a deploy",
+   "fix": "Serve HTML with no-cache, and keep old hashed files available for a while"
+  }
+ ],
+ "say": [
+  "Hashed assets get Cache-Control: public, max-age=31536000, immutable, so repeat visits cost no network.",
+  "HTML gets no-cache with an ETag, so every visit revalidates cheaply with a 304 and deploys show up immediately.",
+  "I set Cache-Control explicitly on every response, use no-store only for truly sensitive data, and keep Vary narrow."
+ ],
+ "followups": [
+  {
+   "q": "What is the difference between no-cache and no-store?",
+   "a": "no-cache lets the browser store the response but forces a check with the server before reuse. no-store means do not store it at all."
+  },
+  {
+   "q": "What happens on a reload?",
+   "a": "Browsers revalidate more on reload; immutable tells them not to bother for assets that will never change."
+  },
+  {
+   "q": "Why avoid Vary: User-Agent?",
+   "a": "It creates a separate cache entry for almost every browser string. MDN advises private instead of varying on Cookie."
+  }
+ ],
+ "today": "The modern recipe is stable: content-hashed assets with a year-long immutable lifetime, revalidating HTML, and stale-while-revalidate for data that can be slightly old. RFC 9111 is the current caching specification, and service workers sit on top when you need offline control.",
+ "check": [
+  {
+   "q": "Best Cache-Control for app.3f9a.js (hashed filename)?",
+   "a": "public, max-age=31536000, immutable",
+   "d": [
+    "no-store",
+    "no-cache",
+    "max-age=0"
+   ],
+   "why": "The URL changes when content changes, so a year-long cache is safe."
+  },
+  {
+   "q": "What does a 304 response mean?",
+   "a": "The cached copy is still valid; no body is sent",
+   "d": [
+    "The file moved permanently",
+    "The server is overloaded",
+    "The request was malformed"
+   ],
+   "why": "It validates the stored response and refreshes its freshness."
+  },
+  {
+   "q": "no-cache on index.html means what?",
+   "a": "Store it, but revalidate before every reuse",
+   "d": [
+    "Never store it",
+    "Cache it for a year",
+    "Only cache on a CDN"
+   ],
+   "why": "no-store is the one that forbids storing."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: HTTP caching",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching"
+  },
+  {
+   "t": "RFC 9111: HTTP Caching",
+   "u": "https://www.rfc-editor.org/rfc/rfc9111"
+  },
+  {
+   "t": "web.dev: Keeping things fresh with stale-while-revalidate",
+   "u": "https://web.dev/articles/stale-while-revalidate"
+  }
+ ]
+}

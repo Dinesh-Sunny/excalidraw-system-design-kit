@@ -3608,5 +3608,1466 @@
     ]
    }
   ]
+ },
+ "fe-news-feed": {
+  "modern": [
+   [
+    "Server Components with streaming",
+    "React Server Components and Suspense stream the first posts as HTML and send no JavaScript for static parts, so only the like button and composer hydrate."
+   ],
+   [
+    "Optimistic updates built in",
+    "React 19 useOptimistic shows the new state while an Action runs and falls back by itself if the real value never changes, so rollback needs no extra code."
+   ],
+   [
+    "INP is the interaction metric",
+    "INP replaced FID as a Core Web Vital; good is 200 ms or less at p75, so break long tasks and keep handlers short, especially on cheap phones."
+   ],
+   [
+    "View Transitions for navigation",
+    "The View Transition API animates feed to post detail with the browser doing the work, and the animation can be turned off for prefers-reduced-motion."
+   ],
+   [
+    "Speculation Rules",
+    "A small JSON script tells Chrome to prefetch or prerender likely next pages (for example the post you hover), with eagerness levels such as moderate, as a progressive enhancement."
+   ],
+   [
+    "Hints, not payloads, over SSE",
+    "Live updates send only a count and a cursor; the client fetches when the user asks, which keeps connections cheap."
+   ]
+  ],
+  "extra": {
+   "t": "Feed behaviour",
+   "look": "They want the list mechanics right: stable pagination, virtualization that keeps focus, and updates that never shove the page.",
+   "rounds": [
+    [
+     "What should pagination use?",
+     "A cursor tied to a feed generation, so new posts at the top do not cause duplicates or gaps",
+     [
+      "Page numbers with offset",
+      "Timestamps from the device clock",
+      "Random post ids"
+     ]
+    ],
+    [
+     "Fresh posts arrive while the user is reading. What happens?",
+     "Show a 'N new posts' pill and load them on click",
+     [
+      "Insert them at the top at once",
+      "Reload the whole feed",
+      "Ignore them until the app restarts"
+     ]
+    ],
+    [
+     "Where does the infinite scroll trigger fire?",
+     "A sentinel observed with IntersectionObserver and a rootMargin about one viewport before the end",
+     [
+      "A scroll event handler that measures the page on every pixel",
+      "A timer every 2 seconds",
+      "Only when the user taps Load more"
+     ]
+    ],
+    [
+     "A post is liked in two places on screen. How do both update?",
+     "Posts are normalized by id, so one entity change re-renders every view of it",
+     [
+      "Each component keeps its own copy and refetches",
+      "Refresh the whole feed",
+      "Store the like count in the URL"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "lowend",
+    "name": "Low-end phones on slow networks",
+    "blurb": "Mid and low-end Android phones on slow 4G, often flaky.",
+    "lens": "Small JavaScript, small DOM, few bytes per post and graceful offline.",
+    "reqN": [
+     "Interactive within the JS budget on a slow CPU; test with throttled CPU and network",
+     "Show cached posts when offline instead of an error"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "sw",
+       "Service Worker (shell + page 1 cache)",
+       "sw",
+       "client",
+       "shell"
+      ]
+     ],
+     "edges": [
+      [
+       "shell",
+       "sw",
+       "cache shell"
+      ]
+     ]
+    },
+    "blocks": {
+     "sw": "Caches the app shell and the first feed page so repeat visits paint from disk and the feed still opens offline."
+    },
+    "dives": [
+     [
+      "Where do the bytes go first?",
+      "Ship the shell under the JS budget (about 100-150 KB gzipped is a common target), code-split the composer and emoji pickers, and send images at the size the screen needs via srcset and sizes."
+     ],
+     [
+      "Scrolling janks on a cheap phone. What helps?",
+      "Keep few nodes mounted with virtualization, avoid layout-heavy styles, move expensive work off the main thread and keep event handlers under the INP budget of 200 ms."
+     ]
+    ],
+    "wrap": [
+     "Watch: p75 field data on the slowest devices, not lab numbers on a laptop."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first (WCAG 2.2 AA)",
+    "blurb": "Keyboard and screen reader users are first-class.",
+    "lens": "Roles, focus management and motion preferences.",
+    "reqF": [
+     "Skip to feed and keyboard shortcuts to move between posts"
+    ],
+    "reqN": [
+     "Pass WCAG 2.2 AA including 24x24 CSS px minimum target size",
+     "No content change steals focus; updates are announced politely"
+    ],
+    "dives": [
+     [
+      "Virtualization removes posts from the DOM. What breaks for keyboard and screen readers?",
+      "Focus can be lost and the list length is unknown. Keep the focused post mounted, set aria-setsize or labels where possible and keep roving focus so Tab does not walk through hundreds of posts."
+     ],
+     [
+      "How do you announce 'N new posts'?",
+      "Put the pill in a polite live region and make it a real button; do not auto-load content. Respect prefers-reduced-motion for any animation."
+     ]
+    ],
+    "wrap": [
+     "Next: automated axe checks in CI plus a manual screen reader pass on each release."
+    ]
+   },
+   {
+    "id": "global",
+    "name": "Global audience and RTL",
+    "blurb": "Users in many languages, including right-to-left.",
+    "lens": "Logical CSS, Intl APIs and mixed-direction text.",
+    "reqF": [
+     "Show posts in the author's language with correct text direction, even in a mixed feed"
+    ],
+    "dives": [
+     [
+      "Arabic and English posts sit in one feed. How is direction handled?",
+      "Use dir='auto' on each post body so the browser picks the direction from the text, and CSS logical properties (margin-inline-start) so the layout flips without separate styles."
+     ],
+     [
+      "How do you show '1,2 mil' or '103K'?",
+      "Use Intl.NumberFormat with compact notation and the user's locale, Intl.PluralRules for '1 comment' versus '2 comments', and Intl.RelativeTimeFormat for 'x minutes ago'."
+     ]
+    ],
+    "wrap": [
+     "Next: translate-on-demand and locale-aware fonts to avoid layout shift."
+    ]
+   }
+  ]
+ },
+ "fe-autocomplete": {
+  "modern": [
+   [
+    "Headless, accessible primitives",
+    "Libraries such as React Aria and Downshift ship the combobox keyboard and ARIA behaviour so teams style the UI and skip re-inventing the pattern."
+   ],
+   [
+    "Concurrent rendering",
+    "React useDeferredValue with Suspense keeps the old list on screen while the new one loads, avoiding spinner flashes on each keystroke."
+   ],
+   [
+    "Query libraries handle races",
+    "TanStack Query passes an AbortSignal to the query function and can keep previous data while the next query loads, covering cancellation and caching."
+   ],
+   [
+    "Popover API and anchor positioning",
+    "The native Popover API puts the list in the top layer without z-index fights, and CSS anchor positioning with position-try fallbacks can flip it above the input when there is no room below."
+   ],
+   [
+    "Edge cached prefixes",
+    "Popular short prefixes are cached at the CDN so the first keystrokes cost no origin trip."
+   ]
+  ],
+  "extra": {
+   "t": "Typing and races",
+   "look": "They want you to find the race condition yourself and fix it on correctness, not only with cancellation.",
+   "rounds": [
+    [
+     "Which reply may update the list?",
+     "Only the one for the current input and the newest request generation",
+     [
+      "Whichever arrives last",
+      "Whichever arrives first",
+      "All of them, merged"
+     ]
+    ],
+    [
+     "What is the job of AbortController here?",
+     "Save work by cancelling stale requests; correctness still comes from the generation check",
+     [
+      "It guarantees the order of replies",
+      "It replaces debouncing",
+      "It clears the cache"
+     ]
+    ],
+    [
+     "Where does DOM focus stay while arrowing through options?",
+     "On the input, with aria-activedescendant naming the highlighted option",
+     [
+      "On each option in turn",
+      "On the body",
+      "On the live region"
+     ]
+    ],
+    [
+     "How do you render the matched part in bold safely?",
+     "Split the text and render <mark> nodes, never innerHTML",
+     [
+      "Replace the match with an HTML string",
+      "Use eval on the suggestion",
+      "Strip all formatting"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "mobile",
+    "name": "Low-end phones on slow networks",
+    "blurb": "Cheap phones, slow 4G, small touch screens and virtual keyboards.",
+    "lens": "Fewer requests, bigger targets, popup that survives the keyboard.",
+    "reqN": [
+     "Rows at least 24x24 CSS px (WCAG 2.2) and comfortable to tap",
+     "Popup stays visible above or below the on-screen keyboard"
+    ],
+    "dives": [
+     [
+      "Every request is expensive on a slow network. What changes?",
+      "Raise minChars and debounce a little, cache aggressively with a longer TTL, and keep the response tiny (ids and short text only)."
+     ],
+     [
+      "The keyboard covers the list. What do you do?",
+      "Place the popup using available viewport space and flip above the input when there is no room; CSS anchor positioning fallbacks or a small measurement on open can do this."
+     ]
+    ],
+    "wrap": [
+     "Watch: INP on low-end devices; render at most ~8 rows and avoid re-rendering the whole page per keystroke."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first (WCAG 2.2 AA)",
+    "blurb": "Screen reader and keyboard users must get the same speed.",
+    "lens": "Roles, announcements and focus rules.",
+    "reqF": [
+     "Announce result counts, empty state and errors without moving focus"
+    ],
+    "dives": [
+     [
+      "Screen readers say nothing when suggestions appear. Why?",
+      "Focus stays in the input, so changes need a separate polite aria-live region with a short message like '5 results'. Do not announce every keystroke."
+     ],
+     [
+      "Should Enter submit the form?",
+      "If an option is active, Enter accepts it and does not submit; with no active option, Enter submits the form as normal."
+     ]
+    ],
+    "wrap": [
+     "Next: test with NVDA, VoiceOver and keyboard only; add axe checks in CI."
+    ]
+   },
+   {
+    "id": "global",
+    "name": "Global audience and RTL",
+    "blurb": "Many languages, scripts and IME input.",
+    "lens": "Normalization, composition and direction.",
+    "reqF": [
+     "Match accents and scripts sensibly (for example 'cafe' also finds 'café')"
+    ],
+    "dives": [
+     [
+      "Why does the cache return misses for 'café' versus 'cafe'?",
+      "Cache keys must be normalized the same way the server matches: Unicode NFC, trimmed and case-folded. Decide with the backend whether accents are folded."
+     ],
+     [
+      "RTL layout?",
+      "Use CSS logical properties and dir='auto' on the input and rows, and make arrow key meaning follow the visual list (Up and Down stay vertical)."
+     ]
+    ],
+    "wrap": [
+     "Next: locale-aware ranking on the server and per-language dictionaries."
+    ]
+   }
+  ]
+ },
+ "fe-chat-app": {
+  "modern": [
+   [
+    "Web Locks for leader tabs",
+    "navigator.locks gives a standard, origin-wide lock, so exactly one tab owns the socket and the next tab takes over when it closes."
+   ],
+   [
+    "WebSocketStream and backpressure",
+    "The classic WebSocket API has no backpressure, so a flood of messages can exhaust memory; the streams-based WebSocketStream applies it automatically (check current browser support)."
+   ],
+   [
+    "Optimistic UI with Actions",
+    "React 19 useOptimistic shows a sending message inside a transition and reverts to the real list if the action fails."
+   ],
+   [
+    "Local-first sync engines",
+    "Libraries that keep a local database and sync with the server (for example Yjs-based or query-sync engines) turn offline and multi-tab into defaults, at the cost of conflict rules."
+   ],
+   [
+    "Web Push is standard",
+    "Push API plus service workers deliver notifications to closed tabs; always show a notification per push and ask for permission at a meaningful moment."
+   ]
+  ],
+  "extra": {
+   "t": "Delivery guarantees",
+   "look": "They want a clear story for ordering, duplicates and reconnects, not just 'use WebSockets'.",
+   "rounds": [
+    [
+     "Two devices send at nearly the same time. Who decides the order?",
+     "The server, with a per-thread sequence number",
+     [
+      "The device with the earlier clock",
+      "Whichever message arrives in the UI first",
+      "Alphabetical by text"
+     ]
+    ],
+    [
+     "The ack never arrives and the user taps retry. How do you avoid a duplicate?",
+     "Resend with the same clientId so the server treats it as the same message",
+     [
+      "Generate a new id and hope",
+      "Disable the send button forever",
+      "Ask the user to check manually"
+     ]
+    ],
+    [
+     "After reconnect, how does the client catch up?",
+     "Ask for messages after the last seq it has for each thread",
+     [
+      "Reload the whole app",
+      "Refetch every thread from the start",
+      "Wait for the user to refresh"
+     ]
+    ],
+    [
+     "Three tabs, how many WebSockets?",
+     "One, owned by a leader tab chosen with a Web Lock",
+     [
+      "One per tab",
+      "One per thread",
+      "None, use polling"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "offline",
+    "name": "Offline first",
+    "blurb": "Metro tunnels and flaky Wi-Fi are normal.",
+    "lens": "Durable outbox, local reads and clear states.",
+    "reqF": [
+     "Read recent threads and send messages with no connection"
+    ],
+    "reqN": [
+     "A message is never lost once the user taps send, even if the tab is killed"
+    ],
+    "dives": [
+     [
+      "What does the user see for a message sent offline?",
+      "It appears at once with a clock icon, moves to sent on ack and shows a retry control after repeated failures; the state is text for screen readers too, not only an icon."
+     ],
+     [
+      "How do you keep offline data private?",
+      "Scope IndexedDB data to the signed-in account and clear it on sign-out; never store tokens in it."
+     ]
+    ],
+    "wrap": [
+     "Next: conflict rules for edits and deletes made offline."
+    ]
+   },
+   {
+    "id": "lowend",
+    "name": "Low-end phones on slow networks",
+    "blurb": "Cheap phones, high latency, tight data plans.",
+    "lens": "Few bytes, little CPU, no battery drain.",
+    "reqN": [
+     "Open a thread from local data first, then sync",
+     "Avoid chatty traffic: throttle typing events, batch receipts"
+    ],
+    "dives": [
+     [
+      "What do you cut first?",
+      "Send typing indicators at most every few seconds, batch read receipts per thread, lazy-load emoji pickers and media, and render at most a few dozen rows."
+     ],
+     [
+      "Battery?",
+      "One socket, a modest heartbeat, pause non-essential subscriptions when the tab is hidden."
+     ]
+    ],
+    "wrap": [
+     "Watch: INP while typing in long threads."
+    ]
+   },
+   {
+    "id": "huge",
+    "name": "Huge channels",
+    "blurb": "Group channels with very large audiences.",
+    "lens": "Subscribe only to what is visible and summarise the rest.",
+    "reqN": [
+     "A busy channel must not overwhelm the main thread"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "pres",
+       "Presence + Typing (visible only)",
+       "wsclient",
+       "client",
+       "ws"
+      ]
+     ],
+     "edges": [
+      [
+       "ws",
+       "pres",
+       "subscribe visible"
+      ]
+     ]
+    },
+    "blocks": {
+     "pres": "Subscribes to presence and typing only for people on screen and shows counts instead of full lists in big channels."
+    },
+    "dives": [
+     [
+      "Messages arrive faster than the UI can render. What do you do?",
+      "Buffer in the store and flush once per animation frame, drop typing events first and show a 'jump to latest' control instead of auto-scrolling."
+     ]
+    ],
+    "wrap": [
+     "Trade-off: freshness of presence versus cost for every viewer."
+    ]
+   }
+  ]
+ },
+ "fe-photo-gallery": {
+  "modern": [
+   [
+    "Fetch Priority",
+    "fetchpriority=high on the single LCP image makes it start at high priority right away; set low on others (web.dev measured about 0.7 s faster LCP in one test)."
+   ],
+   [
+    "Modern image formats from the edge",
+    "Image CDNs and frameworks negotiate AVIF or WebP and resize per request, so the page ships one URL pattern."
+   ],
+   [
+    "Intercepting routes for modals",
+    "Frameworks like Next.js can show a route as an overlay from the grid while a direct visit renders the full page, giving shareable modals."
+   ],
+   [
+    "View Transitions",
+    "A same-document view transition can morph a tile into the detail image with a few lines of code, and can be disabled for reduced motion."
+   ],
+   [
+    "Speculation Rules",
+    "Prefetch or prerender the detail page on hover with eagerness set to moderate; treat it as a hint."
+   ],
+   [
+    "Native masonry is coming",
+    "CSS grid-lanes is in draft and experimental; keep the JavaScript layout as the baseline and use @supports for enhancement."
+   ]
+  ],
+  "extra": {
+   "t": "Masonry layout",
+   "look": "They want to see you remove layout shift by design and know how a layout algorithm and a window cooperate.",
+   "rounds": [
+    [
+     "Where does the next tile go?",
+     "In the currently shortest column",
+     [
+      "In the first column always",
+      "In a random column",
+      "In the column with the most images"
+     ]
+    ],
+    [
+     "How do you know a tile's height before the image loads?",
+     "From the width and height in the API response and the column width",
+     [
+      "Wait for the load event and measure",
+      "Guess a fixed height",
+      "Use the file size"
+     ]
+    ],
+    [
+     "Which images get fetchpriority=high?",
+     "Only the one or two likely LCP images in the first row",
+     [
+      "All images",
+      "Every image below the fold",
+      "None; lazy loading handles it"
+     ]
+    ],
+    [
+     "What opens the detail view?",
+     "A URL such as /pin/:id so it can be shared and the back button closes it",
+     [
+      "A hidden JavaScript flag only",
+      "An alert box",
+      "A new browser window"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "lowend",
+    "name": "Low-end phones on slow networks",
+    "blurb": "Cheap phones, slow 4G, data plans.",
+    "lens": "Fewer pixels, fewer decodes, early placeholders.",
+    "reqN": [
+     "Respect data saver; smaller widths and quality on slow connections"
+    ],
+    "dives": [
+     [
+      "Which images do you request on a slow connection?",
+      "Use sizes so the browser picks the smallest candidate that fits, lower the CDN quality parameter on slow networks and load fewer items per page."
+     ],
+     [
+      "Decode cost?",
+      "Large AVIF files cost CPU to decode; cap the longest edge, use decoding=async and keep the mounted window small."
+     ]
+    ],
+    "wrap": [
+     "Watch: LCP and memory on the slowest devices."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first (WCAG 2.2 AA)",
+    "blurb": "Keyboard and screen reader users browse images too.",
+    "lens": "Alt text, order and a proper dialog.",
+    "dives": [
+     [
+      "Is a visual grid readable by a screen reader?",
+      "Use a list of links with alt text or captions, DOM order equal to visual order and a way to skip the grid. Avoid announcing 'image' without a description."
+     ],
+     [
+      "Modal behaviour?",
+      "Use a dialog role with focus trap, Escape to close, background inert and focus restored to the clicked tile."
+     ]
+    ],
+    "wrap": [
+     "Next: user-written alt text and automated checks."
+    ]
+   },
+   {
+    "id": "huge",
+    "name": "Huge scale data",
+    "blurb": "Millions of images and fast scrolling users.",
+    "lens": "Cheap pages, edge caching and bounded memory.",
+    "reqN": [
+     "Keep client memory flat after hundreds of pages"
+    ],
+    "dives": [
+     [
+      "After 200 pages the tab slows down. Why and what helps?",
+      "Cached pages and decoded images accumulate. Cap cached pages (for example maxPages in TanStack Query), unmount and release far-off tiles and keep positions as numbers only."
+     ],
+     [
+      "How do you keep the CDN effective?",
+      "Quantize widths to a few fixed sizes so URLs repeat and edge caches hit, instead of arbitrary pixel widths per device."
+     ]
+    ],
+    "wrap": [
+     "Trade-off: scroll-back to a far position versus memory; restore by anchor id and refetch."
+    ]
+   }
+  ]
+ },
+ "fe-e-commerce-storefront": {
+  "modern": [
+   [
+    "Partial Prerendering with Cache Components",
+    "Next.js builds a static shell served from the CDN and streams uncached holes (cart count, personal price) behind Suspense, so one page is both static and dynamic."
+   ],
+   [
+    "Server Components and islands",
+    "Data stays on the server and only interactive parts hydrate, cutting JavaScript on product pages."
+   ],
+   [
+    "Optimistic cart with Actions",
+    "React 19 useOptimistic and Actions update the cart at once and reconcile with the server response."
+   ],
+   [
+    "Speculation Rules and framework prefetch",
+    "Prefetch or prerender the likely next page on hover (eagerness moderate) for near-instant navigation, as a progressive enhancement."
+   ],
+   [
+    "View Transitions",
+    "Animate list to product with the browser's View Transition API; honor reduced motion."
+   ],
+   [
+    "Hosted payment elements and wallets",
+    "Payment Element and Express Checkout Element handle many payment methods and wallets inside provider-hosted iframes."
+   ]
+  ],
+  "extra": {
+   "t": "Speed and revenue",
+   "look": "They want you to tie performance decisions to money and keep static and dynamic data apart.",
+   "rounds": [
+    [
+     "Which parts of a product page can be cached at the CDN?",
+     "The shell: description, images, SEO; price and stock stream in separately",
+     [
+      "Everything, including the user's cart",
+      "Nothing",
+      "Only the images"
+     ]
+    ],
+    [
+     "A product price is edited by the merchandising team. What do you trigger?",
+     "On-demand revalidation of that product's page or tag",
+     [
+      "Redeploy the whole site",
+      "Ask users to refresh",
+      "Wait for the build next week"
+     ]
+    ],
+    [
+     "Where should card numbers be typed?",
+     "Inside the payment provider's iframe fields",
+     [
+      "In our own input and posted to our API",
+      "In the URL",
+      "In localStorage"
+     ]
+    ],
+    [
+     "How do you run an A/B test without flicker?",
+     "Decide the variant on the server or edge and render it in the HTML",
+     [
+      "Swap it in with JavaScript after load",
+      "Randomize in CSS",
+      "Show a spinner until it picks"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "sale",
+    "name": "Huge scale data (sale day spike)",
+    "blurb": "Ten times normal traffic when a sale starts.",
+    "lens": "Cache hit rate, graceful degradation and idempotent writes.",
+    "reqN": [
+     "The catalog stays up even if recommendations or reviews fail"
+    ],
+    "dives": [
+     [
+      "What degrades first?",
+      "Non-essential islands: recommendations, recently viewed, reviews. Wrap each in Suspense and an error boundary so a slow service shows a fallback, not a broken page."
+     ],
+     [
+      "Everybody hits add to cart at once. What protects the cart and checkout?",
+      "Idempotency keys on cart and order writes, disabled double-submit buttons, and clear sold-out handling that comes from the server's answer."
+     ]
+    ],
+    "wrap": [
+     "Watch: CDN hit rate and p75 vitals per page type during the event."
+    ]
+   },
+   {
+    "id": "lowend",
+    "name": "Low-end phones on slow networks",
+    "blurb": "Mid and low-end Android phones, slow 4G.",
+    "lens": "Small JS, small images, forgiving checkout.",
+    "reqN": [
+     "Product pages usable within the JS budget on a slow CPU",
+     "Checkout survives a connection drop without losing the form"
+    ],
+    "dives": [
+     [
+      "What do you cut?",
+      "Hydrate only the buy box and gallery, load recommendations after interaction, send srcset-sized AVIF or WebP and skip heavy third-party tags."
+     ],
+     [
+      "Connection drops during payment?",
+      "Keep form state locally, create orders with an idempotency key so retry never double-charges, and show order status from the server on return."
+     ]
+    ],
+    "wrap": [
+     "Watch: INP on filters and gallery taps on slow devices."
+    ]
+   },
+   {
+    "id": "global",
+    "name": "Global audience and RTL",
+    "blurb": "Many countries, currencies, languages and tax rules.",
+    "lens": "Locale at the edge, formatting with Intl and mirrored layouts.",
+    "reqF": [
+     "Prices, taxes and shipping shown in the shopper's country and currency"
+    ],
+    "add": {
+     "nodes": [
+      [
+       "geo",
+       "Edge Geo + Currency",
+       "edgefn",
+       "edge",
+       "cdn"
+      ]
+     ],
+     "edges": [
+      [
+       "cdn",
+       "geo",
+       "locale, currency"
+      ]
+     ]
+    },
+    "blocks": {
+     "geo": "Chooses locale and currency near the shopper and sets them for the cached pages without hurting cache hit rate."
+    },
+    "dives": [
+     [
+      "How do you serve many currencies from cached pages?",
+      "Cache the localized shell per locale and show the live price in a streamed or client-fetched section formatted with Intl.NumberFormat; keep the locale in the path (/en-gb/) so each version is crawlable."
+     ],
+     [
+      "RTL and long languages?",
+      "Use CSS logical properties, test long German and short Chinese strings for layout shift, and mirror icons that imply direction."
+     ]
+    ],
+    "wrap": [
+     "Next: local payment methods and tax display rules per country."
+    ]
+   }
+  ]
+ },
+ "fe-video-player": {
+  "modern": [
+   [
+    "Media Source Extensions in workers",
+    "Chrome 108+ allows MSE inside a dedicated worker, so segment fetching and appending can leave the main thread and protect INP."
+   ],
+   [
+    "ManagedMediaSource",
+    "A MediaSource that the browser may evict under memory pressure and that reports bufferedchange. It is how MSE streaming works on iPhone Safari."
+   ],
+   [
+    "Interaction to Next Paint (INP)",
+    "INP replaced FID as a Core Web Vital. Keep control clicks under 200 ms by doing parsing and ABR math off the main thread."
+   ],
+   [
+    "Speculation Rules",
+    "Prefetch or prerender the next watch page and its manifest while the user hovers, so the next video starts almost instantly (Chromium)."
+   ],
+   [
+    "Common Media Client Data (CMCD)",
+    "A standard way to send player state (buffer length, bitrate) to the CDN in request headers or query strings, helping with delivery tuning."
+   ],
+   [
+    "View Transitions",
+    "Animate between the thumbnail grid and the watch page so the poster morphs into the player without a flash."
+   ]
+  ],
+  "extra": {
+   "t": "Playback and ABR",
+   "look": "They want to hear how bitrate is chosen, how startup is made fast, how the player recovers, and how you know it works for real users.",
+   "rounds": [
+    [
+     "What two signals drive a basic ABR choice?",
+     "Measured throughput of recent segments and current buffer level",
+     [
+      "The video title and its length",
+      "The user's screen brightness",
+      "The number of captions loaded"
+     ]
+    ],
+    [
+     "Start on the lowest rendition or the highest?",
+     "A low or middle one for a fast first frame, then climb as bandwidth is measured",
+     [
+      "Always the highest for quality",
+      "Always random",
+      "Always the one the user chose last year"
+     ]
+    ],
+    [
+     "A segment download fails three times. What next?",
+     "Retry with backoff, drop a rendition, try another CDN host, then show a clear error",
+     [
+      "Reload the whole page silently",
+      "Keep retrying forever at full speed",
+      "Skip to the end of the video"
+     ]
+    ],
+    [
+     "Which metrics prove the experience is good?",
+     "Startup time, rebuffering ratio, average bitrate and error rate from real users",
+     [
+      "Total JavaScript lines",
+      "Server CPU only",
+      "Number of buttons in the UI"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "lowend",
+    "name": "Low-end phones on slow networks",
+    "blurb": "Cheap devices, patchy mobile data, data-saver users.",
+    "lens": "Cap quality, save bytes, protect the main thread.",
+    "reqN": [
+     "Start under a tight data budget; default to a lower rendition on data saver",
+     "Controls stay responsive on slow CPUs"
+    ],
+    "dives": [
+     [
+      "How do you keep it smooth on weak hardware?",
+      "Cap level to player size, prefer hardware-decoded codecs (check MediaCapabilities), avoid heavy DOM updates on timeupdate, and throttle the progress bar to one update per frame."
+     ],
+     [
+      "How do you save data?",
+      "Honour the Save-Data hint, start low, shorten the forward buffer, and do not preload the video until the user shows intent."
+     ]
+    ],
+    "wrap": [
+     "Watch: stalls on 3G-like networks. Fix: lower default start rendition and a shorter buffer goal."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first (WCAG 2.2 AA)",
+    "blurb": "Everyone can control and understand the video.",
+    "lens": "Captions, keyboard, focus, motion.",
+    "dives": [
+     [
+      "What must a custom player do for keyboard users?",
+      "Every control is a focusable button or slider with a name, space or k toggles play, arrows seek and change volume, focus is visible, and no keyboard trap in fullscreen."
+     ],
+     [
+      "Captions beyond the basics?",
+      "Offer WebVTT captions and audio description tracks, let users style captions, remember the choice, and expose a transcript."
+     ]
+    ],
+    "wrap": [
+     "Next: audio description track and a transcript panel."
+    ]
+   },
+   {
+    "id": "drm",
+    "name": "Premium content with DRM",
+    "blurb": "Studio content that must stay protected.",
+    "lens": "Licence flow and device rules.",
+    "add": {
+     "nodes": [
+      [
+       "ent",
+       "Entitlement Check",
+       "gateway",
+       "svc",
+       "api"
+      ]
+     ],
+     "edges": [
+      [
+       "api",
+       "ent",
+       "can this user play?"
+      ]
+     ]
+    },
+    "blocks": {
+     "ent": "Confirms the viewer's plan, region and device limit before the licence server issues keys."
+    },
+    "dives": [
+     [
+      "Which key system per browser?",
+      "Widevine on Chromium and Firefox, PlayReady on Edge and Windows, FairPlay on Safari; package for each (CMAF with common encryption helps) and detect with requestMediaKeySystemAccess."
+     ],
+     [
+      "What if the licence request fails?",
+      "Show a clear message, retry once, and log the error code with the key system so you can tell device issues from server issues."
+     ]
+    ],
+    "wrap": [
+     "Trade-off: stronger security levels (hardware DRM) limit which devices can play HD."
+    ]
+   }
+  ]
+ },
+ "fe-collaborative-editor": {
+  "modern": [
+   [
+    "Local-first sync",
+    "The document lives on the device and syncs in the background. Yjs plus IndexedDB gives instant open, offline edits and automatic merge."
+   ],
+   [
+    "Hosted sync providers",
+    "Services such as Liveblocks, Y-Sweet and Tiptap's cloud run the Yjs room, persistence and auth for you, so teams ship collaboration without running socket servers."
+   ],
+   [
+    "Headless editor frameworks",
+    "Tiptap (on ProseMirror) and Lexical give a ready editor core with collaboration extensions, instead of building from raw contenteditable."
+   ],
+   [
+    "AI suggestions as tracked changes",
+    "An assistant proposes edits that appear as reviewable suggestions from a named collaborator, so people accept or reject them."
+   ],
+   [
+    "Web Workers and scheduler.yield",
+    "Move export, import and search off the main thread, and yield during long loops to keep INP good."
+   ],
+   [
+    "View Transitions",
+    "Smooth animation between the document list and the open document without custom animation code."
+   ]
+  ],
+  "extra": {
+   "t": "Conflict resolution",
+   "look": "They want a clear, honest comparison of CRDT and OT, what happens offline, and how cursors and comments survive concurrent edits.",
+   "rounds": [
+    [
+     "Two people type at the same spot at the same time. What happens?",
+     "Both edits are kept and every replica orders them the same way, so all screens converge",
+     [
+      "The later one overwrites the earlier",
+      "The server rejects both",
+      "The document locks for everyone"
+     ]
+    ],
+    [
+     "A user edits offline for an hour, then reconnects. What do you do?",
+     "Send the CRDT updates (state vector diff) and merge; nothing is thrown away",
+     [
+      "Ask them to copy and paste their text",
+      "Discard the offline changes",
+      "Reload the page and start again"
+     ]
+    ],
+    [
+     "Why store comment anchors as relative positions?",
+     "They follow the text when others insert or delete before it",
+     [
+      "They are shorter to store",
+      "They are required by the browser",
+      "They make the toolbar faster"
+     ]
+    ],
+    [
+     "Is presence data saved to the database?",
+     "No: it is short-lived, throttled and times out when a client goes quiet",
+     [
+      "Yes, every cursor move forever",
+      "Yes, but only on weekends",
+      "Only for admins"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "offline",
+    "name": "Offline first",
+    "blurb": "Planes, trains and bad Wi-Fi are normal.",
+    "lens": "Local copy, merge on reconnect, clear status.",
+    "dives": [
+     [
+      "How do you show sync status honestly?",
+      "A small status chip: saved on this device, syncing, offline with unsent changes. Never say 'saved' until the local write succeeds, and show 'synced' only after the server acknowledges."
+     ],
+     [
+      "Several tabs open on the same doc?",
+      "Share one connection with a leader tab using the Web Locks API, or let each tab hold its own Y.Doc through BroadcastChannel; both rely on IndexedDB for the single saved copy."
+     ]
+    ],
+    "wrap": [
+     "Watch: very long offline sessions create big merges. Fix: show a preview of incoming changes and keep version history."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first (WCAG 2.2 AA)",
+    "blurb": "Screen reader and keyboard users edit together with everyone.",
+    "lens": "Semantics, announcements, shortcuts.",
+    "dives": [
+     [
+      "How do you announce collaborators?",
+      "Use a polite aria-live region for joins, leaves and comment replies, throttled so it does not flood, and avoid announcing every keystroke of others."
+     ],
+     [
+      "Keyboard-only formatting?",
+      "Standard shortcuts for bold, italic and links, a toolbar reachable with arrow keys, and a command menu so no action needs a mouse."
+     ]
+    ],
+    "wrap": [
+     "Next: test with real screen readers on each release."
+    ]
+   },
+   {
+    "id": "huge",
+    "name": "Huge documents and many editors",
+    "blurb": "Hundreds of pages and dozens of active writers.",
+    "lens": "Sub-documents, lazy loading, throttled presence.",
+    "add": {
+     "nodes": [
+      [
+       "sub",
+       "Sub-documents (lazy sections)",
+       "layers",
+       "data",
+       "crdt"
+      ]
+     ],
+     "edges": [
+      [
+       "crdt",
+       "sub",
+       "load on demand"
+      ]
+     ]
+    },
+    "blocks": {
+     "sub": "Splits a big document into sections that load and sync only when scrolled into view."
+    },
+    "dives": [
+     [
+      "How do you keep load time fast?",
+      "Load the outline and visible sections first, fetch other sections on demand, and virtualise off-screen content."
+     ],
+     [
+      "Presence with dozens of cursors?",
+      "Throttle cursor updates, show only nearby cursors in full and collapse the rest into an avatar list."
+     ]
+    ],
+    "wrap": [
+     "Trade-off: lazy sections make global search and find-and-replace more complex."
+    ]
+   }
+  ]
+ },
+ "fe-email-client": {
+  "modern": [
+   [
+    "Local-first with IndexedDB",
+    "The app renders from the on-device database and syncs deltas, so it feels instant on any network."
+   ],
+   [
+    "Navigation API and View Transitions",
+    "The Navigation API (Baseline since January 2026) gives one place to intercept route changes and restore scroll and focus; View Transitions animate list-to-message."
+   ],
+   [
+    "Web Locks API",
+    "Elect a single leader tab for syncing; Baseline widely available since March 2022."
+   ],
+   [
+    "Persistent storage",
+    "navigator.storage.persist() asks the browser not to evict your mail database; Chromium and Safari decide from user engagement, Firefox prompts."
+   ],
+   [
+    "Scheduler API",
+    "scheduler.yield() splits big index builds into small tasks to protect INP; Safari lacks it, so keep a setTimeout fallback."
+   ],
+   [
+    "Background Sync (Chromium only)",
+    "Lets the service worker flush the outbox when the network returns; keep an online-event fallback for other browsers."
+   ]
+  ],
+  "extra": {
+   "t": "Offline and sync",
+   "look": "They want a clear story for local storage, how changes flow in both directions, and what happens when things go wrong.",
+   "rounds": [
+    [
+     "The app opens with no network. What does the user see?",
+     "The cached shell and the inbox from IndexedDB, with a small offline banner",
+     [
+      "A blank page",
+      "A browser error page",
+      "Only the login screen"
+     ]
+    ],
+    [
+     "The saved history id is too old for the server. What now?",
+     "Treat it as a reset: do a full sync of metadata and refresh the stored id",
+     [
+      "Ignore the error and keep going",
+      "Delete the user's account",
+      "Ask the user to email support"
+     ]
+    ],
+    [
+     "A user archives a thread offline. How is that kept?",
+     "Apply it locally at once, add it to a queue, and replay the change when online",
+     [
+      "Block the action until online",
+      "Throw the action away",
+      "Store it only in memory"
+     ]
+    ],
+    [
+     "Why an idempotency key on send?",
+     "A retry after a network blip cannot send the same email twice",
+     [
+      "It encrypts the message",
+      "It speeds up the upload",
+      "It formats the subject"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "huge",
+    "name": "Huge mailbox data",
+    "blurb": "Hundreds of thousands of messages per user.",
+    "lens": "Paging, indexes, storage limits.",
+    "dives": [
+     [
+      "What do you store first?",
+      "Metadata for every thread so lists render, bodies for pinned and recent mail, and attachments only on demand."
+     ],
+     [
+      "How do you cap storage?",
+      "Track usage with navigator.storage.estimate(), evict oldest bodies first, and keep an option to cache more."
+     ]
+    ],
+    "wrap": [
+     "Watch: first-run sync time. Fix: show the newest mail first and backfill in the background."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first (WCAG 2.2 AA)",
+    "blurb": "Fully usable with keyboard and screen reader.",
+    "lens": "Focus, announcements, shortcuts.",
+    "dives": [
+     [
+      "Where does focus go after archiving?",
+      "To the next thread in the list, with a polite announcement 'Conversation archived' and an undo option."
+     ],
+     [
+      "Single-key shortcuts?",
+      "They can clash with assistive tech and speech input, so allow turning them off or remapping them (WCAG 2.1.4)."
+     ]
+    ],
+    "wrap": [
+     "Next: high-contrast and density settings saved per user."
+    ]
+   },
+   {
+    "id": "lowend",
+    "name": "Low-end phones on slow networks",
+    "blurb": "Weak devices and poor data.",
+    "lens": "Small payloads, light rendering.",
+    "dives": [
+     [
+      "How do you keep it light?",
+      "Split the composer and settings into lazy chunks, load fewer rows per page, defer images, and keep the index build in small yielded tasks."
+     ],
+     [
+      "Data saver?",
+      "Skip remote image loading and attachment previews until tapped."
+     ]
+    ],
+    "wrap": [
+     "Watch: memory on old phones. Fix: smaller windows and fewer cached bodies."
+    ]
+   }
+  ]
+ },
+ "fe-spreadsheet-grid": {
+  "modern": [
+   [
+    "OffscreenCanvas in a worker",
+    "Render the grid on a worker thread with transferControlToOffscreen, so scrolling and drawing never compete with input handling."
+   ],
+   [
+    "WebAssembly formula engines",
+    "Heavy calculation (large ranges, statistics) can run in compiled WebAssembly inside the worker for predictable speed."
+   ],
+   [
+    "scheduler.yield and INP",
+    "Split long loads and recalculations into small tasks; INP replaced FID as the responsiveness Core Web Vital."
+   ],
+   [
+    "WebGPU rendering",
+    "Some modern grids and charts draw with WebGPU for very large data; keep a canvas 2D fallback."
+   ],
+   [
+    "Origin Private File System",
+    "OPFS gives fast local file storage for caching big sheets and imports in the browser."
+   ],
+   [
+    "AI formulas and data cleanup",
+    "Assistants write formulas from plain language and suggest fixes; the grid shows them as previewed edits the user accepts."
+   ]
+  ],
+  "extra": {
+   "t": "Formula recalculation",
+   "look": "They want a dependency graph, dirty-cell recalculation, cycle handling and an off-main-thread story.",
+   "rounds": [
+    [
+     "A1 changes. Which cells recalculate?",
+     "Only cells that depend on A1, directly or indirectly, in dependency order",
+     [
+      "Every cell in the sheet",
+      "Only the visible cells",
+      "Only cells in the same row"
+     ]
+    ],
+    [
+     "B1 refers to C1 and C1 refers to B1. What happens?",
+     "Detect the cycle and show an error value instead of looping",
+     [
+      "Loop until the browser stops",
+      "Silently show zero",
+      "Delete both formulas"
+     ]
+    ],
+    [
+     "Where does recalculation run?",
+     "In a Web Worker, sending changed values back in a batch",
+     [
+      "On the main thread inside each keypress",
+      "On the server only",
+      "Inside a CSS animation"
+     ]
+    ],
+    [
+     "How do you recalc a long chain without freezing?",
+     "Compute in the worker and send results in chunks; show the pending cells as calculating",
+     [
+      "Block until every cell is done",
+      "Skip hidden sheets forever",
+      "Round all numbers"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "huge",
+    "name": "Huge scale data",
+    "blurb": "Millions of filled cells and many columns.",
+    "lens": "Chunked loading, sparse storage, worker rendering.",
+    "dives": [
+     [
+      "How do you load millions of cells?",
+      "Request cells by range chunk, keep a block cache keyed by chunk, evict far-away chunks, and render placeholders for chunks still loading."
+     ],
+     [
+      "Memory?",
+      "Store raw strings once, intern repeated values, and compute display text lazily only for visible cells."
+     ]
+    ],
+    "wrap": [
+     "Watch: memory on laptops. Fix: chunk cache with eviction."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first (WCAG 2.2 AA)",
+    "blurb": "Screen reader and keyboard users work with the grid.",
+    "lens": "Hidden DOM grid and focus.",
+    "add": {
+     "nodes": [
+      [
+       "a11y",
+       "Accessible DOM Mirror",
+       "a11y",
+       "client",
+       "sel"
+      ]
+     ],
+     "edges": [
+      [
+       "sel",
+       "a11y",
+       "active area"
+      ]
+     ]
+    },
+    "blocks": {
+     "a11y": "A small hidden DOM grid mirrors the active area with grid roles so assistive technology can read and navigate cells."
+    },
+    "dives": [
+     [
+      "What do you announce?",
+      "On moving, announce the cell address, value and any column header; on edit, announce entering and leaving edit mode."
+     ],
+     [
+      "Focus handling?",
+      "Keep focus on one element (roving tabindex or aria-activedescendant), return focus to the cell after the overlay editor closes."
+     ]
+    ],
+    "wrap": [
+     "Next: test with NVDA, JAWS and VoiceOver each release."
+    ]
+   },
+   {
+    "id": "global",
+    "name": "Global audience / RTL",
+    "blurb": "Many languages, number formats and writing directions.",
+    "lens": "Locale-aware parsing and layout.",
+    "dives": [
+     [
+      "Formulas and numbers by locale?",
+      "Store a locale-neutral internal form; parse and format using the user's locale (decimal comma, list separator, date order) with Intl.NumberFormat and Intl.DateTimeFormat."
+     ],
+     [
+      "Right-to-left sheets?",
+      "Mirror column order and selection movement, keep numbers and formulas readable, and test with bidirectional text in cells."
+     ]
+    ],
+    "wrap": [
+     "Watch: formula function names differing by language. Fix: store the canonical English name internally."
+    ]
+   }
+  ]
+ },
+ "fe-travel-booking": {
+  "modern": [
+   [
+    "React Server Components and streaming",
+    "Render the results shell on the server and stream results in with Suspense so users see content before the whole page is ready."
+   ],
+   [
+    "Speculation Rules",
+    "Prefetch or prerender the listing page when the user hovers or lingers on a card (Chromium); avoid URLs with side effects."
+   ],
+   [
+    "Interaction to Next Paint (INP)",
+    "INP is the responsiveness Core Web Vital; keep filter clicks under 200 ms by showing optimistic UI and moving heavy work off the main thread."
+   ],
+   [
+    "View Transitions",
+    "Morph a result card photo into the listing page hero for a smooth, native-feeling navigation."
+   ],
+   [
+    "Navigation API",
+    "One consistent way to intercept navigations, preserve scroll and handle back and forward in a search-heavy app (Baseline since January 2026)."
+   ],
+   [
+    "Passkeys and wallet payments",
+    "Sign-in with passkeys and one-tap wallet payments reduce checkout friction and phishing risk."
+   ]
+  ],
+  "extra": {
+   "t": "Search and map sync",
+   "look": "They want URL as the single source of truth, a shared result set between list and map, and sensible request control.",
+   "rounds": [
+    [
+     "Where should filter state live?",
+     "In the URL, with components reading and updating it",
+     [
+      "Only in a global variable",
+      "Only in localStorage",
+      "Inside each component separately"
+     ]
+    ],
+    [
+     "The user drags the map quickly. When do you search?",
+     "On the move-end event, debounced, cancelling any older request",
+     [
+      "On every pixel of movement",
+      "Never",
+      "Only after a page reload"
+     ]
+    ],
+    [
+     "Hovering a card should do what?",
+     "Set a shared active id so the matching pin highlights, without a new fetch",
+     [
+      "Reload the results",
+      "Open the booking form",
+      "Clear the filters"
+     ]
+    ],
+    [
+     "Why cache results by a normalised filter key?",
+     "Going back or toggling a filter shows data instantly and avoids duplicate requests",
+     [
+      "It hides errors",
+      "It replaces the URL",
+      "It makes images bigger"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "lowend",
+    "name": "Low-end phones on slow networks",
+    "blurb": "Cheap phones and patchy data.",
+    "lens": "Small first load, list first, map on demand.",
+    "dives": [
+     [
+      "What do you drop on slow devices?",
+      "Show a list first and load the map only when asked, serve smaller image sizes, keep animation minimal and use a lighter map style."
+     ],
+     [
+      "How do you keep input responsive?",
+      "Debounce filters, show optimistic UI, and avoid re-rendering the whole list on each change."
+     ]
+    ],
+    "wrap": [
+     "Watch: map JavaScript size. Fix: tap-to-load map with a static preview."
+    ]
+   },
+   {
+    "id": "global",
+    "name": "Global audience / RTL",
+    "blurb": "Many currencies, languages and calendars.",
+    "lens": "Locale-aware dates, prices and layout.",
+    "dives": [
+     [
+      "How do you handle currency and dates?",
+      "Format with Intl.NumberFormat and Intl.DateTimeFormat using the user's locale and currency; store ISO dates in the URL and API, never localised strings."
+     ],
+     [
+      "Right-to-left?",
+      "Use logical CSS properties (margin-inline-start), mirror the date picker and map controls, and test long translations for wrapping."
+     ]
+    ],
+    "wrap": [
+     "Next: show the total price with taxes and fees per region."
+    ]
+   },
+   {
+    "id": "a11y",
+    "name": "Accessibility first (WCAG 2.2 AA)",
+    "blurb": "Everyone can search, pick dates and pay.",
+    "lens": "Map alternative, picker, forms.",
+    "dives": [
+     [
+      "The map is hard for keyboard and screen reader users. What then?",
+      "The list is the primary interface and always complete; the map is an enhancement with keyboard-reachable pins, and every action available on the map is also available in the list."
+     ],
+     [
+      "Accessible checkout?",
+      "Label every field, show errors in text with aria-describedby, keep focus order logical, and announce price changes and booking status."
+     ]
+    ],
+    "wrap": [
+     "Next: test the full journey with a screen reader and keyboard only."
+    ]
+   }
+  ]
  }
 }

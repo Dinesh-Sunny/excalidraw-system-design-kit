@@ -1,0 +1,289 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A GraphQL client sends queries to one endpoint and manages the answers in a cache. Components declare their data needs as fragments, the parent combines them into one query, and persisted queries send a short hash instead of the full text. Apollo Client, Relay and urql are the main choices.",
+ "like": "Like a group lunch order: each person writes their own dish on a slip, the organiser staples them into one order for the restaurant, and everyone gets only their own plate.",
+ "why": [
+  "Each component asks for exactly the fields it uses - no over-fetching",
+  "One request can fill a whole screen",
+  "Smaller, safer requests with persisted queries"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 300,
+  "nodes": [
+   {
+    "id": "co",
+    "t": "Components|own fragments",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "desktop"
+   },
+   {
+    "id": "qy",
+    "t": "One query|fragments spread up",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "gql"
+   },
+   {
+    "id": "lk",
+    "t": "Link chain|auth, retry, persisted",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "plug"
+   },
+   {
+    "id": "ca",
+    "t": "Cache|normalized store",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "normcache"
+   },
+   {
+    "id": "cd",
+    "t": "CDN|caches hashed GET",
+    "x": 275,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "cloud"
+   },
+   {
+    "id": "sv",
+    "t": "GraphQL server|one endpoint",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "co",
+    "qy",
+    "fragments"
+   ],
+   [
+    "qy",
+    "ca",
+    "cache first"
+   ],
+   [
+    "qy",
+    "lk",
+    "miss"
+   ],
+   [
+    "lk",
+    "cd",
+    "GET by hash"
+   ],
+   [
+    "lk",
+    "sv",
+    "POST"
+   ],
+   [
+    "cd",
+    "sv",
+    "on miss"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Colocate fragments",
+    "d": "Each component declares a fragment next to its markup, e.g. AuthorDetails_author. It reads only those fields.",
+    "hl": [
+     "co"
+    ]
+   },
+   {
+    "t": "Parent builds one query",
+    "d": "Fragments are spread into the parent and up to a route-level query. One network request covers the whole view.",
+    "hl": [
+     "qy"
+    ]
+   },
+   {
+    "t": "Cache first",
+    "d": "The client looks in its normalized cache before the network; data that is already there renders immediately.",
+    "hl": [
+     "qy",
+     "ca"
+    ]
+   },
+   {
+    "t": "Links shape the request",
+    "d": "A chain of links adds auth headers, retries and persisted-query hashing before the HTTP call.",
+    "hl": [
+     "lk"
+    ]
+   },
+   {
+    "t": "Persisted queries shrink and secure it",
+    "d": "The client sends a SHA-256 hash; the server looks up the text. With GET, a CDN can cache it. An allowlist of persisted operations can also block unknown queries.",
+    "hl": [
+     "lk",
+     "cd",
+     "sv"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "1",
+   "l": "network request for a whole view when fragments are spread into one query (Relay)",
+   "s": "https://relay.dev/docs/principles-and-architecture/thinking-in-relay/"
+  },
+  {
+   "v": "2",
+   "l": "requests the first time an automatic persisted query is unknown: hash only, then hash plus full text",
+   "s": "https://www.apollographql.com/docs/apollo-server/performance/apq"
+  },
+  {
+   "v": "SHA-256",
+   "l": "hash that replaces the query text in persisted queries",
+   "s": "https://www.apollographql.com/docs/apollo-server/performance/apq"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Apollo, Relay or urql",
+   "d": "Apollo Client is the general-purpose choice with a normalized cache. Relay is the most opinionated: compiler, strict fragment colocation and masking, built for large apps. urql is lighter and extensible, with an optional normalized cache (Graphcache)."
+  },
+  {
+   "t": "Fragment colocation and masking",
+   "d": "Colocation keeps each component's data needs next to it. Masking hides fields a component did not ask for, so a child removing a field cannot silently break a parent. In Apollo enable it with dataMasking: true."
+  },
+  {
+   "t": "Persisted queries: automatic or allowlist",
+   "d": "Automatic persisted queries cut request size and need no server setup. A registered allowlist (safelisting) also blocks unknown operations, which is a security gain."
+  },
+  {
+   "t": "GraphQL or REST plus a query cache",
+   "d": "GraphQL pays off with many clients and screens needing different slices of a graph. For a few simple endpoints, REST with TanStack Query is lighter."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-server-state-cache-tanstack-query-swr-stale-while-revalidate-dedupe-refetch-query-keys-frontend",
+   "why": "REST or any fetch function with caching and no schema tooling"
+  },
+  {
+   "slug": "fe-normalized-cache-entities-by-id-normalization-apollo-relay-entity-store-denormalize-frontend",
+   "why": "The cache design underneath Apollo and Relay, useful to explain on its own"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Giant root query",
+   "d": "Every field is requested at the top and passed down as props.",
+   "see": "Slow responses and re-renders for unrelated changes",
+   "fix": "Colocate fragments; split with deferred or lazy queries per section"
+  },
+  {
+   "t": "Over-fetching in parents",
+   "d": "Without masking, parents read child fields they never declared.",
+   "see": "A harmless field removal breaks another component",
+   "fix": "Turn on data masking; fragments per component"
+  },
+  {
+   "t": "Cache and server disagree",
+   "d": "Mutation response omits fields or ids.",
+   "see": "Stale values after saving",
+   "fix": "Return the changed object with id and __typename; update list fields explicitly"
+  }
+ ],
+ "say": [
+  "Each component owns a fragment; the route composes them into one query, so the screen loads in a single request and nobody over-fetches.",
+  "I enable data masking so components only see what they asked for, which keeps refactors safe.",
+  "For production I use persisted queries - hashes instead of query text - with GET so a CDN can cache, and an allowlist so unknown queries are rejected."
+ ],
+ "followups": [
+  {
+   "q": "What problem do fragments solve?",
+   "a": "They let each component declare its own data, compose upward into one query, and avoid both over-fetching and tight coupling between parent and child."
+  },
+  {
+   "q": "How do automatic persisted queries work?",
+   "a": "The client sends only a hash. If the server does not know it, it replies PERSISTED_QUERY_NOT_FOUND and the client resends the hash with the full text; later requests use the hash alone."
+  },
+  {
+   "q": "When is GraphQL the wrong call?",
+   "a": "When there are few endpoints and one client; the schema, tooling and cache complexity may not pay for themselves."
+  }
+ ],
+ "today": "Apollo Client now offers data masking and fragment hooks such as useFragment, and GraphOS lets routers enforce a persisted-query allowlist, so type-safe fragment-first data loading is the mainstream pattern.",
+ "check": [
+  {
+   "q": "What is the main benefit of colocated fragments?",
+   "a": "Each component states its own data needs, composed into one query",
+   "d": [
+    "They make the server faster",
+    "They replace the cache",
+    "They remove the need for a schema"
+   ],
+   "why": "Colocation keeps requirements next to the UI and avoids over-fetching."
+  },
+  {
+   "q": "What does data masking do?",
+   "a": "Hides fields a component did not request",
+   "d": [
+    "Encrypts responses",
+    "Hides the endpoint URL",
+    "Removes __typename"
+   ],
+   "why": "It prevents hidden dependencies between parents and children."
+  },
+  {
+   "q": "What does the client send first with an automatic persisted query?",
+   "a": "Only the SHA-256 hash",
+   "d": [
+    "The full query text",
+    "A cookie",
+    "The whole schema"
+   ],
+   "why": "If the server lacks it, the client retries with the full text."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Apollo Client: fragments and data masking",
+   "u": "https://www.apollographql.com/docs/react/data/fragments"
+  },
+  {
+   "t": "Apollo Server: automatic persisted queries",
+   "u": "https://www.apollographql.com/docs/apollo-server/performance/apq"
+  },
+  {
+   "t": "GraphOS Router: persisted queries",
+   "u": "https://www.apollographql.com/docs/graphos/routing/security/persisted-queries"
+  },
+  {
+   "t": "Relay: thinking in Relay",
+   "u": "https://relay.dev/docs/principles-and-architecture/thinking-in-relay/"
+  },
+  {
+   "t": "Apollo Client: optimistic UI",
+   "u": "https://www.apollographql.com/docs/react/performance/optimistic-ui"
+  }
+ ]
+}

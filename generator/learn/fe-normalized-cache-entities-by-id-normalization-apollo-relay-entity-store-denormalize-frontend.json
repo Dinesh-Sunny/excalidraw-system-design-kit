@@ -1,0 +1,288 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A normalized cache stores each object once, under a unique id, and keeps lists as references to those ids instead of nested copies. When any response updates an entity, every screen that shows it updates together. Apollo Client and Relay do this automatically for GraphQL; in Redux you do it with entity adapters.",
+ "like": "Like a school register: each student has one card, and every class list just points to the card, so correcting a name once fixes it on every list.",
+ "why": [
+  "The same user or post shows the same data on every screen",
+  "A mutation that returns the new object updates the UI with no refetch",
+  "Updating one item does not copy and re-render whole nested trees"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 300,
+  "nodes": [
+   {
+    "id": "rs",
+    "t": "API response|nested JSON",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "server"
+   },
+   {
+    "id": "nm",
+    "t": "Normalize|split into entities",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "normcache"
+   },
+   {
+    "id": "es",
+    "t": "Entity store|Type:id -> object",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "store"
+   },
+   {
+    "id": "mu",
+    "t": "Mutation result|same id, new fields",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "send"
+   },
+   {
+    "id": "qr",
+    "t": "Query records|lists of references",
+    "x": 275,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "table"
+   },
+   {
+    "id": "co",
+    "t": "Components|denormalize on read",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "desktop"
+   }
+  ],
+  "edges": [
+   [
+    "rs",
+    "nm",
+    "write"
+   ],
+   [
+    "nm",
+    "es",
+    "by cache id"
+   ],
+   [
+    "nm",
+    "qr",
+    "refs"
+   ],
+   [
+    "mu",
+    "nm",
+    "merge"
+   ],
+   [
+    "qr",
+    "co",
+    "read refs"
+   ],
+   [
+    "es",
+    "co",
+    "denormalize"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Response arrives nested",
+    "d": "A query returns posts with authors inside. Stored as-is, the same author would be copied into every post.",
+    "hl": [
+     "rs"
+    ]
+   },
+   {
+    "t": "Split by identity",
+    "d": "The cache finds each object and builds a cache id. Apollo's default is __typename plus id, e.g. Planet:cGxhbmV0czox. Objects without an id stay inside their parent.",
+    "hl": [
+     "nm",
+     "es"
+    ]
+   },
+   {
+    "t": "Replace nesting with references",
+    "d": "Each nested object becomes a reference (__ref) to its entry. Two people with the same homeworld share one Planet entry.",
+    "hl": [
+     "nm",
+     "qr"
+    ]
+   },
+   {
+    "t": "Merge on every write",
+    "d": "A later response or mutation result with the same id overwrites shared fields and keeps the rest, so every query that references it sees the change.",
+    "hl": [
+     "mu",
+     "nm",
+     "es"
+    ]
+   },
+   {
+    "t": "Denormalize on read",
+    "d": "Components read the query's references and the cache rebuilds the nested shape, notifying only queries that touch changed entities.",
+    "hl": [
+     "qr",
+     "es",
+     "co"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "1",
+   "l": "stored copy per entity in Apollo's cache, however many queries include it",
+   "s": "https://www.apollographql.com/docs/react/caching/overview"
+  },
+  {
+   "v": "3",
+   "l": "problems Redux lists with nested data: duplication, complex reducers, unnecessary re-renders",
+   "s": "https://redux.js.org/usage/structuring-reducers/normalizing-state-shape"
+  },
+  {
+   "v": "2",
+   "l": "fields in Redux Toolkit's normalized shape: ids and entities",
+   "s": "https://redux.js.org/usage/structuring-reducers/normalizing-state-shape"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Normalize or not",
+   "d": "Worth it when the same entity shows in many places and is edited often (feeds, chat, boards). For read-only, one-screen data a plain query cache is simpler."
+  },
+  {
+   "t": "Library or hand-rolled",
+   "d": "Apollo and Relay normalize GraphQL for you by id. In Redux Toolkit use createEntityAdapter. Normalizr works but is no longer actively maintained."
+  },
+  {
+   "t": "Cache id strategy",
+   "d": "Default is typename plus id. If your ids are not unique per type or are named differently, configure the key fields for that type so entities do not collide or duplicate."
+  },
+  {
+   "t": "Cleaning up",
+   "d": "Evicted objects can leave dangling references. Apollo's gc() removes unreachable objects, and you call it after evicting."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-server-state-cache-tanstack-query-swr-stale-while-revalidate-dedupe-refetch-query-keys-frontend",
+   "why": "Cache whole responses by query key - simpler, and enough when entities are not shared across screens"
+  },
+  {
+   "slug": "fe-graphql-client-apollo-relay-urql-fragments-colocated-queries-persisted-queries-frontend",
+   "why": "The clients that give you normalization for free on GraphQL APIs"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Missing id in the response",
+   "d": "The query does not ask for id (and __typename), so objects cannot be keyed.",
+   "see": "Mutation updates do not show up; duplicates appear",
+   "fix": "Always select id and __typename; configure key fields where ids are custom"
+  },
+  {
+   "t": "List membership is not automatic",
+   "d": "A created or deleted item changes which ids a list holds, and the cache cannot guess that.",
+   "see": "New item exists but is missing from the list",
+   "fix": "Update the list field in the mutation (cache.modify / updater) or refetch that query"
+  },
+  {
+   "t": "Dangling references",
+   "d": "An entity is evicted but lists still point at it.",
+   "see": "Gaps, nulls or errors where the item was",
+   "fix": "Filter or null them in a read function; call gc() after evict"
+  }
+ ],
+ "say": [
+  "I normalize so each entity is stored once under a type-and-id key and lists hold references; one mutation result then updates every screen showing that entity.",
+  "The catch is list membership - creates and deletes need an explicit cache update or a targeted refetch.",
+  "For REST I would use a query cache by key; I reach for normalization when entities are shared and edited across many views."
+ ],
+ "followups": [
+  {
+   "q": "Why does Redux recommend normalizing?",
+   "a": "Nested copies mean duplicated updates, awkward reducers, and immutable updates that copy every ancestor and re-render unrelated components. A flat byId shape updates one entry."
+  },
+  {
+   "q": "How does Apollo know two objects are the same?",
+   "a": "By cache id, by default the __typename and id (or _id) joined with a colon."
+  }
+ ],
+ "today": "Apollo Client's InMemoryCache and Relay's store both normalize by id by default for GraphQL, while in Redux Toolkit createEntityAdapter is the recommended way to store normalized collections.",
+ "check": [
+  {
+   "q": "What does a normalized cache store lists as?",
+   "a": "References to entities stored once by id",
+   "d": [
+    "Full nested copies",
+    "Raw response strings",
+    "One entry per component"
+   ],
+   "why": "References let one entity update everywhere."
+  },
+  {
+   "q": "A new comment is created. What else must you do in a normalized cache?",
+   "a": "Add its reference to the post's comment list",
+   "d": [
+    "Nothing, it is automatic",
+    "Clear the whole cache",
+    "Delete the post entity"
+   ],
+   "why": "The entity is stored, but list membership is not inferred."
+  },
+  {
+   "q": "Why must queries select id and __typename?",
+   "a": "They form the cache id used to merge objects",
+   "d": [
+    "They make responses smaller",
+    "They enable HTTP caching",
+    "They are required by JSON"
+   ],
+   "why": "Without them objects cannot be identified or merged."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Apollo Client: caching overview",
+   "u": "https://www.apollographql.com/docs/react/caching/overview"
+  },
+  {
+   "t": "Apollo Client: garbage collection and eviction",
+   "u": "https://www.apollographql.com/docs/react/caching/garbage-collection"
+  },
+  {
+   "t": "Redux docs: normalizing state shape",
+   "u": "https://redux.js.org/usage/structuring-reducers/normalizing-state-shape"
+  },
+  {
+   "t": "react.dev: choosing the state structure",
+   "u": "https://react.dev/learn/choosing-the-state-structure"
+  },
+  {
+   "t": "Relay: GraphQL server specification (object identification)",
+   "u": "https://relay.dev/docs/guides/graphql-server-specification/"
+  }
+ ]
+}

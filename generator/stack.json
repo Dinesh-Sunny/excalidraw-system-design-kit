@@ -2212,6 +2212,820 @@
     "Managed Deep Agents evals",
     "https://docs.langchain.com/langsmith/python/managed-deep-agents-evals"
    ]
+  ],
+  "fe-csr-spa-client-render": [
+   [
+    "Vite",
+    "https://vite.dev/"
+   ],
+   [
+    "React",
+    "https://react.dev/"
+   ],
+   [
+    "React Router",
+    "https://reactrouter.com/"
+   ],
+   [
+    "TanStack Router",
+    "https://tanstack.com/router/latest"
+   ],
+   [
+    "TanStack Query",
+    "https://tanstack.com/query/latest"
+   ]
+  ],
+  "fe-ssg-static-pages": [
+   [
+    "Astro",
+    "https://astro.build/"
+   ],
+   [
+    "Next.js static exports",
+    "https://nextjs.org/docs/app/guides/static-exports"
+   ],
+   [
+    "Eleventy",
+    "https://www.11ty.dev/"
+   ],
+   [
+    "Hugo",
+    "https://gohugo.io/"
+   ],
+   [
+    "Docusaurus",
+    "https://docusaurus.io/"
+   ]
+  ],
+  "fe-isr-revalidate": [
+   [
+    "Next.js ISR",
+    "https://nextjs.org/docs/app/guides/incremental-static-regeneration"
+   ],
+   [
+    "Vercel ISR",
+    "https://vercel.com/docs/incremental-static-regeneration"
+   ],
+   [
+    "Nuxt hybrid rendering",
+    "https://nuxt.com/docs/guide/concepts/rendering"
+   ],
+   [
+    "RFC 5861 cache extensions",
+    "https://www.rfc-editor.org/rfc/rfc5861"
+   ]
+  ],
+  "fe-streaming-ssr-suspense": [
+   [
+    "React Suspense",
+    "https://react.dev/reference/react/Suspense"
+   ],
+   [
+    "React renderToPipeableStream",
+    "https://react.dev/reference/react-dom/server/renderToPipeableStream"
+   ],
+   [
+    "Next.js App Router streaming",
+    "https://nextjs.org/docs/app/guides/streaming"
+   ],
+   [
+    "TanStack Start",
+    "https://tanstack.com/start/latest"
+   ]
+  ],
+  "fe-react-server-components": [
+   [
+    "React Server Components",
+    "https://react.dev/reference/rsc/server-components"
+   ],
+   [
+    "Next.js App Router",
+    "https://nextjs.org/docs/app"
+   ],
+   [
+    "Waku",
+    "https://waku.gg/"
+   ],
+   [
+    "server-only package",
+    "https://www.npmjs.com/package/server-only"
+   ]
+  ],
+  "fe-hydration-islands": [
+   [
+    "Astro",
+    "https://astro.build/"
+   ],
+   [
+    "Qwik",
+    "https://qwik.dev/"
+   ],
+   [
+    "Fresh",
+    "https://usefresh.dev/"
+   ],
+   [
+    "Marko",
+    "https://markojs.com/"
+   ],
+   [
+    "React hydrateRoot",
+    "https://react.dev/reference/react-dom/client/hydrateRoot"
+   ]
+  ],
+  "fe-app-shell-router": [
+   [
+    "React Router",
+    "https://reactrouter.com/"
+   ],
+   [
+    "TanStack Router",
+    "https://tanstack.com/router/latest"
+   ],
+   [
+    "Next.js App Router",
+    "https://nextjs.org/docs/app"
+   ],
+   [
+    "Vue Router",
+    "https://router.vuejs.org/"
+   ],
+   [
+    "MDN History API",
+    "https://developer.mozilla.org/en-US/docs/Web/API/History_API"
+   ]
+  ],
+  "fe-micro-frontend-host": [
+   [
+    "Module Federation",
+    "https://module-federation.io/"
+   ],
+   [
+    "single-spa",
+    "https://single-spa.js.org/"
+   ],
+   [
+    "Nx",
+    "https://nx.dev/"
+   ],
+   [
+    "Vercel Microfrontends",
+    "https://vercel.com/docs/microfrontends"
+   ],
+   [
+    "Webpack Module Federation",
+    "https://webpack.js.org/concepts/module-federation/"
+   ]
+  ],
+  "fe-design-system": [
+   [
+    "Storybook",
+    "https://storybook.js.org/"
+   ],
+   [
+    "Style Dictionary",
+    "https://styledictionary.com/"
+   ],
+   [
+    "Design Tokens Community Group",
+    "https://www.designtokens.org/"
+   ],
+   [
+    "Radix UI",
+    "https://www.radix-ui.com/"
+   ],
+   [
+    "shadcn/ui",
+    "https://ui.shadcn.com/"
+   ]
+  ],
+  "fe-global-store-zustand-redux": [
+   [
+    "Zustand",
+    "https://zustand.docs.pmnd.rs/"
+   ],
+   [
+    "Redux Toolkit",
+    "https://redux-toolkit.js.org/"
+   ],
+   [
+    "Redux",
+    "https://redux.js.org/"
+   ],
+   [
+    "Jotai",
+    "https://jotai.org/"
+   ],
+   [
+    "React Context",
+    "https://react.dev/learn/passing-data-deeply-with-context"
+   ]
+  ],
+  "fe-server-state-cache-tanstack-query": [
+   [
+    "TanStack Query",
+    "https://tanstack.com/query/latest"
+   ],
+   [
+    "SWR",
+    "https://swr.vercel.app/"
+   ],
+   [
+    "RTK Query",
+    "https://redux-toolkit.js.org/rtk-query/overview"
+   ],
+   [
+    "Apollo Client",
+    "https://www.apollographql.com/docs/react"
+   ]
+  ],
+  "fe-normalized-cache-entities-by-id": [
+   [
+    "Apollo Client cache",
+    "https://www.apollographql.com/docs/react/caching/overview"
+   ],
+   [
+    "Relay",
+    "https://relay.dev/"
+   ],
+   [
+    "Redux Toolkit createEntityAdapter",
+    "https://redux-toolkit.js.org/api/createEntityAdapter"
+   ],
+   [
+    "urql Graphcache",
+    "https://nearform.com/open-source/urql/docs/graphcache/"
+   ],
+   [
+    "normalizr",
+    "https://github.com/paularmstrong/normalizr"
+   ]
+  ],
+  "fe-graphql-client": [
+   [
+    "Apollo Client",
+    "https://www.apollographql.com/docs/react"
+   ],
+   [
+    "Relay",
+    "https://relay.dev/"
+   ],
+   [
+    "urql",
+    "https://nearform.com/open-source/urql/"
+   ],
+   [
+    "GraphQL (spec and learning)",
+    "https://graphql.org/"
+   ],
+   [
+    "GraphQL Code Generator",
+    "https://the-guild.dev/graphql/codegen"
+   ]
+  ],
+  "fe-form-state-validation": [
+   [
+    "React Hook Form",
+    "https://react-hook-form.com/"
+   ],
+   [
+    "Zod",
+    "https://zod.dev/"
+   ],
+   [
+    "TanStack Form",
+    "https://tanstack.com/form/latest"
+   ],
+   [
+    "Valibot",
+    "https://valibot.dev/"
+   ],
+   [
+    "React useActionState",
+    "https://react.dev/reference/react/useActionState"
+   ]
+  ],
+  "fe-url-state": [
+   [
+    "URLSearchParams (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams"
+   ],
+   [
+    "Next.js useSearchParams",
+    "https://nextjs.org/docs/app/api-reference/functions/use-search-params"
+   ],
+   [
+    "TanStack Router",
+    "https://tanstack.com/router/latest"
+   ],
+   [
+    "nuqs",
+    "https://nuqs.dev/"
+   ],
+   [
+    "React Router",
+    "https://reactrouter.com/"
+   ]
+  ],
+  "fe-optimistic-update": [
+   [
+    "React useOptimistic",
+    "https://react.dev/reference/react/useOptimistic"
+   ],
+   [
+    "TanStack Query",
+    "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
+   ],
+   [
+    "Apollo Client",
+    "https://www.apollographql.com/docs/react/performance/optimistic-ui"
+   ],
+   [
+    "SWR",
+    "https://swr.vercel.app/docs/mutation"
+   ],
+   [
+    "RTK Query",
+    "https://redux-toolkit.js.org/rtk-query/usage/manual-cache-updates"
+   ]
+  ],
+  "fe-api-client-retry-abort": [
+   [
+    "TanStack Query",
+    "https://tanstack.com/query/latest"
+   ],
+   [
+    "ky",
+    "https://github.com/sindresorhus/ky"
+   ],
+   [
+    "axios",
+    "https://axios-http.com/"
+   ],
+   [
+    "ofetch",
+    "https://github.com/unjs/ofetch"
+   ],
+   [
+    "MDN: AbortController",
+    "https://developer.mozilla.org/en-US/docs/Web/API/AbortController"
+   ]
+  ],
+  "fe-websocket-client": [
+   [
+    "WebSocket API (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/WebSocket"
+   ],
+   [
+    "Socket.IO",
+    "https://socket.io/"
+   ],
+   [
+    "reconnecting-websocket",
+    "https://github.com/pladaria/reconnecting-websocket"
+   ],
+   [
+    "Ably",
+    "https://ably.com/"
+   ],
+   [
+    "Pusher Channels",
+    "https://pusher.com/channels/"
+   ]
+  ],
+  "fe-sse-client-eventsource": [
+   [
+    "EventSource (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/EventSource"
+   ],
+   [
+    "fetch-event-source",
+    "https://github.com/Azure/fetch-event-source"
+   ],
+   [
+    "eventsource-parser",
+    "https://github.com/rexxars/eventsource-parser"
+   ],
+   [
+    "Vercel AI SDK",
+    "https://ai-sdk.dev/"
+   ]
+  ],
+  "fe-polling-long-polling": [
+   [
+    "TanStack Query",
+    "https://tanstack.com/query/latest"
+   ],
+   [
+    "SWR",
+    "https://swr.vercel.app/"
+   ],
+   [
+    "Page Visibility API (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API"
+   ],
+   [
+    "RFC 6202 (long polling)",
+    "https://datatracker.ietf.org/doc/rfc6202/"
+   ]
+  ],
+  "fe-offline-queue-outbox": [
+   [
+    "Workbox Background Sync",
+    "https://developer.chrome.com/docs/workbox/modules/workbox-background-sync"
+   ],
+   [
+    "TanStack Query",
+    "https://tanstack.com/query/latest"
+   ],
+   [
+    "Dexie",
+    "https://dexie.org/"
+   ],
+   [
+    "idb",
+    "https://github.com/jakearchibald/idb"
+   ],
+   [
+    "Background Sync API (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Background_Synchronization_API"
+   ]
+  ],
+  "fe-accessibility-a11y": [
+   [
+    "axe-core (Deque)",
+    "https://www.deque.com/axe/"
+   ],
+   [
+    "React Aria (Adobe)",
+    "https://react-spectrum.adobe.com/react-aria/"
+   ],
+   [
+    "eslint-plugin-jsx-a11y",
+    "https://github.com/jsx-eslint/eslint-plugin-jsx-a11y"
+   ],
+   [
+    "Playwright accessibility testing",
+    "https://playwright.dev/docs/accessibility-testing"
+   ],
+   [
+    "Lighthouse",
+    "https://developer.chrome.com/docs/lighthouse"
+   ]
+  ],
+  "fe-i18n-l10n": [
+   [
+    "FormatJS / react-intl",
+    "https://formatjs.github.io/"
+   ],
+   [
+    "i18next",
+    "https://www.i18next.com/"
+   ],
+   [
+    "next-intl",
+    "https://next-intl.dev/"
+   ],
+   [
+    "Lingui",
+    "https://lingui.dev/"
+   ],
+   [
+    "MDN Intl API",
+    "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl"
+   ]
+  ],
+  "fe-csp-xss-defence": [
+   [
+    "DOMPurify",
+    "https://github.com/cure53/DOMPurify"
+   ],
+   [
+    "MDN Trusted Types API",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API"
+   ],
+   [
+    "CSP Evaluator (Google)",
+    "https://csp-evaluator.withgoogle.com/"
+   ],
+   [
+    "Helmet (Express headers)",
+    "https://helmetjs.github.io/"
+   ],
+   [
+    "OWASP Cheat Sheet Series",
+    "https://cheatsheetseries.owasp.org/"
+   ]
+  ],
+  "fe-auth-in-the-browser": [
+   [
+    "oidc-client-ts",
+    "https://github.com/authts/oidc-client-ts"
+   ],
+   [
+    "Auth.js",
+    "https://authjs.dev/"
+   ],
+   [
+    "Auth0 documentation",
+    "https://auth0.com/docs"
+   ],
+   [
+    "Keycloak",
+    "https://www.keycloak.org/"
+   ],
+   [
+    "OWASP CSRF Cheat Sheet",
+    "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"
+   ]
+  ],
+  "fe-feature-flags-client": [
+   [
+    "OpenFeature",
+    "https://openfeature.dev/"
+   ],
+   [
+    "LaunchDarkly",
+    "https://launchdarkly.com/"
+   ],
+   [
+    "Unleash",
+    "https://www.getunleash.io/"
+   ],
+   [
+    "PostHog feature flags",
+    "https://posthog.com/docs/feature-flags"
+   ],
+   [
+    "GrowthBook",
+    "https://www.growthbook.io/"
+   ]
+  ],
+  "fe-service-worker": [
+   [
+    "Workbox",
+    "https://developer.chrome.com/docs/workbox"
+   ],
+   [
+    "Service Worker API (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API"
+   ],
+   [
+    "Serwist",
+    "https://serwist.pages.dev/"
+   ],
+   [
+    "vite-plugin-pwa",
+    "https://vite-pwa-org.netlify.app/"
+   ]
+  ],
+  "fe-indexeddb": [
+   [
+    "idb",
+    "https://github.com/jakearchibald/idb"
+   ],
+   [
+    "Dexie",
+    "https://dexie.org/"
+   ],
+   [
+    "localForage",
+    "https://localforage.github.io/localForage/"
+   ],
+   [
+    "RxDB",
+    "https://rxdb.info/"
+   ],
+   [
+    "IndexedDB API (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API"
+   ]
+  ],
+  "fe-web-storage-cookies": [
+   [
+    "Web Storage API (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API"
+   ],
+   [
+    "HTTP cookies (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies"
+   ],
+   [
+    "js-cookie",
+    "https://github.com/js-cookie/js-cookie"
+   ],
+   [
+    "OWASP HTML5 Security Cheat Sheet",
+    "https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html"
+   ]
+  ],
+  "fe-web-worker": [
+   [
+    "Comlink",
+    "https://github.com/GoogleChromeLabs/comlink"
+   ],
+   [
+    "Web Workers API (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API"
+   ],
+   [
+    "Partytown",
+    "https://partytown.qwik.dev/"
+   ],
+   [
+    "Vite: web workers",
+    "https://vite.dev/guide/features#web-workers"
+   ]
+  ],
+  "fe-browser-http-cache": [
+   [
+    "MDN: HTTP caching",
+    "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching"
+   ],
+   [
+    "RFC 9111",
+    "https://www.rfc-editor.org/rfc/rfc9111"
+   ],
+   [
+    "web.dev: HTTP cache",
+    "https://web.dev/articles/http-cache"
+   ],
+   [
+    "Workbox",
+    "https://developer.chrome.com/docs/workbox"
+   ]
+  ],
+  "fe-bundler-code-splitting": [
+   [
+    "Vite",
+    "https://vite.dev/"
+   ],
+   [
+    "webpack",
+    "https://webpack.js.org/"
+   ],
+   [
+    "Rollup",
+    "https://rollupjs.org/"
+   ],
+   [
+    "esbuild",
+    "https://esbuild.github.io/"
+   ],
+   [
+    "Rolldown",
+    "https://rolldown.rs/"
+   ]
+  ],
+  "fe-virtualized-list": [
+   [
+    "TanStack Virtual",
+    "https://tanstack.com/virtual/latest"
+   ],
+   [
+    "react-window",
+    "https://github.com/bvaughn/react-window"
+   ],
+   [
+    "react-virtuoso",
+    "https://virtuoso.dev/"
+   ],
+   [
+    "CSS content-visibility (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility"
+   ]
+  ],
+  "fe-infinite-scroll": [
+   [
+    "IntersectionObserver (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver"
+   ],
+   [
+    "TanStack Query: infinite queries",
+    "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+   ],
+   [
+    "SWR: pagination",
+    "https://swr.vercel.app/docs/pagination"
+   ],
+   [
+    "Apollo Client: pagination",
+    "https://www.apollographql.com/docs/react/pagination/overview"
+   ],
+   [
+    "Relay connections spec",
+    "https://relay.dev/graphql/connections.htm"
+   ]
+  ],
+  "fe-image-pipeline-responsive": [
+   [
+    "Next.js Image",
+    "https://nextjs.org/docs/app/api-reference/components/image"
+   ],
+   [
+    "Cloudinary",
+    "https://cloudinary.com/documentation/image_optimization"
+   ],
+   [
+    "imgix",
+    "https://docs.imgix.com/"
+   ],
+   [
+    "Cloudflare Images",
+    "https://developers.cloudflare.com/images/"
+   ],
+   [
+    "sharp",
+    "https://sharp.pixelplumbing.com/"
+   ]
+  ],
+  "fe-prefetch-preload": [
+   [
+    "Speculation Rules API (Chrome)",
+    "https://developer.chrome.com/docs/web-platform/prerender-pages"
+   ],
+   [
+    "Next.js Link prefetch",
+    "https://nextjs.org/docs/app/api-reference/components/link"
+   ],
+   [
+    "quicklink",
+    "https://github.com/GoogleChromeLabs/quicklink"
+   ],
+   [
+    "instant.page",
+    "https://instant.page/"
+   ],
+   [
+    "MDN: rel=preload",
+    "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel/preload"
+   ]
+  ],
+  "fe-debounce-throttle": [
+   [
+    "lodash (debounce, throttle)",
+    "https://lodash.com/docs/"
+   ],
+   [
+    "TanStack Pacer",
+    "https://tanstack.com/pacer/latest"
+   ],
+   [
+    "RxJS",
+    "https://rxjs.dev/"
+   ],
+   [
+    "React useDeferredValue",
+    "https://react.dev/reference/react/useDeferredValue"
+   ],
+   [
+    "AbortController (MDN)",
+    "https://developer.mozilla.org/en-US/docs/Web/API/AbortController"
+   ]
+  ],
+  "fe-core-web-vitals-lcp-inp-cls": [
+   [
+    "web.dev: Web Vitals",
+    "https://web.dev/articles/vitals"
+   ],
+   [
+    "Lighthouse",
+    "https://developer.chrome.com/docs/lighthouse/overview"
+   ],
+   [
+    "PageSpeed Insights",
+    "https://pagespeed.web.dev/"
+   ],
+   [
+    "Chrome DevTools: Performance",
+    "https://developer.chrome.com/docs/devtools/performance"
+   ],
+   [
+    "Lighthouse CI",
+    "https://github.com/GoogleChrome/lighthouse-ci"
+   ]
+  ],
+  "fe-rum-real-user-data": [
+   [
+    "web-vitals (GoogleChrome)",
+    "https://github.com/GoogleChrome/web-vitals"
+   ],
+   [
+    "Chrome UX Report (CrUX)",
+    "https://developer.chrome.com/docs/crux"
+   ],
+   [
+    "MDN: PerformanceObserver",
+    "https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver"
+   ],
+   [
+    "Vercel Speed Insights",
+    "https://vercel.com/docs/speed-insights"
+   ],
+   [
+    "OpenTelemetry JS",
+    "https://opentelemetry.io/docs/languages/js/"
+   ]
   ]
  },
  "designs": {
@@ -2311,6 +3125,103 @@
    "llm": "Claude / GPT per job",
    "mcp": "MCP server (TypeScript SDK)",
    "wf": "Cron + workflow engine (Temporal / Inngest)"
+  },
+  "fe-news-feed": {
+   "shell": "Next.js (App Router, streaming) + React",
+   "feed": "TanStack Virtual + react-window",
+   "qc": "TanStack Query + SWR + Apollo Client",
+   "norm": "Redux Toolkit (createEntityAdapter) + Zustand",
+   "live": "EventSource (MDN)",
+   "img": "Next.js Image + web.dev responsive images",
+   "cdn": "Cloudflare Images + Cloudinary",
+   "rum": "web-vitals library + Vercel Speed Insights + Sentry"
+  },
+  "fe-autocomplete": {
+   "in": "React Aria Components (ComboBox) + Downshift + Radix UI",
+   "deb": "use-debounce + React useDeferredValue",
+   "cache": "TanStack Query + SWR",
+   "api": "AbortController (MDN) + fetch API (MDN)",
+   "list": "Popover API (MDN) + CSS anchor positioning (MDN)",
+   "live": "WAI-ARIA combobox pattern + axe-core",
+   "srv": "Algolia Autocomplete + Typesense"
+  },
+  "fe-chat-app": {
+   "ws": "WebSocket API (MDN) + Socket.IO + Ably",
+   "store": "Redux Toolkit (entity adapter) + Zustand + TanStack Query",
+   "vl": "TanStack Virtual",
+   "idb": "IndexedDB API (MDN) + idb + Dexie.js",
+   "bc": "Broadcast Channel API (MDN) + Web Locks API (MDN)",
+   "push": "Push API (MDN) + Firebase Cloud Messaging",
+   "sw": "Service Worker API (MDN) + Workbox",
+   "out": "Background Synchronization API (MDN)"
+  },
+  "fe-photo-gallery": {
+   "grid": "Gestalt Masonry (open source) + CSS Grid (MDN)",
+   "vw": "TanStack Virtual + react-window",
+   "inf": "IntersectionObserver (MDN)",
+   "qc": "TanStack Query (infinite queries)",
+   "img": "Next.js Image + web.dev Fetch Priority + BlurHash",
+   "cdn": "Cloudflare Images + Cloudinary + imgix",
+   "modal": "Next.js intercepting routes + View Transition API (MDN)",
+   "ssr": "Next.js"
+  },
+  "fe-e-commerce-storefront": {
+   "cdn": "Cloudflare Cache + Vercel Edge Network + Fastly",
+   "isr": "Next.js ISR + Next.js Cache Components + Astro",
+   "rsc": "React Server Components + Shopify Hydrogen",
+   "cart": "React useOptimistic + TanStack Query + Zustand",
+   "url": "nuqs (URL state for React) + Next.js searchParams",
+   "img": "Next.js Image + web.dev Fetch Priority",
+   "chk": "Stripe Elements + Adyen Web Drop-in + React Hook Form + Zod",
+   "ff": "LaunchDarkly + GrowthBook + Statsig",
+   "rum": "web-vitals library + Vercel Speed Insights"
+  },
+  "fe-video-player": {
+   "abr": "hls.js + dash.js + Shaka Player",
+   "mse": "Media Source Extensions (MDN)",
+   "drm": "Encrypted Media Extensions (MDN) + Widevine",
+   "ui": "Media Chrome + Video.js + Vidstack",
+   "cdn": "Cloudflare Stream + Amazon CloudFront",
+   "qoe": "Mux Data + web-vitals library",
+   "man": "HLS (Apple) + MPEG-DASH (DASH-IF)"
+  },
+  "fe-collaborative-editor": {
+   "ed": "ProseMirror + Lexical + Tiptap",
+   "crdt": "Yjs + Automerge",
+   "idb": "y-indexeddb + IndexedDB (MDN)",
+   "ws": "y-websocket + Hocuspocus",
+   "room": "Liveblocks + Y-Sweet",
+   "aw": "Yjs awareness",
+   "ww": "Web Workers (MDN)"
+  },
+  "fe-email-client": {
+   "shell": "Workbox + Next.js",
+   "sw": "Service Worker API (MDN) + Workbox",
+   "list": "TanStack Virtual + react-window",
+   "idb": "Dexie.js + idb",
+   "view": "DOMPurify + iframe sandbox (MDN)",
+   "srch": "MiniSearch + FlexSearch",
+   "sync": "JMAP + Gmail API sync guide",
+   "push": "Push API (MDN)"
+  },
+  "fe-spreadsheet-grid": {
+   "grid": "TanStack Virtual + AG Grid + Glide Data Grid",
+   "cv": "Canvas API (MDN) + OffscreenCanvas (MDN)",
+   "sel": "WAI-ARIA grid pattern",
+   "calc": "HyperFormula + Web Workers (MDN) + Comlink",
+   "model": "Immer",
+   "sync": "Yjs + WebSocket API (MDN)",
+   "edit": "Handsontable"
+  },
+  "fe-travel-booking": {
+   "ssr": "Next.js + Remix",
+   "qc": "TanStack Query + SWR",
+   "url": "nuqs + TanStack Router search params",
+   "map": "MapLibre GL JS + Google Maps JavaScript API + Leaflet",
+   "dp": "React Aria DateRangePicker + Intl.DateTimeFormat (MDN)",
+   "pay": "Stripe Elements + Adyen Web Drop-in",
+   "book": "React Hook Form + Zod",
+   "auth": "Auth.js + OWASP Session Management Cheat Sheet"
   }
  }
 }

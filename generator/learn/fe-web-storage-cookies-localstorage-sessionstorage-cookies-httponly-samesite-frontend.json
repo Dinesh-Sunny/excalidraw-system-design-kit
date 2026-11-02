@@ -1,0 +1,297 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Browsers offer three small stores: localStorage (kept until cleared), sessionStorage (one tab) and cookies (sent to the server with requests). Pick by what the data is: preferences in Web Storage, login sessions in a Secure, HttpOnly, SameSite cookie.",
+ "like": "Like three places to keep notes: a drawer at home (localStorage), a sticky note on your desk that is binned when you leave (sessionStorage), and a hall pass the guard checks at every door (cookie).",
+ "why": [
+  "Remember preferences and drafts without a server round trip",
+  "Keep login sessions out of reach of injected scripts",
+  "Avoid sending extra bytes with every request"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "js",
+    "t": "Page JavaScript|reads storage",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "xss",
+    "t": "Injected script|XSS attacker",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "siren"
+   },
+   {
+    "id": "ls",
+    "t": "localStorage|per origin, sync",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "kv"
+   },
+   {
+    "id": "ss",
+    "t": "sessionStorage|per tab",
+    "x": 275,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "kv"
+   },
+   {
+    "id": "ck",
+    "t": "Cookie jar|HttpOnly session",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "cookie"
+   },
+   {
+    "id": "srv",
+    "t": "Server|Set-Cookie / Cookie",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "js",
+    "ls",
+    "get / set"
+   ],
+   [
+    "js",
+    "ss",
+    "get / set"
+   ],
+   [
+    "xss",
+    "ls",
+    "can read"
+   ],
+   [
+    "xss",
+    "ck",
+    "cannot read HttpOnly"
+   ],
+   [
+    "srv",
+    "ck",
+    "Set-Cookie"
+   ],
+   [
+    "ck",
+    "srv",
+    "sent automatically"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "localStorage for preferences",
+    "d": "Key-value strings that survive restarts, shared by all same-origin tabs. Good for theme or a dismissed banner. It is synchronous, so keep it small.",
+    "hl": [
+     "js",
+     "ls"
+    ]
+   },
+   {
+    "t": "sessionStorage for one tab",
+    "d": "Cleared when the tab closes and separate in each tab. Good for a multi-step form draft.",
+    "hl": [
+     "js",
+     "ss"
+    ]
+   },
+   {
+    "t": "Cookies for sessions",
+    "d": "The server sets Set-Cookie with HttpOnly, Secure and SameSite. The browser then sends it on matching requests without your code touching it.",
+    "hl": [
+     "srv",
+     "ck"
+    ]
+   },
+   {
+    "t": "HttpOnly hides it from scripts",
+    "d": "An injected script can read anything in Web Storage but cannot read an HttpOnly cookie, which is why session ids belong there.",
+    "hl": [
+     "xss",
+     "ls",
+     "ck"
+    ]
+   },
+   {
+    "t": "Sync across tabs",
+    "d": "A storage event fires in other same-origin tabs when localStorage changes, a cheap way to sync logout or theme.",
+    "hl": [
+     "ls",
+     "js"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 300
+ },
+ "numbers": [
+  {
+   "v": "5 MiB",
+   "l": "Web Storage limit per origin for each of localStorage and sessionStorage",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria"
+  },
+  {
+   "v": "~4 KB",
+   "l": "usual cap on a single cookie, and cookies ride on every matching request",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies"
+  },
+  {
+   "v": "Lax",
+   "l": "SameSite value browsers assume when none is set",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies"
+  },
+  {
+   "v": "7 days",
+   "l": "Safari may delete script-created storage after 7 days of use without interaction (server-set cookies are exempt)",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Which store for which data",
+   "d": "Preferences: localStorage. Per-tab drafts: sessionStorage. Session id: HttpOnly cookie. Large or structured data: IndexedDB."
+  },
+  {
+   "t": "Cookie flags",
+   "d": "HttpOnly blocks script access, Secure sends only over HTTPS, SameSite limits cross-site sending (None needs Secure). The __Host- prefix forces Secure, Path=/ and no Domain."
+  },
+  {
+   "t": "Lifetime",
+   "d": "Max-Age beats Expires and does not depend on the client clock. A cookie with neither is a session cookie, deleted when the browser session ends."
+  },
+  {
+   "t": "Cost of cookies",
+   "d": "Cookies are sent with every matching request, so keep them small; MDN advises against using them for client-side storage."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-indexeddb-browser-database-offline-storage-dexie-structured-data-frontend",
+   "why": "For large or structured data, with asynchronous access that does not block the page"
+  },
+  {
+   "slug": "fe-auth-in-the-browser-httponly-cookie-jwt-refresh-token-oauth-pkce-csrf-bff-frontend",
+   "why": "For the full login design: cookies, tokens, refresh and CSRF"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Token stolen by XSS",
+   "d": "A JWT or session id kept in localStorage is readable by any injected script.",
+   "see": "Account takeover after a single XSS bug",
+   "fix": "Session in an HttpOnly, Secure, SameSite cookie, plus CSP to reduce XSS"
+  },
+  {
+   "t": "Quota or blocked storage",
+   "d": "Writes throw QuotaExceededError, or storage is unavailable in some privacy modes.",
+   "see": "App crashes on first write",
+   "fix": "Wrap every access in try/catch and run fine without storage"
+  },
+  {
+   "t": "Cross-site cookie dropped",
+   "d": "SameSite=None without Secure is rejected, and browsers increasingly block third-party cookies.",
+   "see": "Embedded widget or SSO loses its session",
+   "fix": "Design for first-party cookies; set SameSite=None; Secure only where truly needed"
+  }
+ ],
+ "say": [
+  "I match data to storage: preferences in localStorage, per-tab state in sessionStorage, and the session in an HttpOnly, Secure, SameSite cookie.",
+  "I never keep session tokens in Web Storage because any XSS can read them; OWASP says the same.",
+  "I wrap storage in try/catch and keep it small, since it is synchronous and capped at about 5 MiB."
+ ],
+ "followups": [
+  {
+   "q": "What does SameSite=Lax do?",
+   "a": "The cookie is sent on same-site requests and on top-level navigations from other sites, but not on cross-site subrequests. It is the default when SameSite is unset."
+  },
+  {
+   "q": "How do two tabs stay in sync?",
+   "a": "The storage event fires in other same-origin tabs when localStorage changes. It does not fire in the tab that made the change."
+  },
+  {
+   "q": "Can JavaScript delete an HttpOnly cookie?",
+   "a": "It cannot read it, and the server normally clears it by resending the cookie with Max-Age=0 on the same name, path and domain."
+  }
+ ],
+ "today": "Browsers keep tightening cookies: SameSite defaults to Lax and third-party cookies are increasingly blocked. Current guidance is to keep sessions in HttpOnly cookies, keep Web Storage for non-sensitive preferences, and move anything large to IndexedDB.",
+ "check": [
+  {
+   "q": "Where should a session id live?",
+   "a": "An HttpOnly, Secure, SameSite cookie",
+   "d": [
+    "localStorage",
+    "sessionStorage",
+    "A global variable"
+   ],
+   "why": "Scripts cannot read HttpOnly cookies, so XSS cannot copy the session."
+  },
+  {
+   "q": "You change localStorage in tab A. Where does the storage event fire?",
+   "a": "In other same-origin tabs, not tab A",
+   "d": [
+    "Only in tab A",
+    "In every site's tabs",
+    "Nowhere"
+   ],
+   "why": "It lets other tabs react to changes."
+  },
+  {
+   "q": "Which SameSite value is assumed when none is set?",
+   "a": "Lax",
+   "d": [
+    "None",
+    "Strict",
+    "Off"
+   ],
+   "why": "Browsers treat a missing SameSite as Lax."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: Web Storage API",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API"
+  },
+  {
+   "t": "MDN: HTTP cookies",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies"
+  },
+  {
+   "t": "MDN: Storage quotas and eviction criteria",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria"
+  },
+  {
+   "t": "OWASP: HTML5 Security Cheat Sheet",
+   "u": "https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html"
+  },
+  {
+   "t": "web.dev: Storage for the web",
+   "u": "https://web.dev/articles/storage-for-the-web"
+  }
+ ]
+}

@@ -1,0 +1,270 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Polling means the client keeps asking the server whether something changed. Short polling asks on a timer; long polling holds each request open until there is news or a timeout, then asks again.",
+ "like": "Like asking 'are we there yet?' every few minutes (short), versus asking once and the driver only answers when you arrive (long).",
+ "why": [
+  "The simplest way to get near-live data, with no special server support for short polling",
+  "Works everywhere, through any proxy, and is easy to debug",
+  "A good fit for job status, deploy progress and slow-changing dashboards"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "ui",
+    "t": "UI|shows status",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "pl",
+    "t": "Poll loop|short or long",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "poll"
+   },
+   {
+    "id": "vis",
+    "t": "Tab visibility|pause when hidden",
+    "x": 275,
+    "y": 105,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   },
+   {
+    "id": "api",
+    "t": "Status endpoint|ETag, 304",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   },
+   {
+    "id": "lp",
+    "t": "Held request|long poll, about 30 s",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "queue"
+   }
+  ],
+  "edges": [
+   [
+    "pl",
+    "ui",
+    "new data"
+   ],
+   [
+    "pl",
+    "api",
+    "short poll"
+   ],
+   [
+    "pl",
+    "lp",
+    "long poll"
+   ],
+   [
+    "vis",
+    "pl",
+    "pause / resume"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Ask on a schedule",
+    "d": "Short polling calls the endpoint every N seconds. Pick N from how stale the data may be, not from what feels fast.",
+    "hl": [
+     "pl",
+     "api"
+    ]
+   },
+   {
+    "t": "Make each poll cheap",
+    "d": "Return ETag and answer 304 Not Modified when nothing changed, so the response has no body.",
+    "hl": [
+     "api"
+    ]
+   },
+   {
+    "t": "Or hold the request",
+    "d": "Long polling: the server waits until an event or a timeout, replies, and the client immediately asks again. Latency drops, but each client holds a connection.",
+    "hl": [
+     "pl",
+     "lp"
+    ]
+   },
+   {
+    "t": "Stop and slow down",
+    "d": "Stop when the job is done. Back off the interval when nothing changes, and add jitter so clients do not all poll at the same instant.",
+    "hl": [
+     "pl",
+     "api"
+    ]
+   },
+   {
+    "t": "Respect the tab",
+    "d": "Pause when the tab is hidden (Page Visibility API) and refresh immediately when it returns.",
+    "hl": [
+     "vis",
+     "pl"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 300
+ },
+ "numbers": [
+  {
+   "v": "30 s",
+   "l": "the long-poll timeout RFC 6202 calls the safer choice (experiments worked up to 120 s)",
+   "s": "https://datatracker.ietf.org/doc/rfc6202/"
+  },
+  {
+   "v": "300 s",
+   "l": "default browser timeout for a pending request, though many network devices time out sooner",
+   "s": "https://datatracker.ietf.org/doc/rfc6202/"
+  },
+  {
+   "v": "1 / min",
+   "l": "how often Chrome runs chained timers on pages hidden for over 5 minutes (intensive throttling)",
+   "s": "https://developer.chrome.com/blog/timer-throttling-in-chrome-88"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Short vs long polling",
+   "d": "Short polling is simplest and wasteful. Long polling gives near-instant updates with fewer empty responses, but holds a connection per client and needs server support."
+  },
+  {
+   "t": "Interval and cost",
+   "d": "Every poll costs a request and battery. Use ETag/304 to keep empty polls tiny, grow the interval while nothing changes, and stop when done."
+  },
+  {
+   "t": "Chained timeout or setInterval",
+   "d": "Schedule the next poll after the previous one finishes, otherwise a slow response lets requests pile up."
+  },
+  {
+   "t": "When to upgrade",
+   "d": "If you poll faster than every few seconds or many clients poll the same data, move to SSE or WebSocket."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-sse-client-eventsource-server-sent-events-eventsource-stream-one-way-tokens-frontend",
+   "why": "Server pushes updates over one stream, with no repeated requests"
+  },
+  {
+   "slug": "fe-websocket-client-socket-reconnect-heartbeat-backoff-realtime-frontend",
+   "why": "When the client also sends often and latency matters"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Request pile-up",
+   "d": "A fixed interval fires again before the slow response has returned.",
+   "see": "Overlapping requests and out-of-order results",
+   "fix": "Schedule the next poll after the previous completes, and abort the old one"
+  },
+  {
+   "t": "Thundering herd",
+   "d": "Many clients poll on aligned schedules, for example right after a deploy.",
+   "see": "Periodic server spikes",
+   "fix": "Add random jitter and back off when nothing changes"
+  },
+  {
+   "t": "Hidden tab keeps polling",
+   "d": "Background tabs still send requests, or timers get throttled and run late.",
+   "see": "Wasted battery and data, bursts when you return",
+   "fix": "Pause on visibilitychange and refetch once when visible"
+  }
+ ],
+ "say": [
+  "For job status I poll with a chained timeout, ETag so empty polls are 304, and I stop as soon as the job reaches a final state.",
+  "I pause polling when the tab is hidden and refresh on return, and I add jitter so clients do not poll in lockstep.",
+  "If I need sub-second updates or many clients watch the same data, I move to SSE or WebSocket instead of polling harder."
+ ],
+ "followups": [
+  {
+   "q": "Why use setTimeout instead of setInterval?",
+   "a": "setInterval fires on a fixed clock, so a slow response lets requests overlap. A timeout scheduled after the response keeps exactly one poll in flight."
+  },
+  {
+   "q": "What is the catch with long polling?",
+   "a": "Each client holds an open request, so servers and proxies need enough capacity, and timeouts must be shorter than any proxy in between, for example about 30 s."
+  },
+  {
+   "q": "How do you make polling cheap?",
+   "a": "Conditional requests: send If-None-Match and let the server return 304 with no body when nothing changed."
+  }
+ ],
+ "today": "Polling is still the simplest correct choice for status checks and slow dashboards. Server-state libraries such as TanStack Query provide refetchInterval for it, and the Page Visibility API lets you pause when nobody is looking.",
+ "check": [
+  {
+   "q": "A long-poll timeout of about what is the safer choice per RFC 6202?",
+   "a": "30 seconds",
+   "d": [
+    "10 minutes",
+    "1 second",
+    "Never time out"
+   ],
+   "why": "Many network devices time out early, so 30 s is safer than the browser default of 300 s."
+  },
+  {
+   "q": "Your poll takes 6 s but the interval is 5 s. What goes wrong and what fixes it?",
+   "a": "Requests overlap; schedule the next poll after the response",
+   "d": [
+    "Nothing, browsers queue them",
+    "The server crashes; use POST",
+    "Data is encrypted twice"
+   ],
+   "why": "Chained timeouts keep one request in flight."
+  },
+  {
+   "q": "What response makes an unchanged poll cheap?",
+   "a": "304 Not Modified via ETag",
+   "d": [
+    "200 with full body",
+    "500 with Retry-After",
+    "101 Switching Protocols"
+   ],
+   "why": "A conditional request returns no body when nothing changed."
+  }
+ ],
+ "sources": [
+  {
+   "t": "RFC 6202: Known issues and best practices for long polling",
+   "u": "https://datatracker.ietf.org/doc/rfc6202/"
+  },
+  {
+   "t": "MDN: Page Visibility API",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API"
+  },
+  {
+   "t": "Chrome for Developers: timer throttling in Chrome 88",
+   "u": "https://developer.chrome.com/blog/timer-throttling-in-chrome-88"
+  },
+  {
+   "t": "MDN: HTTP caching (ETag and 304)",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching"
+  },
+  {
+   "t": "TanStack Query: important defaults",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults"
+  }
+ ]
+}

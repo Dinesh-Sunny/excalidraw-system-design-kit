@@ -1,0 +1,299 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "An API client is the one small wrapper around fetch that every request in your app goes through. It adds the shared rules: auth headers, timeouts, cancelling stale requests, and safe retries with backoff.",
+ "like": "Like one front desk at a school office: every request goes through it, it knows the forms to fill, how long to wait, and when it is worth trying again.",
+ "why": [
+  "One place to change auth, headers and error handling for the whole app",
+  "Cancelled and timed-out requests stop wasting bandwidth and never overwrite newer data",
+  "Retries recover from short blips without hammering a struggling server"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "ui",
+    "t": "Component|asks for data",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "qc",
+    "t": "Query cache|dedupes by key",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "querycache"
+   },
+   {
+    "id": "cl",
+    "t": "API client|one fetch wrapper",
+    "x": 275,
+    "y": 105,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "apiclient"
+   },
+   {
+    "id": "ab",
+    "t": "Abort + timeout|AbortSignal.any",
+    "x": 275,
+    "y": 275,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "clock"
+   },
+   {
+    "id": "rt",
+    "t": "Retry policy|backoff + jitter",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "flow"
+   },
+   {
+    "id": "api",
+    "t": "API server|429 / 503 + Retry-After",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "ui",
+    "qc",
+    "asks"
+   ],
+   [
+    "qc",
+    "cl",
+    "cache miss"
+   ],
+   [
+    "ab",
+    "cl",
+    "signal"
+   ],
+   [
+    "cl",
+    "api",
+    "request"
+   ],
+   [
+    "cl",
+    "rt",
+    "transient error"
+   ],
+   [
+    "rt",
+    "api",
+    "retry later"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Ask through one door",
+    "d": "A component asks for data. The query cache answers from memory if the key is fresh; otherwise it calls the API client.",
+    "hl": [
+     "ui",
+     "qc"
+    ]
+   },
+   {
+    "t": "Attach the rules",
+    "d": "The client adds auth headers, base URL and a signal made with AbortSignal.any: one signal for the user or route cancelling, one for AbortSignal.timeout(ms).",
+    "hl": [
+     "cl",
+     "ab"
+    ]
+   },
+   {
+    "t": "Send and classify",
+    "d": "The server answers. Network errors, 429 and 503 are transient; 400, 401, 403 and 404 are not and should fail at once.",
+    "hl": [
+     "cl",
+     "api"
+    ]
+   },
+   {
+    "t": "Retry with backoff and jitter",
+    "d": "Wait 1 s, 2 s, 4 s and so on with random jitter added, capped, and honour a Retry-After header if the server sends one.",
+    "hl": [
+     "rt",
+     "api"
+    ]
+   },
+   {
+    "t": "Cancel what is stale",
+    "d": "When the user types again or leaves the page, abort the old request so a slow answer can never overwrite a newer one.",
+    "hl": [
+     "ab",
+     "cl"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 385
+ },
+ "numbers": [
+  {
+   "v": "3",
+   "l": "default retries for a failed query in TanStack Query (0 on the server)",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+  },
+  {
+   "v": "30 s",
+   "l": "cap on its default retry delay, which starts at 1 s and doubles each attempt",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+  },
+  {
+   "v": "243x",
+   "l": "extra database load when 5 layers each retry 3 times (3 to the power 5), which is why you retry at one layer",
+   "s": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Retry at one layer only",
+   "d": "Retries multiply across layers. Pick one place, the client wrapper or the server-state library, and turn the others off."
+  },
+  {
+   "t": "What is safe to retry",
+   "d": "GET, PUT and DELETE are idempotent, so repeating them is safe. POST is not, so retry it only with an Idempotency-Key header, which is still an IETF draft."
+  },
+  {
+   "t": "Timeout and cancel together",
+   "d": "AbortSignal.timeout(ms) gives a TimeoutError; AbortSignal.any([userSignal, timeoutSignal]) aborts on whichever comes first. Both are Baseline since 2024."
+  },
+  {
+   "t": "Wrapper or library",
+   "d": "A thin fetch wrapper (or ky, axios) is enough for transport rules. For reads, let TanStack Query own retry, dedupe and cancellation per query key."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-server-state-cache-tanstack-query-swr-stale-while-revalidate-dedupe-refetch-query-keys-frontend",
+   "why": "For reads it already retries, dedupes and cancels per query key, so you write less transport code"
+  },
+  {
+   "slug": "svc-circuit-breaker-resilience-fallback-hystrix-retry",
+   "why": "When a dependency is down, stop retrying and fail fast instead of backing off forever"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Retry storm",
+   "d": "After an outage every client retries on the same schedule.",
+   "see": "A traffic spike right after recovery and repeated 429s",
+   "fix": "Exponential backoff with jitter, a small attempt cap, and honour Retry-After"
+  },
+  {
+   "t": "Double submit",
+   "d": "A POST times out but the first one actually succeeded, then gets retried.",
+   "see": "Duplicate orders or payments",
+   "fix": "Send an Idempotency-Key per user action, or do not auto-retry non-idempotent calls"
+  },
+  {
+   "t": "Stale response wins",
+   "d": "A slow older request finishes after a newer one.",
+   "see": "Search results jump back to an old query",
+   "fix": "Abort the previous request with its AbortController and ignore the AbortError"
+  }
+ ],
+ "say": [
+  "Every call goes through one fetch wrapper that adds auth, a timeout with AbortSignal.timeout, and a cancel signal combined with AbortSignal.any.",
+  "I retry only transient failures - network errors, 429 and 503 - with exponential backoff, jitter and a cap, honouring Retry-After, and only at one layer.",
+  "POSTs are retried only with an idempotency key, and I abort superseded requests so stale data cannot win."
+ ],
+ "followups": [
+  {
+   "q": "Why add jitter?",
+   "a": "Without it, all clients that failed together retry together and re-create the spike. Random spread breaks the synchronisation."
+  },
+  {
+   "q": "How do you tell a timeout from a user cancel?",
+   "a": "AbortSignal.timeout aborts with a TimeoutError, while a manual abort() gives an AbortError, so the catch block can branch on err.name."
+  },
+  {
+   "q": "Why not retry everything?",
+   "a": "Client errors such as 400 or 404 will fail the same way again, and non-idempotent calls can cause duplicate side effects."
+  }
+ ],
+ "today": "AbortSignal.timeout() and AbortSignal.any() are now Baseline in every major browser, so a small fetch wrapper handles timeouts and cancellation natively, while server-state libraries such as TanStack Query supply retry, backoff and dedupe per query.",
+ "check": [
+  {
+   "q": "A fetch with AbortSignal.timeout(5000) hits the limit. What is err.name?",
+   "a": "TimeoutError",
+   "d": [
+    "AbortError",
+    "NetworkError",
+    "RangeError"
+   ],
+   "why": "A timeout abort uses a TimeoutError; AbortError is for a manual abort or user action."
+  },
+  {
+   "q": "Which call is NOT safe to retry automatically?",
+   "a": "POST /orders without an idempotency key",
+   "d": [
+    "GET /orders",
+    "PUT /orders/7",
+    "DELETE /orders/7"
+   ],
+   "why": "POST can create duplicates. GET, PUT and DELETE are idempotent."
+  },
+  {
+   "q": "Five layers each retry 3 times. The database could see how much extra load?",
+   "a": "243 times (3 to the power 5)",
+   "d": [
+    "15 times",
+    "3 times",
+    "No change, retries are free"
+   ],
+   "why": "Retries multiply across layers, so retry at one place only."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: AbortSignal.timeout()",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static"
+  },
+  {
+   "t": "MDN: AbortSignal.any()",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/any_static"
+  },
+  {
+   "t": "TanStack Query: query retries",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+  },
+  {
+   "t": "AWS Builders' Library: timeouts, retries and backoff with jitter",
+   "u": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/"
+  },
+  {
+   "t": "MDN: Retry-After",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After"
+  },
+  {
+   "t": "MDN: POST (not idempotent)",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods/POST"
+  },
+  {
+   "t": "IETF draft: Idempotency-Key header",
+   "u": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/"
+  }
+ ]
+}

@@ -1,0 +1,291 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "An offline queue (outbox) saves each user action in a local database when the network is down, shows it as pending, and replays it in order when the connection returns. Each action carries an idempotency key so replaying it twice is harmless.",
+ "like": "Like putting letters in an outbox tray: you keep writing, the postman collects them when he arrives, and each letter has a number so a duplicate is thrown away.",
+ "why": [
+  "Users keep working on trains, in lifts and on bad wifi, and nothing is lost",
+  "The UI stays instant because actions apply locally first",
+  "Replays are safe because the server deduplicates by key"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "ui",
+    "t": "Form / action|user taps Save",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "form"
+   },
+   {
+    "id": "opt",
+    "t": "Optimistic UI|shows as pending",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "optimistic"
+   },
+   {
+    "id": "box",
+    "t": "Outbox store|IndexedDB queue",
+    "x": 275,
+    "y": 105,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "idb"
+   },
+   {
+    "id": "rep",
+    "t": "Replayer|in order, with retries",
+    "x": 275,
+    "y": 275,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "conveyor"
+   },
+   {
+    "id": "sw",
+    "t": "Service worker|sync event",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "sw"
+   },
+   {
+    "id": "api",
+    "t": "API|dedupes by key",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "ui",
+    "opt",
+    "apply locally"
+   ],
+   [
+    "ui",
+    "box",
+    "enqueue with id"
+   ],
+   [
+    "box",
+    "rep",
+    "oldest first"
+   ],
+   [
+    "rep",
+    "api",
+    "send"
+   ],
+   [
+    "sw",
+    "rep",
+    "wake on network"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Save locally first",
+    "d": "On submit, update the UI optimistically and write the action {id, type, payload, createdAt} to the outbox in IndexedDB.",
+    "hl": [
+     "ui",
+     "opt",
+     "box"
+    ]
+   },
+   {
+    "t": "Try to send now",
+    "d": "If online, the replayer sends the oldest item with its idempotency key. If it fails or you are offline, the item stays in the queue.",
+    "hl": [
+     "rep",
+     "api"
+    ]
+   },
+   {
+    "t": "Wake up when the network returns",
+    "d": "Where Background Sync exists, a service worker sync event replays the queue even if the tab is closed. Elsewhere, replay on the online event and on app start.",
+    "hl": [
+     "sw",
+     "rep"
+    ]
+   },
+   {
+    "t": "Replay in order, retry with backoff",
+    "d": "Process items one at a time per entity so edits stay in order. Back off on failures, and remove an item only after the server confirms.",
+    "hl": [
+     "rep",
+     "box"
+    ]
+   },
+   {
+    "t": "Resolve and report",
+    "d": "On success mark the item synced. On a conflict or a permanent error, move it to a visible failed list so the user can retry or discard.",
+    "hl": [
+     "opt",
+     "api"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 385
+ },
+ "numbers": [
+  {
+   "v": "24 h",
+   "l": "retention used in Workbox's basic Background Sync example (maxRetentionTime of 24 * 60 minutes)",
+   "s": "https://developer.chrome.com/docs/workbox/modules/workbox-background-sync"
+  },
+  {
+   "v": "3",
+   "l": "network modes in TanStack Query: online (default, pauses offline), always, offlineFirst",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/network-mode"
+  },
+  {
+   "v": "409 / 422",
+   "l": "statuses the Idempotency-Key draft suggests for a retry in flight / a key reused with a different body",
+   "s": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Where the queue lives",
+   "d": "IndexedDB: it is asynchronous and holds structured data. localStorage is synchronous, string-only and about 5 MB, and it is not available in service workers."
+  },
+  {
+   "t": "What triggers replay",
+   "d": "Background Sync lets a service worker replay even when the tab is closed, but MDN marks it limited availability. Always add a fallback: replay on the online event and on app start."
+  },
+  {
+   "t": "Ordering and conflicts",
+   "d": "Replay in order per entity. Decide the conflict rule up front: last write wins, merge fields, or ask the user."
+  },
+  {
+   "t": "Build or use a library",
+   "d": "Workbox's Queue replays failed requests from IndexedDB. TanStack Query pauses mutations while offline and resumes them. Use a sync engine if you need real merging."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-optimistic-update-optimistic-ui-rollback-pending-mutation-useoptimistic-frontend",
+   "why": "If the app is online-first and only needs an instant UI with rollback on failure"
+  },
+  {
+   "slug": "fe-service-worker-pwa-offline-cache-storage-fetch-interception-workbox-push-frontend",
+   "why": "For the background replay and caching layer that sits underneath an outbox"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Duplicate apply",
+   "d": "The app sent an item, crashed before deleting it, and sent it again.",
+   "see": "Two identical orders or comments",
+   "fix": "One idempotency key per queued action, stored with it; the server dedupes"
+  },
+  {
+   "t": "Poison item",
+   "d": "One permanently invalid item sits at the head and blocks everything behind it.",
+   "see": "Queue never drains, pending badge forever",
+   "fix": "Cap attempts, move permanent 4xx failures to a failed list, and let the user fix or discard"
+  },
+  {
+   "t": "No Background Sync",
+   "d": "Some browsers do not support it, so nothing replays while the app is closed.",
+   "see": "Actions stay pending until the user reopens the app",
+   "fix": "Fall back to online event plus replay on startup, and tell the user it is queued"
+  }
+ ],
+ "say": [
+  "Each action is applied optimistically and written to an outbox in IndexedDB with a client-generated id that doubles as the idempotency key.",
+  "A replayer sends items in order with backoff, using a service worker sync event where supported and the online event or app start as the fallback.",
+  "I remove an item only after the server confirms, surface permanent failures to the user, and have the server deduplicate by key so replays are safe."
+ ],
+ "followups": [
+  {
+   "q": "Why not just keep the queue in memory?",
+   "a": "A refresh or crash would lose the user's work. A durable store such as IndexedDB survives reloads and lets a service worker read it."
+  },
+  {
+   "q": "How do you handle conflicts?",
+   "a": "Send the base version or timestamp with each action; the server rejects stale writes, and the client applies a rule: last write wins, field merge, or ask the user."
+  },
+  {
+   "q": "Does Background Sync work in every browser?",
+   "a": "No. MDN lists it as limited availability and not Baseline, so design the queue to work with only the online event and app-start replay."
+  }
+ ],
+ "today": "The Background Synchronization API is still limited availability, so production outboxes treat it as an enhancement. Workbox ships a Background Sync Queue backed by IndexedDB with a fallback that retries on service worker start, and TanStack Query pauses and resumes mutations around connectivity.",
+ "check": [
+  {
+   "q": "Where should the outbox be stored?",
+   "a": "IndexedDB",
+   "d": [
+    "localStorage",
+    "A JavaScript variable",
+    "A cookie"
+   ],
+   "why": "It is durable, asynchronous, structured and reachable from a service worker."
+  },
+  {
+   "q": "The app crashes after sending an item but before deleting it. What prevents a duplicate?",
+   "a": "An idempotency key the server dedupes on",
+   "d": [
+    "Sending it twice faster",
+    "Using GET instead",
+    "Clearing the queue on start"
+   ],
+   "why": "The replay carries the same key, so the server applies it once."
+  },
+  {
+   "q": "Background Sync is not supported in the user's browser. Best fallback?",
+   "a": "Replay on the online event and on app start",
+   "d": [
+    "Drop the queued actions",
+    "Poll every 100 ms",
+    "Block the UI until online"
+   ],
+   "why": "The queue still works, just without replay while the app is closed."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: Background Synchronization API",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Background_Synchronization_API"
+  },
+  {
+   "t": "web.dev: The Offline Cookbook",
+   "u": "https://web.dev/articles/offline-cookbook"
+  },
+  {
+   "t": "Chrome for Developers: workbox-background-sync",
+   "u": "https://developer.chrome.com/docs/workbox/modules/workbox-background-sync"
+  },
+  {
+   "t": "TanStack Query: network mode",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/network-mode"
+  },
+  {
+   "t": "IETF draft: Idempotency-Key header",
+   "u": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/"
+  },
+  {
+   "t": "web.dev: Storage for the web",
+   "u": "https://web.dev/articles/storage-for-the-web"
+  }
+ ]
+}

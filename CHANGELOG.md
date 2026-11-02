@@ -4,6 +4,15 @@ All notable changes to the kit. Versions follow [Semantic Versioning](https://se
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-02
+Frontend system design. The library now has 442 items (up from 371).
+- 39 new frontend building blocks (`sd:fe/`), each with its own icon, a sourced lesson, nested concepts and real tools: rendering (CSR, SSG, ISR, streaming SSR, React Server Components, islands, app shell + router, micro-frontends, design system), state and data (global store, server-state cache, normalized cache, GraphQL client, forms, URL state, optimistic updates), network and realtime (API client, WebSocket, SSE, polling, offline outbox), the browser platform (Service Worker, IndexedDB, storage and cookies, Web Workers, HTTP cache), performance (code splitting, virtualized lists, infinite scroll, responsive images, prefetch, debounce, Core Web Vitals, RUM) and quality (accessibility, i18n, CSP + XSS, auth in the browser, feature flags).
+- 14 frontend patterns (`sd:fep/`): Critical Rendering Path, Rendering Strategies, Streaming SSR + Hydration, Stale-While-Revalidate, Optimistic Update, Offline-First Sync, Realtime Options, Virtualized Infinite List, Micro-Frontends, Browser Auth (BFF), Web Caching Layers, Responsive Images, Frontend Observability and the JavaScript Event Loop.
+- 10 frontend full designs with practice questions in the RADIO flow (Requirements, Architecture, Data model, Interface, Optimizations): News Feed, Autocomplete, Chat App, Photo Gallery, E-commerce Storefront, Video Player, Collaborative Editor, Email Client, Spreadsheet Grid and Travel Booking - each with deep dives, 2026 upgrades, a question-specific round and scenarios (low-end phones, accessibility first, offline, global audience, huge scale).
+- 6 frontend interview notes: RADIO Framework, Frontend Requirements, Core Web Vitals, State Placement, Component API and Frontend Optimizations.
+- 3 new starter packs: Frontend interview starter, Frontend performance, Frontend data and realtime.
+- Frontend and Frontend patterns have their own filters on the site, and "frontend" is a search chip.
+
 ## [1.6.0] - 2026-10-31
 The library now has 371 items (up from 314), plus Practice, Explore and a lesson in many blocks on the site.
 - 4 new starter packs: Realtime apps (sockets, fan-out, calls, shared editing and push), Payments (idempotency, sagas, the outbox and a ledger), Data pipeline (change capture, streams, batch jobs and the lakehouse) and AI interview research (the five new research designs with the blocks they lean on). 17 packs in all.

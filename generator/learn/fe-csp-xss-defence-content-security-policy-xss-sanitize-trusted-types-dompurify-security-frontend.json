@@ -1,0 +1,304 @@
+{
+ "what": "XSS (cross-site scripting) is when an attacker gets their script to run on your page. Defence is layered: frameworks escape output by default, a sanitiser cleans any HTML you must render, Trusted Types lock the dangerous DOM sinks, and a strict Content Security Policy (CSP) blocks scripts you did not approve.",
+ "like": "Like a school with a visitor sign-in desk: staff check every guest (escape and sanitise), only badged people enter certain rooms (Trusted Types), and the front-door rules say which adults may speak to the class at all (CSP).",
+ "why": [
+  "One XSS bug lets an attacker act as the user: read the page, call APIs, and steal anything JavaScript can reach",
+  "CSP limits the damage when a bug slips through - defence in depth",
+  "Frameworks are safe by default, so most XSS now comes from escape hatches and third-party scripts"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "in",
+    "t": "Untrusted input|user text, URL, API data",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "user"
+   },
+   {
+    "id": "esc",
+    "t": "Framework escaping|textContent, JSX",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "shield"
+   },
+   {
+    "id": "san",
+    "t": "Sanitiser|DOMPurify for rich HTML",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "redact"
+   },
+   {
+    "id": "tt",
+    "t": "Trusted Types|sinks only accept typed values",
+    "x": 0,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "lock"
+   },
+   {
+    "id": "csp",
+    "t": "CSP header|nonce + strict-dynamic",
+    "x": 275,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "csp"
+   },
+   {
+    "id": "rep",
+    "t": "Report-only + reports|find breakage first",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "siren"
+   },
+   {
+    "id": "dom",
+    "t": "Page DOM|where script would run",
+    "x": 275,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   }
+  ],
+  "edges": [
+   [
+    "in",
+    "esc",
+    "default path"
+   ],
+   [
+    "in",
+    "san",
+    "rich HTML"
+   ],
+   [
+    "esc",
+    "dom",
+    "safe text"
+   ],
+   [
+    "san",
+    "tt",
+    "createHTML policy"
+   ],
+   [
+    "tt",
+    "dom",
+    "TrustedHTML"
+   ],
+   [
+    "csp",
+    "dom",
+    "blocks unapproved script"
+   ],
+   [
+    "csp",
+    "rep",
+    "violations"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Treat all data as hostile",
+    "d": "Anything from users, URLs, query params, third-party APIs or the CMS can carry markup. The rule: render data as text, never as HTML.",
+    "hl": [
+     "in"
+    ]
+   },
+   {
+    "t": "Let the framework escape",
+    "d": "React, Vue and Angular escape by default, and textContent never parses markup. The risks are escape hatches: dangerouslySetInnerHTML, v-html, innerHTML, and javascript: URLs.",
+    "hl": [
+     "esc"
+    ]
+   },
+   {
+    "t": "Sanitise when you must render HTML",
+    "d": "For rich text, run it through DOMPurify with a strict allow-list, and do not modify the string after sanitising.",
+    "hl": [
+     "san"
+    ]
+   },
+   {
+    "t": "Lock the sinks with Trusted Types",
+    "d": "With require-trusted-types-for 'script', assigning a plain string to innerHTML throws. Only values made by a named policy (which calls your sanitiser) are accepted.",
+    "hl": [
+     "tt"
+    ]
+   },
+   {
+    "t": "Add a strict CSP",
+    "d": "Send a per-response nonce (or hashes) with strict-dynamic, object-src 'none' and base-uri 'none'. Inline handlers, javascript: URLs and eval are blocked unless allowed.",
+    "hl": [
+     "csp"
+    ]
+   },
+   {
+    "t": "Roll out with report-only",
+    "d": "Ship Content-Security-Policy-Report-Only first, collect reports through report-to, fix what breaks, then enforce.",
+    "hl": [
+     "rep"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "3",
+   "l": "Trusted Types object kinds: TrustedHTML, TrustedScript, TrustedScriptURL",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API"
+  },
+  {
+   "v": "Baseline 2026",
+   "l": "Trusted Types is 'Newly available' across the latest browsers since February 2026",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API"
+  },
+  {
+   "v": "3",
+   "l": "XSS kinds: stored, reflected and DOM-based",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS"
+  }
+ ],
+ "choices": [
+  {
+   "t": "Nonce or hash",
+   "d": "Nonces need server-rendered HTML with a fresh random value per response (hard on pure static hosting). Hashes suit static pages but must be regenerated on every script change."
+  },
+  {
+   "t": "strict-dynamic or allow-lists",
+   "d": "Host allow-lists are easy to bypass and hard to maintain. A nonce plus strict-dynamic lets trusted scripts load their own dependencies; the trade-off is that a trusted script that builds script tags from attacker input is still dangerous."
+  },
+  {
+   "t": "Sanitise on input or output",
+   "d": "Sanitise at render time with the context in mind (OWASP): encoding for HTML text, attribute and URL contexts differ. Storing pre-sanitised HTML makes later policy changes hard."
+  },
+  {
+   "t": "Enforce Trusted Types now or later",
+   "d": "Start report-only to find all sink writes, use the default policy only as a migration aid, then enforce with an allow-list of policy names."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-auth-in-the-browser-httponly-cookie-jwt-refresh-token-oauth-pkce-csrf-bff-frontend",
+   "why": "HttpOnly cookies and a BFF limit what a successful XSS can steal"
+  },
+  {
+   "slug": "fe-web-storage-cookies-localstorage-sessionstorage-cookies-httponly-samesite-frontend",
+   "why": "What JavaScript can read is exactly what XSS can steal"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Escape hatch misuse",
+   "d": "dangerouslySetInnerHTML or innerHTML with user content, or a user-supplied URL put in href.",
+   "see": "Injected script or javascript: link in a comment or profile field",
+   "fix": "Sanitise with DOMPurify, validate URL schemes to http and https, lint for the escape hatches"
+  },
+  {
+   "t": "Third-party script compromise",
+   "d": "A tag manager or CDN script is changed and runs with full page power.",
+   "see": "Unexpected requests or DOM changes from a vendor script",
+   "fix": "Subresource Integrity, minimal third-party scripts, CSP, and isolate in sandboxed iframes where possible"
+  },
+  {
+   "t": "Policy breaks the app",
+   "d": "A new CSP blocks inline styles, analytics or an extension.",
+   "see": "Blank widgets and CSP violation reports after a release",
+   "fix": "Report-only first, monitor reports, then enforce; keep a quick rollback for the header"
+  }
+ ],
+ "say": [
+  "Our first line is that data is always rendered as text; the framework escapes by default and we lint for dangerouslySetInnerHTML and innerHTML.",
+  "Where we must show rich HTML we sanitise with DOMPurify behind a Trusted Types policy, so any raw string reaching a dangerous sink throws.",
+  "On top we send a nonce-based strict CSP with strict-dynamic, object-src none and base-uri none, rolled out report-only first, as defence in depth and not the primary defence."
+ ],
+ "followups": [
+  {
+   "q": "Is CSP enough to stop XSS?",
+   "a": "No. OWASP calls it an extra layer because mistakes are easy; escaping, sanitising and safe APIs prevent the bug and CSP reduces the impact."
+  },
+  {
+   "q": "What is DOM-based XSS?",
+   "a": "Client script reads input such as the URL and writes it to a sink like innerHTML. Trusted Types are aimed at this class because they make every sink write go through a policy."
+  },
+  {
+   "q": "How do you add CSP to an existing app?",
+   "a": "Start with Content-Security-Policy-Report-Only, collect violations through report-to, fix inline code and third parties, and then enforce, ideally with nonces rather than allow-lists."
+  }
+ ],
+ "today": "A nonce plus strict-dynamic policy is the recommended CSP shape, and Trusted Types reached Baseline 'Newly available' status in 2026, so enforcing them is now practical for new apps. React 19 blocks javascript: URLs in href and src, but OWASP still advises validating URLs yourself.",
+ "check": [
+  {
+   "q": "What does require-trusted-types-for 'script' do?",
+   "a": "Makes DOM sinks like innerHTML reject plain strings",
+   "d": [
+    "Blocks all inline CSS",
+    "Forces HTTPS for scripts",
+    "Encrypts cookie values"
+   ],
+   "why": "Only TrustedHTML, TrustedScript or TrustedScriptURL objects from a policy are accepted, else a TypeError is thrown."
+  },
+  {
+   "q": "Why must a CSP nonce differ on each response?",
+   "a": "If it is predictable, an attacker can include it in injected script",
+   "d": [
+    "Browsers cache nonces for one request only",
+    "It is required for HTTP/2",
+    "Nonces are used to sign cookies"
+   ],
+   "why": "The nonce is the secret proving a script came from the server."
+  },
+  {
+   "q": "Best handling for user comments containing limited HTML?",
+   "a": "Sanitise with a library like DOMPurify before rendering",
+   "d": [
+    "Strip the word script with a regex",
+    "Encode once at write time and trust it forever",
+    "Put it in a hidden iframe without sandbox"
+   ],
+   "why": "Regex filters are bypassable; a maintained sanitiser with an allow-list is the OWASP recommendation."
+  }
+ ],
+ "sources": [
+  {
+   "t": "OWASP: XSS Prevention Cheat Sheet",
+   "u": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+  },
+  {
+   "t": "MDN: Content Security Policy guide",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP"
+  },
+  {
+   "t": "MDN: Trusted Types API",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API"
+  },
+  {
+   "t": "MDN: Cross-site scripting",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS"
+  }
+ ],
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "tool": ""
+}

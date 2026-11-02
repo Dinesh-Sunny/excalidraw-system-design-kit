@@ -1,0 +1,289 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A global store is one shared place in the browser for client state - things only the app knows, like a theme, a sidebar, a wizard step or a draft - so far-apart components can read and change it without passing props down. Libraries such as Zustand and Redux Toolkit give it a small API, and components subscribe to just the slice they need.",
+ "like": "Like a classroom notice board everyone can read and pin to, so nobody has to pass notes from desk to desk.",
+ "why": [
+  "Distant components share state without prop drilling",
+  "Updates go through named actions, so changes are easy to trace and debug",
+  "Selectors keep re-renders small, so the UI stays fast"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 300,
+  "nodes": [
+   {
+    "id": "ui",
+    "t": "Components|subscribe with selectors",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "desktop"
+   },
+   {
+    "id": "ac",
+    "t": "Actions|setters or dispatch",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "send"
+   },
+   {
+    "id": "st",
+    "t": "Store|one state tree",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "store"
+   },
+   {
+    "id": "se",
+    "t": "Selectors|derived values",
+    "x": 275,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "sliders"
+   },
+   {
+    "id": "pe",
+    "t": "Persist|localStorage, partialize",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "kv"
+   },
+   {
+    "id": "dv",
+    "t": "DevTools|log and time travel",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "eye"
+   }
+  ],
+  "edges": [
+   [
+    "ui",
+    "ac",
+    "user event"
+   ],
+   [
+    "ac",
+    "st",
+    "update"
+   ],
+   [
+    "st",
+    "se",
+    "read"
+   ],
+   [
+    "se",
+    "ui",
+    "re-render if changed"
+   ],
+   [
+    "st",
+    "pe",
+    "save"
+   ],
+   [
+    "st",
+    "dv",
+    "log"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Define the store",
+    "d": "Create the store in one module. In Zustand you call create() with state and actions together; in Redux Toolkit you use configureStore and createSlice.",
+    "hl": [
+     "st"
+    ]
+   },
+   {
+    "t": "Components subscribe to a slice",
+    "d": "A component passes a selector, so it re-renders only when the piece it selected changes. This is the main performance lever.",
+    "hl": [
+     "ui",
+     "se"
+    ]
+   },
+   {
+    "t": "Change state through actions",
+    "d": "Events call a setter (Zustand) or dispatch a named action (Redux). Redux reducers stay pure and Immer lets you write update code that looks like mutation.",
+    "hl": [
+     "ac",
+     "st"
+    ]
+   },
+   {
+    "t": "Derive, don't duplicate",
+    "d": "Compute totals and filtered lists from the store in selectors instead of storing them twice, so two copies can never disagree.",
+    "hl": [
+     "se"
+    ]
+   },
+   {
+    "t": "Persist only what must survive",
+    "d": "Persist middleware saves chosen fields (partialize) to storage and can migrate old versions. DevTools log each action for debugging.",
+    "hl": [
+     "pe",
+     "dv"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "5",
+   "l": "react.dev principles for structuring state: group related, avoid contradictions, avoid redundant, avoid duplicate, avoid deep nesting",
+   "s": "https://react.dev/learn/choosing-the-state-structure"
+  },
+  {
+   "v": "0",
+   "l": "context providers needed to use a Zustand store - the hook works in any component",
+   "s": "https://zustand.docs.pmnd.rs/getting-started/introduction"
+  },
+  {
+   "v": "2",
+   "l": "core Redux Toolkit APIs to start: configureStore and createSlice",
+   "s": "https://redux.js.org/introduction/why-rtk-is-redux-today"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Zustand or Redux Toolkit",
+   "d": "Zustand is a tiny hook-based store with no boilerplate; Redux Toolkit adds strict structure, DevTools and a big ecosystem, which suits large teams. Redux docs say that if you write Redux today you should use Redux Toolkit."
+  },
+  {
+   "t": "Global store or local state",
+   "d": "Keep state next to where it is used first. Lift it to a store only when many distant components need it. A global store for everything becomes hidden coupling."
+  },
+  {
+   "t": "Context or a store",
+   "d": "React Context is fine for rarely-changing values such as theme or current user. When a provider value changes, every consumer re-renders, so frequently-changing state belongs in a store with selectors."
+  },
+  {
+   "t": "What goes in it",
+   "d": "Only client state (UI flags, drafts, wizard steps). Server data belongs in a server-state cache, and filters you want shareable belong in the URL."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-server-state-cache-tanstack-query-swr-stale-while-revalidate-dedupe-refetch-query-keys-frontend",
+   "why": "For data that comes from the API - it needs caching, refetching and staleness, which a plain store does not give you"
+  },
+  {
+   "slug": "fe-url-state-query-params-search-params-deep-link-shareable-filters-frontend",
+   "why": "For filters, tabs and pages that should survive refresh and be shareable as a link"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Whole-store subscription",
+   "d": "Components select the entire state object instead of one slice.",
+   "see": "Typing in one input re-renders half the page",
+   "fix": "Select the smallest slice; use shallow comparison or split the store"
+  },
+  {
+   "t": "Server data copied into the store",
+   "d": "API responses are pushed into the store and kept by hand.",
+   "see": "Stale lists, manual loading flags, duplicated entities",
+   "fix": "Move fetched data to a server-state cache; keep the store for client-only state"
+  },
+  {
+   "t": "Persisted state from an old version",
+   "d": "A new release changes the shape but old localStorage is loaded as-is.",
+   "see": "Crashes or blank UI after deploy for returning users",
+   "fix": "Use the persist version and migrate options; persist only needed fields"
+  }
+ ],
+ "say": [
+  "I split state by kind: server data in a query cache, shareable view state in the URL, form state in the form library, and only the leftover client state in a small global store.",
+  "Components subscribe through selectors so a change re-renders only what read it; I derive values instead of storing them twice.",
+  "For persistence I save only the fields that must survive, with a version and a migration so old localStorage cannot crash a new release."
+ ],
+ "followups": [
+  {
+   "q": "Why not just use React Context?",
+   "a": "Context re-renders every consumer when its value changes. It is great for stable values like theme or user, but fast-changing state is better in a store where components select only their slice."
+  },
+  {
+   "q": "Redux or Zustand for a big team?",
+   "a": "Both are valid. Redux Toolkit gives enforced structure, DevTools and middleware conventions; Zustand is lighter and quicker to start. I pick by team size and how much structure the team needs, and say so."
+  }
+ ],
+ "today": "Redux Toolkit is the official way to write Redux, and the docs treat server data as a job for a separate cache: TanStack Query's own docs note that after moving async data there, the remaining global client state is usually small.",
+ "check": [
+  {
+   "q": "Which kind of state is a good fit for a global store?",
+   "a": "Client-only UI state such as a sidebar or wizard step",
+   "d": [
+    "Every API response",
+    "The current URL query string",
+    "Each keystroke of every form"
+   ],
+   "why": "Server data belongs in a query cache, URL state in the URL; the store holds what only the app knows."
+  },
+  {
+   "q": "How do you stop a component re-rendering on unrelated store changes?",
+   "a": "Subscribe with a selector for just the slice it needs",
+   "d": [
+    "Wrap everything in one Context",
+    "Copy the state into useState",
+    "Call forceUpdate less often"
+   ],
+   "why": "A component re-renders only when its selected value changes."
+  },
+  {
+   "q": "Why derive totals in a selector instead of storing them?",
+   "a": "Two stored copies can drift apart; a derived value cannot",
+   "d": [
+    "Stored values are not allowed",
+    "Selectors are free to run on a server",
+    "It makes the bundle smaller"
+   ],
+   "why": "react.dev lists 'avoid redundant state' - anything computable should be computed."
+  }
+ ],
+ "sources": [
+  {
+   "t": "react.dev: choosing the state structure",
+   "u": "https://react.dev/learn/choosing-the-state-structure"
+  },
+  {
+   "t": "Zustand docs: introduction",
+   "u": "https://zustand.docs.pmnd.rs/getting-started/introduction"
+  },
+  {
+   "t": "Zustand docs: persisting store data",
+   "u": "https://zustand.docs.pmnd.rs/integrations/persisting-store-data"
+  },
+  {
+   "t": "Redux docs: why Redux Toolkit",
+   "u": "https://redux.js.org/introduction/why-rtk-is-redux-today"
+  },
+  {
+   "t": "react.dev: scaling up with reducer and context",
+   "u": "https://react.dev/learn/scaling-up-with-reducer-and-context"
+  },
+  {
+   "t": "TanStack Query: does this replace client state",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/does-this-replace-client-state"
+  }
+ ]
+}

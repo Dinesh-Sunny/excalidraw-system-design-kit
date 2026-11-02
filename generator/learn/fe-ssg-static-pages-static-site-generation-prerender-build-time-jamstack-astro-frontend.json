@@ -1,0 +1,266 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Static site generation (SSG) renders every page to a plain HTML file at build time, before anyone visits. The files are copied to a CDN, so each request is just a file download.",
+ "like": "Like printing a book once and putting copies on every shelf, instead of writing a fresh copy by hand for each reader.",
+ "why": [
+  "Fastest, most predictable first byte - a CDN serves a file with no server work",
+  "Cheap and very resilient: no render server to scale or to fail",
+  "Content is real HTML, so search engines and link previews just work"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 290,
+  "nodes": [
+   {
+    "id": "src",
+    "t": "Content + data|CMS, markdown, API",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "doc"
+   },
+   {
+    "id": "build",
+    "t": "Build step|renders every route",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "cicd"
+   },
+   {
+    "id": "files",
+    "t": "HTML + JS + CSS|one file per URL",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "bucket"
+   },
+   {
+    "id": "cdn",
+    "t": "CDN edge|serves the file",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "globe"
+   },
+   {
+    "id": "user",
+    "t": "Browser|reads HTML, hydrates",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   }
+  ],
+  "edges": [
+   [
+    "src",
+    "build",
+    "pull at build"
+   ],
+   [
+    "build",
+    "files",
+    "emit"
+   ],
+   [
+    "files",
+    "cdn",
+    "deploy"
+   ],
+   [
+    "cdn",
+    "user",
+    "file, no server work"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Gather content at build time",
+    "d": "The build pulls data from markdown, a headless CMS or an API. Whatever is not known at build time cannot be in the page.",
+    "hl": [
+     "src",
+     "build"
+    ]
+   },
+   {
+    "t": "Render every route to HTML",
+    "d": "The build runs your components once per URL and writes an HTML file for each. Dynamic routes need a list of params, such as generateStaticParams in Next.js.",
+    "hl": [
+     "build",
+     "files"
+    ]
+   },
+   {
+    "t": "Deploy files to a CDN",
+    "d": "The output folder (for example out/ in a Next.js static export) can be hosted by any server that serves static files, with hashed assets cached long-term.",
+    "hl": [
+     "files",
+     "cdn"
+    ]
+   },
+   {
+    "t": "Serve with no render work",
+    "d": "Each request is a cache hit at the nearest edge, so TTFB is low and consistent however many users arrive.",
+    "hl": [
+     "cdn",
+     "user"
+    ]
+   },
+   {
+    "t": "Add interactivity where needed",
+    "d": "Ship little JS: only components that must be interactive hydrate. Personalised parts load from APIs on the client after the static shell.",
+    "hl": [
+     "user"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "0.8 s",
+   "l": "rough 'good' TTFB threshold; static files from a CDN usually sit well inside it",
+   "s": "https://web.dev/articles/ttfb"
+  },
+  {
+   "v": "1 file per URL",
+   "l": "what a Next.js static export emits per route (index.html, blog/post-1.html and so on)",
+   "s": "https://nextjs.org/docs/app/guides/static-exports"
+  },
+  {
+   "v": "2.5 s",
+   "l": "good LCP threshold at the 75th percentile",
+   "s": "https://web.dev/articles/vitals"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "How often does content change",
+   "d": "Rarely (docs, marketing, blog): SSG is ideal. Every few minutes or per user: use ISR, SSR or client fetches instead. web.dev notes SSG must generate a file for every URL, which is hard for very large or unpredictable sites."
+  },
+  {
+   "t": "Build time vs number of pages",
+   "d": "Build time grows with page count. Pre-render the popular pages and generate the long tail on demand (ISR) rather than building millions of files."
+  },
+  {
+   "t": "Where the dynamic bits go",
+   "d": "Keep the shell static and fetch personal or fast-changing data on the client, or use server islands. This keeps the page cacheable."
+  },
+  {
+   "t": "Static export or runtime server",
+   "d": "A pure export hosts anywhere but drops features that need a server, such as cookies, redirects, rewrites, ISR and default image optimisation."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-isr-revalidate-incremental-static-regeneration-stale-while-revalidate-on-demand-nextjs-frontend",
+   "why": "Same static speed, but pages refresh in the background without a full rebuild"
+  },
+  {
+   "slug": "fe-csr-spa-client-render-client-side-rendering-single-page-app-react-vite-frontend",
+   "why": "Highly interactive private app where per-user content dominates"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Stale content after an edit",
+   "d": "Pages only change when you rebuild and redeploy.",
+   "see": "Editors say their change is not live",
+   "fix": "Trigger a rebuild from CMS webhooks, or move that route to ISR with on-demand revalidation"
+  },
+  {
+   "t": "Build takes forever",
+   "d": "Tens of thousands of routes rendered on every deploy.",
+   "see": "Slow CI, deploys blocked",
+   "fix": "Prebuild top pages only, generate the rest on first request, cache build output between runs"
+  },
+  {
+   "t": "Unsupported feature in export",
+   "d": "Server-only features used with output: export.",
+   "see": "Build error or missing behaviour",
+   "fix": "Drop to a hosted runtime or move the logic to an API or edge function"
+  }
+ ],
+ "say": [
+  "For content that changes slowly I would statically generate the pages at build time and serve them from a CDN - fastest and cheapest option, and great for SEO.",
+  "Personalised or fast-changing bits are fetched on the client after the static shell, so the page itself stays cacheable.",
+  "If the site is huge or editors need quick updates, I move to ISR rather than rebuilding everything on each change."
+ ],
+ "followups": [
+  {
+   "q": "How do you handle a page that needs the logged-in user's name?",
+   "a": "Serve the static shell, then fetch the user on the client or use a deferred server island, so the HTML stays cacheable for everyone."
+  },
+  {
+   "q": "SSG vs prerendering an SPA?",
+   "a": "Static rendering produces real per-URL HTML at build time. web.dev distinguishes it from prerendering a client app, which captures initial state as HTML but still needs client JS to become interactive."
+  }
+ ],
+ "today": "Static-first frameworks lean on partial JavaScript: Astro ships zero JS by default and adds interactive islands, and Next.js static exports now include Server Components rendered at build time.",
+ "check": [
+  {
+   "q": "When is the HTML for a static page generated?",
+   "a": "At build time, before any visit",
+   "d": [
+    "On every request",
+    "When the user clicks",
+    "Only after hydration"
+   ],
+   "why": "That is the definition of static rendering - the work is done once, ahead of time."
+  },
+  {
+   "q": "Which feature does a Next.js static export NOT support?",
+   "a": "Incremental Static Regeneration",
+   "d": [
+    "Server Components rendered at build",
+    "Client-side data fetching with SWR",
+    "Route handlers marked force-static"
+   ],
+   "why": "ISR needs a running server to regenerate pages, so it is on the unsupported list."
+  },
+  {
+   "q": "Best home for per-user data on a static page?",
+   "a": "Client-side fetch or a deferred server island",
+   "d": [
+    "Baked into the HTML at build",
+    "Stored in the CDN cache key for everyone",
+    "A cookie read at build time"
+   ],
+   "why": "The static HTML must be identical for everyone, so personal data arrives later."
+  }
+ ],
+ "sources": [
+  {
+   "t": "web.dev: Rendering on the Web",
+   "u": "https://web.dev/articles/rendering-on-the-web"
+  },
+  {
+   "t": "Next.js: Static exports",
+   "u": "https://nextjs.org/docs/app/guides/static-exports"
+  },
+  {
+   "t": "Astro: Why Astro",
+   "u": "https://docs.astro.build/en/concepts/why-astro/"
+  },
+  {
+   "t": "Astro: Islands",
+   "u": "https://docs.astro.build/en/concepts/islands/"
+  },
+  {
+   "t": "web.dev: TTFB",
+   "u": "https://web.dev/articles/ttfb"
+  }
+ ]
+}

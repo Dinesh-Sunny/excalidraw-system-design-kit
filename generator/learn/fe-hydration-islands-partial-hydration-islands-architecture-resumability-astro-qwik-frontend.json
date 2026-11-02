@@ -1,0 +1,290 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Hydration is when JavaScript attaches event handlers and state to server-rendered HTML so it becomes interactive. Islands and resumability reduce that cost: islands hydrate only the interactive pieces, and resumable frameworks like Qwik skip replaying the app and load code only when an event happens.",
+ "like": "Like a mostly printed poster with a few light switches: only the switches need wiring (islands), or the wiring is pre-labelled so it connects only when someone touches it (resumability).",
+ "why": [
+  "Less JavaScript to download, parse and run, so pages become usable sooner",
+  "Main-thread work stays low, which helps INP on cheap phones",
+  "Static content stays static and cacheable"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 290,
+  "nodes": [
+   {
+    "id": "html",
+    "t": "Server HTML|full page, readable now",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "ssr"
+   },
+   {
+    "id": "static",
+    "t": "Static regions|header, article, footer",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "doc"
+   },
+   {
+    "id": "isl",
+    "t": "Island A|client:visible carousel",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "islands"
+   },
+   {
+    "id": "isl2",
+    "t": "Island B|client:load search",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "islands"
+   },
+   {
+    "id": "res",
+    "t": "Resumable app|listeners in HTML",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "spa"
+   },
+   {
+    "id": "chunk",
+    "t": "Lazy chunk|loaded on first event",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "cache",
+    "i": "bundle"
+   }
+  ],
+  "edges": [
+   [
+    "html",
+    "static",
+    "no JS"
+   ],
+   [
+    "html",
+    "isl",
+    "hydrate"
+   ],
+   [
+    "html",
+    "isl2",
+    "hydrate"
+   ],
+   [
+    "html",
+    "res",
+    "state in HTML"
+   ],
+   [
+    "res",
+    "chunk",
+    "on click"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Start from complete HTML",
+    "d": "The server sends a page the user can read at once. Everything after this is about how much JavaScript is needed to make it interactive.",
+    "hl": [
+     "html"
+    ]
+   },
+   {
+    "t": "Full hydration is the baseline",
+    "d": "Classic SSR frameworks re-run the whole component tree in the browser to attach handlers. web.dev warns this can hurt TBT and INP, even though FCP improves.",
+    "hl": [
+     "html",
+     "isl2"
+    ]
+   },
+   {
+    "t": "Islands hydrate only what is marked",
+    "d": "In Astro a component renders to plain HTML with no JS unless it has a client directive. client:load hydrates at once, client:idle when the browser is idle, client:visible when it scrolls into view.",
+    "hl": [
+     "static",
+     "isl",
+     "isl2"
+    ]
+   },
+   {
+    "t": "Server islands defer dynamic HTML",
+    "d": "A server:defer component shows a fallback in the cached page, then its HTML is fetched separately and swapped in, so personalised parts do not make the whole page uncacheable.",
+    "hl": [
+     "html",
+     "static"
+    ]
+   },
+   {
+    "t": "Resumability skips replay",
+    "d": "Qwik serialises state and listeners into the HTML. A tiny global listener reads attributes like on:click and downloads the matching chunk only when the event fires.",
+    "hl": [
+     "res",
+     "chunk"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "~1 KB",
+   "l": "of JavaScript a simple Qwik app needs to become interactive, per Qwik's own docs",
+   "s": "https://qwik.dev/docs/concepts/think-qwik/"
+  },
+  {
+   "v": "3 things",
+   "l": "hydration must restore on the client: listeners, the component tree and application state - what resumability avoids replaying",
+   "s": "https://qwik.dev/docs/concepts/resumable/"
+  },
+  {
+   "v": "2048 bytes",
+   "l": "max length of an Astro server island GET URL; larger props switch to an uncacheable POST",
+   "s": "https://docs.astro.build/en/guides/server-islands/"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Islands or full-page hydration",
+   "d": "Content-heavy sites with a few widgets suit islands. Apps where most of the page is interactive gain little and may prefer streaming plus selective hydration."
+  },
+  {
+   "t": "Pick the hydration trigger",
+   "d": "load for above-the-fold critical widgets, idle for low priority, visible for below the fold, media for breakpoint-specific, only for client-only widgets with no SSR."
+  },
+  {
+   "t": "Islands vs resumability",
+   "d": "Islands are easy to adopt and framework-agnostic. Resumability gives finer lazy-loading but needs state to be serialisable and a different coding style."
+  },
+  {
+   "t": "Shared state between islands",
+   "d": "Islands run in isolation, so share state with a small store or URL rather than props from a common parent."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-react-server-components-rsc-server-components-use-client-server-actions-app-router-frontend",
+   "why": "Stay in React and cut client JS by keeping most components on the server"
+  },
+  {
+   "slug": "fe-streaming-ssr-suspense-streaming-html-suspense-boundaries-ttfb-progressive-rendering-frontend",
+   "why": "Keep one app tree but hydrate boundary by boundary as it streams"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Hydration mismatch",
+   "d": "Server and client render different output (dates, window checks, random values).",
+   "see": "Console warnings, slowdown, handlers on wrong elements",
+   "fix": "Make output deterministic; use suppressHydrationWarning for unavoidable text; use an effect for client-only content"
+  },
+  {
+   "t": "Interactive but not responsive yet",
+   "d": "Content is visible but the bundle is still hydrating, so clicks do nothing.",
+   "see": "Dead clicks, poor INP",
+   "fix": "Hydrate above-the-fold first, split bundles, defer low-priority islands"
+  },
+  {
+   "t": "Island props too big",
+   "d": "Large data passed into islands is serialised into the HTML.",
+   "see": "Heavy HTML and duplicated data",
+   "fix": "Pass ids, fetch inside the island, keep server island props small"
+  }
+ ],
+ "say": [
+  "Hydration has a cost: the browser must download and run the same code the server already ran. I would shrink that with islands or selective hydration so only interactive parts pay.",
+  "For a content site I would use islands, with client:visible for below-the-fold widgets, so most of the page ships zero JavaScript.",
+  "Resumability goes further by serialising state into HTML and loading code on the first event, at the price of writing serialisable, framework-specific code."
+ ],
+ "followups": [
+  {
+   "q": "Why not just use full SSR plus hydration everywhere?",
+   "a": "web.dev describes it as one app for the price of two: HTML plus duplicated data, and hydration work that can hurt TBT and INP. It is fine for small apps but costly as JS grows."
+  },
+  {
+   "q": "What is a hydration mismatch?",
+   "a": "The client render differs from the server HTML, usually due to dates, browser-only checks or different data. React warns and may recover with slowdown; the fix is deterministic rendering or deferring client-only parts."
+  }
+ ],
+ "today": "Partial hydration has gone mainstream: Astro ships islands and server islands, React uses Suspense-based selective hydration plus Server Components, and Qwik pushes resumability as an alternative to hydration.",
+ "check": [
+  {
+   "q": "In Astro, what happens to a component with no client directive?",
+   "a": "It renders to HTML and CSS only, with no client JS",
+   "d": [
+    "It hydrates on load",
+    "It hydrates when idle",
+    "It is not rendered"
+   ],
+   "why": "Zero JavaScript by default is the core of the islands model."
+  },
+  {
+   "q": "Which directive hydrates a component only when it enters the viewport?",
+   "a": "client:visible",
+   "d": [
+    "client:load",
+    "client:idle",
+    "client:only"
+   ],
+   "why": "client:visible uses an IntersectionObserver."
+  },
+  {
+   "q": "What does Qwik do instead of hydration?",
+   "a": "Serialises state and listeners into HTML and loads handler code on demand",
+   "d": [
+    "Re-runs all components on load",
+    "Removes event handlers",
+    "Renders only on the client"
+   ],
+   "why": "Resumability continues where the server stopped."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Astro: Islands",
+   "u": "https://docs.astro.build/en/concepts/islands/"
+  },
+  {
+   "t": "Astro: Client directives",
+   "u": "https://docs.astro.build/en/reference/directives-reference/"
+  },
+  {
+   "t": "Astro: Server islands",
+   "u": "https://docs.astro.build/en/guides/server-islands/"
+  },
+  {
+   "t": "Qwik: Resumable",
+   "u": "https://qwik.dev/docs/concepts/resumable/"
+  },
+  {
+   "t": "Qwik: Think Qwik",
+   "u": "https://qwik.dev/docs/concepts/think-qwik/"
+  },
+  {
+   "t": "web.dev: Rendering on the Web",
+   "u": "https://web.dev/articles/rendering-on-the-web"
+  },
+  {
+   "t": "React: hydrateRoot",
+   "u": "https://react.dev/reference/react-dom/client/hydrateRoot"
+  }
+ ]
+}

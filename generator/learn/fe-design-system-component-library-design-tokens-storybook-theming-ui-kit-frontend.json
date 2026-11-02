@@ -1,0 +1,287 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A design system is a shared set of design tokens (named colours, sizes, spacing), reusable accessible components and usage guidance that every product team builds from. Tokens feed the components, themes swap token values, and a tool like Storybook documents and tests each component in isolation.",
+ "like": "Like a LEGO set with an instruction booklet: everyone uses the same bricks, so whatever different people build still looks and fits together.",
+ "why": [
+  "Consistent look and behaviour across screens and teams",
+  "Faster delivery: teams reuse components instead of rebuilding buttons",
+  "Accessibility and brand fixes made once reach every product"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 290,
+  "nodes": [
+   {
+    "id": "tok",
+    "t": "Design tokens|colour, space, type (JSON)",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "dsys"
+   },
+   {
+    "id": "tf",
+    "t": "Token build|transform to CSS vars",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "gear"
+   },
+   {
+    "id": "lib",
+    "t": "Component library|Button, Input, Dialog",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "layers"
+   },
+   {
+    "id": "sb",
+    "t": "Storybook|stories, docs, tests",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "eye"
+   },
+   {
+    "id": "app",
+    "t": "Product apps|import library + theme",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "reg",
+    "t": "Package registry|versioned releases",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "tok",
+    "tf",
+    "source of truth"
+   ],
+   [
+    "tf",
+    "lib",
+    "CSS variables"
+   ],
+   [
+    "lib",
+    "sb",
+    "stories"
+   ],
+   [
+    "lib",
+    "reg",
+    "publish"
+   ],
+   [
+    "reg",
+    "app",
+    "install"
+   ],
+   [
+    "tf",
+    "app",
+    "theme values"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Define tokens once",
+    "d": "Tokens are named design decisions stored as data. The W3C Design Tokens Community Group format uses JSON with $value, optional $type and aliases like {colour.brand}.",
+    "hl": [
+     "tok"
+    ]
+   },
+   {
+    "t": "Transform to platform output",
+    "d": "A build step turns tokens into CSS custom properties (and native formats if needed). Themes, such as dark mode, redefine the same variable names with different values.",
+    "hl": [
+     "tok",
+     "tf"
+    ]
+   },
+   {
+    "t": "Build components on tokens",
+    "d": "Components read var(--color-...) instead of hard-coded values, include keyboard, focus and ARIA behaviour, and expose a small, stable API.",
+    "hl": [
+     "tf",
+     "lib"
+    ]
+   },
+   {
+    "t": "Document and test in isolation",
+    "d": "Storybook renders each state as a story, generates docs, and supports interaction, accessibility and visual tests so changes are caught before release.",
+    "hl": [
+     "lib",
+     "sb"
+    ]
+   },
+   {
+    "t": "Version and release",
+    "d": "The library is published as a versioned package. Apps upgrade deliberately, with semantic versioning and a changelog, so a change in one place does not surprise every team.",
+    "hl": [
+     "lib",
+     "reg",
+     "app"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "4.5:1",
+   "l": "minimum contrast for normal text under WCAG 2.2 level AA; 3:1 for large text",
+   "s": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html"
+  },
+  {
+   "v": "18 pt / 14 pt bold",
+   "l": "what counts as large text (about 24 px and 18.5 px) for the lower 3:1 ratio",
+   "s": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html"
+  },
+  {
+   "v": "2025.10",
+   "l": "latest published version of the Design Tokens Format Module - still a Community Group draft, not a W3C Standard",
+   "s": "https://www.designtokens.org/tr/drafts/format/"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Build vs adopt a base",
+   "d": "Start from an accessible headless or open-source base and add your tokens and styling, rather than writing focus management and ARIA for dialogs and menus from scratch."
+  },
+  {
+   "t": "Token layers",
+   "d": "Use primitive tokens (blue-500), semantic tokens (color-action) and component tokens. Components should only use semantic ones, which makes theming a re-mapping job."
+  },
+  {
+   "t": "Styling approach",
+   "d": "CSS custom properties work with any framework and update at runtime for themes. They are inherited, and can be redefined under prefers-color-scheme or a data-theme attribute."
+  },
+  {
+   "t": "Distribution and versioning",
+   "d": "Versioned npm package with a changelog and codemods for breaking changes. Add 'use client' to entry points that need it so the library works in Server Components."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-accessibility-a11y-wcag-aria-keyboard-focus-screen-reader-semantic-html-frontend",
+   "why": "Accessibility rules the components must satisfy"
+  },
+  {
+   "slug": "fe-micro-frontend-host-micro-frontends-module-federation-composition-independent-deploy-frontend",
+   "why": "How separate teams share one UI kit without sharing a deploy"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Library becomes a bottleneck",
+   "d": "Every change needs the core team and releases are slow.",
+   "see": "Teams fork components or copy styles",
+   "fix": "Contribution model, clear ownership, slots and composition so teams extend instead of fork"
+  },
+  {
+   "t": "Theme breaks contrast",
+   "d": "A dark theme or brand colour fails contrast.",
+   "see": "Hard-to-read text, failing audits",
+   "fix": "Check semantic token pairs against 4.5:1 and 3:1 in CI, with automated a11y tests in Storybook"
+  },
+  {
+   "t": "Breaking upgrade across apps",
+   "d": "A prop rename ships in a minor version.",
+   "see": "Multiple products fail after bumping the package",
+   "fix": "Semantic versioning, deprecation period, codemods, visual regression tests"
+  }
+ ],
+ "say": [
+  "I would build the design system in layers: tokens as the single source of truth, components that consume only semantic tokens, and Storybook for docs and tests.",
+  "Theming is just redefining the CSS custom properties, so dark mode and brands don't need component changes, and I check text contrast pairs against 4.5 to 1.",
+  "It ships as a versioned package with a changelog, and I measure adoption and a11y test results so the system earns trust and does not become a bottleneck."
+ ],
+ "followups": [
+  {
+   "q": "Where do design tokens come from and go to?",
+   "a": "Designers define them in a tool or a tokens JSON file; a build step transforms them into CSS variables and other platform formats. The Design Tokens Community Group format is the emerging interchange standard."
+  },
+  {
+   "q": "How do you keep many products on the latest version?",
+   "a": "Semantic versioning, a published roadmap and deprecations, codemods for breaking changes, and automated visual and accessibility tests so upgrades are low risk."
+  }
+ ],
+ "today": "The W3C Design Tokens Community Group published Format Module 2025.10 as a draft interchange format, and Storybook is commonly used with interaction, accessibility and visual tests as the quality gate for component libraries.",
+ "check": [
+  {
+   "q": "What is a design token?",
+   "a": "A named design decision, like a colour or spacing value, stored as data",
+   "d": [
+    "A login credential",
+    "A React component",
+    "A CSS selector"
+   ],
+   "why": "Tokens are the single source of truth that code and design tools read."
+  },
+  {
+   "q": "Minimum contrast for normal text at WCAG AA?",
+   "a": "4.5:1",
+   "d": [
+    "2:1",
+    "3:1",
+    "7:1"
+   ],
+   "why": "3:1 applies to large text; 7:1 is the AAA level."
+  },
+  {
+   "q": "How does a dark theme typically work with CSS variables?",
+   "a": "Redefine the same variables under a media query or data attribute",
+   "d": [
+    "Duplicate every component",
+    "Reload the page with a new stylesheet",
+    "Use inline styles only"
+   ],
+   "why": "Components keep using var(--x) while the value changes."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Design Tokens Format Module 2025.10",
+   "u": "https://www.designtokens.org/tr/drafts/format/"
+  },
+  {
+   "t": "Storybook docs",
+   "u": "https://storybook.js.org/docs"
+  },
+  {
+   "t": "WCAG 2.2: Contrast (Minimum)",
+   "u": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html"
+  },
+  {
+   "t": "MDN: CSS custom properties",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties"
+  },
+  {
+   "t": "Next.js: Server and Client Components",
+   "u": "https://nextjs.org/docs/app/getting-started/server-and-client-components"
+  }
+ ]
+}

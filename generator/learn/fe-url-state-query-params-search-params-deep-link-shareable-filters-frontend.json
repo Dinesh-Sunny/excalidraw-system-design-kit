@@ -1,0 +1,285 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "URL state puts view settings - search text, filters, sort order, page, selected tab - in the address bar's query string, so the link itself describes the screen. Refresh, back button, bookmarks and shared links all just work. You read and write it with the URLSearchParams API or your router.",
+ "like": "Like writing the shelf and page number on a sticky note: anyone who gets the note lands on exactly the same spot in the library.",
+ "why": [
+  "Shareable and bookmarkable views",
+  "Back and forward buttons and refresh keep the user's place",
+  "Server rendering can use the same params for the first paint"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 300,
+  "nodes": [
+   {
+    "id": "us",
+    "t": "User|filters, shares link",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "ui",
+    "t": "Filters UI|reads from URL",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "funnel"
+   },
+   {
+    "id": "ur",
+    "t": "URL|path + query string",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "urlstate"
+   },
+   {
+    "id": "sv",
+    "t": "Server render|page searchParams",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   },
+   {
+    "id": "da",
+    "t": "Data fetch|keyed by params",
+    "x": 275,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "querycache"
+   },
+   {
+    "id": "pa",
+    "t": "Parse + validate|schema, defaults",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "check"
+   }
+  ],
+  "edges": [
+   [
+    "us",
+    "ui",
+    "change filter"
+   ],
+   [
+    "ui",
+    "ur",
+    "push or replace"
+   ],
+   [
+    "ur",
+    "pa",
+    "read"
+   ],
+   [
+    "pa",
+    "da",
+    "typed params"
+   ],
+   [
+    "pa",
+    "sv",
+    "same params on load"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "The URL is the state",
+    "d": "Filters live in the query string, e.g. ?q=shoes&sort=price&page=2. The UI is derived from it, not copied into separate state.",
+    "hl": [
+     "ur",
+     "ui"
+    ]
+   },
+   {
+    "t": "Write with push or replace",
+    "d": "Discrete choices (page, tab) use pushState so Back works. Fast-changing input like typing replaces the current entry so history does not fill up.",
+    "hl": [
+     "ui",
+     "ur"
+    ]
+   },
+   {
+    "t": "Parse and validate",
+    "d": "Query strings are untrusted user input. Parse to typed values with defaults and fall back safely on bad input.",
+    "hl": [
+     "pa"
+    ]
+   },
+   {
+    "t": "Fetch by params",
+    "d": "The params become part of the data query key, so each filter combination caches separately.",
+    "hl": [
+     "pa",
+     "da"
+    ]
+   },
+   {
+    "t": "Server and client agree",
+    "d": "On first load the server reads the same params to render the page; the client reads them with useSearchParams afterwards.",
+    "hl": [
+     "sv",
+     "pa"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "8000 octets",
+   "l": "minimum URI length the HTTP spec recommends all senders and recipients support - keep URL state small",
+   "s": "https://www.rfc-editor.org/rfc/rfc9110.html#section-4.1"
+  },
+  {
+   "v": "Apr 2018",
+   "l": "URLSearchParams has been widely available in browsers since",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams"
+  },
+  {
+   "v": "v13.0.0",
+   "l": "Next.js version that introduced useSearchParams (read-only, Client Components)",
+   "s": "https://nextjs.org/docs/app/api-reference/functions/use-search-params"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "URL or component state",
+   "d": "Use the URL for anything a user would want to share, bookmark or return to: filters, sort, page, selected item. Keep throwaway UI state (hover, open menu) out of it."
+  },
+  {
+   "t": "push or replace",
+   "d": "pushState adds a history entry so Back undoes the change; replaceState edits the current entry. Use replace for typing in a search box."
+  },
+  {
+   "t": "Typed parsing",
+   "d": "Treat params as untrusted. A router with schema validation (TanStack Router's validateSearch) or a helper library gives typed values and safe fallbacks."
+  },
+  {
+   "t": "Query string or path",
+   "d": "Path segments identify a resource (/products/42); query params refine a view of it (?sort=price). Mixing them up hurts caching and clarity."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-global-store-zustand-redux-client-state-redux-zustand-signals-context-ui-state-frontend",
+   "why": "For state that should not be shared by link, like a draft or a sidebar toggle"
+  },
+  {
+   "slug": "fe-server-state-cache-tanstack-query-swr-stale-while-revalidate-dedupe-refetch-query-keys-frontend",
+   "why": "Pair it: the URL holds the filters, the query cache holds the results keyed by them"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Typing pushes history",
+   "d": "Every keystroke calls push.",
+   "see": "Back button needs dozens of presses",
+   "fix": "Debounce and use replace for text input; push for discrete choices"
+  },
+  {
+   "t": "Unvalidated params",
+   "d": "Code trusts ?page=abc or a missing value.",
+   "see": "NaN pages, crashes, or injection into queries",
+   "fix": "Parse with a schema, default or clamp values, escape output"
+  },
+  {
+   "t": "Missing Suspense in Next.js",
+   "d": "A static page uses useSearchParams in a Client Component without a Suspense boundary.",
+   "see": "Production build error",
+   "fix": "Wrap the component in Suspense, or read the page's searchParams prop in a Server Component"
+  }
+ ],
+ "say": [
+  "Anything shareable - search, filters, sort, page - lives in the query string, so refresh, Back and shared links all restore the exact view.",
+  "I treat params as untrusted input: parse them to typed values with defaults, and use replace while typing, push for discrete choices.",
+  "The URL params feed the data query key, and on first load the server reads the same params so the first paint matches."
+ ],
+ "followups": [
+  {
+   "q": "What should not go in the URL?",
+   "a": "Secrets, tokens, personal data and large objects. URLs end up in logs, history and referrers, and have practical length limits."
+  },
+  {
+   "q": "How do you debounce a search box with URL state?",
+   "a": "Keep the typed text in local state, update the URL after a short pause with replace, and let the URL drive the query."
+  },
+  {
+   "q": "How do you read params in Next.js?",
+   "a": "Server Component pages receive a searchParams prop; Client Components use the read-only useSearchParams hook, wrapped in Suspense for static pages."
+  }
+ ],
+ "today": "Routers now treat search params as typed, validated state: TanStack Router calls them 'a form of global state' in the URL and validates them with schemas, and Next.js App Router exposes them as a prop on pages and as a read-only hook on the client.",
+ "check": [
+  {
+   "q": "Which belongs in URL state?",
+   "a": "Selected filters and page number",
+   "d": [
+    "An open dropdown",
+    "A JWT",
+    "A password field"
+   ],
+   "why": "Shareable view settings go in the URL; secrets and transient UI do not."
+  },
+  {
+   "q": "Typing in a search box that syncs to the URL. Best history choice?",
+   "a": "Replace the current entry (and debounce)",
+   "d": [
+    "Push on every keystroke",
+    "Never update the URL",
+    "Use a hash for every letter"
+   ],
+   "why": "Push per keystroke floods history; replace keeps one entry."
+  },
+  {
+   "q": "Why parse search params with a schema?",
+   "a": "They are untrusted user input",
+   "d": [
+    "They are always numbers",
+    "The browser validates them",
+    "They are encrypted"
+   ],
+   "why": "Anyone can edit the URL; defaults and validation keep the app safe."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: URLSearchParams",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams"
+  },
+  {
+   "t": "MDN: History.pushState",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/History/pushState"
+  },
+  {
+   "t": "Next.js: useSearchParams",
+   "u": "https://nextjs.org/docs/app/api-reference/functions/use-search-params"
+  },
+  {
+   "t": "TanStack Router: search params",
+   "u": "https://tanstack.com/router/latest/docs/framework/react/guide/search-params"
+  },
+  {
+   "t": "RFC 9110: HTTP semantics",
+   "u": "https://www.rfc-editor.org/rfc/rfc9110.html#section-4.1"
+  }
+ ]
+}

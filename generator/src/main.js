@@ -7,9 +7,10 @@ import { AGENTIC, AI_TEMPLATES } from "./agentic.js";
 import { AEO_TEMPLATES } from "./aeo.js";
 import { RESEARCH_TEMPLATES } from "./research.js";
 import { UI, FRAMES, SCREENS } from "./ui.js";
+import { FE_SECTIONS, FE_PATTERNS, FE_TEMPLATES, FE_NOTES } from "./frontend.js";
 
 const items = []; // {name, section, skel}
-export const KIT = "sd", KIT_VERSION = "1.6.0";
+export const KIT = "sd", KIT_VERSION = "1.7.0";
 const add = (cat, label, skel, section) => items.push({ name: `${KIT}:${cat}/ ${label}`, section: section || cat, skel });
 const one = (s) => s.replace(/\n/g, " ");
 
@@ -27,8 +28,8 @@ function section(cat, no, title, theme = "ops", hint) {
 
 // ================= 00 GUIDE =================
 section("guide", "00", "How to use this kit", "msg", `v${KIT_VERSION} · search "sd:" for the whole kit`);
-add("guide", "Library guide - how to search insert", [rect(0, 0, 460, 330, { strokeColor: "#e67700", backgroundColor: "#fff9db", strokeWidth: 2,
-  label: { text: "System Design & AI Architecture Kit v" + KIT_VERSION + "\n\nCmd/Ctrl + /  then type a name  ->  Enter\n   inserts the item (no dragging)\nLibrary search: every name starts \"sd:\"\n   \"sd:\" = whole kit, \"sd:data/\" = one section,\n   or just \"kafka\", \"redis\", \"agent\"...\n\nSections (sd:...): note client edge svc data\n cache msg ai agent rag llmops ops ext\n zone link ui frame screen pattern agentic tpl\n\nDouble-click a box to rename it.", fontSize: 16, textAlign: "left", verticalAlign: "top", strokeColor: INK } })]);
+add("guide", "Library guide - how to search insert", [rect(0, 0, 460, 350, { strokeColor: "#e67700", backgroundColor: "#fff9db", strokeWidth: 2,
+  label: { text: "System Design & AI Architecture Kit v" + KIT_VERSION + "\n\nCmd/Ctrl + /  then type a name  ->  Enter\n   inserts the item (no dragging)\nLibrary search: every name starts \"sd:\"\n   \"sd:\" = whole kit, \"sd:data/\" = one section,\n   or just \"kafka\", \"redis\", \"agent\"...\n\nSections (sd:...): note client edge svc data\n cache msg ai agent rag llmops ops ext\n fe fep zone link ui frame screen pattern\n agentic tpl\n\nDouble-click a box to rename it.", fontSize: 16, textAlign: "left", verticalAlign: "top", strokeColor: INK } })]);
 add("guide", "Colour legend - category key", (() => {
   const L = [["client", "Clients"], ["edge", "Edge / network"], ["svc", "Services"], ["data", "Data stores"], ["cache", "Caches"], ["msg", "Messaging"], ["ai", "AI models"], ["agent", "Agents"], ["rag", "RAG / knowledge"], ["llmops", "LLMOps / safety"], ["ops", "Ops / security"], ["ext", "External"]];
   const out = [rect(0, 0, 230, 54 + L.length * 30, { strokeColor: "#adb5bd", backgroundColor: WHITE, strokeWidth: 1.5 }), txt(14, 10, "Legend", { fontSize: 18 })];
@@ -59,6 +60,7 @@ add("note", "Sticky Note - yellow", card(200, 140, "Note", { stroke: "#f08c00", 
 add("note", "Sticky Note - blue question", card(200, 140, "Question for interviewer", { stroke: "#1971c2", fill: "#a5d8ff", fs: 18 }));
 add("note", "Sticky Note - pink assumption", card(200, 140, "Assumption", { stroke: "#c2255c", fill: "#fcc2d7", fs: 18 }));
 for (let i = 1; i <= 9; i++) add("note", `Step ${i} - numbered flow marker`, [ell(0, 0, 36, 36, { strokeColor: ACCENT, backgroundColor: ACCENT, strokeWidth: 1 }), txt(i === 1 ? 14 : 12.5, 7, String(i), { fontSize: 18, strokeColor: WHITE })]);
+for (const [n, t, o] of FE_NOTES) add("note", n, card(o.font ? 380 : 360, 200, t, o));
 
 // ---- client starters: the first thing you drop in every design ----
 function clientGroup(label, cards, theme, out) {
@@ -85,6 +87,12 @@ function clientStarters() {
 for (const S of SECTIONS) {
   if (!S.noSection) section(S.cat, S.no, S.label, S.theme, S.cat === "client" ? 'search "sd:client/" or "ai client"' : undefined);
   if (S.cat === "client" && !S.noSection) clientStarters();
+  for (const [title, icon, kw] of S.items) add(S.cat, `${one(title)} - ${kw}${S.tags ? " " + S.tags : ""}`, comp(0, 0, { title, icon, theme: S.theme }).els);
+}
+
+// ================= 22 FRONTEND BLOCKS =================
+for (const S of FE_SECTIONS) {
+  if (!S.noSection) section(S.cat, S.no, S.label, S.theme, 'search "sd:fe/" or "frontend"');
   for (const [title, icon, kw] of S.items) add(S.cat, `${one(title)} - ${kw}${S.tags ? " " + S.tags : ""}`, comp(0, 0, { title, icon, theme: S.theme }).els);
 }
 
@@ -131,8 +139,10 @@ section("pattern", "19", "Architecture patterns", "svc");
 for (const p of PATTERNS) add("pattern", p.name, diagram(p.spec));
 section("agentic", "20", "Agentic patterns", "agent", "Anthropic: building effective agents");
 for (const p of AGENTIC) add("agentic", p.name + " ai agent", diagram(p.spec));
+section("fep", "23", "Frontend patterns", "client", "rendering, data, realtime, performance");
+for (const p of FE_PATTERNS) add("fep", p.name, diagram(p.spec));
 section("tpl", "21", "Full interview designs", "ai", "classic questions, ready to adapt");
-for (const p of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES, ...RESEARCH_TEMPLATES]) add("tpl", p.name, diagram(p.spec));
+for (const p of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES, ...RESEARCH_TEMPLATES, ...FE_TEMPLATES]) add("tpl", p.name, diagram(p.spec));
 
 // ================= build =================
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -194,7 +204,7 @@ async function practiceBuild(spec) {
 const pslug = (name) => name.toLowerCase().split(" - ")[0].replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 window.PRACTICE = async () => {
   const out = [];
-  for (const t of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES, ...RESEARCH_TEMPLATES]) {
+  for (const t of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES, ...RESEARCH_TEMPLATES, ...FE_TEMPLATES]) {
     const spec = t.spec, base = await practiceBuild(spec), variants = {}, v2 = V2[pslug(t.name)] || {};
     for (const sc of v2.scenarios || []) {
       if (!sc.add || !sc.add.nodes || !sc.add.nodes.length) continue;

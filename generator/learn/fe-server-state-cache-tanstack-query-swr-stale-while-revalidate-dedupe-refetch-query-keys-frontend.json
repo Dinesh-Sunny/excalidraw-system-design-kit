@@ -1,0 +1,299 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A server-state cache keeps copies of API data in the browser, keyed by a query key, and decides when each copy is fresh, stale or can be thrown away. TanStack Query (and SWR) do the fetching, de-duplication, retries and background refetching, so components just ask for data by key.",
+ "like": "Like a library's reserve shelf: the first student fetches the book, everyone after gets the shelf copy at once, and the librarian quietly checks for a newer edition in the background.",
+ "why": [
+  "Screens show cached data instantly and refresh in the background",
+  "Many components asking for the same data cause only one request",
+  "Loading, error and retry logic is written once, not per component"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 300,
+  "nodes": [
+   {
+    "id": "co",
+    "t": "Component|useQuery(key)",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "desktop"
+   },
+   {
+    "id": "ca",
+    "t": "Query cache|data by query key",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "querycache"
+   },
+   {
+    "id": "qf",
+    "t": "queryFn|your fetch call",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "apiclient"
+   },
+   {
+    "id": "mu",
+    "t": "Mutation|useMutation",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "send"
+   },
+   {
+    "id": "iv",
+    "t": "Invalidate|mark stale by key",
+    "x": 275,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "flag"
+   },
+   {
+    "id": "ap",
+    "t": "Server API|source of truth",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "co",
+    "ca",
+    "read by key"
+   ],
+   [
+    "ca",
+    "qf",
+    "stale: fetch"
+   ],
+   [
+    "qf",
+    "ap",
+    "request"
+   ],
+   [
+    "mu",
+    "iv",
+    "on success"
+   ],
+   [
+    "iv",
+    "ca",
+    "refetch active"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Ask by key",
+    "d": "A component calls useQuery with a key such as ['todos', {page: 1}]. The key must be an array that includes every variable the data depends on.",
+    "hl": [
+     "co",
+     "ca"
+    ]
+   },
+   {
+    "t": "Cache hit shows instantly",
+    "d": "If cached data exists it renders at once. If it is stale it is refetched in the background - that is stale-while-revalidate.",
+    "hl": [
+     "ca"
+    ]
+   },
+   {
+    "t": "Dedupe and fetch",
+    "d": "Components asking for the same key share one in-flight request. The queryFn calls the API, with automatic retries on failure.",
+    "hl": [
+     "ca",
+     "qf",
+     "ap"
+    ]
+   },
+   {
+    "t": "Refetch on triggers",
+    "d": "Stale queries refetch when a new component mounts, the window regains focus, or the network reconnects.",
+    "hl": [
+     "ca"
+    ]
+   },
+   {
+    "t": "Mutate then invalidate",
+    "d": "After a successful mutation, invalidateQueries marks matching keys stale and refetches the ones on screen, so lists update without manual wiring.",
+    "hl": [
+     "mu",
+     "iv",
+     "ca"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "0 ms",
+   "l": "default staleTime - data counts as stale immediately, so mounts and focus trigger a background refetch",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/caching"
+  },
+  {
+   "v": "5 min",
+   "l": "default gcTime - unused cache entries are garbage collected after this",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults"
+  },
+  {
+   "v": "3",
+   "l": "default retries on failure, with backoff (on the server the default is 0)",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+  },
+  {
+   "v": "30 s",
+   "l": "cap on retry delay: it doubles from 1,000 ms and never exceeds this",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "staleTime: how fresh is fresh enough",
+   "d": "The default 0 refetches very eagerly. Raise it per data type (minutes for a profile, seconds for a feed). Too high shows old data; too low wastes requests."
+  },
+  {
+   "t": "Query key design",
+   "d": "Put every input in the key as a hierarchy (['todos', 'list', filters]) so you can invalidate a whole family by prefix. Object key order does not matter, array order does."
+  },
+  {
+   "t": "Invalidate or write to the cache",
+   "d": "invalidateQueries is simple and always correct but costs a refetch. Writing the mutation response straight into the cache (setQueryData) saves the request but you must keep shapes in sync."
+  },
+  {
+   "t": "Server rendering",
+   "d": "Prefetch on the server, dehydrate, and hydrate on the client. Set a staleTime above 0 so the client does not refetch straight away, and create the QueryClient per request so users never share a cache."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-global-store-zustand-redux-client-state-redux-zustand-signals-context-ui-state-frontend",
+   "why": "For client-only state; TanStack's docs say storing async data there is inefficient compared with a query cache"
+  },
+  {
+   "slug": "fe-normalized-cache-entities-by-id-normalization-apollo-relay-entity-store-denormalize-frontend",
+   "why": "When the same entity appears in many queries and must update everywhere at once"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Key missing a variable",
+   "d": "The page number or filter is not in the query key.",
+   "see": "Changing the filter shows the old data",
+   "fix": "Include every input the queryFn uses in the key"
+  },
+  {
+   "t": "Shared QueryClient on the server",
+   "d": "A module-level client is reused across requests in SSR.",
+   "see": "One user's data appears for another user",
+   "fix": "Create the client per request or in React state"
+  },
+  {
+   "t": "Refetch storm",
+   "d": "staleTime left at 0 on a heavy endpoint used by many components.",
+   "see": "Lots of requests on focus and mount",
+   "fix": "Set staleTime per query; rely on dedupe; lower refetchOnWindowFocus where needed"
+  }
+ ],
+ "say": [
+  "Server data lives in a query cache keyed by arrays, so identical requests are deduped and screens render cached data instantly while revalidating in the background.",
+  "I tune staleTime per data type, and after mutations I invalidate by key prefix so the lists on screen refetch.",
+  "For SSR I prefetch, dehydrate, hydrate, create the client per request, and use a non-zero staleTime to avoid an immediate double fetch."
+ ],
+ "followups": [
+  {
+   "q": "staleTime vs gcTime?",
+   "a": "staleTime is how long data counts as fresh (no refetch needed). gcTime is how long unused data stays in memory before being deleted. Fresh versus kept."
+  },
+  {
+   "q": "How do you avoid duplicate requests?",
+   "a": "Same query key means one shared in-flight request and one cache entry, no matter how many components ask."
+  },
+  {
+   "q": "Why not keep API data in Redux?",
+   "a": "You would rebuild caching, loading flags, retries and invalidation by hand. A query cache gives those by default."
+  }
+ ],
+ "today": "TanStack Query's docs now treat caching, de-duplication, retries and server-rendering hydration as built-in defaults, and say moving async data there usually leaves only a small amount of global client state.",
+ "check": [
+  {
+   "q": "What does stale-while-revalidate do?",
+   "a": "Shows cached data now and refetches in the background",
+   "d": [
+    "Deletes cached data on every focus",
+    "Blocks rendering until the network replies",
+    "Only fetches on page reload"
+   ],
+   "why": "The user sees data instantly and it updates when fresh data arrives."
+  },
+  {
+   "q": "Which key variable choice is correct for a paged list?",
+   "a": "['todos', { page, status }]",
+   "d": [
+    "['todos']",
+    "A random id per render",
+    "Only the page number in component state"
+   ],
+   "why": "Anything that changes the result must be in the key so each variant caches separately."
+  },
+  {
+   "q": "What does invalidateQueries(['todos']) do?",
+   "a": "Marks matching queries stale and refetches active ones",
+   "d": [
+    "Deletes the server data",
+    "Only matches the exact key ['todos']",
+    "Cancels all mutations"
+   ],
+   "why": "Matching is by prefix by default; exact: true narrows it."
+  }
+ ],
+ "sources": [
+  {
+   "t": "TanStack Query: important defaults",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults"
+  },
+  {
+   "t": "TanStack Query: caching",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/caching"
+  },
+  {
+   "t": "TanStack Query: query retries",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+  },
+  {
+   "t": "TanStack Query: query keys",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/query-keys"
+  },
+  {
+   "t": "TanStack Query: query invalidation",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/query-invalidation"
+  },
+  {
+   "t": "TanStack Query: SSR",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/ssr"
+  },
+  {
+   "t": "TanStack Query: does this replace client state",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/does-this-replace-client-state"
+  }
+ ]
+}

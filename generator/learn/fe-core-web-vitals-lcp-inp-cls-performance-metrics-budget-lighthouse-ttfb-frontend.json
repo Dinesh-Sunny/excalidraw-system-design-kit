@@ -1,0 +1,324 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Core Web Vitals are three user-focused metrics: LCP (how fast the main content appears), INP (how quickly the page responds to clicks and keys) and CLS (how much the layout jumps). A page passes when the 75th percentile of real visits is in the 'good' range for all three.",
+ "like": "Like a restaurant review with three questions: did the food arrive quickly, did the waiter respond when I called, and did the table wobble while I ate?",
+ "why": [
+  "They turn 'feels fast' into numbers the whole team can track",
+  "They are measured on real users, so they reflect real phones and networks",
+  "Each one points to a specific kind of fix (loading, responsiveness, stability)"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 404,
+  "nodes": [
+   {
+    "id": "l",
+    "t": "LCP|loading, good 2.5 s or less",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "cwv"
+   },
+   {
+    "id": "i",
+    "t": "INP|responsiveness, good 200 ms or less",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "cwv"
+   },
+   {
+    "id": "c",
+    "t": "CLS|stability, good 0.1 or less",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "cwv"
+   },
+   {
+    "id": "fd",
+    "t": "Field data|CrUX or your RUM, p75",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "chart"
+   },
+   {
+    "id": "lab",
+    "t": "Lab tools|Lighthouse, DevTools trace",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "gauge"
+   },
+   {
+    "id": "b",
+    "t": "Budget in CI|Lighthouse CI thresholds",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "checklist"
+   },
+   {
+    "id": "fx",
+    "t": "Fix by cause|LCP parts, long tasks, reserved space",
+    "x": 280,
+    "y": 300,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "wrench"
+   }
+  ],
+  "edges": [
+   [
+    "fd",
+    "l",
+    "p75"
+   ],
+   [
+    "fd",
+    "i",
+    "p75"
+   ],
+   [
+    "fd",
+    "c",
+    "p75"
+   ],
+   [
+    "lab",
+    "fx",
+    "trace"
+   ],
+   [
+    "fd",
+    "fx",
+    "prioritise"
+   ],
+   [
+    "b",
+    "lab",
+    "regression gate"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Know the three metrics",
+    "d": "LCP is when the largest image or text block is shown. INP is the worst click, tap or key latency of the visit. CLS is the largest burst of unexpected layout movement.",
+    "hl": [
+     "l",
+     "i",
+     "c"
+    ]
+   },
+   {
+    "t": "Know the targets",
+    "d": "Good at the 75th percentile: LCP 2.5 s or less, INP 200 ms or less, CLS 0.1 or less. Poor is above 4 s, 500 ms and 0.25. Measure mobile and desktop separately.",
+    "hl": [
+     "l",
+     "i",
+     "c"
+    ]
+   },
+   {
+    "t": "Start from field data",
+    "d": "CrUX (via PageSpeed Insights) or your own RUM shows what real users get. Use it to decide what to fix first.",
+    "hl": [
+     "fd"
+    ]
+   },
+   {
+    "t": "Reproduce in the lab",
+    "d": "Lighthouse and DevTools give repeatable traces for debugging. They can't predict INP, which depends on real interactions.",
+    "hl": [
+     "lab"
+    ]
+   },
+   {
+    "t": "Fix by cause",
+    "d": "LCP splits into TTFB, resource load delay, load duration and render delay. INP splits into input delay, processing and presentation. CLS comes from unsized media, late content, fonts and ads.",
+    "hl": [
+     "fx"
+    ]
+   },
+   {
+    "t": "Hold the line",
+    "d": "Put budgets and Lighthouse CI in the pipeline and re-check field data after each release.",
+    "hl": [
+     "b"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "2.5 s",
+   "l": "Good LCP at the 75th percentile (needs improvement up to 4 s, poor above)",
+   "s": "https://web.dev/articles/lcp"
+  },
+  {
+   "v": "200 ms",
+   "l": "Good INP at the 75th percentile (poor above 500 ms); INP replaced FID",
+   "s": "https://web.dev/articles/inp"
+  },
+  {
+   "v": "0.1",
+   "l": "Good CLS at the 75th percentile (poor above 0.25)",
+   "s": "https://web.dev/articles/cls"
+  },
+  {
+   "v": "40 / 10 / 40 / 10 %",
+   "l": "Ideal share of LCP for TTFB, resource load delay, load duration, element render delay",
+   "s": "https://web.dev/articles/optimize-lcp"
+  }
+ ],
+ "tool": "PageSpeed Insights, Lighthouse, Chrome DevTools, web-vitals",
+ "choices": [
+  {
+   "t": "Lab or field first",
+   "d": "Field data (CrUX, RUM) shows reality and sets priorities. Lab data (Lighthouse) is repeatable for debugging and CI. Use both; trust field when they disagree."
+  },
+  {
+   "t": "Where to spend effort",
+   "d": "Find the weakest of the three at p75 and the biggest LCP subpart. Optimising one subpart can just move time to another, so re-measure."
+  },
+  {
+   "t": "Budgets",
+   "d": "Quantity budgets (JS KB, image MB) and metric budgets (LCP, TBT) in CI catch regressions early. Lighthouse weights TBT 30%, LCP 25% and CLS 25% in its score."
+  },
+  {
+   "t": "Rendering strategy",
+   "d": "SSR or static HTML puts content in the first response (helps LCP); less client JavaScript helps INP; reserved space fixes CLS."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-rum-real-user-data-real-user-monitoring-web-vitals-performance-observer-beacon-frontend",
+   "why": "How to measure these metrics on real users"
+  },
+  {
+   "slug": "fe-streaming-ssr-suspense-streaming-html-suspense-boundaries-ttfb-progressive-rendering-frontend",
+   "why": "A tool for lowering TTFB and getting content on screen sooner"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Great Lighthouse score, poor field LCP",
+   "d": "Lab used a fast device and a different LCP element than real users see.",
+   "see": "CrUX LCP is orange or red while Lighthouse is green",
+   "fix": "Trust field data, segment by device and network, check the actual LCP element in RUM"
+  },
+  {
+   "t": "INP regresses after adding a library",
+   "d": "A third-party script or a heavy handler blocks the main thread.",
+   "see": "Long tasks over 50 ms around clicks",
+   "fix": "Break up work with scheduler.yield, defer or remove the script, shrink DOM"
+  },
+  {
+   "t": "CLS from late content",
+   "d": "Banners, ads, fonts or images arrive without reserved space.",
+   "see": "Content jumps as the page loads",
+   "fix": "Set width and height or aspect-ratio, reserve slots, use font-display and matching fallback metrics"
+  }
+ ],
+ "say": [
+  "The three Core Web Vitals are LCP at 2.5 seconds, INP at 200 milliseconds and CLS at 0.1, judged at the 75th percentile of real users, split by device.",
+  "I start from field data to find what to fix, use Lighthouse and DevTools traces to reproduce it, and keep budgets in CI so it doesn't regress.",
+  "For LCP I look at the four subparts, for INP at long tasks and DOM size, and for CLS at anything that loads without reserved space."
+ ],
+ "followups": [
+  {
+   "q": "Why 75th percentile?",
+   "a": "It shows the experience of most users without being dominated by outliers, and it is what Google uses to judge pass or fail. Averages hide the slow tail."
+  },
+  {
+   "q": "Why did INP replace FID?",
+   "a": "FID only measured the delay before the first interaction. INP covers all interactions across the visit and includes processing and presentation time."
+  }
+ ],
+ "today": "The Core Web Vitals set is LCP, INP and CLS (INP replaced FID). Field data from CrUX is the reference, Lighthouse scores TBT as a lab proxy for responsiveness, and the web-vitals library with attribution makes it practical to find which element or interaction caused a poor score.",
+ "sources": [
+  {
+   "t": "web.dev: Web Vitals",
+   "u": "https://web.dev/articles/vitals"
+  },
+  {
+   "t": "web.dev: LCP",
+   "u": "https://web.dev/articles/lcp"
+  },
+  {
+   "t": "web.dev: Optimize LCP",
+   "u": "https://web.dev/articles/optimize-lcp"
+  },
+  {
+   "t": "web.dev: INP",
+   "u": "https://web.dev/articles/inp"
+  },
+  {
+   "t": "web.dev: Optimize INP",
+   "u": "https://web.dev/articles/optimize-inp"
+  },
+  {
+   "t": "web.dev: CLS",
+   "u": "https://web.dev/articles/cls"
+  },
+  {
+   "t": "web.dev: Lab and field data differences",
+   "u": "https://web.dev/articles/lab-and-field-data-differences"
+  },
+  {
+   "t": "Chrome for Developers: Lighthouse performance scoring",
+   "u": "https://developer.chrome.com/docs/lighthouse/performance/performance-scoring"
+  },
+  {
+   "t": "web.dev: Performance budgets 101",
+   "u": "https://web.dev/articles/performance-budgets-101"
+  }
+ ],
+ "check": [
+  {
+   "q": "Which metric replaced First Input Delay?",
+   "a": "INP",
+   "d": [
+    "CLS",
+    "LCP",
+    "TTFB"
+   ],
+   "why": "INP measures all interactions, not just the first."
+  },
+  {
+   "q": "Where must a page score 'good' to pass?",
+   "a": "At the 75th percentile of real page loads for all three metrics",
+   "d": [
+    "On one Lighthouse run",
+    "On the average",
+    "On the fastest 10% of users"
+   ],
+   "why": "Pass/fail is based on p75 of field data, split by mobile and desktop."
+  },
+  {
+   "q": "What usually causes poor CLS?",
+   "a": "Images, ads or fonts that load without reserved space",
+   "d": [
+    "A slow database",
+    "Too many CSS classes",
+    "Using HTTPS"
+   ],
+   "why": "Late content pushes existing content around; reserve the space up front."
+  }
+ ]
+}

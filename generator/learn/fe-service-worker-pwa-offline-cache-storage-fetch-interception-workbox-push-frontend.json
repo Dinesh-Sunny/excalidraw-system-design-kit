@@ -1,0 +1,297 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A service worker is a script the browser runs in the background, between your page and the network. It can answer requests from a cache, so the app loads offline, and it can receive push messages and background sync events.",
+ "like": "Like a school receptionist who sits between visitors and the offices: she can answer common questions from her own notes, and only phones the office when the notes are old.",
+ "why": [
+  "The app shell opens instantly and works offline",
+  "You choose a caching strategy per kind of request",
+  "Enables installable PWAs, push notifications and background sync"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "pg",
+    "t": "Page|your app",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "reg",
+    "t": "Registration|scope + lifecycle",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "gear"
+   },
+   {
+    "id": "sw",
+    "t": "Service worker|fetch event",
+    "x": 275,
+    "y": 105,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "sw"
+   },
+   {
+    "id": "cs",
+    "t": "Cache Storage|request / response",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "cachelocal"
+   },
+   {
+    "id": "net",
+    "t": "Network|origin or CDN",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "cloud"
+   },
+   {
+    "id": "push",
+    "t": "Push + sync|wake the worker",
+    "x": 275,
+    "y": 275,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "bell"
+   }
+  ],
+  "edges": [
+   [
+    "pg",
+    "reg",
+    "register()"
+   ],
+   [
+    "reg",
+    "sw",
+    "install, activate"
+   ],
+   [
+    "pg",
+    "sw",
+    "every request in scope"
+   ],
+   [
+    "sw",
+    "cs",
+    "match / put"
+   ],
+   [
+    "sw",
+    "net",
+    "fetch on miss"
+   ],
+   [
+    "push",
+    "sw",
+    "events"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Register",
+    "d": "The page calls navigator.serviceWorker.register('/sw.js'). It needs HTTPS (localhost is allowed). The worker controls pages under its scope.",
+    "hl": [
+     "pg",
+     "reg"
+    ]
+   },
+   {
+    "t": "Install and precache",
+    "d": "On install, open a versioned cache and addAll() the app shell. If a file fails, install fails, so the old worker keeps running.",
+    "hl": [
+     "reg",
+     "sw",
+     "cs"
+    ]
+   },
+   {
+    "t": "Wait, then activate",
+    "d": "A new worker waits until no pages use the old one. On activate, delete old caches. skipWaiting() and clients.claim() take over sooner.",
+    "hl": [
+     "reg",
+     "sw"
+    ]
+   },
+   {
+    "t": "Intercept requests",
+    "d": "The fetch event lets the worker answer with respondWith(): cache first for hashed assets, network first for HTML, stale-while-revalidate for avatars.",
+    "hl": [
+     "pg",
+     "sw",
+     "cs"
+    ]
+   },
+   {
+    "t": "Go beyond fetch",
+    "d": "Push messages and sync events wake the worker even with no tab open. It has no DOM, so it posts messages back to the page.",
+    "hl": [
+     "push",
+     "sw"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 385
+ },
+ "numbers": [
+  {
+   "v": "24 h",
+   "l": "the browser re-checks the worker script on in-scope navigations and, if not checked in the last 24 hours, on events",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API"
+  },
+  {
+   "v": "5",
+   "l": "built-in Workbox strategies: StaleWhileRevalidate, CacheFirst, NetworkFirst, NetworkOnly, CacheOnly",
+   "s": "https://developer.chrome.com/docs/workbox/modules/workbox-strategies"
+  },
+  {
+   "v": "7 days",
+   "l": "Safari can delete script-written storage after 7 days of use without user interaction (installed PWAs excepted)",
+   "s": "https://web.dev/articles/storage-for-the-web"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Strategy per resource",
+   "d": "Cache first for hashed static files, network first (with a timeout) for HTML and API data, stale-while-revalidate for things where slightly old is fine."
+  },
+  {
+   "t": "Precache or runtime cache",
+   "d": "Precache the small app shell at install so it works offline at once. Cache big or optional files at runtime or when the user asks to save them."
+  },
+  {
+   "t": "Update flow",
+   "d": "skipWaiting plus clients.claim updates quickly but can mix old pages with new code. Waiting for old tabs to close, or showing an 'update available' prompt, is safer."
+  },
+  {
+   "t": "Workbox or hand-written",
+   "d": "Workbox gives precaching, strategies, expiration and a Background Sync queue as configuration. Hand-write only for tiny, special cases."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-browser-http-cache-cache-control-etag-immutable-hashed-assets-304-frontend",
+   "why": "If you only need fast repeat loads, correct HTTP caching headers need no worker"
+  },
+  {
+   "slug": "fe-indexeddb-browser-database-offline-storage-dexie-structured-data-frontend",
+   "why": "For app data and queues, which belong in a database rather than the response cache"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Stuck on an old version",
+   "d": "The worker keeps serving cached HTML and old JS to users.",
+   "see": "Users do not see a fix until they clear data",
+   "fix": "Version cache names, delete old caches on activate, serve HTML network first, and show an update prompt"
+  },
+  {
+   "t": "Cache never shrinks",
+   "d": "The Cache API does not expire items and ignores HTTP caching headers.",
+   "see": "Storage grows until QuotaExceededError",
+   "fix": "Cap entries and age with Workbox expiration; delete caches you no longer use"
+  },
+  {
+   "t": "Caching bad responses",
+   "d": "fetch resolves on 404 and 500, so they get stored.",
+   "see": "Offline users see a cached error page",
+   "fix": "Cache only successful responses and add an offline fallback page"
+  }
+ ],
+ "say": [
+  "A service worker is a network proxy in the browser: on install I precache the versioned app shell, and on fetch I pick a strategy per request type.",
+  "Hashed assets are cache-first, HTML is network-first with an offline fallback, and avatars are stale-while-revalidate.",
+  "I plan the update path - a waiting worker, versioned caches, cleanup on activate and an in-app 'refresh' prompt - so users never get stuck on an old build."
+ ],
+ "followups": [
+  {
+   "q": "Why does a new worker not take over at once?",
+   "a": "It waits until no open page uses the old worker, so one page never runs against two versions. skipWaiting() and clients.claim() override this."
+  },
+  {
+   "q": "Can a service worker touch the DOM or localStorage?",
+   "a": "No. It is a separate thread without DOM or Web Storage; it uses the Cache API and IndexedDB and talks to pages through postMessage."
+  },
+  {
+   "q": "What is the risk of a bad service worker?",
+   "a": "It controls every request in scope, so a bug can break the whole site until the browser fetches a fixed script, which is why updates and a kill-switch plan matter."
+  }
+ ],
+ "today": "Service workers are mainstream for offline apps and installable PWAs, and most teams use Workbox for precaching, routing strategies, expiration and background sync rather than writing fetch handlers by hand. Background Sync still has limited browser availability.",
+ "check": [
+  {
+   "q": "A new service worker is installed while a tab is open on the old one. What happens?",
+   "a": "It waits until no pages use the old worker (unless skipWaiting is called)",
+   "d": [
+    "It replaces the old one instantly",
+    "It is deleted",
+    "It runs both at the same time"
+   ],
+   "why": "The waiting phase prevents one page mixing two versions."
+  },
+  {
+   "q": "Best strategy for a hashed JS bundle like app.3f9a.js?",
+   "a": "Cache first",
+   "d": [
+    "Network only",
+    "Network first with 1 s timeout",
+    "No caching"
+   ],
+   "why": "The URL changes when content changes, so a cached copy is always correct."
+  },
+  {
+   "q": "Does the Cache API honour HTTP Cache-Control headers?",
+   "a": "No, you must expire and update entries yourself",
+   "d": [
+    "Yes, fully",
+    "Only max-age",
+    "Only for images"
+   ],
+   "why": "Items are not updated or expired unless you do it."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: Service Worker API",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API"
+  },
+  {
+   "t": "MDN: Cache",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Cache"
+  },
+  {
+   "t": "web.dev: The Offline Cookbook",
+   "u": "https://web.dev/articles/offline-cookbook"
+  },
+  {
+   "t": "Chrome for Developers: Workbox strategies",
+   "u": "https://developer.chrome.com/docs/workbox/modules/workbox-strategies"
+  },
+  {
+   "t": "web.dev: Storage for the web",
+   "u": "https://web.dev/articles/storage-for-the-web"
+  },
+  {
+   "t": "MDN: Background Synchronization API",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Background_Synchronization_API"
+  }
+ ]
+}

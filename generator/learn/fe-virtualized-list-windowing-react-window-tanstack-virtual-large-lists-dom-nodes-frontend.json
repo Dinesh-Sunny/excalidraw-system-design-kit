@@ -1,0 +1,300 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Virtualization (also called windowing) renders only the rows currently on screen plus a few extra, instead of every row in a huge list. The DOM stays small and the page stays fast, even with 100,000 items.",
+ "like": "Like a film projector: the reel is miles long, but only the frame in front of the lamp is lit at any moment.",
+ "why": [
+  "Thousands of DOM nodes make every style recalculation and interaction slow",
+  "Scrolling stays smooth because only about a screenful of rows is mounted",
+  "Memory and first render time stay flat as data grows"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 404,
+  "nodes": [
+   {
+    "id": "d",
+    "t": "Full dataset|all rows, or paged cache",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "sc",
+    "t": "Scroll container|fixed height, overflow",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "v",
+    "t": "Virtualizer|visible range + overscan",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "virtual"
+   },
+   {
+    "id": "sz",
+    "t": "Size model|fixed or measured",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "gauge"
+   },
+   {
+    "id": "dom",
+    "t": "Rendered rows|about 20 DOM nodes",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "grid"
+   },
+   {
+    "id": "sp",
+    "t": "Spacer|total height keeps scrollbar",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "layers"
+   },
+   {
+    "id": "a",
+    "t": "Accessibility|aria-rowcount, focus",
+    "x": 280,
+    "y": 300,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "eye"
+   }
+  ],
+  "edges": [
+   [
+    "sc",
+    "v",
+    "scrollTop"
+   ],
+   [
+    "v",
+    "sz",
+    "estimate"
+   ],
+   [
+    "v",
+    "dom",
+    "range"
+   ],
+   [
+    "d",
+    "dom",
+    "items"
+   ],
+   [
+    "sp",
+    "sc",
+    "height"
+   ],
+   [
+    "dom",
+    "a",
+    "roles"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Give the list a fixed viewport",
+    "d": "The scroll container has a set height and overflow: auto. The virtualizer needs to know how much room there is to fill.",
+    "hl": [
+     "sc"
+    ]
+   },
+   {
+    "t": "Compute total size",
+    "d": "With fixed row height, total height is count times height. With variable heights, it starts from an estimate and corrects as rows are measured. A spacer of that height makes the scrollbar behave normally.",
+    "hl": [
+     "sp",
+     "sz"
+    ]
+   },
+   {
+    "t": "Find the visible range",
+    "d": "On scroll, the virtualizer turns scrollTop into a start and end index.",
+    "hl": [
+     "v"
+    ]
+   },
+   {
+    "t": "Add overscan",
+    "d": "A few extra rows above and below are rendered so fast scrolling does not show blank gaps. Too few gives flicker; too many wastes the saving.",
+    "hl": [
+     "v"
+    ]
+   },
+   {
+    "t": "Render and position rows",
+    "d": "Only that slice becomes DOM nodes, absolutely positioned (or translated) at the right offset. Rows leaving the window are unmounted or reused.",
+    "hl": [
+     "dom"
+    ]
+   },
+   {
+    "t": "Keep it accessible",
+    "d": "Set aria-rowcount and aria-rowindex, keep focus on a row that is scrolled away, and give a 'jump to' control since Ctrl+F cannot find unrendered rows.",
+    "hl": [
+     "a"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "800 / 1,400",
+   "l": "Lighthouse warns at 800 DOM nodes and flags a page as excessive above 1,400",
+   "s": "https://web.dev/articles/dom-size-and-interactivity"
+  },
+  {
+   "v": "100,000 rows, about 10 mounted",
+   "l": "TanStack Virtual's own demo (illustrative, not a benchmark)",
+   "s": "https://tanstack.com/virtual/latest"
+  },
+  {
+   "v": "232 ms to 30 ms",
+   "l": "Rendering time in web.dev's example of content-visibility: auto, the no-library alternative for moderate lists",
+   "s": "https://web.dev/articles/content-visibility"
+  }
+ ],
+ "tool": "TanStack Virtual, react-window, react-virtuoso",
+ "choices": [
+  {
+   "t": "Virtualize, paginate, or content-visibility",
+   "d": "Pagination is simplest and keeps native find and accessibility. content-visibility: auto skips rendering off-screen sections with almost no code. Virtualize when you truly need one continuous scroll over thousands of rows."
+  },
+  {
+   "t": "Fixed or dynamic row height",
+   "d": "Fixed heights are fast and exact. Dynamic heights (chat, cards with images) need measurement and cause scrollbar jumps; give a good size estimate."
+  },
+  {
+   "t": "Headless library or component library",
+   "d": "TanStack Virtual is headless: it gives you ranges and offsets and you render the markup. react-window gives ready list and grid components. Headless is more flexible, components are quicker to start."
+  },
+  {
+   "t": "Overscan amount",
+   "d": "Small overscan saves DOM but risks blank flashes on fast flings; a few rows each side is the usual balance. Measure on a low-end phone."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-infinite-scroll-intersection-observer-cursor-pagination-load-more-feed-frontend",
+   "why": "Controls how data arrives; virtualization controls how much is in the DOM"
+  },
+  {
+   "slug": "fe-url-state-query-params-search-params-deep-link-shareable-filters-frontend",
+   "why": "Classic pagination in the URL, with native find and simple accessibility"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Blank rows on fast scroll",
+   "d": "Rows are not rendered in time for the scroll position.",
+   "see": "White gaps while flinging",
+   "fix": "Raise overscan a little, keep row render cheap, avoid heavy work in row components"
+  },
+  {
+   "t": "Scrollbar jumps",
+   "d": "Estimated heights differ from real ones, so total height changes while scrolling.",
+   "see": "Thumb shifts or the list jumps",
+   "fix": "Use a close estimate, measure rows once, or use fixed heights"
+  },
+  {
+   "t": "Lost state and focus",
+   "d": "A row unmounts when scrolled away, taking its input value or focus with it.",
+   "see": "Typed text vanishes, keyboard focus resets",
+   "fix": "Keep state in the parent or store, keep the focused row mounted, restore focus on return"
+  }
+ ],
+ "say": [
+  "Past a few hundred complex rows I virtualize: only the visible rows plus small overscan are in the DOM, so cost depends on the screen, not the data size.",
+  "I weigh it against pagination and content-visibility first, because virtualization breaks native find and needs extra accessibility work.",
+  "Row height is the key decision: fixed is simple and exact, dynamic needs measuring and a good estimate to avoid scrollbar jumps."
+ ],
+ "followups": [
+  {
+   "q": "How does it work with infinite scroll?",
+   "a": "Fetch pages with a cursor into a cache, and virtualize the combined list. Trigger the next fetch when the last rendered index nears the end, and cap pages in memory if the list is huge."
+  },
+  {
+   "q": "What about accessibility?",
+   "a": "Use list or grid roles with aria-rowcount and aria-rowindex, keep keyboard focus stable, and offer search or jump-to since the browser cannot find rows that are not in the DOM."
+  }
+ ],
+ "today": "Headless libraries such as TanStack Virtual (framework-agnostic: React, Vue, Solid, Svelte, Angular and more) are the common choice, with support for dynamic sizes, grids and end-anchored chat lists. CSS content-visibility: auto is now a cheap first step for moderate lists.",
+ "sources": [
+  {
+   "t": "web.dev: Virtualize large lists with react-window",
+   "u": "https://web.dev/articles/virtualize-long-lists-react-window"
+  },
+  {
+   "t": "TanStack Virtual",
+   "u": "https://tanstack.com/virtual/latest"
+  },
+  {
+   "t": "web.dev: DOM size and interactivity",
+   "u": "https://web.dev/articles/dom-size-and-interactivity"
+  },
+  {
+   "t": "web.dev: content-visibility",
+   "u": "https://web.dev/articles/content-visibility"
+  },
+  {
+   "t": "web.dev: Optimize INP",
+   "u": "https://web.dev/articles/optimize-inp"
+  }
+ ],
+ "check": [
+  {
+   "q": "What does virtualization keep small?",
+   "a": "The number of DOM nodes",
+   "d": [
+    "The size of the dataset in the database",
+    "The number of API requests",
+    "The size of the CSS file"
+   ],
+   "why": "Only visible rows are mounted, so the DOM stays small regardless of data size."
+  },
+  {
+   "q": "Why add overscan?",
+   "a": "To avoid blank gaps during fast scrolling",
+   "d": [
+    "To make the dataset larger",
+    "To lazy-load images",
+    "To cache the API"
+   ],
+   "why": "Extra rows beyond the viewport are ready before they scroll into view."
+  },
+  {
+   "q": "A real downside of virtualized lists?",
+   "a": "Browser find (Ctrl+F) cannot see rows that are not rendered",
+   "d": [
+    "They cannot show images",
+    "They only work with fixed data",
+    "They disable scrolling"
+   ],
+   "why": "Unmounted rows are not in the DOM, so search and some accessibility features need extra handling."
+  }
+ ]
+}

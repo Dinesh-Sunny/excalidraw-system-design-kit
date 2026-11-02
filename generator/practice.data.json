@@ -2801,5 +2801,962 @@
    "Risk: leaking another study's quotes - filters in the query, tests that try to cross tenants.",
    "Next: proactive digests ('what changed this week'), and agents that turn findings into actions."
   ]
+ },
+ "fe-news-feed": {
+  "level": "Medium",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Scroll an endless feed of posts (text and images), newest or ranked first",
+   "React to a post (like) and see it change instantly",
+   "Write a post (text and photo) that shows up in the feed at once",
+   "See a 'N new posts' pill when fresh posts arrive, never a sudden jump",
+   "Open a post and come back to the same scroll spot"
+  ],
+  "reqN": [
+   "Core Web Vitals 'good' at the 75th percentile: LCP 2.5 s or less, INP 200 ms or less, CLS 0.1 or less",
+   "Smooth on mid-range phones and slow 4G, so ship little JavaScript and keep the DOM small",
+   "Accessible (WCAG 2.2 AA): feed and article roles, keyboard reachable, focus never stolen",
+   "International: right-to-left text, plural rules, number and date formats",
+   "Safe: user text is never injected as HTML (XSS), strict Content Security Policy"
+  ],
+  "est": [
+   "Assume 20 posts per page and 3-4 posts above the fold on a phone, so the first response only needs page 1",
+   "Assume a first-load JavaScript budget of about 100-150 KB gzipped for the shell and about 300 KB for full interactivity (a common interview budget)",
+   "LCP time guide from web.dev: about 40% waiting for the server, about 40% loading the LCP resource, under 10% each for the two delays",
+   "Assume only ~10-20 posts are mounted in the DOM at any time, however far the user scrolled (virtualization)",
+   "Start the next fetch about one viewport before the end (IntersectionObserver rootMargin), so the user rarely sees a spinner",
+   "Count a post as seen after 50% visible for 1 second (a common impression rule), batch those events"
+  ],
+  "api": [
+   "GET /feed?cursor=&limit=20&dir=older -> {items:[postId], posts:{id:Post}, users:{id:User}, nextCursor, newerCursor}",
+   "POST /posts {text, mediaIds, clientId} + Idempotency-Key header -> {post}",
+   "PUT /posts/:id/reaction {type}  /  DELETE /posts/:id/reaction",
+   "POST /media/uploads -> {uploadUrl, mediaId}",
+   "GET /feed/stream (Server-Sent Events) -> event: new-posts, data: {count, newerCursor}",
+   "<Feed pages renderPost onNearEnd /> and <Post id onReact /> and <Composer onSubmit />"
+  ],
+  "data": [
+   "Server state (TanStack Query style): infinite query key ['feed', userId, 'home'], pages keyed by cursor, maxPages to cap memory",
+   "Normalized entities: postsById, usersById, mediaById - the feed is just an ordered list of post ids plus cursors, so one like updates every copy",
+   "Client state: composer draft, pending posts keyed by clientId, newPostsCount, scroll anchor (post id + pixel offset)",
+   "URL: /post/:id for detail; session storage for scroll restore; optional IndexedDB copy of page 1 for instant repeat visits",
+   "Never store user text as HTML - store plain text plus entity ranges (mentions, links)"
+  ],
+  "blocks": {
+   "u": "A person on a phone or laptop scrolling, tapping like and writing posts.",
+   "shell": "Server renders and streams the first page of posts as HTML so the largest element paints early, then the page hydrates.",
+   "feed": "Renders only the posts near the viewport (virtualization) so the DOM stays small however far you scroll.",
+   "sent": "An IntersectionObserver sentinel near the end of the list asks for the next page about one screen early.",
+   "qc": "Caches each page by cursor, de-duplicates in-flight requests and allows only one next-page fetch at a time.",
+   "api": "Cursor-paginated GET /feed returns post ids plus the posts and users they need.",
+   "norm": "Keeps posts and users by id so every copy of a post on screen updates together.",
+   "comp": "Adds your new post to the top at once with a temporary id, then swaps in the server post or rolls back on error.",
+   "live": "A Server-Sent Events stream only says 'N new posts exist'; the pill lets the user choose when to load them.",
+   "img": "Responsive images with srcset, AVIF or WebP, reserved width and height, lazy below the fold and high priority for the LCP image.",
+   "cdn": "Serves resized, cached images close to the user.",
+   "rum": "Real-user monitoring reports LCP, INP and CLS by device and network so regressions show up in the field."
+  },
+  "dives": [
+   [
+    "Why cursor pagination instead of page numbers?",
+    "New posts arrive at the top, so offset pages shift and show duplicates or gaps. An opaque cursor points at a stable position and can be tied to a feed generation so a re-ranked feed asks for a refresh."
+   ],
+   [
+    "Infinite scroll makes the DOM huge. What do you do?",
+    "Virtualize (windowing): mount only the posts near the viewport plus a small overscan, with spacers for the rest. Keep the focused post mounted and restore scroll by anchoring to a post id and offset, because heights are variable."
+   ],
+   [
+    "The sentinel fires twice and you load the same page twice. How do you prevent it?",
+    "Allow a single in-flight next-page fetch (check isFetching, TanStack Query allows only one ongoing fetch per infinite query), key pages by cursor, and re-observe the sentinel after each load so it fires again if it is still visible."
+   ],
+   [
+    "How do likes and new posts feel instant yet stay correct?",
+    "Optimistic update: change the entity at once, send the request with an idempotency key, and roll back on failure (React useOptimistic reverts automatically when the real state does not change). Because entities are normalized, every copy updates together."
+   ],
+   [
+    "New posts arrive while the user reads. What is the UX and the transport?",
+    "Show a 'N new posts' pill and prepend only on click, so the content under the finger never jumps. Server-Sent Events are enough because traffic is one-way, the browser reconnects by itself and resumes with Last-Event-ID; use HTTP/2 because HTTP/1.1 allows only about 6 connections per domain."
+   ],
+   [
+    "SSR or client-side rendering for the signed-in feed?",
+    "A personal feed is highly interactive and long-lived, so client rendering with a tight JS budget is a valid default, while public permalinks and logged-out pages benefit from SSR. Here we stream the first page from the server for LCP and hydrate only the interactive parts."
+   ],
+   [
+    "How do you make it accessible?",
+    "Use role='feed' with role='article' per post, aria-busy while a page loads, keyboard-reachable actions, polite live region for the new-posts pill, 24x24 CSS px minimum targets (WCAG 2.2) and respect prefers-reduced-motion. Never move focus when new data arrives."
+   ],
+   [
+    "Security and i18n in post content?",
+    "Render text from plain text plus entity ranges, never innerHTML, validate link schemes and ship a Content Security Policy. Use dir='auto' on post bodies, CSS logical properties for RTL and Intl.NumberFormat / Intl.PluralRules for counts like '103K'."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: the first page decides LCP and a long session grows the DOM and memory. Fix: stream page 1 with a priority image, virtualize, cap cached pages (maxPages).",
+   "Next: ranked feed, comments thread, offline outbox for posts, experiments with feature flags and a field-data dashboard."
+  ]
+ },
+ "fe-autocomplete": {
+  "level": "Medium",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Show suggestions under a text box as the user types",
+   "Move through suggestions with arrow keys, pick with Enter or click, close with Escape",
+   "Highlight the part of each suggestion that matches the query",
+   "Reusable: the host app supplies the data fetcher and how an item looks",
+   "Clear states for loading, no results, error and offline"
+  ],
+  "reqN": [
+   "Feels instant: typing is never blocked, suggestions appear within a frame when cached",
+   "Always correct: a slow older reply can never overwrite a newer query",
+   "Accessible: follows the WAI-ARIA combobox pattern with a live region",
+   "Works on mobile and with IME input (Chinese, Japanese, Korean) and RTL",
+   "Small and framework friendly, no XSS from suggestion text"
+  ],
+  "est": [
+   "Debounce about 300 ms (a common default) so a fast typist sends one request, not one per key",
+   "Start at 1-3 characters (a common minimum is 3 for large corpora); make it a prop",
+   "Assume 5-10 suggestions per response and about 1 KB of JSON per response",
+   "Assume a cache of ~100 queries with a TTL and least-recently-used eviction, so memory stays tiny",
+   "INP target 200 ms or less at p75: render the list in one commit per response",
+   "WCAG 2.2 minimum target size is 24x24 CSS px for each suggestion row"
+  ],
+  "api": [
+   "GET /suggest?q=sys&limit=8 -> {items:[{id, text, value?, type?}], nextCursor?}",
+   "fetcher(query, {limit, signal: AbortSignal}) -> Promise<Item[]>   (the only place that knows URLs and auth)",
+   "<Autocomplete fetcher minChars={2} debounceMs={300} limit={8} cacheTtlMs={60000} onSelect renderItem />",
+   "Events: onInput, onFocus, onBlur, onSelect(item), onError(err)",
+   "ARIA contract: input role=combobox, aria-expanded, aria-controls, aria-activedescendant; popup role=listbox; rows role=option"
+  ],
+  "data": [
+   "Component state: query, status (idle | loading | success | error | offline), items, activeIndex, isOpen, requestGeneration counter",
+   "Results cache: Map<normalizedQuery, {items, fetchedAt}> with TTL and LRU cap; normalize by trim, lowercase and Unicode NFC",
+   "A successful query with zero items is an empty state, not an error",
+   "Optional: recent searches in localStorage (per user), never the typed text of other people",
+   "No URL state until the user submits a search"
+  ],
+  "blocks": {
+   "u": "A person typing, using arrows, Enter and Escape, maybe with an IME or a screen reader.",
+   "in": "The text box with role=combobox; focus stays here while aria-activedescendant points at the highlighted option.",
+   "deb": "Waits until typing pauses (about 300 ms) before asking for suggestions.",
+   "cache": "Remembers results per normalized query with a TTL and LRU cap, so backspacing or retyping costs nothing.",
+   "api": "Sends the request with an AbortSignal and a generation number so only the newest reply is accepted.",
+   "srv": "The suggest endpoint returns a short ranked list of items with stable ids.",
+   "st": "Holds query, results, status and the active index as the single source of truth for the UI.",
+   "list": "Renders the listbox, highlights the matched text safely and handles pointer and key selection.",
+   "live": "A polite live region announces things like '5 results' or 'No results' to screen readers."
+  },
+  "dives": [
+   [
+    "A slow reply for 'ca' arrives after the reply for 'cat'. How do you stop the wrong list showing?",
+    "Give every request a generation number and only render a reply whose query matches the current input and whose generation is the newest. AbortController cancels wasted work but is not the correctness mechanism, since an aborted request can still race."
+   ],
+   [
+    "Debounce, throttle or useDeferredValue?",
+    "Debounce for network calls (wait for a pause). Throttle suits continuous signals like scroll. React's useDeferredValue keeps typing responsive while the list renders but does not stop requests, so combine it with debouncing."
+   ],
+   [
+    "What does the accessible pattern look like?",
+    "Follow the WAI-ARIA combobox: input role=combobox with aria-expanded and aria-controls, popup role=listbox, options role=option, DOM focus stays on the input and aria-activedescendant tracks the highlighted row. Down Arrow opens or moves, Enter accepts, Escape closes, plus an aria-live region for counts."
+   ],
+   [
+    "Why can Enter select the wrong thing with Chinese or Japanese input?",
+    "During IME composition the keys belong to the input method. Ignore navigation keys while composing and only search on the committed value after compositionend."
+   ],
+   [
+    "How do you highlight the match without XSS?",
+    "Split the suggestion text into matched and unmatched parts and render them as text nodes or <mark> elements. Never build the string with innerHTML from server data."
+   ],
+   [
+    "Clicking a suggestion closes the popup before the click lands. Why?",
+    "Blur fires before click. Prevent default on pointer down in the list or delay closing on blur until pointer activation is handled, otherwise the row is unmounted mid-click."
+   ],
+   [
+    "How do you design the cache?",
+    "A query to results map is enough for a short-lived widget. Key by the normalized full query, add a TTL and an LRU cap, and clear it when the user signs out. A client-side trie only helps for a small, stable local list, because server results may be top-k only."
+   ],
+   [
+    "Errors and offline?",
+    "Show a retry for server errors, back off if the server is overloaded, and when offline serve only cached results and show a small no-connection state. Keep the typed text so nothing is lost."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: races and per-keystroke work, not the server. Fix: debounce, generation guard, cache, one commit per reply.",
+   "Next: fuzzy matching, recent and trending sections, rich result types (images), analytics on selection rank."
+  ]
+ },
+ "fe-chat-app": {
+  "level": "Hard",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Send and receive text messages in 1:1 and group threads in real time",
+   "A sent message appears at once and shows its state: sending, sent, delivered, read",
+   "Thread list with last message, unread badge and newest first",
+   "Scroll up to load older history; open a thread at the newest message",
+   "Offline: keep typing, messages wait in an outbox and send when back online",
+   "A notification when the tab is closed; several open tabs stay in sync"
+  ],
+  "reqN": [
+   "No lost, duplicated or out-of-order messages, even across reconnects",
+   "Typing stays smooth (INP 200 ms or less at p75) in threads with thousands of messages",
+   "Resilient: reconnect with backoff and jitter, then catch up on what was missed",
+   "Accessible: new messages announced politely, keyboard-first composer, WCAG 2.2 AA",
+   "International: emoji, IME input, right-to-left text; safe: text escaped, auth on the socket handshake"
+  ],
+  "est": [
+   "Assume 50 messages loaded when a thread opens and 50 more per scroll-up page",
+   "Assume only ~30-60 message rows are mounted in the DOM (virtualized), however long the thread",
+   "Assume ONE WebSocket per browser (leader tab), not one per tab",
+   "Browsers do not reconnect a WebSocket or send heartbeats for you: assume an app ping about every 30 s and reconnect backoff 1 s doubling to a 30 s cap, plus random jitter so a server restart does not cause a thundering herd (a common pattern, not built into the API)",
+   "Assume IndexedDB keeps the last ~20 threads x 50 messages for instant open and offline reading",
+   "Server-Sent Events over HTTP/1.1 are limited to about 6 connections per domain across tabs, which is one reason to prefer one shared WebSocket"
+  ],
+  "api": [
+   "WS client -> server: {type:'send', threadId, clientId, text}",
+   "WS server -> client: {type:'ack', clientId, id, seq, ts}  and  {type:'message', threadId, id, seq, from, text, ts}",
+   "WS: {type:'receipt', threadId, upToSeq, kind:'delivered'|'read'}, {type:'typing', threadId} (throttled), {type:'sync', threadId, afterSeq} -> missed messages",
+   "GET /threads?cursor= -> {threads:[{id, title, lastMessageId, unread}], nextCursor}",
+   "GET /threads/:id/messages?beforeSeq=&limit=50 -> {messages, hasMore}",
+   "POST /push/subscriptions {endpoint, keys} for Web Push",
+   "<ChatThread threadId /> <MessageList items onReachTop /> <Composer onSend disabled />"
+  ],
+  "data": [
+   "Normalized store: messagesById, threadMessageIds[threadId] ordered by server seq, threadsById, lastSeq per thread, unreadCount",
+   "Pending messages keyed by clientId with status (queued | sending | sent | failed); on ack swap to the server id and drop the temp entry",
+   "Outbox persisted in IndexedDB so a refresh or crash loses nothing",
+   "Recent threads and messages cached in IndexedDB; draft text per thread in localStorage or IndexedDB",
+   "Cross-tab: BroadcastChannel for events, Web Locks to elect the one tab that owns the socket",
+   "URL: /t/:threadId so a thread is linkable and back works"
+  ],
+  "blocks": {
+   "u": "A person writing and reading messages, sometimes offline, sometimes in several tabs.",
+   "ui": "Thread list, message pane and composer; the composer never blocks while the network is slow.",
+   "out": "Queues each message with a temporary clientId, shows it at once and retries until the server acknowledges it.",
+   "ws": "Owns the WebSocket: heartbeat, reconnect with backoff and jitter, and a catch-up request after the last known seq.",
+   "gw": "Server side of the socket: authenticates the handshake, assigns the per-thread sequence and fans messages out.",
+   "store": "Keeps messages normalized and ordered by server sequence, merges acks and receipts, and de-duplicates by id and clientId.",
+   "vl": "Renders only nearby messages, anchored to the bottom, and keeps the scroll position stable when history loads.",
+   "idb": "Persists recent threads, messages and the outbox so the app opens instantly and survives refreshes and offline.",
+   "bc": "Shares updates between tabs with Broadcast Channel so unread counts and drafts stay consistent.",
+   "push": "Web Push delivers a notification when no tab is open.",
+   "sw": "The service worker receives the push event and shows the notification, then focuses or opens the right thread on click."
+  },
+  "dives": [
+   [
+    "How do you avoid duplicates and show a message at once?",
+    "Create a clientId on send and render the message immediately as pending. The server echoes it in an ack with the real id and seq, and the store replaces the pending entry. On retry the same clientId makes the send idempotent."
+   ],
+   [
+    "How do you order messages?",
+    "By the server-assigned sequence per thread, not by device clocks or arrival order. Pending messages sit at the bottom until acked, then take their seq position."
+   ],
+   [
+    "The connection drops for 30 seconds. What happens on reconnect?",
+    "Reconnect with exponential backoff plus jitter, re-authenticate, then send a sync request with the last seq per open thread and merge the missed messages. Resend the outbox with the same clientIds."
+   ],
+   [
+    "WebSocket, Server-Sent Events or polling?",
+    "Chat needs two-way, low-latency traffic, so WebSocket. SSE is one-way (and HTTP/1.1 limits it to about 6 connections per domain), polling wastes battery. WebSocket has no built-in reconnect, heartbeat or backpressure, so the client adds the first two."
+   ],
+   [
+    "How does the message list stay smooth and not jump?",
+    "Virtualize with a bottom-anchored list: auto-scroll on new messages only if the user is already near the bottom, show a 'new messages' button otherwise, and preserve the scroll anchor when older pages are prepended."
+   ],
+   [
+    "Three tabs are open. How many sockets?",
+    "One. Elect a leader with a Web Lock (navigator.locks.request with ifAvailable) and relay messages to other tabs over BroadcastChannel; if the leader closes, the lock frees and another tab takes over."
+   ],
+   [
+    "How do offline sends work?",
+    "Persist the outbox in IndexedDB and flush when the socket is back. Background Sync can help but has limited browser availability, so keep an in-page retry as the primary path."
+   ],
+   [
+    "Notifications when the tab is closed?",
+    "Register a service worker, ask for permission after a user action, subscribe with PushManager (userVisibleOnly: true) and send the subscription to the server. The worker's push event must show a notification, and the click should open the thread."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: correctness around reconnects and many tabs, then rendering long threads. Fix: client ids and server seq, sync-after-seq, one leader socket, virtualized list.",
+   "Next: group presence at scale, attachments with upload progress, end-to-end encryption, search over local history."
+  ]
+ },
+ "fe-photo-gallery": {
+  "level": "Medium",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Show a masonry grid: columns of images with different heights, no gaps",
+   "Endless scroll that loads the next batch before the user hits the bottom",
+   "Click an image to open a detail view with a shareable URL; Esc and the back button close it",
+   "Columns adapt to screen width (fewer on phones, more on desktop)",
+   "Related images below the detail view"
+  ],
+  "reqN": [
+   "No layout shift: CLS 0.1 or less, because every image has reserved space before it loads",
+   "LCP 2.5 s or less: the first row loads with high priority, everything below is lazy",
+   "Smooth scrolling and INP 200 ms or less on mid-range phones; limited memory",
+   "Accessible: alt text, logical keyboard order, focus trap and focus return in the modal, reduced motion",
+   "Data-friendly: right-sized, modern-format images"
+  ],
+  "est": [
+   "Assume 2 columns on phones and 4-6 on desktop, with 20-40 items per page",
+   "Only 1-2 images get fetchpriority=high; web.dev warns that more than that stops helping",
+   "LCP guide from web.dev: about 40% server time, about 40% image load, under 10% each for the delays",
+   "Assume 3-4 image widths in srcset per image and the browser picks one using the sizes attribute",
+   "Assume ~50-100 image nodes mounted at once (virtualized window plus overscan), not thousands",
+   "Blur placeholder is a tiny string or inline image sent in the API response (assume tens of bytes to a few hundred bytes)"
+  ],
+  "api": [
+   "GET /pins?cursor=&limit=30 -> {items:[{id, w, h, src, alt, blurhash, color}], nextCursor}",
+   "GET /pins/:id -> {pin, author, stats}  and  GET /pins/:id/related?cursor= -> {items, nextCursor}",
+   "Image URL on the CDN: /img/:id?w=474&fmt=avif (width and format as parameters, edge resizes and caches)",
+   "<Masonry items columnWidth gutter renderItem virtualize overscan onLoadMore />",
+   "Modal route: /pin/:id (full page on direct hit, overlay when opened from the grid)"
+  ],
+  "data": [
+   "Server state: pins by id and pages by cursor (infinite query), related pins per pin id",
+   "Layout state (derived, not fetched): columns[] with running heights, and positions {id -> column, top, height} computed from w/h ratio",
+   "Viewport state: scrollTop, containerWidth (debounced resize) decide the visible slice",
+   "URL: /pin/:id decides whether the modal is open, so share, refresh and back all work",
+   "Nothing in IndexedDB at first; placeholder (blurhash or color) comes with each item"
+  ],
+  "blocks": {
+   "u": "A person scrolling a grid of images, hovering and opening details.",
+   "ssr": "Server renders the first grid with real dimensions and a priority image so the first screen paints fast.",
+   "grid": "Places each item in the currently shortest column using its width and height ratio, so positions are known before any image loads.",
+   "vw": "Mounts only the items near the viewport and keeps the rest as empty positioned space.",
+   "inf": "Loads the next cursor page when a sentinel gets close to the viewport.",
+   "qc": "Caches pages by cursor and avoids duplicate requests while scrolling fast.",
+   "api": "Returns each pin with width, height, alt text and a tiny blur placeholder.",
+   "img": "Uses srcset and sizes, AVIF or WebP, width and height set, lazy loading below the fold and a blur placeholder.",
+   "cdn": "Resizes and caches images at the edge so each device downloads only the size it needs.",
+   "modal": "Opens the detail as a URL-driven overlay and prefetches the pin on hover or focus."
+  },
+  "dives": [
+   [
+    "How do you place items in a masonry layout?",
+    "Know each item's height before it loads: height = columnWidth x (h / w) from the API, plus any fixed caption. Place the next item in the shortest column and record its top and column. Positions never change when later pages append."
+   ],
+   [
+    "Why must the API send width and height?",
+    "The browser needs space reserved before the file arrives. Setting width and height on the img (or CSS aspect-ratio) lets it compute the ratio, which prevents layout shift and lets the layout engine position items without waiting."
+   ],
+   [
+    "How do you virtualize a masonry grid?",
+    "Because positions are absolute and known, render only items whose box intersects the viewport plus an overscan margin, with the container height set to the tallest column. Recompute columns when the container width changes (debounced), not on every scroll."
+   ],
+   [
+    "What is your image loading strategy?",
+    "First row: eager with fetchpriority=high on one or two images; everything else loading=lazy. Use srcset with width descriptors and sizes, serve AVIF or WebP from the CDN, and show a blur placeholder until decode."
+   ],
+   [
+    "Keyboard and screen reader order in columns?",
+    "DOM order should be the placement order (by item index), not column by column, so tabbing follows what the user sees. Give every image meaningful alt text, and in the modal trap focus, close on Escape and return focus to the tile."
+   ],
+   [
+    "How does the detail modal work with URLs?",
+    "The route /pin/:id drives the overlay: opening from the grid pushes the URL and shows an overlay (intercepting route), while a direct visit renders the full page. Share, refresh and back all behave. Prefetch the pin on hover or focus."
+   ],
+   [
+    "Memory and jank on a phone?",
+    "Unmount off-screen tiles, use decoding=async, request right-sized images, avoid animating layout properties and keep a stable key per pin so React does not remount tiles when pages append."
+   ],
+   [
+    "Native CSS masonry instead of JavaScript?",
+    "Native masonry (display: grid-lanes in the draft spec) is still experimental in stable browsers, so use it only as progressive enhancement behind @supports. Note that placement can make tab order differ from visual order."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: layout shift and too many big images decoding at once. Fix: dimensions from the API, right-sized AVIF or WebP from an image CDN, virtualized window, lazy below the fold.",
+   "Next: drag to save, personalised related pins, offline cache of saved pins, field-data dashboard."
+  ]
+ },
+ "fe-e-commerce-storefront": {
+  "level": "Hard",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Browse categories and search with filters (facets) and sorting",
+   "Product page: image gallery, variants (size, color), live price and stock, add to cart",
+   "Cart that survives refreshes, tabs, devices and sign-in (guest cart merges into account cart)",
+   "Checkout: address, shipping, payment, order confirmation",
+   "Experiments (A/B) and recommendations without slowing the page"
+  ],
+  "reqN": [
+   "SEO: crawlable HTML, real links for pagination, product structured data",
+   "Core Web Vitals 'good' at p75 (LCP 2.5 s, INP 200 ms, CLS 0.1); speed is tied to sales",
+   "Accessible forms and flows (WCAG 2.2 AA): labels, errors, keyboard, focus",
+   "Safe payments: card fields never touch our servers (PCI scope kept small)",
+   "Resilient during traffic spikes and global: locale, currency, RTL"
+  ],
+  "est": [
+   "Case study: Vodafone's A/B test saw a 31% LCP improvement lead to 8% more sales (web.dev) - speed is a business metric here",
+   "Assume 24-48 products per listing page and a catalog of ~1M products: pre-render the top pages, build the long tail on first request (ISR)",
+   "Next.js docs suggest a long revalidate time (for example 1 hour) and on-demand revalidation (revalidatePath / revalidateTag) for price changes",
+   "Only 1-2 images get fetchpriority=high on a page; the product main image is the LCP candidate",
+   "Assume a first-load JS budget of about 100-150 KB gzipped on product pages; ship JS only for islands (gallery, buy box, cart)",
+   "LCP guide from web.dev: about 40% server time, about 40% image load, under 10% each for the two delays - cached HTML at the CDN attacks the first 40%"
+  ],
+  "api": [
+   "GET /products?category=shoes&color=red&size=42&sort=price&cursor= -> {items, facets, nextCursor}",
+   "GET /products/:slug -> {product, variants[], images[]}  (read on the server, cached at the CDN)",
+   "GET /products/:id/offer?variant= -> {price, currency, stock, promo}  (short cache, streamed into the page)",
+   "GET /cart  POST /cart/items {sku, qty}  PATCH /cart/items/:id {qty}  DELETE /cart/items/:id  (cart id in an httpOnly cookie)",
+   "POST /checkout/session -> {clientSecret}   POST /orders + Idempotency-Key -> {orderId}",
+   "<BuyBox sku variants onAdd /> <Gallery images /> <FilterPanel facets value onChange /> <CartDrawer />"
+  ],
+  "data": [
+   "Server-rendered state: product, images, SEO tags and structured data come from Server Components and are cached (ISR / use cache)",
+   "URL state: category, filters, sort, page and selected variant live in the path and query string, so pages are shareable, cacheable, crawlable and back works",
+   "Cart: the server cart is the source of truth (cartId in an httpOnly cookie); the client keeps an optimistic copy and reconciles on every response; guest cart merges on login",
+   "Checkout form state in a form library with schema validation; card data lives only inside the payment provider's iframe",
+   "Experiment assignment from feature flags resolved on the server or edge and passed as a cookie, so no flicker",
+   "RUM events (LCP, INP, CLS) joined with cart and order events for speed versus conversion"
+  ],
+  "blocks": {
+   "u": "A shopper on a phone or laptop browsing, adding to cart and paying.",
+   "cdn": "Serves cached HTML and static assets from the edge so most pages never reach the origin.",
+   "isr": "Product pages are prebuilt and refreshed in the background on a timer or when a price changes (stale-while-revalidate).",
+   "rsc": "Server Components fetch catalog data on the server, send HTML and ship no JavaScript for static parts.",
+   "api": "Catalog, price and cart services behind one gateway the server and the client call.",
+   "isl": "Only the gallery, variant picker and buy box ship JavaScript and hydrate.",
+   "cart": "Adds items instantly in the UI, sends the change to the server cart and reconciles with the server's answer.",
+   "url": "Search, filters, sort and page live in the URL so results are shareable and indexable where intended.",
+   "img": "Responsive AVIF or WebP images with reserved size, priority only on the main product image.",
+   "chk": "Checkout form with validation and a payment provider iframe so card numbers never touch our code.",
+   "ff": "Feature flags and A/B tests are decided on the server so the page never flickers or shifts.",
+   "rum": "Measures speed in the field and ties it to add-to-cart and purchase rates."
+  },
+  "dives": [
+   [
+    "Which rendering mode for which page?",
+    "Home, category and product: static or ISR at the CDN for SEO and speed, with price and stock streamed in. Search results: server rendered from the URL. Cart and checkout: dynamic, no-store, personal. Choose per route instead of one mode for the whole site."
+   ],
+   [
+    "A price changes. How does the product page update?",
+    "Use on-demand revalidation (for example revalidateTag on the product) so the next request rebuilds the page, and keep the live price in a small streamed or client-fetched section so the cached shell is never wrong about money."
+   ],
+   [
+    "Where do filters live and what about SEO?",
+    "In the URL as query params so pages are shareable and back works. Give real <a href> links and a unique URL per page, and keep filtered or oddly sorted combinations out of the index (noindex or robots rules), while important category pages stay indexable."
+   ],
+   [
+    "How does the cart stay correct?",
+    "The server cart is the truth. The UI updates optimistically (useOptimistic), sends the change, then replaces local state with the server response; stock or price conflicts are shown clearly. Keep cartId in an httpOnly cookie and merge guest and account carts on sign-in."
+   ],
+   [
+    "How do you keep card data out of your app?",
+    "Use the payment provider's hosted fields (Stripe Elements-style iframes): card details go straight to the provider and never touch your servers, which keeps PCI scope small. Add the provider to your Content Security Policy and use HTTPS everywhere."
+   ],
+   [
+    "Third-party scripts and A/B tests hurt speed. What do you do?",
+    "Resolve flags on the server or edge so there is no flicker or layout shift, load tags after interaction or in a worker, set budgets, and watch INP and CLS per experiment variant."
+   ],
+   [
+    "How do you make checkout accessible and easy to finish?",
+    "Real labels, autocomplete attributes, inline errors tied with aria-describedby and moved focus to the first error, large tap targets (24x24 CSS px minimum), and support wallets or express checkout to skip typing."
+   ],
+   [
+    "Traffic spike on a sale day. What protects the site?",
+    "Cache pages at the CDN with stale-while-revalidate, keep personal parts as small streamed islands with Suspense and error boundaries, degrade recommendations first and make orders idempotent so retries are safe."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: dynamic data (price, stock, personalization) fighting caching. Fix: static shell at the CDN, streamed holes, small hydrated islands, on-demand revalidation.",
+   "Next: recommendations, reviews, wishlists, saved payment methods, and field data linking speed to conversion."
+  ]
+ },
+ "fe-video-player": {
+  "level": "Hard",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Play, pause, seek, volume, speed, fullscreen, picture-in-picture",
+   "Adaptive quality: auto picks the bitrate, user can pin a quality",
+   "Captions and subtitles (WebVTT) plus audio tracks",
+   "Resume where you left off, on any device",
+   "Keyboard controls and a seek bar with hover thumbnails",
+   "Protected content plays through DRM when the title needs it"
+  ],
+  "reqN": [
+   "Fast start: LCP of the page under 2.5 s and the first frame as soon as possible",
+   "Few stalls: low rebuffering ratio, smooth quality switches",
+   "Smooth controls: INP under 200 ms (good threshold, 75th percentile)",
+   "Works on phones, desktops and TVs; flaky mobile networks",
+   "Accessible: captions, focus visible, controls reachable by keyboard, reduced motion respected",
+   "Measured: real-user QoE metrics, not just lab tests"
+  ],
+  "est": [
+   "Core Web Vitals good thresholds at the 75th percentile: LCP 2.5 s, INP 200 ms, CLS 0.1 (web.dev/articles/vitals)",
+   "hls.js defaults to a 30 s forward buffer goal (maxBufferLength) and a 60 MB cap on buffered bytes - a good reference point for how much the player holds ahead",
+   "hls.js ABR uses 0.95 x measured bandwidth to stay or step down, and 0.7 x to step up - so switching up is deliberately cautious",
+   "Assume the ladder is 5-7 renditions from a low-bitrate phone tier up to full HD or higher; the exact ladder is a packaging choice, say so out loud",
+   "Player code budget: assume under ~100-150 KB gzipped before play, lazy-load DRM and captions code when needed"
+  ],
+  "api": [
+   "GET /watch/:id -> page HTML with the player shell, poster and manifest URL (SSR or static)",
+   "GET manifest.m3u8 (HLS) or manifest.mpd (DASH) -> list of renditions, audio and subtitle tracks",
+   "GET segment-N.m4s (CDN, range or whole file) -> a few seconds of media at one bitrate",
+   "POST /license {challenge} -> {license} (DRM licence server, via EME)",
+   "GET /playback/:videoId/state -> {positionSec, updatedAt}",
+   "PUT /playback/:videoId/state {positionSec, deviceId} -> 204 (beacon every few seconds, last write wins)",
+   "POST /qoe {sessionId, startupMs, rebufferMs, avgBitrate, errors[]} (sendBeacon)",
+   "<VideoPlayer src poster captions=[{lang,url}] startPosition autoplay=false onTimeUpdate onEnded onError />"
+  ],
+  "data": [
+   "Server state: manifest, renditions, caption tracks, resume position (cached per video id)",
+   "Player state (client, one reducer or store): status idle|loading|playing|paused|buffering|ended|error, currentTime, buffered ranges, selected level, volume, muted, captions on/off",
+   "Media buffer lives in the browser's SourceBuffer, not in your JS memory - you only hold the segment queue and bandwidth estimate",
+   "Preferences in localStorage: volume, captions language, playback speed, 'auto' vs pinned quality",
+   "Resume position in the server (per user and title) with a local copy for instant start",
+   "QoE session object: startup time, rebuffer events, bitrate switches, sent with sendBeacon on pagehide"
+  ],
+  "blocks": {
+   "u": "The viewer presses play, drags the seek bar, toggles captions or goes fullscreen.",
+   "ui": "Custom controls built on the native video element: buttons with labels, a slider seek bar, captions menu and keyboard shortcuts.",
+   "abr": "hls.js or dash.js fetches segments and picks the next bitrate from measured throughput and how full the buffer is.",
+   "man": "The manifest lists every rendition, audio language and subtitle track so the player can plan before downloading media.",
+   "cdn": "Edge servers near the viewer serve short, cacheable segment files, so most requests never reach the origin.",
+   "mse": "Media Source Extensions let JavaScript append downloaded segments into a SourceBuffer that the video element plays.",
+   "drm": "Encrypted Media Extensions hand the licence exchange to the browser's CDM (Widevine, PlayReady, FairPlay) so keys never touch page JS.",
+   "prog": "Sends the current position every few seconds with a beacon so resume works on any device.",
+   "api": "Playback API stores the resume position and brokers the DRM licence request after checking entitlement.",
+   "qoe": "Collects startup time, rebuffering and bitrate switches from real viewers so you can see what users actually feel."
+  },
+  "dives": [
+   [
+    "How does adaptive bitrate (ABR) choose a quality?",
+    "It measures recent segment download speed and watches buffer level. hls.js only steps up when 0.7 x bandwidth beats the next bitrate, and steps down when 0.95 x bandwidth falls below the current one, so it climbs slowly and drops quickly to avoid stalls."
+   ],
+   [
+    "How do you make the first frame appear fast?",
+    "Preconnect to the CDN and fetch the manifest early (even before the user clicks), start on a low or middle rendition, show a poster image instantly, and keep the player script small and deferred. hls.js can also prefetch the first fragment with startFragPrefetch."
+   ],
+   [
+    "What does MSE actually do?",
+    "MSE replaces a single src URL with a MediaSource and SourceBuffer. Your code downloads segments and calls appendBuffer after each updateend, and the browser decodes them. This is why quality can change mid-stream: you just append a segment from a different rendition."
+   ],
+   [
+    "How does DRM fit in?",
+    "EME: ask requestMediaKeySystemAccess for Widevine, PlayReady or FairPlay, create MediaKeys, and on the encrypted event create a session, send its challenge to your licence server and pass the licence back. Needs HTTPS. Keys stay inside the CDM."
+   ],
+   [
+    "Accessibility of a custom player?",
+    "Use real buttons with names, a slider role for seek with aria-valuetext as a time, visible focus, WebVTT captions on by preference, no autoplay with sound, and respect prefers-reduced-motion for hover animations."
+   ],
+   [
+    "How do you avoid wasting data and memory?",
+    "Cap quality to the player size (hls.js capLevelToPlayerSize), keep the forward buffer bounded, evict the back buffer, and pause loading when the tab is hidden. ManagedMediaSource lets Safari evict buffer under memory pressure."
+   ],
+   [
+    "How do you handle errors and stalls?",
+    "Retry a segment with backoff, then step down a rendition, then try another CDN host from the manifest. Fatal errors show a plain message with a retry button; every error is sent to QoE with its type."
+   ],
+   [
+    "How do you test it?",
+    "Throttle the network in devtools to rehearse low bandwidth, run a matrix of browsers and devices, use a fixture stream with known renditions, and watch real-user QoE dashboards after release."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: startup time and rebuffering on poor networks. Fix: early manifest fetch, low first rendition, cautious ABR and CDN failover.",
+   "Next: low-latency live, offline downloads with persistent licences, Picture-in-Picture and casting."
+  ]
+ },
+ "fe-collaborative-editor": {
+  "level": "Hard",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Rich text: headings, lists, links, tables, images, formatting shortcuts",
+   "Many people edit the same document at once and see each other's changes live",
+   "Live cursors and selections with names and colours",
+   "Comments anchored to a range of text, with replies and resolve",
+   "Works offline: keep typing, merge when back online",
+   "Version history: browse and restore earlier snapshots",
+   "Undo and redo that only undoes your own edits"
+  ],
+  "reqN": [
+   "Typing feels instant: apply edits locally, never wait for the server",
+   "Everyone converges to the same document, no lost edits",
+   "INP under 200 ms (good threshold) even in long documents",
+   "Presence updates are cheap and may be lossy",
+   "Accessible editor: screen reader support, keyboard formatting, announced collaborator changes",
+   "i18n: IME input, right-to-left text, any script",
+   "Secure: permissions per document, sanitise pasted HTML"
+  ],
+  "est": [
+   "Core Web Vitals good thresholds at the 75th percentile: LCP 2.5 s, INP 200 ms, CLS 0.1 (web.dev/articles/vitals)",
+   "Yjs awareness marks a peer offline after 30 s without updates, so clients re-broadcast their state on a timer (docs.yjs.dev/api/about-awareness)",
+   "A task over 50 ms is a long task and hurts INP, so heavy work like spellcheck or export goes to a Web Worker (web.dev/articles/optimize-long-tasks)",
+   "Assume documents of tens of pages for the main path; say that very large documents need splitting into sub-documents or lazy loading of sections",
+   "Assume the editor bundle is the biggest chunk: load it only on the document route and lazy-load plugins like tables and comments"
+  ],
+  "api": [
+   "WS /doc/:id (y-websocket style): sync step 1 (state vector) -> sync step 2 (missing updates) -> incremental updates both ways",
+   "Awareness messages on the same socket: {clientId, clock, state:{user:{name,color}, cursor:{anchor,head}}}",
+   "GET /doc/:id/meta -> {title, permissions, latestSnapshotId}",
+   "GET /doc/:id/versions -> [{id, createdAt, author}]; POST /doc/:id/versions/:vid/restore",
+   "POST /doc/:id/comments {anchor, text} -> comment (anchor is a Yjs relative position, not a number)",
+   "<Editor docId user provider onReady readOnly renderToolbar plugins />"
+  ],
+  "data": [
+   "Document = Yjs Y.Doc with a shared XML fragment mapped to the ProseMirror schema (nodes and marks)",
+   "Server state: permissions, title, snapshots; the live document itself is the CRDT, not a REST resource",
+   "Client state: editor selection, toolbar state, open comment thread, connection status (connected | syncing | offline)",
+   "Offline copy: Y.Doc updates saved to IndexedDB (y-indexeddb) and merged on reconnect",
+   "Presence: Yjs awareness map, never persisted; each user publishes name, colour and cursor",
+   "Comments: stored beside the doc with anchors as Yjs relative positions so they follow the text as it moves",
+   "Preferences (zoom, spellcheck language) in localStorage"
+  ],
+  "blocks": {
+   "u": "The writer types, formats, comments and sees collaborators appear live.",
+   "ed": "ProseMirror or Lexical turns key presses into transactions on a typed document schema and renders them.",
+   "crdt": "A Yjs document keeps the local copy; each edit becomes a small update that merges cleanly with everyone else's.",
+   "idb": "Updates are persisted in IndexedDB so reloads and offline sessions keep your work.",
+   "ws": "The WebSocket provider sends and receives CRDT updates and awareness messages, and reconnects with backoff.",
+   "room": "The sync server groups connections per document, relays updates, persists them and enforces permissions.",
+   "aw": "Awareness shares names, colours and cursor positions as short-lived, throttled messages that are never saved.",
+   "cm": "Comments attach to relative positions so they stay on the right words as others edit around them.",
+   "ww": "A Web Worker runs spellcheck, word count and export so typing never waits on heavy work.",
+   "hist": "The server saves periodic snapshots of the document so people can browse and restore earlier versions."
+  },
+  "dives": [
+   [
+    "CRDT or OT (operational transform)?",
+    "OT needs a central server to order and transform operations; ProseMirror's own collab module works that way with a single authority that rejects and rebases. A CRDT like Yjs merges updates in any order, which makes offline and peer-to-peer natural, at the cost of metadata growth that Yjs compacts well."
+   ],
+   [
+    "Why apply edits locally first?",
+    "Waiting for a server round trip on every key would feel laggy. The editor applies the transaction at once (optimistic), the CRDT encodes it as an update, and the network catches up in the background."
+   ],
+   [
+    "How do cursors and comments stay correct while text changes?",
+    "Never store numeric offsets. Use Yjs relative positions, which point at an item in the CRDT, so they follow the text when others insert or delete before it."
+   ],
+   [
+    "How is presence different from document data?",
+    "Awareness is ephemeral: small JSON per user, overwritten by a newer clock, timed out after 30 s of silence, throttled when the cursor moves, and never stored. Losing a message is fine."
+   ],
+   [
+    "What does undo mean with many people?",
+    "Undo only your own changes. Y.UndoManager tracks the local origin so it will not revert a collaborator's paragraph."
+   ],
+   [
+    "Performance in long documents?",
+    "Keep the editor schema simple, avoid re-rendering the whole tree (decorations for cursors), debounce toolbar state, offload heavy work to a worker and consider splitting very large docs into sub-documents."
+   ],
+   [
+    "Accessibility?",
+    "Use contenteditable with proper roles and labels, keep native selection, announce collaborator joins politely (aria-live), make every toolbar action keyboard reachable and keep colour-only cursors readable with name labels."
+   ],
+   [
+    "Security of pasted and shared content?",
+    "Parse paste through the editor schema so only allowed nodes survive, sanitise URLs, check permissions on the server for every connection, and never trust awareness data as HTML."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: large documents and long histories growing the CRDT. Fix: sub-documents, lazy sections, periodic snapshots and garbage collection.",
+   "Next: suggestion mode, per-section permissions, and AI-assisted editing that proposes changes as tracked suggestions."
+  ]
+ },
+ "fe-email-client": {
+  "level": "Hard",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Inbox list with unread state, labels or folders, and threads (conversations)",
+   "Open a message and read it safely, including attachments and inline images",
+   "Compose, reply, forward with autosaved drafts",
+   "Undo send and send later",
+   "Search across mail with filters (from, date, has attachment)",
+   "Keyboard shortcuts for triage (archive, delete, next, reply)",
+   "Works offline: read, triage and write, then sync"
+  ],
+  "reqN": [
+   "Inbox opens instantly from local data, then updates",
+   "Smooth scrolling through very large mailboxes",
+   "INP under 200 ms for triage actions (good threshold)",
+   "Safe by default: untrusted HTML cannot run script or track by remote images",
+   "Accessible list and message view, full keyboard use",
+   "i18n: right-to-left, many scripts, locale dates",
+   "Multi-tab safe: one sync, consistent state"
+  ],
+  "est": [
+   "Core Web Vitals good thresholds at the 75th percentile: LCP 2.5 s, INP 200 ms, CLS 0.1 (web.dev/articles/vitals)",
+   "Lighthouse warns above about 800 DOM nodes and errors above about 1,400, so a mailbox must be virtualized (developer.chrome.com/docs/lighthouse/performance/dom-size)",
+   "Fastmail notes some users have millions of messages and bodies of hundreds of KB, so it loads metadata first and bodies later, only for pinned and recent mail (fastmail.com/blog/offline-mail-storage)",
+   "Gmail's undo send window can be 5, 10, 20 or 30 seconds (support.google.com/mail/answer/1284885)",
+   "Gmail history records are kept for at least a week, so the client must fall back to a full sync after a long gap (developers.google.com/gmail/api/guides/sync)",
+   "Browser storage is best-effort by default; Chromium allows up to 60% of disk per origin and persist() protects it from eviction (MDN storage quotas)"
+  ],
+  "api": [
+   "GET /threads?label=INBOX&pageToken=&limit=50 -> {threads:[{id, snippet, from, date, unread, labelIds}], nextPageToken, historyId}",
+   "GET /threads/:id -> {messages:[{id, headers, bodyHtml, attachments:[{id,name,size}]}]}",
+   "GET /history?startHistoryId=H -> {changes:[{type, messageId, labelsAdded}], historyId} (404 means do a full sync)",
+   "POST /messages/send {draftId, idempotencyKey} -> {id}",
+   "PUT /drafts/:id {to, subject, body} -> {id, updatedAt}",
+   "POST /threads/:id/modify {addLabels, removeLabels} (archive, star, read)",
+   "GET /search?q=&pageToken= -> {threadIds}",
+   "<ThreadList items selectedId onSelect onAction renderRow /> and <MessageView html sandbox allowRemoteImages onBlockedContent />"
+  ],
+  "data": [
+   "IndexedDB stores: threads (metadata), messages (bodies), labels, drafts, outbox, syncState {historyId}, searchIndex (token -> message ids)",
+   "Normalised by id: a thread holds message ids, a message holds label ids - one source of truth",
+   "Server state is the truth; the local database is a cache plus a queue of pending changes",
+   "UI state: selected thread, multi-select, open composer, scroll position, density",
+   "URL holds the route: /mail/inbox, /mail/thread/:id, /mail/search?q=",
+   "Preferences (shortcuts on/off, undo-send seconds, load remote images) in the server settings, mirrored in localStorage",
+   "Service worker cache: app shell and static assets; mail data stays in IndexedDB"
+  ],
+  "blocks": {
+   "u": "The user triages mail, reads, searches and writes, often with keyboard shortcuts.",
+   "shell": "A small app shell loads first and renders the inbox from local data before any network call.",
+   "sw": "The service worker precaches the shell and assets so the app opens offline.",
+   "list": "A virtualized thread list renders only the visible rows and reads them from IndexedDB.",
+   "idb": "IndexedDB holds thread metadata, message bodies, drafts and the outbox so mail works offline.",
+   "sync": "The sync engine asks the server only for changes since the last history id and merges them in.",
+   "api": "The Mail API serves lists, bodies and a change feed since a given history id.",
+   "view": "Message HTML is sanitised and shown in a sandboxed iframe with a strict CSP, with remote images blocked until allowed.",
+   "out": "Sent and queued messages wait in an outbox for a short delay, which is what makes undo send possible.",
+   "srch": "A search index built in a Web Worker answers queries on-device, and the server fills in older mail.",
+   "push": "A push message tells the client new mail has arrived so it syncs without polling."
+  },
+  "dives": [
+   [
+    "Why local-first for an inbox?",
+    "Reading from IndexedDB means the first paint needs no network, so the inbox opens instantly and works offline. The network only brings changes, and the UI updates when they arrive."
+   ],
+   [
+    "How does delta sync work?",
+    "Store the last history id. Ask for changes since it, apply them to the local database, and save the new id. If the server says the id is too old (Gmail keeps history at least a week), do a full re-sync."
+   ],
+   [
+    "How do you render untrusted email HTML safely?",
+    "Sanitise it, put it in an iframe with the sandbox attribute (no scripts), use srcdoc and a strict CSP, block remote images by default to stop tracking, and never combine allow-scripts with allow-same-origin because that undoes the sandbox."
+   ],
+   [
+    "How does undo send work?",
+    "Do not send at once: put the message in the outbox with a delay of a few seconds (Gmail offers 5 to 30). Undo removes it; otherwise it sends with an idempotency key so retries cannot duplicate it."
+   ],
+   [
+    "How do you scroll a huge mailbox smoothly?",
+    "Virtualize the list so only the visible rows plus a small overscan are in the DOM, use fixed or estimated row heights, and page metadata in batches while bodies load later."
+   ],
+   [
+    "How does search work offline?",
+    "Build a token index on the device in a Web Worker (tokenise, case-fold, prefix match) over downloaded messages, show local hits at once, and merge server results for older mail."
+   ],
+   [
+    "Several tabs open?",
+    "Elect a leader tab with the Web Locks API so only one tab syncs, share changes through BroadcastChannel and keep IndexedDB as the single store."
+   ],
+   [
+    "Accessibility of the list?",
+    "Use a listbox or grid pattern with one tab stop and arrow-key movement, announce unread state and selection, keep shortcuts discoverable and switchable, and provide focus after archive or delete."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: first sync of a huge mailbox and storage eviction. Fix: metadata first, bodies for recent mail, persist() and a graceful full re-sync.",
+   "Next: smart replies, scheduled send, snooze, and AI summaries that run on top of the local index."
+  ]
+ },
+ "fe-spreadsheet-grid": {
+  "level": "Hard",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Scroll a very large grid of rows and columns smoothly",
+   "Select cells and ranges with mouse and keyboard; resize and freeze rows and columns",
+   "Edit a cell in place; formulas like =SUM(A1:A10) recalculate dependent cells",
+   "Copy, paste, fill-down, sort and filter",
+   "Undo and redo",
+   "Real-time collaboration with other people's cursors",
+   "Number, date and currency formats"
+  ],
+  "reqN": [
+   "Scrolling stays smooth; typing and selection respond fast (INP under 200 ms, good threshold)",
+   "A recalculation never freezes the page",
+   "Memory stays modest because only filled cells are stored",
+   "Accessible: keyboard navigation and screen reader access to the grid",
+   "i18n: locale number formats, right-to-left sheets, IME input",
+   "Conflict-safe collaboration; offline edits merge"
+  ],
+  "est": [
+   "Google Sheets allows up to 20 million cells or 100 MB per spreadsheet, so a sheet can far exceed what any DOM could hold (support.google.com/drive/answer/37603)",
+   "Lighthouse warns above about 800 DOM nodes and errors above about 1,400, which rules out one DOM node per cell (developer.chrome.com/docs/lighthouse/performance/dom-size)",
+   "Tasks over 50 ms are long tasks that hurt INP, so formula recalculation runs in a Web Worker (web.dev/articles/optimize-long-tasks)",
+   "Assume a viewport shows a few hundred visible cells; draw only those plus a small overscan each frame",
+   "Core Web Vitals good thresholds at the 75th percentile: LCP 2.5 s, INP 200 ms, CLS 0.1 (web.dev/articles/vitals)"
+  ],
+  "api": [
+   "GET /sheets/:id/meta -> {sheetNames, rowCount, colCount, frozen, columnWidths}",
+   "GET /sheets/:id/tabs/:tab/cells?rowStart=&rowEnd=&colStart=&colEnd= -> {cells:[{r,c,raw,format}]} (load the visible window, then prefetch around it)",
+   "WS /sheets/:id: client sends {opId, baseRevision, ops:[{type:'set', r, c, raw}]}; server broadcasts accepted ops with a revision number",
+   "POST /sheets/:id/export?format=csv|xlsx -> file",
+   "<DataGrid rowCount colCount getCell onCellEdit rowHeight overscan frozenRows frozenCols renderCell />",
+   "Worker messages: {type:'setCell', cell} -> {type:'valuesChanged', cells:[{id,value}]}"
+  ],
+  "data": [
+   "Sheet model: sparse map keyed by cell id (row,col) -> {raw, value, format}; empty cells are not stored",
+   "Dependency graph: cell id -> cells it reads and cells that read it, kept in the formula worker",
+   "Viewport state: scroll offsets, visible row and column range, column widths, frozen panes",
+   "Selection state: active cell, ranges, edit mode (separate from the model)",
+   "Command stack for undo and redo: list of {do, undo} commands that are also the collaboration ops",
+   "Server state: revision number and operation log; chunks of cells fetched by range",
+   "Preferences (zoom, locale) in localStorage; sheet id and tab in the URL"
+  ],
+  "blocks": {
+   "u": "The user scrolls, selects cells, types values and formulas, and works with others.",
+   "grid": "The viewport maps scroll position to a visible range of rows and columns so only that window is rendered.",
+   "cv": "A canvas draws the visible cells (text, borders, fills, selection) in one pass per frame, instead of thousands of DOM nodes.",
+   "sel": "Tracks the active cell and ranges, handles arrow keys, Tab, Enter and shortcuts, and keeps a small accessible DOM layer in step.",
+   "edit": "An input overlay is placed exactly over the active cell for typing, so the browser handles text input, IME and selection.",
+   "model": "A sparse map stores only filled cells by id, so a huge sheet costs memory only for real data.",
+   "calc": "A Web Worker parses formulas, keeps the dependency graph and recomputes only the cells affected by a change.",
+   "undo": "Every edit is a command with a do and an undo, which powers undo, redo and the operations sent to collaborators.",
+   "sync": "Sends local operations over a WebSocket and applies remote ones, rebasing against the server revision.",
+   "srv": "The sheet service orders operations, saves the sheet in chunks and serves cell ranges."
+  },
+  "dives": [
+   [
+    "Why canvas and not a table of divs?",
+    "A big visible grid in DOM means thousands of nodes and slow style and layout work. A canvas redraws just the visible cells directly. Google moved Docs to canvas rendering for performance and consistency, and the same reasoning applies to grids."
+   ],
+   [
+    "How does virtualization work in two directions?",
+    "Compute the first and last visible row and column from scroll offsets and cumulative row heights and column widths, then draw only those plus overscan. Keep a prefix-sum (or tree) of sizes so mapping offset to index is fast even with custom sizes."
+   ],
+   [
+    "How are formulas recalculated efficiently?",
+    "Parse into a dependency graph. When a cell changes, mark it dirty, walk its dependents in topological order, recompute only those, detect cycles, and send the changed values back in one batch. Run it in a Web Worker so typing stays smooth."
+   ],
+   [
+    "How do you stay accessible if the grid is canvas?",
+    "Mirror the active area in a hidden DOM grid with role grid, row and gridcell, and aria-rowcount, aria-colcount, aria-rowindex and aria-colindex for the full size. Follow the WAI-ARIA grid keyboard pattern: arrows, Home and End, Ctrl+Home and Ctrl+End, Page Up and Down."
+   ],
+   [
+    "How do you keep text input and IME right?",
+    "Do not draw an editor yourself. Overlay a real input or contenteditable on the active cell so IME, spellcheck, paste and screen readers work."
+   ],
+   [
+    "How is collaboration handled?",
+    "Send small operations ('set cell A1 to 5') with a base revision. The server orders them; conflicting edits to the same cell are decided by order (last writer wins) which is fine for cells. Structural changes like inserting a row need transformation or a CRDT for position."
+   ],
+   [
+    "How do undo and redo fit in?",
+    "Each action is a command object with do and undo. Undo applies the inverse and sends it as a normal operation, so everyone stays consistent; keep one stack per user."
+   ],
+   [
+    "Loading a huge sheet?",
+    "Fetch only the visible window and a margin from the server, show placeholders while scrolling fast, cancel stale requests, and cache fetched blocks in memory."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: recalculating long dependency chains and repainting during fast scroll. Fix: dirty-cell recalculation in a worker, batched value updates and requestAnimationFrame drawing with overscan.",
+   "Next: pivot tables, charts, conditional formatting, and OffscreenCanvas rendering in a worker."
+  ]
+ },
+ "fe-travel-booking": {
+  "level": "Medium",
+  "track": "Frontend",
+  "companies": [],
+  "reqF": [
+   "Search by place, dates and guests; see a list of results and the same results on a map",
+   "Filters (price, type, amenities) and sort, kept when you share or reload the page",
+   "Moving or zooming the map searches that area",
+   "Date picker for check-in and check-out with blocked dates",
+   "Listing page with photos, price breakdown and availability",
+   "Book: sign in, enter details, pay, get a confirmation",
+   "Save favourites"
+  ],
+  "reqN": [
+   "SEO: search pages are crawlable and fast on first load (LCP under 2.5 s, good threshold)",
+   "Filtering and map moves respond quickly (INP under 200 ms)",
+   "No layout jumps as images and prices arrive (CLS under 0.1)",
+   "Accessible date picker and map alternatives (keyboard, screen reader, WCAG 2.2 AA)",
+   "i18n: currencies, date formats, week start, right-to-left",
+   "Safe payments: card data never touches our code; no double charges",
+   "Works on phones with slow networks"
+  ],
+  "est": [
+   "Core Web Vitals good thresholds at the 75th percentile: LCP 2.5 s, INP 200 ms, CLS 0.1 (web.dev/articles/vitals)",
+   "Lighthouse warns above about 800 DOM nodes and errors above about 1,400, so long result lists need virtualization or paging (developer.chrome.com/docs/lighthouse/performance/dom-size)",
+   "Stripe idempotency keys can be up to 255 characters and are kept for at least 24 hours on API v1, so a retry within a day returns the saved result (docs.stripe.com/api/idempotent_requests)",
+   "Assume 20-30 results per page and 1 image above the fold per card at first; the rest lazy-load with width and height set",
+   "Assume the map library (often hundreds of KB) is the biggest chunk, so it loads lazily after the list is visible"
+  ],
+  "api": [
+   "GET /search?place=&checkin=&checkout=&guests=&filters=&bbox=&sort=&cursor= -> {items:[{id,title,photos,price,rating,lat,lng}], nextCursor, total}",
+   "GET /listings/:id -> details, photos, amenities",
+   "GET /listings/:id/availability?month=2026-12 -> {blockedDates[], minNights}",
+   "POST /quote {listingId, checkin, checkout, guests} -> {total, breakdown, expiresAt}",
+   "POST /bookings {quoteId, paymentToken} with header Idempotency-Key: <uuid> -> {bookingId, status}",
+   "POST /payment-intents -> {clientSecret} (PSP hosted fields render inside an iframe)",
+   "POST /auth/login -> sets HttpOnly SameSite cookie; GET /me -> user",
+   "<DateRangePicker value onChange locale minNights blockedDates /> and <ResultsMap items activeId onActiveChange onBoundsChange />"
+  ],
+  "data": [
+   "URL (source of truth for search): ?place=&checkin=&checkout=&guests=&price=&type=&bbox=&sort=&page=",
+   "Server state in a query cache keyed by the normalised search params (TanStack Query style); stale-while-revalidate; prefetch the next page",
+   "Client UI state: hovered listing id, map viewport, open filter panel, date picker draft",
+   "Normalised entities: listings by id, photos by listing id, so list, map and listing page share data",
+   "Booking draft: guests, dates, quote id, form values - kept in memory and sessionStorage so refresh does not lose it; payment data never stored",
+   "Auth: HttpOnly session cookie (JS cannot read it); user profile in the cache",
+   "Favourites: server state with optimistic update",
+   "Preferences (currency, language) in a cookie so SSR can use it"
+  ],
+  "blocks": {
+   "u": "The traveller searches, filters, explores the map, picks dates and books.",
+   "ssr": "The server renders the search page with real results so crawlers and users see content at once, then the page hydrates.",
+   "url": "Every filter, date and map area lives in the URL, so links can be shared, the back button works and the server can read it.",
+   "qc": "A query cache fetches and stores results by filter key, de-duplicates requests and keeps old results while new ones load.",
+   "api": "The search API returns a page of results for the filters and map bounds.",
+   "list": "The results list loads more as you scroll, with images lazy-loaded and sizes reserved to avoid layout shift.",
+   "map": "The map loads as a separate chunk and shows pins for the same results, in sync with the list.",
+   "dp": "A keyboard-friendly, locale-aware date range picker that blocks unavailable dates and enforces minimum nights.",
+   "book": "The booking form validates input, locks the quote and submits once with an idempotency key.",
+   "pay": "The payment provider's iframe collects card details so they never touch our code.",
+   "auth": "Sign-in uses an HttpOnly cookie session, and the booking resumes exactly where the user left off."
+  },
+  "dives": [
+   [
+    "Why put filters in the URL?",
+    "The URL becomes the single source of truth: shareable links, working back and forward buttons, refresh keeps state, and SSR can render the right page. Components read from the URL and update it, rather than keeping separate state."
+   ],
+   [
+    "How do list and map stay in sync?",
+    "Both read the same cached result set. Hovering a card sets an activeId that highlights the pin and the reverse, and the map's moveend event (debounced) updates the bbox in the URL, which triggers a new fetch."
+   ],
+   [
+    "How do you stop the map from spamming the API?",
+    "Debounce map moves, fetch only on moveend not on every frame, cancel in-flight requests with AbortController, and show a 'Search this area' button if auto-search is too noisy."
+   ],
+   [
+    "How do you prevent a double booking or double charge?",
+    "Generate an idempotency key (a UUID) when the checkout opens and send it on the booking POST. Disable the button while pending. A retry after a timeout returns the saved result instead of creating a second booking."
+   ],
+   [
+    "Server rendering or client rendering for search?",
+    "Server-render the first results for SEO and fast LCP, then hydrate. Later filter changes can be client-side navigations that fetch JSON, with the URL updated and results cached."
+   ],
+   [
+    "How do you make the date picker accessible and international?",
+    "Use a grid with arrow-key navigation, labels per day, clear blocked-date states and range announcements; format with Intl.DateTimeFormat, respect the locale's first day of the week, and support RTL."
+   ],
+   [
+    "How do you keep payment data safe?",
+    "Use the payment provider's hosted fields in an iframe, load their script from their origin, add a CSP, and send only a token to our server. Auth uses an HttpOnly SameSite cookie, with CSRF protection on state-changing calls."
+   ],
+   [
+    "How do you avoid layout shift and slow images?",
+    "Reserve image space with width and height or aspect-ratio, serve responsive sizes and modern formats, give the first image priority, lazy-load the rest and keep skeletons the same size as final cards."
+   ]
+  ],
+  "wrap": [
+   "Bottleneck: heavy map bundle and result images. Fix: lazy map chunk, responsive images, caching by filter key and prefetching the next page.",
+   "Next: saved searches and price alerts, flexible dates, and personalised ranking."
+  ]
  }
 }

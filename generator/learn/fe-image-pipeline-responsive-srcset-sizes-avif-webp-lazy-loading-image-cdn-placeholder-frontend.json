@@ -1,0 +1,313 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "An image pipeline turns one uploaded master image into many sizes and modern formats, and the page lets the browser pick the best one with srcset and sizes. Add lazy loading, fixed dimensions and a placeholder so images are fast and never move the layout.",
+ "like": "Like a photo lab that prints the same picture as a wallet card, a poster or a billboard, and hands each customer exactly the size they need.",
+ "why": [
+  "Images are often the biggest bytes on a page and the usual LCP element",
+  "Right-sized AVIF or WebP files cost far less data than one huge JPEG",
+  "Reserved space and placeholders stop layout shift (CLS)"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 404,
+  "nodes": [
+   {
+    "id": "o",
+    "t": "Master upload|one high-quality original",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "picture"
+   },
+   {
+    "id": "cdn",
+    "t": "Image CDN|resize, crop, quality",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "imgopt"
+   },
+   {
+    "id": "f",
+    "t": "Formats|AVIF, WebP, JPEG fallback",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "files"
+   },
+   {
+    "id": "h",
+    "t": "img + srcset + sizes|browser picks width",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "code"
+   },
+   {
+    "id": "l",
+    "t": "Lazy vs priority|loading, fetchpriority",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "clock"
+   },
+   {
+    "id": "p",
+    "t": "Placeholder|width/height, blur or color",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "layers"
+   },
+   {
+    "id": "c",
+    "t": "Edge cache|immutable variant URLs",
+    "x": 280,
+    "y": 300,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "cache"
+   }
+  ],
+  "edges": [
+   [
+    "o",
+    "cdn",
+    "source"
+   ],
+   [
+    "cdn",
+    "f",
+    "encode"
+   ],
+   [
+    "f",
+    "h",
+    "candidates"
+   ],
+   [
+    "h",
+    "l",
+    "chosen"
+   ],
+   [
+    "p",
+    "h",
+    "reserve space"
+   ],
+   [
+    "cdn",
+    "c",
+    "cache"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Keep one master",
+    "d": "Store the original once in object storage. Everything else is generated, so you never hand-export sizes.",
+    "hl": [
+     "o"
+    ]
+   },
+   {
+    "t": "Generate variants on demand",
+    "d": "The image CDN (or build step) resizes to widths like 400, 800, 1200, 1600 and encodes AVIF, WebP and a JPEG fallback. Each variant has its own URL and is cached.",
+    "hl": [
+     "cdn",
+     "f"
+    ]
+   },
+   {
+    "t": "Describe the choices",
+    "d": "The img tag lists candidates in srcset with w descriptors and states its layout width in sizes. The browser combines that with screen size and pixel density to pick one. Use picture only for art direction or format fallback.",
+    "hl": [
+     "h"
+    ]
+   },
+   {
+    "t": "Reserve the space",
+    "d": "Always set width and height (or aspect-ratio) so the box exists before the file arrives. Add a blur or dominant-color placeholder for a smooth reveal.",
+    "hl": [
+     "p"
+    ]
+   },
+   {
+    "t": "Prioritise the right images",
+    "d": "The hero or LCP image loads eagerly with fetchpriority=high. Everything below the fold gets loading=lazy. Never lazy-load the LCP image.",
+    "hl": [
+     "l"
+    ]
+   },
+   {
+    "t": "Cache hard",
+    "d": "Variant URLs are immutable and cached at the edge and in the browser; the CDN negotiates format from the Accept header or you list sources in picture.",
+    "hl": [
+     "c"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "20% smaller, 50% longer to encode",
+   "l": "AVIF versus WebP according to Next.js docs, so the first request is slower but cached ones are faster",
+   "s": "https://nextjs.org/docs/app/api-reference/components/image"
+  },
+  {
+   "v": "13% to 15% slower",
+   "l": "LCP when the LCP image was lazy-loaded (WebPageTest A/B on WordPress archive pages: 2,029 ms to 1,759 ms on desktop)",
+   "s": "https://web.dev/articles/lcp-lazy-loading"
+  },
+  {
+   "v": "2.6 s to 1.9 s",
+   "l": "LCP improvement on Google Flights from fetchpriority=high on the LCP image",
+   "s": "https://web.dev/articles/fetch-priority"
+  },
+  {
+   "v": "1,250 px / 2,500 px",
+   "l": "Distance from the viewport at which Chrome starts loading lazy images on 4G / slower connections (values may change)",
+   "s": "https://web.dev/articles/browser-level-image-lazy-loading"
+  }
+ ],
+ "tool": "Next.js Image, Cloudinary, imgix, Cloudflare Images, sharp",
+ "choices": [
+  {
+   "t": "Image CDN or build-time processing",
+   "d": "A CDN transforms on demand and adapts to new sizes without a rebuild. Build-time (sharp in CI) is cheaper and fully static but only makes sizes you predicted."
+  },
+  {
+   "t": "AVIF, WebP or both",
+   "d": "AVIF compresses best but encodes slower; WebP is widely supported and quick. Offer AVIF then WebP then JPEG fallback so every browser gets the best it can decode."
+  },
+  {
+   "t": "srcset with w descriptors, or picture",
+   "d": "srcset + sizes covers resolution switching. Use picture for art direction (different crop on mobile) and for explicit format fallback."
+  },
+  {
+   "t": "Placeholder style",
+   "d": "Blur-up (tiny base64 image), dominant color, or BlurHash. All cost little; keep the data URL small so it does not slow the HTML."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-browser-http-cache-cache-control-etag-immutable-hashed-assets-304-frontend",
+   "why": "Immutable variant URLs rely on long-lived caching"
+  },
+  {
+   "slug": "fe-prefetch-preload-resource-hints-preload-preconnect-prefetch-speculation-rules-frontend",
+   "why": "Preload the LCP image when it is only discovered late (CSS background or JS-rendered)"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Huge image on a phone",
+   "d": "Missing or wrong sizes makes the browser assume 100vw and download the biggest candidate.",
+   "see": "Network tab shows a 2000px file for a 300px slot",
+   "fix": "Write accurate sizes (or use a framework Image component) and check downloaded versus displayed size"
+  },
+  {
+   "t": "Hero is lazy-loaded",
+   "d": "loading=lazy on the first image delays LCP.",
+   "see": "LCP element has a late request start",
+   "fix": "Remove lazy, add fetchpriority=high, make it discoverable in the initial HTML"
+  },
+  {
+   "t": "Layout shift as images arrive",
+   "d": "No width, height or aspect-ratio, so the box has zero height until load.",
+   "see": "CLS spike and text jumping",
+   "fix": "Set dimensions on every img and reserve space for placeholders"
+  }
+ ],
+ "say": [
+  "I store one master and generate AVIF, WebP and JPEG variants at several widths on an image CDN, with immutable URLs cached at the edge.",
+  "The img tag gets srcset and an accurate sizes attribute plus width and height, so the browser downloads the smallest adequate file and the layout never shifts.",
+  "The LCP hero is eager with fetchpriority high; everything below the fold is lazy. Lazy-loading the hero is a classic LCP bug."
+ ],
+ "followups": [
+  {
+   "q": "How does the browser choose from srcset?",
+   "a": "It reads the w descriptors, uses sizes to know the layout width, multiplies by device pixel ratio, and picks the closest suitable file. Wrong sizes means wrong choices."
+  },
+  {
+   "q": "When would you use picture instead?",
+   "a": "For art direction (different crops per breakpoint) or when you want explicit type-based sources for AVIF and WebP with a JPEG fallback."
+  }
+ ],
+ "today": "AVIF and WebP are supported by all modern browsers, fetchpriority is Baseline 2024, and framework image components (Next.js Image and similar) generate srcset, sizes, formats and blur placeholders for you. The big wins are still correct sizes, a fast LCP image and reserved space.",
+ "sources": [
+  {
+   "t": "web.dev: Responsive images",
+   "u": "https://web.dev/articles/responsive-images"
+  },
+  {
+   "t": "web.dev: Browser-level image lazy loading",
+   "u": "https://web.dev/articles/browser-level-image-lazy-loading"
+  },
+  {
+   "t": "web.dev: Optimize LCP",
+   "u": "https://web.dev/articles/optimize-lcp"
+  },
+  {
+   "t": "web.dev: Don't lazy-load your LCP image",
+   "u": "https://web.dev/articles/lcp-lazy-loading"
+  },
+  {
+   "t": "web.dev: Fetch Priority API",
+   "u": "https://web.dev/articles/fetch-priority"
+  },
+  {
+   "t": "web.dev: Choose the right image format",
+   "u": "https://web.dev/articles/choose-the-right-image-format"
+  },
+  {
+   "t": "Next.js: Image component",
+   "u": "https://nextjs.org/docs/app/api-reference/components/image"
+  }
+ ],
+ "check": [
+  {
+   "q": "Which attribute tells the browser how wide the image will be rendered?",
+   "a": "sizes",
+   "d": [
+    "srcset",
+    "alt",
+    "loading"
+   ],
+   "why": "sizes describes the layout width; srcset lists the candidate files."
+  },
+  {
+   "q": "The hero image is the LCP element. What should you do?",
+   "a": "Load it eagerly, optionally with fetchpriority=high",
+   "d": [
+    "Add loading=lazy to save bytes",
+    "Convert to a CSS background",
+    "Wait for scroll"
+   ],
+   "why": "Lazy-loading the LCP image delays it; high priority gets it moving sooner."
+  },
+  {
+   "q": "Why set width and height on images?",
+   "a": "To reserve space and avoid layout shift",
+   "d": [
+    "To make the file smaller",
+    "To enable AVIF",
+    "To disable caching"
+   ],
+   "why": "The browser can compute the aspect ratio before the image loads, so nothing jumps."
+  }
+ ]
+}

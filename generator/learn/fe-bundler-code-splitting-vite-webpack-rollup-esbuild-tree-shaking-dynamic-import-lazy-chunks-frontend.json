@@ -1,0 +1,312 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A bundler turns your many source files into a few optimised files for the browser. Code splitting then cuts that output into chunks, so a visitor downloads only the code the current page needs and fetches the rest on demand with dynamic import().",
+ "like": "Like packing for a trip: you carry a small day bag now and collect the big suitcase only when you actually reach the hotel.",
+ "why": [
+  "Less JavaScript at startup means faster interaction and a better INP",
+  "Rarely used features (charts, editors, admin) cost nothing until opened",
+  "Hashed chunk filenames can be cached for a long time, so repeat visits are quick"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 404,
+  "nodes": [
+   {
+    "id": "b",
+    "t": "Bundler|Vite / webpack",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "bundle"
+   },
+   {
+    "id": "t",
+    "t": "Tree shaking|drop unused exports",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "scissors"
+   },
+   {
+    "id": "s",
+    "t": "Code splitting|import() boundaries",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "layers"
+   },
+   {
+    "id": "c",
+    "t": "Hashed chunks|entry, route, vendor",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "files"
+   },
+   {
+    "id": "cdn",
+    "t": "CDN + HTTP cache|immutable filenames",
+    "x": 560,
+    "y": 300,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "cache"
+   },
+   {
+    "id": "br",
+    "t": "Browser|loads route chunk on demand",
+    "x": 280,
+    "y": 300,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "bud",
+    "t": "Size budget|analyzer + CI limit",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "gauge"
+   }
+  ],
+  "edges": [
+   [
+    "b",
+    "t",
+    "ES modules"
+   ],
+   [
+    "t",
+    "s",
+    "smaller graph"
+   ],
+   [
+    "s",
+    "c",
+    "emit"
+   ],
+   [
+    "c",
+    "cdn",
+    "upload"
+   ],
+   [
+    "cdn",
+    "br",
+    "fetch"
+   ],
+   [
+    "b",
+    "bud",
+    "report"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Bundle the module graph",
+    "d": "The bundler starts at your entry file, follows every import, and builds one dependency graph. Vite's production build now uses Rolldown; webpack and Rollup do the same job.",
+    "hl": [
+     "b"
+    ]
+   },
+   {
+    "t": "Tree shake dead code",
+    "d": "Because import and export are static, the bundler can see which exports are never used and drop them. Packages need ES module builds and a correct sideEffects flag for this to work.",
+    "hl": [
+     "t"
+    ]
+   },
+   {
+    "t": "Split at dynamic import()",
+    "d": "Every import() call is a split point. Routes, modals and heavy libraries become separate chunks; React.lazy plus Suspense wraps them in components.",
+    "hl": [
+     "s"
+    ]
+   },
+   {
+    "t": "Emit hashed chunks",
+    "d": "Output files carry a content hash in the name, so a changed file gets a new URL and an unchanged one keeps its old, cached URL. Shared code is pulled into common chunks.",
+    "hl": [
+     "c"
+    ]
+   },
+   {
+    "t": "Serve and cache",
+    "d": "The CDN serves chunks with a long immutable cache lifetime. The browser fetches the entry first, then each route chunk when the user goes there (or when you prefetch it).",
+    "hl": [
+     "cdn",
+     "br"
+    ]
+   },
+   {
+    "t": "Guard the size",
+    "d": "A bundle analyzer shows what is big; a budget in CI fails the build when JavaScript grows past an agreed limit.",
+    "hl": [
+     "bud"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "170 KB",
+   "l": "Starter budget for critical-path resources, compressed and minified (web.dev baseline for slow-network devices)",
+   "s": "https://web.dev/articles/performance-budgets-101"
+  },
+  {
+   "v": "50 ms",
+   "l": "A task longer than this is a long task and blocks input - big bundles create long parse and run tasks",
+   "s": "https://web.dev/articles/optimize-long-tasks"
+  },
+  {
+   "v": "Entry -> (A + C)",
+   "l": "Vite rewrites dynamic imports with a preload step so shared chunks load in parallel, not one after another",
+   "s": "https://vite.dev/guide/features.html"
+  }
+ ],
+ "tool": "Vite (Rolldown), webpack, Rollup, esbuild",
+ "choices": [
+  {
+   "t": "Split by route, by component, or by vendor",
+   "d": "Route splitting is the default win: most users never visit most routes. Split heavy components (editor, chart, map) next. A separate vendor chunk helps caching because libraries change less often than your code."
+  },
+  {
+   "t": "How many chunks",
+   "d": "Too few means a big first download; too many small chunks means many requests and waterfalls. Aim for one entry, one chunk per route, and a few shared chunks, then measure."
+  },
+  {
+   "t": "When to load the lazy chunk",
+   "d": "On click is simplest but shows a spinner. Prefetch on hover, on idle, or when the link enters the viewport to hide the wait (see the Prefetch / Preload block)."
+  },
+  {
+   "t": "Client bundle versus server components",
+   "d": "Moving work to the server (RSC, SSR) removes JavaScript from the bundle entirely, which beats splitting what is left."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-react-server-components-rsc-server-components-use-client-server-actions-app-router-frontend",
+   "why": "Ships no client JavaScript at all for server-only components"
+  },
+  {
+   "slug": "fe-prefetch-preload-resource-hints-preload-preconnect-prefetch-speculation-rules-frontend",
+   "why": "Pairs with splitting: fetch the next chunk before the click"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Chunk fails to load after a deploy",
+   "d": "An open tab asks for an old hashed file that the new deploy removed, so the import() rejects (ChunkLoadError).",
+   "see": "Console shows ChunkLoadError or a 404 on a chunk",
+   "fix": "Keep old assets for a while, catch the error and reload once, and show a 'new version' prompt"
+  },
+  {
+   "t": "Waterfall of lazy chunks",
+   "d": "Route chunk imports a component chunk which imports a library chunk, each fetched after the last.",
+   "see": "Network panel shows a staircase of requests",
+   "fix": "Preload the chain, flatten imports, or let the bundler hoist shared code"
+  },
+  {
+   "t": "Tree shaking silently fails",
+   "d": "A library ships CommonJS or has side effects, so the whole library lands in the bundle.",
+   "see": "Analyzer shows a huge single dependency",
+   "fix": "Use ES module builds, import named functions, and check sideEffects in package.json"
+  }
+ ],
+ "say": [
+  "I split by route first with dynamic import, then split heavy components like the editor, so the first load ships only what the landing page needs.",
+  "Files have content hashes and are served immutable from the CDN, so repeat visits cost almost nothing and deploys bust only the files that changed.",
+  "I set a JavaScript budget in CI and read the bundle analyzer on every big dependency, because bundle size is the cheapest INP and LCP win."
+ ],
+ "followups": [
+  {
+   "q": "How do you decide what to split?",
+   "a": "Start from the bundle analyzer and real routes. Anything over a few tens of KB that is not needed for first paint (editors, charts, maps, markdown, admin screens) goes behind import(). Measure the entry chunk after each change."
+  },
+  {
+   "q": "What happens to an open tab when you deploy?",
+   "a": "Its old chunk URLs can 404. Keep previous assets live for a while, retry once on ChunkLoadError by reloading the page, and surface a refresh banner."
+  }
+ ],
+ "today": "Vite's production build now runs on Rolldown (a Rust bundler), webpack 5 and Rollup remain common, and frameworks hide most splitting behind routes. Splitting still matters, but the biggest gains now come from shipping less client JavaScript in the first place (server components, islands).",
+ "sources": [
+  {
+   "t": "webpack: Code Splitting",
+   "u": "https://webpack.js.org/guides/code-splitting/"
+  },
+  {
+   "t": "Vite: Features (code splitting, async chunk loading)",
+   "u": "https://vite.dev/guide/features.html"
+  },
+  {
+   "t": "Vite: Building for production",
+   "u": "https://vite.dev/guide/build.html"
+  },
+  {
+   "t": "web.dev: Reduce JavaScript payloads with code splitting",
+   "u": "https://web.dev/articles/reduce-javascript-payloads-with-code-splitting"
+  },
+  {
+   "t": "react.dev: lazy",
+   "u": "https://react.dev/reference/react/lazy"
+  },
+  {
+   "t": "MDN: Tree shaking",
+   "u": "https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking"
+  },
+  {
+   "t": "web.dev: Performance budgets 101",
+   "u": "https://web.dev/articles/performance-budgets-101"
+  },
+  {
+   "t": "web.dev: Optimize long tasks",
+   "u": "https://web.dev/articles/optimize-long-tasks"
+  }
+ ],
+ "check": [
+  {
+   "q": "Which statement about tree shaking is true?",
+   "a": "It removes unused exports using the static structure of import and export",
+   "d": [
+    "It removes unused CSS at runtime",
+    "It needs the browser to run the code first",
+    "It only works with CommonJS require()"
+   ],
+   "why": "Tree shaking is a build-time analysis that relies on static ES module syntax."
+  },
+  {
+   "q": "What does a dynamic import() create?",
+   "a": "A separate chunk loaded on demand",
+   "d": [
+    "A second copy of the whole app",
+    "A service worker",
+    "A server-side render"
+   ],
+   "why": "import() is a split point, so the bundler emits its module graph as its own file."
+  },
+  {
+   "q": "Why put a content hash in chunk filenames?",
+   "a": "So files can be cached forever and a change gets a new URL",
+   "d": [
+    "So the file loads faster in parallel",
+    "So the browser skips minification",
+    "So the CDN can compress it"
+   ],
+   "why": "A new hash means a new URL, so long cache lifetimes are safe."
+  }
+ ]
+}

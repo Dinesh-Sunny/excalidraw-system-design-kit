@@ -1,0 +1,293 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "An app shell is the permanent frame of the app - header, navigation, sidebar - that stays mounted while a client-side router swaps only the content area as the URL changes. The router uses the History API to update the address bar without a full page load, and loads each route's code on demand.",
+ "like": "Like a TV that stays on while you change channels: the frame and remote stay put, and only the picture changes.",
+ "why": [
+  "Navigation feels instant because only the changed part re-renders",
+  "Shared layout state, such as sidebar scroll or an open panel, survives page changes",
+  "Each route loads only its own code, keeping first load small"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 290,
+  "nodes": [
+   {
+    "id": "url",
+    "t": "URL / link click|pushState, popstate",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "router",
+    "t": "Router|matches route tree",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "router"
+   },
+   {
+    "id": "shell",
+    "t": "App shell layout|header, nav stay mounted",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "layers"
+   },
+   {
+    "id": "outlet",
+    "t": "Outlet|nested route content",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "spa"
+   },
+   {
+    "id": "chunk",
+    "t": "Route chunk|dynamic import",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "cache",
+    "i": "bundle"
+   },
+   {
+    "id": "data",
+    "t": "Route loader|fetch before render",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "apiclient"
+   }
+  ],
+  "edges": [
+   [
+    "url",
+    "router",
+    "location change"
+   ],
+   [
+    "router",
+    "shell",
+    "keep"
+   ],
+   [
+    "router",
+    "data",
+    "start fetch"
+   ],
+   [
+    "router",
+    "chunk",
+    "lazy load"
+   ],
+   [
+    "chunk",
+    "outlet",
+    "render"
+   ],
+   [
+    "shell",
+    "outlet",
+    "nest"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Intercept the navigation",
+    "d": "Links are caught and the router calls history.pushState (new entry) or replaceState (no new entry). The Back and Forward buttons fire popstate, which the router listens to.",
+    "hl": [
+     "url",
+     "router"
+    ]
+   },
+   {
+    "t": "Match the route tree",
+    "d": "Routes nest: a parent renders a layout with an Outlet and children fill it. Layout routes add nesting without adding a URL segment, and index routes are the default child.",
+    "hl": [
+     "router",
+     "shell",
+     "outlet"
+    ]
+   },
+   {
+    "t": "Load code and data in parallel",
+    "d": "The router lazy-loads the matching route chunk and starts its loader at the same time, so data does not wait for the component to render.",
+    "hl": [
+     "router",
+     "chunk",
+     "data"
+    ]
+   },
+   {
+    "t": "Swap only the outlet",
+    "d": "The shell stays mounted, so its state and DOM are preserved, and the outlet gets the new view. Show a pending indicator or keep the old view until the new one is ready.",
+    "hl": [
+     "shell",
+     "outlet"
+    ]
+   },
+   {
+    "t": "Make deep links and refresh work",
+    "d": "The URL is the source of truth for location, so the server must serve the app (or prerendered HTML) for every path, and the router restores the right view on load.",
+    "hl": [
+     "url",
+     "router"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "200 ms",
+   "l": "good INP threshold; route transitions should respond within it, at the 75th percentile",
+   "s": "https://web.dev/articles/vitals"
+  },
+  {
+   "v": "100 ms",
+   "l": "suggested delay before showing a navigation spinner, so fast transitions show no flicker",
+   "s": "https://nextjs.org/docs/app/getting-started/linking-and-navigating"
+  },
+  {
+   "v": "~200 KB",
+   "l": "JS budget in web.dev's example for a Slow 4G, Moto G4 target; the shell should sit well inside it",
+   "s": "https://web.dev/articles/your-first-performance-budget"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Client router or framework router",
+   "d": "A library router (React Router, TanStack Router) gives control in an SPA. A framework router (Next.js App Router) adds server rendering, prefetching and streaming on top."
+  },
+  {
+   "t": "Where layout boundaries go",
+   "d": "Put shared chrome in a layout route so it never remounts, and split by route so each page's code loads separately."
+  },
+  {
+   "t": "Prefetch strategy",
+   "d": "Prefetch on link viewport entry or hover. Prefetching everything wastes bandwidth, as Next.js notes for long link lists, so limit it to likely next routes."
+  },
+  {
+   "t": "What lives in the URL",
+   "d": "Put shareable state, such as filters, tab and page, in the path or query string. Keep ephemeral UI state in memory."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-url-state-query-params-search-params-deep-link-shareable-filters-frontend",
+   "why": "Deciding which state belongs in the URL for deep links and sharing"
+  },
+  {
+   "slug": "fe-bundler-code-splitting-vite-webpack-rollup-esbuild-tree-shaking-dynamic-import-lazy-chunks-frontend",
+   "why": "How route chunks are produced and loaded"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Refresh on a deep link returns 404",
+   "d": "The host only knows index.html and has no fallback rule.",
+   "see": "Direct visits to /settings fail while in-app clicks work",
+   "fix": "Rewrite all non-file paths to index.html, or prerender or server-render each route"
+  },
+  {
+   "t": "Scroll and focus lost on navigation",
+   "d": "Content swaps but the browser does not move focus or restore scroll.",
+   "see": "User lands mid-page, screen reader announces nothing",
+   "fix": "Reset scroll on push, restore on back, move focus to the new heading and announce the route change"
+  },
+  {
+   "t": "Stale chunk after deploy",
+   "d": "A long-open tab asks for a route chunk that no longer exists.",
+   "see": "Navigation fails with a chunk load error",
+   "fix": "Catch the error and do a full reload; keep recent chunks available"
+  }
+ ],
+ "say": [
+  "I would build the app as a persistent shell with nested routes: the layout stays mounted and only the outlet changes, so navigation is instant and shared UI state survives.",
+  "Each route is a separate chunk loaded through dynamic import, and its data loader starts in parallel with the code, so there is no render-then-fetch waterfall.",
+  "The URL stays the source of truth, using pushState for new entries and handling popstate, and the server falls back to the app for deep links."
+ ],
+ "followups": [
+  {
+   "q": "pushState vs replaceState?",
+   "a": "pushState adds a history entry so Back returns to the previous view; replaceState swaps the current entry, for things like redirects or a locale switch where Back should not return."
+  },
+  {
+   "q": "How do you keep a slow route from feeling frozen?",
+   "a": "Prefetch the route, start its data loader early, use a transition to keep the current view until the next is ready, and show a delayed pending indicator."
+  }
+ ],
+ "today": "Routers now bundle data loading, nested layouts and code splitting together (React Router framework mode, TanStack Router, Next.js App Router), and Next.js adds prefetching, partial prefetch of loading states and a useLinkStatus hook for pending feedback.",
+ "check": [
+  {
+   "q": "What does a layout route do in React Router?",
+   "a": "Adds nesting and shared UI without adding a URL segment",
+   "d": [
+    "Creates a new domain",
+    "Disables child routes",
+    "Forces a full reload"
+   ],
+   "why": "It lets many pages share one shell while keeping clean URLs."
+  },
+  {
+   "q": "Which event fires when the user presses the Back button?",
+   "a": "popstate",
+   "d": [
+    "hashchange only",
+    "beforeunload",
+    "pushstate"
+   ],
+   "why": "History traversal fires popstate, which the router uses to update the view."
+  },
+  {
+   "q": "User refreshes /settings and gets a 404 from the server. Likely cause?",
+   "a": "No fallback to index.html for client routes",
+   "d": [
+    "The router is lazy-loading",
+    "pushState is disabled",
+    "The bundle is too large"
+   ],
+   "why": "The server must return the app for any client route."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: History API",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/History_API"
+  },
+  {
+   "t": "React Router: Routing",
+   "u": "https://reactrouter.com/start/framework/routing"
+  },
+  {
+   "t": "Next.js: Linking and navigating",
+   "u": "https://nextjs.org/docs/app/getting-started/linking-and-navigating"
+  },
+  {
+   "t": "Next.js: Single-page applications",
+   "u": "https://nextjs.org/docs/app/guides/single-page-applications"
+  },
+  {
+   "t": "web.dev: Core Web Vitals",
+   "u": "https://web.dev/articles/vitals"
+  },
+  {
+   "t": "web.dev: Your first performance budget",
+   "u": "https://web.dev/articles/your-first-performance-budget"
+  }
+ ]
+}

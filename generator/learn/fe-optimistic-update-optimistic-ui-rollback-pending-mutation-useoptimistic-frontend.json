@@ -1,0 +1,287 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "An optimistic update shows the expected result of an action immediately - the heart fills, the comment appears - before the server has confirmed it. If the request succeeds nothing changes; if it fails the UI rolls back and tells the user. React's useOptimistic and TanStack Query's mutation hooks both support it.",
+ "like": "Like a waiter saying 'coming right up' and putting your drink on the table list at once, then quietly fixing it only if the kitchen says they are out.",
+ "why": [
+  "The interface feels instant, even on a slow network",
+  "Most actions succeed, so the guess is usually right",
+  "Rollback keeps the UI honest when the server disagrees"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 300,
+  "nodes": [
+   {
+    "id": "us",
+    "t": "User action|tap like or send",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "ui",
+    "t": "UI|shows the guess now",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "optimistic"
+   },
+   {
+    "id": "ca",
+    "t": "Local state or cache|snapshot saved",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "cache",
+    "i": "querycache"
+   },
+   {
+    "id": "mu",
+    "t": "Mutation|request in flight",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "send"
+   },
+   {
+    "id": "ap",
+    "t": "Server|source of truth",
+    "x": 275,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "server"
+   },
+   {
+    "id": "sy",
+    "t": "Reconcile|confirm or roll back",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "check"
+   }
+  ],
+  "edges": [
+   [
+    "us",
+    "ui",
+    "instant"
+   ],
+   [
+    "ui",
+    "ca",
+    "snapshot + guess"
+   ],
+   [
+    "us",
+    "mu",
+    "send"
+   ],
+   [
+    "mu",
+    "ap",
+    "request"
+   ],
+   [
+    "ap",
+    "sy",
+    "result"
+   ],
+   [
+    "sy",
+    "ca",
+    "confirm or restore"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Show the guess immediately",
+    "d": "On the action, the UI renders the expected result at once. In React, useOptimistic does this only while an Action is pending.",
+    "hl": [
+     "us",
+     "ui"
+    ]
+   },
+   {
+    "t": "Save a way back",
+    "d": "In the cache approach, cancel in-flight refetches (so they cannot overwrite the guess), snapshot the current data, then write the optimistic value.",
+    "hl": [
+     "ui",
+     "ca"
+    ]
+   },
+   {
+    "t": "Send the real request",
+    "d": "The mutation goes to the server in parallel. Mark the item as pending so users can see it is not final.",
+    "hl": [
+     "mu",
+     "ap"
+    ]
+   },
+   {
+    "t": "On success, take the server's answer",
+    "d": "Replace the guess with the real response (for example the real id). With useOptimistic, the optimistic and real values converge in the same render.",
+    "hl": [
+     "ap",
+     "sy"
+    ]
+   },
+   {
+    "t": "On failure, roll back and tell the user",
+    "d": "Restore the snapshot or let useOptimistic revert to the real value, show an error, and offer retry. Finally invalidate to sync with the server.",
+    "hl": [
+     "sy",
+     "ca"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "2",
+   "l": "ways to do it in TanStack Query: render the pending variables in the UI, or write the guess into the cache",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
+  },
+  {
+   "v": "3",
+   "l": "callbacks in the cache approach: onMutate (snapshot and write), onError (restore), onSettled (invalidate)",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
+  },
+  {
+   "v": "0",
+   "l": "rollback code needed in the variables approach - the cache is never touched",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Which actions deserve it",
+   "d": "Optimistic UI fits high-success, low-stakes actions: likes, toggles, reorders, adding a comment. Avoid it for payments, deletes that cannot be undone, or anything with complex server rules."
+  },
+  {
+   "t": "UI-only or cache write",
+   "d": "If one place shows the result, render the pending mutation's variables - no rollback. If several screens must update, write to the cache with onMutate and roll back on error."
+  },
+  {
+   "t": "useOptimistic or a query library",
+   "d": "React's useOptimistic suits Actions and forms with local state; TanStack Query and Apollo (optimisticResponse) integrate with a shared cache across screens."
+  },
+  {
+   "t": "Temporary ids and ordering",
+   "d": "New items need a temporary id replaced by the real one. Use a reducer so relative changes (like +1) apply to the latest value, and make the server idempotent."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-server-state-cache-tanstack-query-swr-stale-while-revalidate-dedupe-refetch-query-keys-frontend",
+   "why": "The cache that optimistic updates usually write to and then invalidate"
+  },
+  {
+   "slug": "fe-form-state-validation-react-hook-form-zod-schema-validation-controlled-uncontrolled-frontend",
+   "why": "When the server may reject input, validate first and show a pending state instead of a guess"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Refetch overwrites the guess",
+   "d": "A background refetch lands after the optimistic write.",
+   "see": "The change flickers back and forth",
+   "fix": "Cancel outgoing queries in onMutate before writing"
+  },
+  {
+   "t": "Silent failure",
+   "d": "Rollback happens but nothing tells the user.",
+   "see": "Item vanishes with no explanation",
+   "fix": "Show an error with a retry action; keep failed variables for retry"
+  },
+  {
+   "t": "Setter called outside an Action",
+   "d": "useOptimistic's setter runs outside a transition.",
+   "see": "Value flashes then reverts; React warns",
+   "fix": "Call it inside startTransition or an Action prop"
+  }
+ ],
+ "say": [
+  "I use optimistic updates for high-success, low-risk actions like likes and comments: show the result now, send the request, and reconcile with the server's answer.",
+  "In TanStack Query I cancel in-flight queries, snapshot, write the guess in onMutate, restore in onError, and invalidate in onSettled.",
+  "A failed update rolls back with a clear message and a retry, and the server stays the source of truth."
+ ],
+ "followups": [
+  {
+   "q": "What if two optimistic updates overlap?",
+   "a": "Use a reducer so each update applies to the latest state, cancel stale refetches, and invalidate once all mutations settle."
+  },
+  {
+   "q": "Why cancel queries in onMutate?",
+   "a": "An in-flight refetch could return old data and overwrite the optimistic value."
+  },
+  {
+   "q": "Is optimistic UI always right?",
+   "a": "No. For payments or irreversible actions show a pending state until the server confirms."
+  }
+ ],
+ "today": "React 19's useOptimistic makes optimistic state automatic: it shows the guess while an Action is pending and reverts to the real value when the Action ends, and Apollo and TanStack Query keep their own layers or cache hooks for shared data.",
+ "check": [
+  {
+   "q": "What does useOptimistic show when no Action is pending?",
+   "a": "The real value",
+   "d": [
+    "The last optimistic value forever",
+    "Always undefined",
+    "A loading spinner"
+   ],
+   "why": "Optimistic state is temporary and only renders while an Action is pending."
+  },
+  {
+   "q": "First step of the cache approach in onMutate?",
+   "a": "Cancel outgoing refetches for that key",
+   "d": [
+    "Invalidate the query",
+    "Clear the whole cache",
+    "Retry the mutation"
+   ],
+   "why": "Otherwise a refetch can overwrite the optimistic write."
+  },
+  {
+   "q": "Which action is a poor fit for optimistic UI?",
+   "a": "Submitting a payment",
+   "d": [
+    "Liking a post",
+    "Toggling a setting",
+    "Adding a comment"
+   ],
+   "why": "Risky, irreversible actions should wait for confirmation."
+  }
+ ],
+ "sources": [
+  {
+   "t": "react.dev: useOptimistic",
+   "u": "https://react.dev/reference/react/useOptimistic"
+  },
+  {
+   "t": "TanStack Query: optimistic updates",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
+  },
+  {
+   "t": "Apollo Client: optimistic UI",
+   "u": "https://www.apollographql.com/docs/react/performance/optimistic-ui"
+  },
+  {
+   "t": "react.dev: useActionState",
+   "u": "https://react.dev/reference/react/useActionState"
+  }
+ ]
+}

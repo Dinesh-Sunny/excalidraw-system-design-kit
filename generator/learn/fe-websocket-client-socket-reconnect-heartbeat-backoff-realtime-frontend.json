@@ -1,0 +1,278 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A WebSocket client keeps one two-way connection to the server open so messages can flow both ways instantly. The browser does not reconnect for you, so your code needs a small state machine with heartbeat, backoff and a way to catch up on missed messages.",
+ "like": "Like a walkie-talkie channel that stays on: either side can talk at any time, but you have to notice when the line goes silent and call back.",
+ "why": [
+  "Server pushes arrive instantly, with no polling delay",
+  "Chat, presence, live prices and collaboration need messages in both directions",
+  "A good client survives wifi drops, sleeping laptops and deploys without losing data"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "ui",
+    "t": "UI + store|renders messages",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "bo",
+    "t": "Backoff + jitter|reconnect delay",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "flow"
+   },
+   {
+    "id": "sock",
+    "t": "Socket client|state machine",
+    "x": 275,
+    "y": 105,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "wsclient"
+   },
+   {
+    "id": "hb",
+    "t": "Heartbeat|ping, pong, timeout",
+    "x": 275,
+    "y": 275,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "clock"
+   },
+   {
+    "id": "srv",
+    "t": "WebSocket server|gateway",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "ws"
+   },
+   {
+    "id": "buf",
+    "t": "Outbox buffer|hold while closed",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "msg",
+    "i": "queue"
+   }
+  ],
+  "edges": [
+   [
+    "ui",
+    "sock",
+    "events"
+   ],
+   [
+    "sock",
+    "srv",
+    "frames both ways"
+   ],
+   [
+    "hb",
+    "sock",
+    "ping / pong"
+   ],
+   [
+    "bo",
+    "sock",
+    "reconnect"
+   ],
+   [
+    "sock",
+    "buf",
+    "queue while closed"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Connect and authenticate",
+    "d": "Open wss:// (the secure form). Send a short-lived token in the first message or the URL, because the browser API cannot set custom headers.",
+    "hl": [
+     "sock",
+     "srv"
+    ]
+   },
+   {
+    "t": "Send and receive",
+    "d": "Messages arrive as events. Parse them, validate the type field, and push them into the store that drives the UI.",
+    "hl": [
+     "ui",
+     "sock"
+    ]
+   },
+   {
+    "t": "Heartbeat",
+    "d": "The browser API only has send() and close(), so the app sends its own small ping and expects a pong. No pong in time means the link is dead, close it.",
+    "hl": [
+     "hb",
+     "sock"
+    ]
+   },
+   {
+    "t": "Reconnect with backoff",
+    "d": "On close, wait with exponential backoff plus jitter, then reconnect. Fresh state per attempt; stop on codes that mean do not retry, such as a policy violation.",
+    "hl": [
+     "bo",
+     "sock"
+    ]
+   },
+   {
+    "t": "Catch up and flush",
+    "d": "After reconnecting, send the last seen message id so the server replays the gap (or refetch a snapshot), then flush the outbox.",
+    "hl": [
+     "sock",
+     "buf",
+     "srv"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 385
+ },
+ "numbers": [
+  {
+   "v": "125 bytes",
+   "l": "maximum payload of a WebSocket control frame such as Ping or Pong",
+   "s": "https://www.rfc-editor.org/rfc/rfc6455"
+  },
+  {
+   "v": "1006",
+   "l": "the close code a client reports when the connection ended without a Close frame (abnormal drop)",
+   "s": "https://www.rfc-editor.org/rfc/rfc6455"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "WebSocket, SSE or polling",
+   "d": "Use WebSocket when both sides send often (chat, collaboration). Use SSE when only the server pushes, and polling when updates are rare."
+  },
+  {
+   "t": "Heartbeat design",
+   "d": "Browser code cannot send protocol ping frames, so send an app-level ping message. A server that sends Ping frames gets a Pong back automatically, per RFC 6455."
+  },
+  {
+   "t": "Resume strategy",
+   "d": "Keep a sequence number or last event id, and ask the server to replay from it. If the gap is too large, refetch a full snapshot."
+  },
+  {
+   "t": "Backpressure",
+   "d": "The classic API has none, so a slow tab can pile up messages. Watch bufferedAmount when sending and batch or drop on receive. WebSocketStream has backpressure but is experimental."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-sse-client-eventsource-server-sent-events-eventsource-stream-one-way-tokens-frontend",
+   "why": "If only the server pushes, SSE is simpler and reconnects by itself"
+  },
+  {
+   "slug": "fe-polling-long-polling-short-polling-long-polling-interval-fallback-frontend",
+   "why": "If updates are rare or you need the simplest thing that works through any proxy"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Half-open connection",
+   "d": "The network drops silently and the socket never fires close.",
+   "see": "UI looks connected but nothing updates",
+   "fix": "App-level heartbeat with a timeout, then close and reconnect"
+  },
+  {
+   "t": "Reconnect storm",
+   "d": "A deploy drops every client at once and all reconnect at the same moment.",
+   "see": "Server overload right after a restart",
+   "fix": "Exponential backoff with random jitter and a maximum delay"
+  },
+  {
+   "t": "Missed messages",
+   "d": "Events sent while the client was offline are gone.",
+   "see": "Chat gaps or stale prices after a reconnect",
+   "fix": "Resume from the last seen id, or refetch a snapshot, then apply live events"
+  }
+ ],
+ "say": [
+  "I wrap the socket in a small state machine - connecting, open, closing, closed - and the browser never reconnects for me, so I add backoff with jitter.",
+  "Because the browser API cannot send ping frames, I run an application-level heartbeat and treat a missing pong as a dead connection.",
+  "After every reconnect I resume from the last event id or refetch a snapshot, so no message is lost, and I buffer outgoing messages while closed."
+ ],
+ "followups": [
+  {
+   "q": "How do you authenticate a WebSocket?",
+   "a": "The browser API cannot set headers, so use a short-lived ticket or token in the first message or URL, validated by the server, and use wss:// only."
+  },
+  {
+   "q": "When would you pick SSE instead?",
+   "a": "When data only flows from server to client, such as notifications or token streams. SSE reconnects automatically and works over plain HTTP."
+  },
+  {
+   "q": "What does close code 1006 tell you?",
+   "a": "The connection dropped with no Close frame, so it was abnormal, for example a network failure. Reconnect with backoff."
+  }
+ ],
+ "today": "Most apps still use the classic WebSocket API plus their own reconnect and heartbeat logic or a wrapper library. WebSocketStream adds streams and automatic backpressure, but MDN marks it experimental and not part of any specification.",
+ "check": [
+  {
+   "q": "The browser WebSocket drops with no Close frame. What code do you see?",
+   "a": "1006",
+   "d": [
+    "1000",
+    "1001",
+    "1011"
+   ],
+   "why": "1006 is how an abnormal closure with no Close frame is reported."
+  },
+  {
+   "q": "Does the browser WebSocket reconnect automatically?",
+   "a": "No, your code must reconnect",
+   "d": [
+    "Yes, after about 3 seconds",
+    "Yes, if you set retry",
+    "Only over wss://"
+   ],
+   "why": "Unlike EventSource, WebSocket has no built-in reconnect."
+  },
+  {
+   "q": "100 clients lose the connection in a deploy. Best reconnect plan?",
+   "a": "Exponential backoff plus random jitter",
+   "d": [
+    "All retry every second",
+    "Retry immediately in a loop",
+    "Wait for the user to refresh"
+   ],
+   "why": "Jitter spreads the reconnects so the server is not hit all at once."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: WebSocket",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/WebSocket"
+  },
+  {
+   "t": "MDN: WebSocketStream",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/WebSocketStream"
+  },
+  {
+   "t": "RFC 6455: The WebSocket Protocol",
+   "u": "https://www.rfc-editor.org/rfc/rfc6455"
+  },
+  {
+   "t": "AWS Builders' Library: backoff with jitter",
+   "u": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/"
+  }
+ ]
+}

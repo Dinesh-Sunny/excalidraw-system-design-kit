@@ -1,0 +1,321 @@
+{
+ "what": "Accessibility (a11y) means everyone can use your product - with a keyboard, a screen reader, zoom, or limited vision or motion. You get there by using the right HTML first, adding ARIA only to fill gaps, and checking against the WCAG success criteria.",
+ "like": "Like a classroom with ramps, large-print handouts and captions from day one, so no student has to ask for a special favour to join in.",
+ "why": [
+  "More people benefit than you expect: keyboard power users, people on phones in sunlight, and people using assistive technology",
+  "Many markets require WCAG conformance by law or by procurement, so it affects sales and risk",
+  "Accessible markup is also easier to test, and it helps SEO and automation"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "html",
+    "t": "Semantic HTML|button, nav, label, h1-h6",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "a11y"
+   },
+   {
+    "id": "aria",
+    "t": "ARIA|roles, states, names",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "doc"
+   },
+   {
+    "id": "kbd",
+    "t": "Keyboard + focus|tab order, roving tabindex",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "live",
+    "t": "Live regions|status and alert",
+    "x": 0,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "bell"
+   },
+   {
+    "id": "vis",
+    "t": "Visual rules|contrast, 24px targets, zoom",
+    "x": 275,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "eye"
+   },
+   {
+    "id": "auto",
+    "t": "Automated checks|axe + lint in CI",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "checklist"
+   },
+   {
+    "id": "sr",
+    "t": "Manual testing|keyboard + screen reader",
+    "x": 275,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "user"
+   }
+  ],
+  "edges": [
+   [
+    "html",
+    "aria",
+    "only if needed"
+   ],
+   [
+    "html",
+    "kbd",
+    "free behaviour"
+   ],
+   [
+    "aria",
+    "kbd",
+    "you must add"
+   ],
+   [
+    "kbd",
+    "live",
+    "state changes"
+   ],
+   [
+    "vis",
+    "auto",
+    "contrast rules"
+   ],
+   [
+    "auto",
+    "sr",
+    "then verify by hand"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Start with native HTML",
+    "d": "A real button, a, input with a label and a heading give you the role, name, focus and keyboard behaviour for free. This is the first rule of ARIA: do not add ARIA if a native element does the job.",
+    "hl": [
+     "html"
+    ]
+   },
+   {
+    "t": "Add ARIA only for gaps",
+    "d": "For custom widgets (tabs, combobox, dialog) use the WAI-ARIA Authoring Practices patterns. A role is a promise: you must also build the keyboard behaviour it implies.",
+    "hl": [
+     "aria"
+    ]
+   },
+   {
+    "t": "Make focus predictable",
+    "d": "Everything operable by keyboard, a visible focus ring, DOM order matching visual order. In widgets use roving tabindex or aria-activedescendant; in dialogs trap focus and return it to the trigger on close.",
+    "hl": [
+     "kbd"
+    ]
+   },
+   {
+    "t": "Announce changes",
+    "d": "Toasts, form errors and async results are invisible to a screen reader unless they sit in a live region: role=status (polite) or role=alert (urgent).",
+    "hl": [
+     "live"
+    ]
+   },
+   {
+    "t": "Meet the visual rules",
+    "d": "Text contrast 4.5:1 (3:1 for large text and UI parts), targets at least 24 by 24 CSS px in WCAG 2.2, and the page still works at 200 percent zoom.",
+    "hl": [
+     "vis"
+    ]
+   },
+   {
+    "t": "Test in layers",
+    "d": "Lint and axe catch the cheap bugs in CI, but only manual keyboard and screen reader passes catch the rest. Treat automation as a floor, not a pass.",
+    "hl": [
+     "auto",
+     "sr"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "4.5:1",
+   "l": "minimum contrast for normal text (3:1 for large text), WCAG 1.4.3 level AA",
+   "s": "https://www.w3.org/TR/WCAG22/"
+  },
+  {
+   "v": "24 x 24 px",
+   "l": "minimum target size in WCAG 2.2 (2.5.8, level AA)",
+   "s": "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html"
+  },
+  {
+   "v": "95.9%",
+   "l": "of the top 1,000,000 home pages had detectable WCAG 2 failures (WebAIM, Feb 2026)",
+   "s": "https://webaim.org/projects/million/"
+  },
+  {
+   "v": "83.9%",
+   "l": "of those pages had low-contrast text, the most common failure",
+   "s": "https://webaim.org/projects/million/"
+  }
+ ],
+ "choices": [
+  {
+   "t": "Native element or ARIA",
+   "d": "Native wins: free keyboard, focus and semantics. Use ARIA only when no native element exists, and then follow the APG pattern fully - bad ARIA is worse than none."
+  },
+  {
+   "t": "Roving tabindex or aria-activedescendant",
+   "d": "Roving tabindex moves real focus and the browser scrolls it into view. activedescendant keeps focus on the container (good for combobox with an input) but you draw the focus ring and scroll yourself."
+  },
+  {
+   "t": "Build custom or use a headless library",
+   "d": "Headless libraries (React Aria, Radix) ship tested keyboard and ARIA behaviour for dialogs, menus and comboboxes. Rolling your own is slow and usually misses screen reader edge cases."
+  },
+  {
+   "t": "Target level",
+   "d": "Aim for WCAG 2.2 AA as the baseline. AAA is not required as a whole and some criteria cannot be met for all content."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-design-system-component-library-design-tokens-storybook-theming-ui-kit-frontend",
+   "why": "Put accessible behaviour inside shared components once, instead of fixing every page"
+  },
+  {
+   "slug": "fe-form-state-validation-react-hook-form-zod-schema-validation-controlled-uncontrolled-frontend",
+   "why": "Forms are where labels, error announcements and focus order matter most"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Div soup buttons",
+   "d": "Clickable div with onClick: no focus, no Enter or Space, no role.",
+   "see": "Tab skips it; screen reader says 'group' or nothing",
+   "fix": "Use button; if not possible add role, tabindex=0 and key handlers"
+  },
+  {
+   "t": "Lost focus after a dialog or route change",
+   "d": "Focus falls back to the body, so keyboard users start again from the top.",
+   "see": "Pressing Tab after closing a modal jumps to page start",
+   "fix": "Return focus to the trigger; on route change move focus to the new heading or main"
+  },
+  {
+   "t": "Silent updates",
+   "d": "Errors and toasts appear visually but nothing is announced.",
+   "see": "Screen reader users never learn the form failed",
+   "fix": "role=alert for errors, role=status for success, registered in the DOM before the text changes"
+  }
+ ],
+ "say": [
+  "I start from semantic HTML so keyboard, focus and screen reader behaviour come free, and add ARIA only for real gaps, following the WAI-ARIA Authoring Practices patterns.",
+  "Every interactive thing is reachable and operable by keyboard with a visible focus ring, dialogs trap and restore focus, and async changes go through live regions.",
+  "We aim for WCAG 2.2 AA, run axe and lint in CI, and still do manual keyboard and screen reader passes because automation only finds part of the problems."
+ ],
+ "followups": [
+  {
+   "q": "What is the first rule of ARIA?",
+   "a": "If a native HTML element or attribute already gives the semantics and behaviour you need, use it instead of adding ARIA. A role only changes what assistive tech is told, not how the element behaves."
+  },
+  {
+   "q": "How do you make a modal dialog accessible?",
+   "a": "role=dialog with aria-modal and a label, move focus inside on open, trap Tab within it, close on Escape, and return focus to the element that opened it. The native dialog element gives much of this by default."
+  },
+  {
+   "q": "How do you keep accessibility from regressing?",
+   "a": "Accessible primitives in the design system, eslint jsx-a11y and axe in CI and Storybook, plus a short manual checklist per release for keyboard and screen reader flows."
+  }
+ ],
+ "today": "WCAG 2.2 is the current W3C recommendation; it added focus-not-obscured, dragging alternatives, a 24px minimum target size and accessible authentication at level AA. Headless component libraries now carry most of the hard keyboard and ARIA work.",
+ "check": [
+  {
+   "q": "What does WCAG 2.2 require as a minimum target size (level AA)?",
+   "a": "At least 24 by 24 CSS pixels, with spacing and other exceptions",
+   "d": [
+    "44 by 44 CSS pixels with no exceptions",
+    "10 by 10 CSS pixels",
+    "It sets no size requirement"
+   ],
+   "why": "2.5.8 Target Size (Minimum) sets 24 by 24 CSS px; larger targets such as 44-48 px are recommended practice but not the AA minimum."
+  },
+  {
+   "q": "Which is best for a clickable control that runs an action?",
+   "a": "A native button element",
+   "d": [
+    "A div with role=button only",
+    "A span with an onClick",
+    "An anchor with no href"
+   ],
+   "why": "Native button gives focus, Enter and Space, and the role with no extra code."
+  },
+  {
+   "q": "How should an async error message be exposed to a screen reader?",
+   "a": "Put it in a live region such as role=alert",
+   "d": [
+    "Change its colour to red",
+    "Show it in a tooltip only",
+    "Move the mouse pointer to it"
+   ],
+   "why": "Live regions make dynamic changes announce without moving focus."
+  }
+ ],
+ "sources": [
+  {
+   "t": "W3C: WCAG 2.2",
+   "u": "https://www.w3.org/TR/WCAG22/"
+  },
+  {
+   "t": "W3C: Understanding Target Size (Minimum)",
+   "u": "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html"
+  },
+  {
+   "t": "W3C APG: Read Me First",
+   "u": "https://www.w3.org/WAI/ARIA/apg/practices/read-me-first/"
+  },
+  {
+   "t": "W3C APG: Keyboard interface",
+   "u": "https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/"
+  },
+  {
+   "t": "W3C APG: Modal dialog pattern",
+   "u": "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"
+  },
+  {
+   "t": "MDN: ARIA live regions",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Guides/Live_regions"
+  },
+  {
+   "t": "WebAIM Million",
+   "u": "https://webaim.org/projects/million/"
+  },
+  {
+   "t": "web.dev: Accessible tap targets",
+   "u": "https://web.dev/articles/accessible-tap-targets"
+  }
+ ],
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "tool": ""
+}

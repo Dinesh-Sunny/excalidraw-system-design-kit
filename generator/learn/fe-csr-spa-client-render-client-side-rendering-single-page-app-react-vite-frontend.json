@@ -1,0 +1,271 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A client-side rendered single-page app (CSR SPA) ships one near-empty HTML file plus JavaScript bundles. The browser runs the JavaScript, which fetches data, builds the page and handles every later navigation without a full reload.",
+ "like": "Like a flat-pack wardrobe: the box (HTML) arrives nearly empty, and you build everything at home (in the browser) from the parts inside.",
+ "why": [
+  "Cheapest hosting - plain static files on a CDN, no render server",
+  "App-like feel after the first load: no full reloads, state survives navigation",
+  "Great fit for logged-in tools and dashboards where SEO does not matter"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 290,
+  "nodes": [
+   {
+    "id": "u",
+    "t": "Browser|requests /",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "cdn",
+    "t": "CDN / static host|empty HTML + bundles",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "globe"
+   },
+   {
+    "id": "app",
+    "t": "JS bundle runs|router + render",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "spa"
+   },
+   {
+    "id": "api",
+    "t": "JSON API|data after load",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "server"
+   },
+   {
+    "id": "dom",
+    "t": "Real UI painted|content appears",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "layers"
+   }
+  ],
+  "edges": [
+   [
+    "u",
+    "cdn",
+    "GET /"
+   ],
+   [
+    "cdn",
+    "app",
+    "html + js"
+   ],
+   [
+    "app",
+    "api",
+    "fetch data"
+   ],
+   [
+    "api",
+    "dom",
+    "JSON"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Request the shell",
+    "d": "The browser asks for any URL and the host returns the same small index.html with an empty root div and script tags. This is why one file serves every route.",
+    "hl": [
+     "u",
+     "cdn"
+    ]
+   },
+   {
+    "t": "Download and run JavaScript",
+    "d": "The bundle (framework, router, your code) downloads, parses and executes. Nothing meaningful is visible until this finishes, so the first paint is usually a blank page or spinner.",
+    "hl": [
+     "cdn",
+     "app"
+    ]
+   },
+   {
+    "t": "Fetch the data",
+    "d": "Only now does the app know which route it is on and call the API. This creates a waterfall: HTML, then JS, then data, then render.",
+    "hl": [
+     "app",
+     "api"
+    ]
+   },
+   {
+    "t": "Paint and become interactive",
+    "d": "The app renders into the DOM. Since the same code that drew the page also owns the handlers, it is interactive straight away - no hydration step.",
+    "hl": [
+     "api",
+     "dom"
+    ]
+   },
+   {
+    "t": "Navigate without reloading",
+    "d": "Later clicks swap views in place using the History API and fetch just the new data. Code splitting loads only the route chunk that is needed.",
+    "hl": [
+     "app",
+     "dom"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "170 KB",
+   "l": "suggested budget for critical-path resources (compressed) for slow networks and cheap devices",
+   "s": "https://web.dev/articles/your-first-performance-budget"
+  },
+  {
+   "v": "2.5 s / 200 ms",
+   "l": "good LCP and INP thresholds, measured at the 75th percentile of page loads",
+   "s": "https://web.dev/articles/vitals"
+  },
+  {
+   "v": "0.8 s",
+   "l": "rough TTFB guide; for SPAs a fast first byte matters because rendering cannot start before the JS arrives",
+   "s": "https://web.dev/articles/ttfb"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Pure SPA or a framework with CSR mode",
+   "d": "A pure SPA (Vite + React) is simplest to host. Next.js can also start as a strict SPA or static export and add server features later, so the choice is reversible."
+  },
+  {
+   "t": "Where the data waterfall goes",
+   "d": "Start fetches as early as possible - in the route loader or a server-provided promise - instead of inside components after render. web.dev notes JS grows with the app and hurts INP, so a tight JS budget is the lever."
+  },
+  {
+   "t": "Code splitting by route",
+   "d": "Split on route and heavy widgets with dynamic import so first load only ships what the landing screen needs. Prefetch likely next routes."
+  },
+  {
+   "t": "SEO and link previews",
+   "d": "Crawlers and share-card bots may not run JavaScript, so public pages usually need prerendering or SSR. Keep pure CSR for behind-login areas."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-ssg-static-pages-static-site-generation-prerender-build-time-jamstack-astro-frontend",
+   "why": "Public content pages that need fast first paint and SEO without a render server"
+  },
+  {
+   "slug": "fe-streaming-ssr-suspense-streaming-html-suspense-boundaries-ttfb-progressive-rendering-frontend",
+   "why": "Dynamic pages where users should see content before all JS has loaded"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Blank page on slow phones",
+   "d": "Large bundle plus a data waterfall delays the first meaningful paint.",
+   "see": "High LCP, long white screen, poor INP in field data",
+   "fix": "Route-level code splitting, a JS budget, skeleton shell, start fetches early"
+  },
+  {
+   "t": "Deploy breaks open tabs",
+   "d": "Old HTML points at hashed chunks that a new deploy deleted.",
+   "see": "Dynamic import failures after release",
+   "fix": "Serve index.html with no-cache, keep old chunks for a while, handle the preload error by reloading (Vite emits vite:preloadError)"
+  },
+  {
+   "t": "Crawler sees an empty page",
+   "d": "Bots that do not run JS get only the shell.",
+   "see": "Missing titles and descriptions in search or link previews",
+   "fix": "Prerender or SSR public routes; keep CSR for private screens"
+  }
+ ],
+ "say": [
+  "For a logged-in dashboard I would choose a client-rendered SPA: static hosting on a CDN, and after the first load every navigation is instant.",
+  "The cost is the first load - HTML, then JS, then data - so I enforce a JavaScript budget, split by route and start data fetches at the router level to avoid a waterfall.",
+  "For any public, SEO-sensitive page I would not rely on CSR alone; I would prerender or server-render it and keep the SPA for the app behind login."
+ ],
+ "followups": [
+  {
+   "q": "How do you improve first load of an SPA?",
+   "a": "Smaller critical bundle via route splitting and tree shaking, preload the route chunk and its data early, ship a lightweight shell or skeleton, cache hashed assets for a long time, and measure LCP and INP in the field."
+  },
+  {
+   "q": "Why does the same URL work after refresh on /settings?",
+   "a": "The host must rewrite unknown paths to index.html (history fallback) so the client router can read the URL and render the right view."
+  }
+ ],
+ "today": "Pure SPAs are now usually a deliberate choice for authenticated apps. Frameworks such as Next.js can start as a strict SPA or static export and later add Server Components and Server Actions, and Vite builds target Baseline widely available browsers by default.",
+ "check": [
+  {
+   "q": "What does the server return for /dashboard in a pure CSR SPA?",
+   "a": "The same small index.html shell as for every route",
+   "d": [
+    "A fully rendered HTML page for that route",
+    "JSON for that route only",
+    "A 404 unless the file exists"
+   ],
+   "why": "The router in the browser reads the URL and renders the view; the host just falls back to index.html."
+  },
+  {
+   "q": "Which is the main cost of CSR?",
+   "a": "Content waits for JS download and execution, then data fetch",
+   "d": [
+    "It needs a database on every request",
+    "It cannot use a CDN",
+    "It cannot navigate without reloading"
+   ],
+   "why": "First paint depends on the bundle and a fetch waterfall, so JS size drives load and INP."
+  },
+  {
+   "q": "When is CSR a good fit?",
+   "a": "Logged-in tools where SEO does not matter",
+   "d": [
+    "Public blog posts needing search ranking",
+    "Pages that must work with JavaScript off",
+    "Static marketing pages"
+   ],
+   "why": "Behind a login there is no crawler, and app-like navigation is the benefit."
+  }
+ ],
+ "sources": [
+  {
+   "t": "web.dev: Rendering on the Web",
+   "u": "https://web.dev/articles/rendering-on-the-web"
+  },
+  {
+   "t": "Next.js: Single-page applications",
+   "u": "https://nextjs.org/docs/app/guides/single-page-applications"
+  },
+  {
+   "t": "web.dev: Your first performance budget",
+   "u": "https://web.dev/articles/your-first-performance-budget"
+  },
+  {
+   "t": "web.dev: Core Web Vitals",
+   "u": "https://web.dev/articles/vitals"
+  },
+  {
+   "t": "web.dev: TTFB",
+   "u": "https://web.dev/articles/ttfb"
+  },
+  {
+   "t": "Vite: Building for Production",
+   "u": "https://vite.dev/guide/build.html"
+  }
+ ]
+}

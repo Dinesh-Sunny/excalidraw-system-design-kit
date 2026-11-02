@@ -727,6 +727,8 @@ const I = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const ICON = {
   all: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
   tpl: '<rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M9 9v11"/>',
+  fe: '<rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 9h18M9.5 13.5 7.5 15.5l2 2M14.5 13.5l2 2-2 2"/>',
+  fep: '<rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 9h18"/><circle cx="8" cy="14.5" r="1.6"/><circle cx="16" cy="14.5" r="1.6"/><path d="M9.6 14.5h4.8"/>',
   agentic: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
   agent: '<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V4.5"/><circle cx="12" cy="4" r="1"/><circle cx="9.5" cy="13" r="1"/><circle cx="14.5" cy="13" r="1"/>',
   ai: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
@@ -749,9 +751,9 @@ const ICON = {
   note: '<path d="M5 4h14v11l-5 5H5z"/><path d="M14 20v-5h5"/>',
   guide: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.2"/>',
 };
-const LABEL = { all: "All", tpl: "Designs", agentic: "Agent patterns", agent: "Agents", ai: "AI models", rag: "RAG", llmops: "LLMOps", client: "Clients", edge: "Network", svc: "Services", data: "Data", cache: "Cache", msg: "Messaging", ops: "Ops", ext: "External", zone: "Zones", link: "Arrows", ui: "UI", frame: "Frames", screen: "Screens", pattern: "Patterns", note: "Notes", guide: "Guide" };
-const ORDER = ["all", "tpl", "agentic", "agent", "ai", "rag", "llmops", "client", "screen", "ui", "frame", "pattern", "edge", "svc", "data", "cache", "msg", "ops", "ext", "note", "zone", "link", "guide"];
-const TRIES = ["kafka", "rag", "tpl/ chat", "ai client"];
+const LABEL = { all: "All", tpl: "Designs", fe: "Frontend", fep: "Frontend patterns", agentic: "Agent patterns", agent: "Agents", ai: "AI models", rag: "RAG", llmops: "LLMOps", client: "Clients", edge: "Network", svc: "Services", data: "Data", cache: "Cache", msg: "Messaging", ops: "Ops", ext: "External", zone: "Zones", link: "Arrows", ui: "UI", frame: "Frames", screen: "Screens", pattern: "Patterns", note: "Notes", guide: "Guide" };
+const ORDER = ["all", "tpl", "fe", "fep", "agentic", "agent", "ai", "rag", "llmops", "client", "screen", "ui", "frame", "pattern", "edge", "svc", "data", "cache", "msg", "ops", "ext", "note", "zone", "link", "guide"];
+const TRIES = ["kafka", "rag", "frontend", "ai client"];
 
 const items = ITEMS.filter(i => !/ SECTION - /.test(i.name)).map(i => {
   const m = i.name.match(/^sd:([a-z]+)\/\s(.*)$/); const rest = m ? m[2] : i.name; const k = rest.indexOf(" - ");
@@ -780,6 +782,9 @@ const inBoard = i => board.includes(slug(i));
 /* starter packs: ready-made sets you can paste as one board */
 const PACKS = [
   { id: "interview", title: "Interview starter", desc: "Everything for the first 10 minutes: the flow, requirements, estimates, API, data model and the core boxes.", keys: ["note/Interview Flow", "note/Requirements", "note/Capacity Estimates", "note/API Design", "note/Data Model", "note/Trade-offs", "client/Clients Group", "edge/Load Balancer", "edge/API Gateway", "svc/Service", "data/PostgreSQL", "cache/Redis", "msg/Kafka", "note/Bottleneck"] },
+  { id: "frontend", title: "Frontend interview starter", desc: "RADIO flow, rendering choices, state, data fetching and the checks interviewers look for.", keys: ["note/RADIO Framework", "note/Frontend Requirements", "note/State Placement", "note/Component API", "note/Core Web Vitals", "note/Frontend Optimizations", "fep/Rendering Strategies", "fe/App Shell + Router", "fe/Server-State Cache (TanStack Query)", "fe/Normalized Cache (entities by id)", "fe/Global Store (Zustand/Redux)", "fe/API Client (retry, abort)", "tpl/FE News Feed"] },
+  { id: "frontend-perf", title: "Frontend performance", desc: "Make it feel fast: rendering path, code splitting, images, long lists, caching and real user metrics.", keys: ["fep/Critical Rendering Path", "fep/JavaScript Event Loop", "fe/Core Web Vitals (LCP INP CLS)", "fe/Bundler + Code Splitting", "fe/Image Pipeline (responsive)", "fe/Prefetch / Preload", "fe/Virtualized List", "fe/Debounce / Throttle", "fe/Web Worker", "fep/Web Caching Layers", "fe/RUM (real user data)", "fep/Responsive Image Loading"] },
+  { id: "frontend-data", title: "Frontend data and realtime", desc: "Fetch, cache, sync and stay live: SWR, optimistic updates, offline and sockets.", keys: ["fep/Stale-While-Revalidate Fetching", "fep/Optimistic Update + Rollback", "fep/Offline-First Sync", "fep/Realtime Options", "fe/WebSocket Client", "fe/SSE Client (EventSource)", "fe/Service Worker", "fe/IndexedDB", "fe/Offline Queue (outbox)", "fe/URL State", "tpl/FE Chat App"] },
   { id: "web", title: "Classic web backend", desc: "DNS to database: the request path most designs start from.", keys: ["client/Users", "edge/DNS", "edge/CDN", "edge/Load Balancer", "edge/API Gateway", "svc/Service", "svc/Auth Service", "cache/Redis", "data/Primary DB", "data/Read Replica", "data/Object Storage (S3)", "ops/Monitoring"] },
   { id: "events", title: "Event-driven systems", desc: "Queues, streams and the patterns that keep events reliable.", keys: ["svc/Service", "msg/Kafka", "msg/Pub/Sub Topic", "msg/Stream Processor (Flink)", "msg/Dead Letter Queue", "msg/CDC", "data/Data Warehouse", "pattern/Transactional Outbox", "pattern/Pub/Sub Fan-out", "pattern/Async Job Queue"] },
   { id: "scale", title: "Scale and reliability", desc: "Caching, replicas, shards, regions and the guards that keep it up.", keys: ["pattern/Cache-Aside", "pattern/Read Replicas", "pattern/Sharding", "pattern/Multi-Region Active-Active", "edge/Rate Limiter", "svc/Circuit Breaker", "zone/Region", "zone/Availability Zone", "ops/Alerting"] },

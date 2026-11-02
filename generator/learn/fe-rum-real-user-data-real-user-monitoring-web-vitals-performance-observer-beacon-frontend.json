@@ -1,0 +1,314 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Real User Monitoring (RUM) collects performance numbers from the browsers of actual visitors, using the web-vitals library or PerformanceObserver, and sends them to your backend with sendBeacon. It shows what real devices and networks experience, which lab tests can't.",
+ "like": "Like asking every diner to fill in a tiny rating card as they leave, instead of only tasting the food yourself in the kitchen.",
+ "why": [
+  "Shows real p75 and p95 across devices, networks and countries",
+  "Catches regressions after a deploy that lab tests missed",
+  "Points at the exact element or interaction that was slow"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 404,
+  "nodes": [
+   {
+    "id": "pg",
+    "t": "Your page|web-vitals library",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "po",
+    "t": "PerformanceObserver|LCP, CLS, event entries",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "rum"
+   },
+   {
+    "id": "bc",
+    "t": "sendBeacon|on visibilitychange hidden",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "send"
+   },
+   {
+    "id": "col",
+    "t": "Collector|small endpoint, sampling",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "server"
+   },
+   {
+    "id": "st",
+    "t": "Metrics store|route, device, release",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "tsdb"
+   },
+   {
+    "id": "da",
+    "t": "Dashboard|p75, p95, segments",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "chart"
+   },
+   {
+    "id": "al",
+    "t": "Alerts|regression after deploy",
+    "x": 280,
+    "y": 300,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "bell"
+   }
+  ],
+  "edges": [
+   [
+    "pg",
+    "po",
+    "onLCP onINP onCLS"
+   ],
+   [
+    "po",
+    "bc",
+    "metric"
+   ],
+   [
+    "bc",
+    "col",
+    "POST"
+   ],
+   [
+    "col",
+    "st",
+    "write"
+   ],
+   [
+    "st",
+    "da",
+    "query"
+   ],
+   [
+    "st",
+    "al",
+    "threshold"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Collect with web-vitals",
+    "d": "Import onLCP, onINP and onCLS from the web-vitals library (about 3 KB brotli). It handles the tricky rules (bfcache restores, hidden tabs, iframes) on top of PerformanceObserver.",
+    "hl": [
+     "pg"
+    ]
+   },
+   {
+    "t": "Use PerformanceObserver for the rest",
+    "d": "Observe largest-contentful-paint, layout-shift, longtask, event and navigation entries with buffered: true to get entries recorded before your script ran. Check supportedEntryTypes first.",
+    "hl": [
+     "po"
+    ]
+   },
+   {
+    "t": "Add attribution",
+    "d": "The attribution build (about 1.5 KB more) tells you which element, URL or interaction caused the number, so you can act on it.",
+    "hl": [
+     "pg"
+    ]
+   },
+   {
+    "t": "Send reliably",
+    "d": "Send when the page becomes hidden (visibilitychange), not on unload, using navigator.sendBeacon, with fetch keepalive as fallback. Keep each payload small (beacon limit is 64 KiB).",
+    "hl": [
+     "bc"
+    ]
+   },
+   {
+    "t": "Store with dimensions",
+    "d": "Save metric, value, id, route, device class, connection, country and release version so you can slice later. Sample if traffic is large.",
+    "hl": [
+     "col",
+     "st"
+    ]
+   },
+   {
+    "t": "Read percentiles and alert",
+    "d": "Chart p75 (the pass/fail line) and watch p90 or p95 for the slow tail. Avoid averages. Alert when p75 crosses a threshold after a release.",
+    "hl": [
+     "da",
+     "al"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "About 3 KB (+1.5 KB)",
+   "l": "web-vitals library size, brotli'd; the attribution build adds about 1.5 KB",
+   "s": "https://github.com/GoogleChrome/web-vitals"
+  },
+  {
+   "v": "64 KiB",
+   "l": "Total size limit of queued sendBeacon data",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon"
+  },
+  {
+   "v": "28 days",
+   "l": "CrUX is a 28-day rolling aggregate of real Chrome users - your own RUM can be more current and per-user",
+   "s": "https://developer.chrome.com/docs/crux/api"
+  },
+  {
+   "v": "p75, then p90 or p95",
+   "l": "Report the 75th percentile for pass/fail and watch higher percentiles for slow users; avoid averages",
+   "s": "https://web.dev/articles/vitals-field-measurement-best-practices"
+  }
+ ],
+ "tool": "web-vitals, PerformanceObserver, CrUX, Vercel Speed Insights, Datadog RUM, OpenTelemetry",
+ "choices": [
+  {
+   "t": "Build or buy",
+   "d": "A small collector plus web-vitals is cheap and gives full control. Vendors (Datadog, Sentry, Vercel Speed Insights, SpeedCurve and others) add dashboards, sessions and alerts."
+  },
+  {
+   "t": "CrUX or your own RUM",
+   "d": "CrUX is free and is what Google uses, but it is Chrome-only, aggregated and lagging. Own RUM covers all browsers, works per route and release, and is near real time."
+  },
+  {
+   "t": "Sampling and cost",
+   "d": "Sample a percentage on high-traffic sites. Keep dimension cardinality low (route templates, not full URLs) so storage stays cheap."
+  },
+  {
+   "t": "Privacy",
+   "d": "Send performance numbers, not personal data. Avoid full URLs with IDs or query strings, and respect consent rules."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-core-web-vitals-lcp-inp-cls-performance-metrics-budget-lighthouse-ttfb-frontend",
+   "why": "Defines the metrics and thresholds RUM reports against"
+  },
+  {
+   "slug": "fe-service-worker-pwa-offline-cache-storage-fetch-interception-workbox-push-frontend",
+   "why": "Can buffer beacons offline, though sendBeacon already queues for you"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Metrics lost on exit",
+   "d": "Data is sent on unload, which doesn't fire reliably (especially mobile).",
+   "see": "Missing CLS or INP values; undercount",
+   "fix": "Send on visibilitychange hidden with sendBeacon"
+  },
+  {
+   "t": "Misleading averages",
+   "d": "Averages hide the slow tail and outliers.",
+   "see": "Mean looks fine while users complain",
+   "fix": "Use p75 and p95 by segment"
+  },
+  {
+   "t": "Wrong deploy blamed",
+   "d": "Releases aren't tagged, so a regression can't be tied to a change.",
+   "see": "Metric dips with no known cause",
+   "fix": "Tag every beacon with a release version and compare before and after"
+  }
+ ],
+ "say": [
+  "I'd use the web-vitals library with attribution, send on visibilitychange with sendBeacon, and store route, device, connection and release as dimensions.",
+  "I read p75 as the pass line and p95 for the slow tail, never averages, and alert when p75 regresses after a release.",
+  "CrUX tells me how Chrome users experience the origin; my own RUM covers every browser and lets me slice by route."
+ ],
+ "followups": [
+  {
+   "q": "Why not just run Lighthouse?",
+   "a": "Lighthouse is one device, one network and one run. It can't capture real interactions, so it can't predict INP, and it misses variation by device, country and cache state."
+  },
+  {
+   "q": "How do you keep RUM from hurting performance?",
+   "a": "The library is tiny, send work is deferred to idle or page hide, payloads are small, and you sample on high traffic. The collector must never block the page."
+  }
+ ],
+ "today": "The web-vitals library (with its attribution build) over PerformanceObserver is the standard approach, CrUX supplies Google's reference data, and most monitoring vendors build on the same APIs. The practice is to segment by route, device and release and to tie every metric to its likely cause.",
+ "sources": [
+  {
+   "t": "GitHub: GoogleChrome/web-vitals",
+   "u": "https://github.com/GoogleChrome/web-vitals"
+  },
+  {
+   "t": "web.dev: Field measurement best practices",
+   "u": "https://web.dev/articles/vitals-field-measurement-best-practices"
+  },
+  {
+   "t": "MDN: PerformanceObserver",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver"
+  },
+  {
+   "t": "MDN: Navigator.sendBeacon",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon"
+  },
+  {
+   "t": "Chrome for Developers: CrUX API",
+   "u": "https://developer.chrome.com/docs/crux/api"
+  },
+  {
+   "t": "Chrome for Developers: CrUX",
+   "u": "https://developer.chrome.com/docs/crux"
+  },
+  {
+   "t": "web.dev: Lab and field data differences",
+   "u": "https://web.dev/articles/lab-and-field-data-differences"
+  }
+ ],
+ "check": [
+  {
+   "q": "When should metrics be sent so they are not lost?",
+   "a": "When the page becomes hidden (visibilitychange), via sendBeacon",
+   "d": [
+    "On the unload event only",
+    "Every second",
+    "Never"
+   ],
+   "why": "visibilitychange is reliable, unload is not, and sendBeacon survives page exit."
+  },
+  {
+   "q": "Which statistic should you chart for Core Web Vitals pass/fail?",
+   "a": "75th percentile",
+   "d": [
+    "Average",
+    "Minimum",
+    "Maximum"
+   ],
+   "why": "p75 is the pass/fail line; averages hide outliers and the slow tail."
+  },
+  {
+   "q": "What does PerformanceObserver's buffered: true do?",
+   "a": "Delivers entries recorded before observe() was called",
+   "d": [
+    "Compresses the data",
+    "Sends data to the server",
+    "Limits entries to one"
+   ],
+   "why": "Without it you would miss early entries like LCP candidates."
+  }
+ ]
+}

@@ -1,0 +1,315 @@
+{
+ "what": "Browser auth is about where the login proof lives and who can steal it. The safest common design is a Backend For Frontend (BFF): the server does the OAuth login with PKCE, keeps the tokens, and gives the browser only an HttpOnly session cookie, protected against CSRF.",
+ "like": "Like a school front office: the student never carries the master key; the office holds it and hands out a hall pass (cookie) that only works on school grounds.",
+ "why": [
+  "Tokens in JavaScript-readable storage are stolen by any XSS bug",
+  "Cookies are sent automatically, so they need CSRF defences",
+  "Refresh tokens are long-lived and powerful, so they should stay server-side where possible"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "spa",
+    "t": "Browser app|no tokens in JS",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "bff",
+    "t": "BFF|confidential OAuth client",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "gateway"
+   },
+   {
+    "id": "idp",
+    "t": "Authorization server|login, consent, tokens",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "idcard"
+   },
+   {
+    "id": "ck",
+    "t": "Session cookie|HttpOnly Secure SameSite",
+    "x": 0,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "cookie"
+   },
+   {
+    "id": "csrf",
+    "t": "CSRF checks|custom header + Origin",
+    "x": 275,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "shield"
+   },
+   {
+    "id": "api",
+    "t": "Resource APIs|get access token from BFF",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   },
+   {
+    "id": "ref",
+    "t": "Token store|access + refresh, server-side",
+    "x": 275,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "tokenauth"
+   }
+  ],
+  "edges": [
+   [
+    "spa",
+    "bff",
+    "login redirect"
+   ],
+   [
+    "bff",
+    "idp",
+    "code + PKCE"
+   ],
+   [
+    "idp",
+    "ref",
+    "tokens"
+   ],
+   [
+    "bff",
+    "ck",
+    "Set-Cookie"
+   ],
+   [
+    "ck",
+    "csrf",
+    "every request"
+   ],
+   [
+    "csrf",
+    "bff",
+    "verified"
+   ],
+   [
+    "bff",
+    "api",
+    "adds access token"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Start login with PKCE",
+    "d": "The app sends the user to the authorization server with a random code challenge and a state value. PKCE ties the returned code to the party that started the flow, and state/nonce blocks CSRF on the redirect.",
+    "hl": [
+     "spa",
+     "bff"
+    ]
+   },
+   {
+    "t": "Server exchanges the code",
+    "d": "The BFF is a confidential client: it swaps the code for tokens using its own credentials plus the PKCE verifier, so tokens never touch the browser.",
+    "hl": [
+     "bff",
+     "idp"
+    ]
+   },
+   {
+    "t": "Browser gets a session cookie",
+    "d": "The BFF sets a cookie with HttpOnly, Secure and SameSite, ideally with the __Host- prefix (no Domain, Path=/). JavaScript cannot read it.",
+    "hl": [
+     "ck"
+    ]
+   },
+   {
+    "t": "BFF proxies API calls",
+    "d": "The SPA calls /api on the same site; the BFF looks up the session, attaches the access token and forwards to the resource server, only to an allow-list of hosts and paths.",
+    "hl": [
+     "bff",
+     "api"
+    ]
+   },
+   {
+    "t": "Defend against CSRF",
+    "d": "Because the cookie rides along automatically, require a custom header such as X-CSRF-Token on state-changing calls, check Origin or Sec-Fetch-Site, and keep SameSite on.",
+    "hl": [
+     "csrf"
+    ]
+   },
+   {
+    "t": "Refresh and log out on the server",
+    "d": "Refresh tokens are rotated or sender-constrained and live only in the BFF store. Logout deletes the server session and the cookie so tokens are dead everywhere.",
+    "hl": [
+     "ref"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "3",
+   "l": "architectures in the IETF browser-based apps draft, safest first: BFF, token-mediating backend, browser-only client",
+   "s": "https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps"
+  },
+  {
+   "v": "Lax",
+   "l": "default SameSite treatment when a cookie sets no SameSite attribute",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies"
+  },
+  {
+   "v": "Path=/ + no Domain",
+   "l": "requirements of the __Host- cookie prefix, plus Secure over HTTPS",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies"
+  }
+ ],
+ "choices": [
+  {
+   "t": "BFF cookie or tokens in the browser",
+   "d": "BFF keeps tokens off the page and the draft recommends it for sensitive and personal-data apps. Tokens in the browser are simpler to host but exposed to XSS and token theft."
+  },
+  {
+   "t": "Cookie or localStorage for a session",
+   "d": "HttpOnly cookie cannot be read by injected script but needs CSRF protection; localStorage is not sent automatically but any script on the origin can read it, so one XSS leaks it."
+  },
+  {
+   "t": "Session id or JWT",
+   "d": "An opaque session id is easy to revoke on the server. A self-contained JWT scales without lookups but is hard to revoke; keep lifetimes short and do not put secrets inside it."
+  },
+  {
+   "t": "Same-site or cross-site API",
+   "d": "Same site lets SameSite=Strict cookies work simply. A cross-origin API needs credentials: 'include', exact-origin CORS with Allow-Credentials, and SameSite=None; Secure with weaker CSRF protection."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-web-storage-cookies-localstorage-sessionstorage-cookies-httponly-samesite-frontend",
+   "why": "The storage and cookie-attribute details underneath this block"
+  },
+  {
+   "slug": "fe-csp-xss-defence-content-security-policy-xss-sanitize-trusted-types-dompurify-security-frontend",
+   "why": "XSS is the main way browser tokens get stolen, so prevent it first"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Token theft via XSS",
+   "d": "Access or refresh token in localStorage is read by an injected script.",
+   "see": "Same token used from another IP or device",
+   "fix": "Move tokens behind a BFF with HttpOnly cookie; short access tokens, rotate refresh tokens"
+  },
+  {
+   "t": "CSRF on a cookie session",
+   "d": "A malicious site makes the browser send a state-changing request with the cookie.",
+   "see": "Unexpected POSTs with a foreign Origin",
+   "fix": "SameSite, custom header requirement, Origin or Sec-Fetch-Site checks, and no state change on GET"
+  },
+  {
+   "t": "Silent refresh races",
+   "d": "Many tabs refresh at once; rotation invalidates the winner's token.",
+   "see": "Random logouts and invalid_grant errors",
+   "fix": "Do refresh on the server in one place, single-flight the call, and queue requests that arrive during it"
+  }
+ ],
+ "say": [
+  "I would use a BFF: the server runs the Authorization Code flow with PKCE as a confidential client and the browser holds only an HttpOnly, Secure, SameSite session cookie.",
+  "The BFF attaches the access token when it proxies API calls and keeps refresh tokens server-side with rotation, so an XSS bug cannot exfiltrate long-lived credentials.",
+  "Because it is cookie based, we add CSRF defences: a required custom header, Origin or Fetch Metadata checks, and SameSite, on top of strong XSS prevention."
+ ],
+ "followups": [
+  {
+   "q": "Why PKCE if the BFF is confidential?",
+   "a": "A confidential client authenticates with its own credentials, but PKCE is still good practice and is required for public clients. If the app is a pure SPA with no backend, PKCE is mandatory."
+  },
+  {
+   "q": "Is a JWT in localStorage ever fine?",
+   "a": "It is a trade-off for low-risk apps. Any XSS can read it, so for sensitive data prefer the BFF cookie; if you must hold a token in the browser, keep it in memory, short lived, with a strict CSP."
+  },
+  {
+   "q": "What are the CSRF defences?",
+   "a": "SameSite cookies, a synchronizer or signed double-submit token, custom headers that force a CORS preflight, and Origin or Sec-Fetch-Site checks. XSS defeats all of them, so prevent XSS too."
+  }
+ ],
+ "today": "The IETF guidance OAuth 2.0 for Browser-Based Applications is now RFC 10017 (BCP 212, August 2026). It ranks BFF first, token-mediating backend second and a browser-only client last, requires PKCE for public clients and rotation or sender-constraining of refresh tokens.",
+ "check": [
+  {
+   "q": "What is the draft's most secure pattern for a browser app?",
+   "a": "Backend For Frontend with tokens kept server-side and a cookie session",
+   "d": [
+    "Access token in localStorage",
+    "Refresh token in a JavaScript variable shared across tabs",
+    "Embedding the client secret in the bundle"
+   ],
+   "why": "The BFF is a confidential client and the browser never sees tokens."
+  },
+  {
+   "q": "Which cookie attributes protect a session cookie from script access and plain HTTP?",
+   "a": "HttpOnly and Secure",
+   "d": [
+    "Path and Expires",
+    "SameSite=None only",
+    "Domain and Max-Age"
+   ],
+   "why": "HttpOnly hides it from document.cookie and Secure restricts it to HTTPS."
+  },
+  {
+   "q": "Why add a custom header requirement on API calls?",
+   "a": "Cross-site pages cannot send it without a CORS preflight that you control",
+   "d": [
+    "It encrypts the request body",
+    "It speeds up HTTP caching",
+    "It replaces the session cookie"
+   ],
+   "why": "Browsers preflight custom headers cross-origin, so only allowed origins can set it."
+  }
+ ],
+ "sources": [
+  {
+   "t": "RFC 10017: OAuth 2.0 for Browser-Based Applications",
+   "u": "https://www.rfc-editor.org/rfc/rfc10017"
+  },
+  {
+   "t": "IETF draft: OAuth 2.0 for Browser-Based Applications",
+   "u": "https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps"
+  },
+  {
+   "t": "OWASP: CSRF Prevention Cheat Sheet",
+   "u": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"
+  },
+  {
+   "t": "MDN: Using HTTP cookies",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies"
+  },
+  {
+   "t": "MDN: CORS",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS"
+  },
+  {
+   "t": "MDN: Document.cookie security",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie"
+  }
+ ],
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "tool": ""
+}

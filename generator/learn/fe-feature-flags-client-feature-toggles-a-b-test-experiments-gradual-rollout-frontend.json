@@ -1,0 +1,301 @@
+{
+ "what": "A feature flag is an if-statement whose answer comes from a remote service, so you can turn features on for some users, ramp them up gradually, run A/B tests, or switch them off instantly without redeploying. On the client you must deal with flicker, security of the flag data, and cleaning up old flags.",
+ "like": "Like a classroom light switch panel the head teacher controls: you can brighten one row of lamps (a group of users) at a time, and flip them all off if something sparks.",
+ "why": [
+  "Ship code dark, release to users later: deploy and release become separate steps",
+  "Gradual rollout and a kill switch shrink the blast radius of a bad change",
+  "Experiments let you measure impact instead of guessing"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "svc",
+    "t": "Flag service|rules, segments, % rollout",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "flags"
+   },
+   {
+    "id": "sdk",
+    "t": "Client SDK|context in, flag value out",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "sdk"
+   },
+   {
+    "id": "boot",
+    "t": "Server bootstrap|flags inlined in HTML",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "ssr"
+   },
+   {
+    "id": "ui",
+    "t": "UI code|if flag, show variant",
+    "x": 0,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "laptop"
+   },
+   {
+    "id": "exp",
+    "t": "Exposure events|who saw which variant",
+    "x": 275,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "msg",
+    "i": "chart"
+   },
+   {
+    "id": "kill",
+    "t": "Kill switch|instant off, safe default",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "siren"
+   },
+   {
+    "id": "clean",
+    "t": "Flag cleanup|owner, expiry, remove",
+    "x": 275,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "tasks"
+   }
+  ],
+  "edges": [
+   [
+    "svc",
+    "sdk",
+    "evaluated values"
+   ],
+   [
+    "boot",
+    "sdk",
+    "initial values"
+   ],
+   [
+    "sdk",
+    "ui",
+    "flag(key)"
+   ],
+   [
+    "ui",
+    "exp",
+    "log exposure"
+   ],
+   [
+    "svc",
+    "kill",
+    "toggle"
+   ],
+   [
+    "kill",
+    "sdk",
+    "stream update"
+   ],
+   [
+    "ui",
+    "clean",
+    "remove after rollout"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Define flags centrally",
+    "d": "Each flag has a key, a default, targeting rules (user, plan, country) and a rollout percentage, all edited in the flag service, not in code.",
+    "hl": [
+     "svc"
+    ]
+   },
+   {
+    "t": "Evaluate for a context",
+    "d": "The SDK sends a user context (id, plan, device) and gets back values. Client-side SDKs usually receive only the results, not your rules, so rule details stay off the device.",
+    "hl": [
+     "sdk"
+    ]
+   },
+   {
+    "t": "Avoid flicker",
+    "d": "Fetching flags after load shows the wrong variant for a moment. Evaluate on the server and bootstrap the values into the HTML or SDK so the first paint is correct; the later fetch replaces them.",
+    "hl": [
+     "boot"
+    ]
+   },
+   {
+    "t": "Use the flag in the UI",
+    "d": "Check the flag at one clear point per feature, always with a safe default for when the service is unreachable.",
+    "hl": [
+     "ui"
+    ]
+   },
+   {
+    "t": "Measure exposure",
+    "d": "Log an exposure event when the user actually sees the variant, not when the flag loads. Experiment results depend on this.",
+    "hl": [
+     "exp"
+    ]
+   },
+   {
+    "t": "Kill and clean up",
+    "d": "A kill switch flips the feature off in seconds through streaming or polling. Release flags are temporary: give each an owner and a removal date.",
+    "hl": [
+     "kill",
+     "clean"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "CNCF incubating",
+   "l": "OpenFeature, the vendor-neutral feature flag API, is an incubating project at the Cloud Native Computing Foundation",
+   "s": "https://openfeature.dev/docs/reference/intro"
+  },
+  {
+   "v": "2 key types",
+   "l": "Client-side ID for browsers and mobile keys vs a server SDK key, never to be used in client-side code",
+   "s": "https://launchdarkly.com/docs/sdk/concepts/client-side-server-side"
+  },
+  {
+   "v": "3 parts",
+   "l": "OpenFeature concepts to know: provider, evaluation context, hooks",
+   "s": "https://openfeature.dev/docs/reference/intro"
+  }
+ ],
+ "choices": [
+  {
+   "t": "Client-side or server-side evaluation",
+   "d": "Server-side evaluation keeps rules private and avoids flicker but needs a request path. Client-side SDKs are flexible for SPAs but add a network fetch and expose evaluated values to users, so never put secrets in flags."
+  },
+  {
+   "t": "Bootstrap or fetch on load",
+   "d": "Bootstrap values from the server for a correct first paint; fetch-only is simpler but flashes the wrong variant (the 'flash of control')."
+  },
+  {
+   "t": "Streaming or polling updates",
+   "d": "Streaming gives near-instant kill switches; polling is simpler and cheaper but lags by the interval. Some SDKs only stream when a change listener is registered."
+  },
+  {
+   "t": "Vendor SDK or OpenFeature",
+   "d": "OpenFeature gives one API with swappable providers, hooks and a shared evaluation context, reducing lock-in at the cost of a thin extra layer."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-url-state-query-params-search-params-deep-link-shareable-filters-frontend",
+   "why": "For user-visible filters and modes, URL state is the right tool, not flags"
+  },
+  {
+   "slug": "fe-global-store-zustand-redux-client-state-redux-zustand-signals-context-ui-state-frontend",
+   "why": "Flags are usually exposed to components through a provider backed by a store"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Flicker of the wrong variant",
+   "d": "UI renders the default, then swaps after the flag fetch.",
+   "see": "Layout shift or flash of control; worse LCP and CLS",
+   "fix": "Server bootstrap, skeleton until ready, or evaluate before render"
+  },
+  {
+   "t": "Flag service outage",
+   "d": "SDK cannot reach the service at startup.",
+   "see": "All features fall back to defaults or the app hangs",
+   "fix": "Safe defaults, cached last-known values, short init timeout, and a bundled snapshot"
+  },
+  {
+   "t": "Flag debt",
+   "d": "Dozens of old flags and nested conditions nobody dares remove.",
+   "see": "Untestable combinations and dead code paths",
+   "fix": "Owner and expiry per flag, remove after full rollout, lint or report on stale flags"
+  }
+ ],
+ "say": [
+  "Flags decouple deploy from release: I evaluate them for a user context, roll out by percentage, and keep a kill switch with a safe default if the service is down.",
+  "To avoid flicker I evaluate on the server and bootstrap the values into the page, so the first paint is right and the client SDK just takes over.",
+  "I log exposure events when the user sees a variant, treat release flags as temporary with an owner and removal date, and never put secrets in a client-visible flag."
+ ],
+ "followups": [
+  {
+   "q": "How does a percentage rollout stay consistent for a user?",
+   "a": "The service hashes the user id with the flag key into a bucket, so the same user gets the same answer every time, and raising the percentage only adds users."
+  },
+  {
+   "q": "How do you test code behind flags?",
+   "a": "Unit test both branches by setting the flag in a test provider, run key end-to-end flows with the new variant, and keep the number of live combinations small by removing flags quickly."
+  },
+  {
+   "q": "What is the risk of client-side flags?",
+   "a": "Users can see evaluated values and tamper with the client, so never use a flag as the only security gate; enforce permissions on the server too."
+  }
+ ],
+ "today": "OpenFeature, a CNCF incubating project, gives a vendor-neutral API with providers, evaluation context and hooks, including web client SDKs. Vendors support server-side bootstrapping so client-side flags and experiments no longer need to flash the wrong variant.",
+ "check": [
+  {
+   "q": "Best way to stop users seeing the wrong variant for a moment?",
+   "a": "Evaluate on the server and bootstrap flag values into the client",
+   "d": [
+    "Hide the whole page with a long timeout",
+    "Poll every second after render",
+    "Store flags in a cookie forever"
+   ],
+   "why": "Bootstrapping gives the SDK correct values at startup; the later fetch just refreshes them."
+  },
+  {
+   "q": "What should an experiment log when the user sees a variant?",
+   "a": "An exposure event",
+   "d": [
+    "Only a page view",
+    "Nothing, it is derived on the server",
+    "The full flag ruleset"
+   ],
+   "why": "Exposure events tie outcomes to who actually saw each variant."
+  },
+  {
+   "q": "Which statement about client-side flag SDKs is true?",
+   "a": "They receive evaluation results, so never put secrets in flags",
+   "d": [
+    "They receive the full targeting rules",
+    "They can use the server SDK key safely",
+    "Their values cannot be changed by a user"
+   ],
+   "why": "Client-visible values can be inspected and tampered with, so enforce real access control on the server."
+  }
+ ],
+ "sources": [
+  {
+   "t": "OpenFeature: introduction",
+   "u": "https://openfeature.dev/docs/reference/intro"
+  },
+  {
+   "t": "LaunchDarkly: client-side vs server-side SDKs",
+   "u": "https://launchdarkly.com/docs/sdk/concepts/client-side-server-side"
+  },
+  {
+   "t": "PostHog: client-side bootstrapping",
+   "u": "https://posthog.com/docs/feature-flags/bootstrapping"
+  }
+ ],
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "tool": ""
+}

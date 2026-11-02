@@ -511,5 +511,3083 @@
   "agent-credential-broker": "Hands each tool call the right token: the user's own (act as me) or the agent's service account (act as the agent).",
   "llmops-agent-eval-harness": "Scores agents on real tasks in a sandboxed environment with a verifier, not on single answers.",
   "agent-agent-task-queue": "Holds agent runs until a worker is free, so long runs scale, retry and stay fair."
- }
+ },
+ "fe-csr-spa-client-render": [
+  {
+   "t": "How a CSR SPA loads",
+   "s": "Shell first, everything else in the browser",
+   "k": [
+    {
+     "t": "App shell",
+     "d": "The minimal HTML plus script tags that every route shares. Because it is identical for all URLs, it can be cached forever on a CDN."
+    },
+    {
+     "t": "Load waterfall",
+     "d": "HTML, then JS, then data, then render. Each step waits for the previous one, so the order of requests matters more than any single one.",
+     "k": [
+      {
+       "t": "Fix: start fetches early",
+       "d": "Kick off data requests in the router loader or from a server-provided promise, not inside a component after it mounts."
+      },
+      {
+       "t": "Fix: preload",
+       "d": "Use modulepreload or prefetch for the route chunk the user will probably open next."
+      }
+     ]
+    },
+    {
+     "t": "No hydration",
+     "d": "The client built the DOM itself, so handlers are attached as it renders. That removes the double-work of server-rendered apps."
+    }
+   ]
+  },
+  {
+   "t": "Making it fast enough",
+   "s": "Budgets, splitting and caching",
+   "k": [
+    {
+     "t": "JavaScript budget",
+     "d": "A cap on bytes shipped for the first route, enforced in CI. web.dev suggests keeping critical-path resources around 170 KB compressed for slow networks."
+    },
+    {
+     "t": "Code splitting",
+     "d": "Dynamic import() creates a chunk per route or heavy component, so the landing screen does not pay for the settings page.",
+     "k": [
+      {
+       "t": "Route-based splitting",
+       "d": "The most common cut line. The router lazy-loads the page module when the URL matches."
+      },
+      {
+       "t": "Component-based splitting",
+       "d": "Charts, editors and maps load on demand, usually behind an interaction or visibility."
+      }
+     ]
+    },
+    {
+     "t": "Hashed assets and caching",
+     "d": "File names contain a content hash, so they can be cached as immutable. Only index.html is revalidated on every visit."
+    }
+   ]
+  },
+  {
+   "t": "Trade-offs to state",
+   "s": "What you give up",
+   "k": [
+    {
+     "t": "SEO and previews",
+     "d": "Bots that do not execute JavaScript see an empty shell. Use prerendering or SSR for public pages."
+    },
+    {
+     "t": "Device dependence",
+     "d": "All rendering work runs on the user's device, so low-end phones feel the cost of every extra KB."
+    },
+    {
+     "t": "Deploy skew",
+     "d": "Open tabs may reference chunks that no longer exist after a release. Handle chunk-load failure by prompting a reload."
+    }
+   ]
+  }
+ ],
+ "fe-ssg-static-pages": [
+  {
+   "t": "What gets built",
+   "s": "Static means decided before the request",
+   "k": [
+    {
+     "t": "Static rendering vs prerendering",
+     "d": "Static rendering writes final HTML per URL at build time. Prerendering a client app captures initial HTML, but the page still needs its JS to become interactive."
+    },
+    {
+     "t": "Dynamic routes",
+     "d": "A route like /blog/[slug] needs the full list of slugs at build time, supplied by a function such as generateStaticParams.",
+     "k": [
+      {
+       "t": "Unknown params",
+       "d": "In a pure export, any param not listed returns 404. A runtime framework can generate it on first request instead."
+      }
+     ]
+    },
+    {
+     "t": "Output folder",
+     "d": "HTML, CSS, JS and images in one folder, deployable to any static host or object store plus CDN."
+    }
+   ]
+  },
+  {
+   "t": "Delivery",
+   "s": "Why it is fast",
+   "k": [
+    {
+     "t": "CDN edge caching",
+     "d": "Files are copied to many locations, so the byte path is short and no origin compute is involved."
+    },
+    {
+     "t": "Cache headers",
+     "d": "Hashed JS and CSS can be immutable for a year; HTML gets a short or revalidated lifetime so new deploys appear."
+    }
+   ]
+  },
+  {
+   "t": "Mixing in dynamic content",
+   "s": "Keep the page cacheable",
+   "k": [
+    {
+     "t": "Client fetch",
+     "d": "After load, JavaScript calls an API for per-user or live data and fills reserved space to avoid layout shift."
+    },
+    {
+     "t": "Islands and server islands",
+     "d": "Astro hydrates only components marked with client directives, and server islands render personalised parts on demand while the rest stays static.",
+     "k": [
+      {
+       "t": "client:visible",
+       "d": "Hydrate when the component scrolls into view - good for below-the-fold widgets."
+      },
+      {
+       "t": "server:defer",
+       "d": "Page renders at once with a fallback; the island's HTML arrives from a separate request and swaps in."
+      }
+     ]
+    },
+    {
+     "t": "Rebuild triggers",
+     "d": "CMS webhooks and CI pipelines rebuild when content changes. For large sites, move hot routes to ISR."
+    }
+   ]
+  }
+ ],
+ "fe-isr-revalidate": [
+  {
+   "t": "The regeneration cycle",
+   "s": "Fresh, stale, regenerating",
+   "k": [
+    {
+     "t": "Fresh",
+     "d": "Inside the revalidate window the cached page is served and nothing else happens."
+    },
+    {
+     "t": "Stale",
+     "d": "Past the window the page is still served, but the request triggers a background render. This is stale-while-revalidate."
+    },
+    {
+     "t": "Replace or keep",
+     "d": "A successful render swaps the entry. A failed render leaves the old page in place and is retried later."
+    }
+   ]
+  },
+  {
+   "t": "Ways to refresh",
+   "s": "Choose by how precise you need to be",
+   "k": [
+    {
+     "t": "Time-based",
+     "d": "export const revalidate = 3600 on a route. Simple, predictable load, content can lag by the window."
+    },
+    {
+     "t": "On-demand",
+     "d": "Called from a Server Action, route handler or webhook.",
+     "k": [
+      {
+       "t": "revalidatePath",
+       "d": "Invalidates a route; the next request regenerates it. Good for 'this page changed'."
+      },
+      {
+       "t": "revalidateTag",
+       "d": "Invalidates every cached fetch or function tagged with a label, across many pages. Good for 'this article changed'."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": "Operating it",
+   "s": "Production concerns",
+   "k": [
+    {
+     "t": "Observing cache state",
+     "d": "The x-nextjs-cache header reports HIT, STALE, MISS or REVALIDATED, which is the first thing to check when debugging."
+    },
+    {
+     "t": "Shared cache",
+     "d": "Use a custom cache handler so multiple instances share entries and invalidations."
+    },
+    {
+     "t": "Deployment skew",
+     "d": "During rolling deploys a client from build A may hit a server on build B. A deployment id lets the client fall back to a hard navigation."
+    }
+   ]
+  }
+ ],
+ "fe-streaming-ssr-suspense": [
+  {
+   "t": "How the stream is built",
+   "s": "Shell first, then boundary by boundary",
+   "k": [
+    {
+     "t": "Static shell",
+     "d": "Everything that renders before any async work resolves: layouts, navigation and Suspense fallbacks."
+    },
+    {
+     "t": "Suspense boundary",
+     "d": "A marker around a component that may wait. While it waits React shows the fallback; when ready it streams the finished HTML and swaps it in.",
+     "k": [
+      {
+       "t": "loading.js",
+       "d": "Next.js file convention that wraps a page in a boundary automatically - good when nothing renders without the data."
+      },
+      {
+       "t": "Granular boundaries",
+       "d": "Sibling boundaries stream independently; nested ones create progressive detail, such as product first then reviews."
+      }
+     ]
+    },
+    {
+     "t": "Chunked transfer",
+     "d": "The HTTP mechanism that lets the server send the body in pieces without knowing its total length."
+    }
+   ]
+  },
+  {
+   "t": "Effect on Core Web Vitals",
+   "s": "What improves and what can regress",
+   "k": [
+    {
+     "t": "TTFB and FCP",
+     "d": "Drop to the time needed to render the shell instead of the slowest query."
+    },
+    {
+     "t": "LCP",
+     "d": "Only improves if the LCP element is in the shell. Inside a boundary it waits for the swap."
+    },
+    {
+     "t": "CLS",
+     "d": "Use fallbacks with matching dimensions to avoid shift on swap."
+    },
+    {
+     "t": "INP",
+     "d": "Selective hydration splits work into small tasks, keeping the main thread responsive."
+    }
+   ]
+  },
+  {
+   "t": "Keeping it working",
+   "s": "Things that quietly break streaming",
+   "k": [
+    {
+     "t": "Buffering layers",
+     "d": "Reverse proxies, CDNs, compression and serverless platforms may hold chunks. Verify in the Network tab or by reading the response as a stream."
+    },
+    {
+     "t": "Status and headers",
+     "d": "Fixed after the first chunk. Do hard checks first, use error boundaries for failures mid-stream."
+    },
+    {
+     "t": "Bots",
+     "d": "HTML-limited crawlers get metadata in the initial HTML; the server waits for it before sending the page."
+    }
+   ]
+  }
+ ],
+ "fe-react-server-components": [
+  {
+   "t": "Two kinds of component",
+   "s": "Where code runs decides what it can do",
+   "k": [
+    {
+     "t": "Server Component",
+     "d": "Runs once on the server (build time or per request). Can be async, read data and use secrets. Cannot use state, effects, event handlers or browser APIs.",
+     "k": [
+      {
+       "t": "Async rendering",
+       "d": "await data in the component body; React suspends until it resolves, which works naturally with streaming."
+      },
+      {
+       "t": "Passing a promise",
+       "d": "Start a fetch on the server without awaiting, pass the promise to a Client Component and read it with use() inside Suspense."
+      }
+     ]
+    },
+    {
+     "t": "Client Component",
+     "d": "Marked with 'use client'. Has state, effects and handlers. It is also prerendered to HTML on the server, then hydrated."
+    },
+    {
+     "t": "Serialisation rule",
+     "d": "Props crossing the boundary must be serialisable. Functions can only cross as Server Functions."
+    }
+   ]
+  },
+  {
+   "t": "Composition patterns",
+   "s": "Keeping bundles small",
+   "k": [
+    {
+     "t": "Children slot",
+     "d": "A Client Component such as Modal receives server-rendered children, so the content stays on the server."
+    },
+    {
+     "t": "Context providers",
+     "d": "Wrap children in a small Client Component provider placed deep in the tree."
+    },
+    {
+     "t": "Third-party client libs",
+     "d": "Wrap them in your own 'use client' file so they can be used from Server Components."
+    },
+    {
+     "t": "server-only / client-only",
+     "d": "Packages that cause a build error if a module is imported on the wrong side."
+    }
+   ]
+  },
+  {
+   "t": "Mutations and safety",
+   "s": "Server Functions and security",
+   "k": [
+    {
+     "t": "Server Actions",
+     "d": "Functions with 'use server' called from forms or event handlers. Forms still work before hydration (progressive enhancement)."
+    },
+    {
+     "t": "Treat as public endpoints",
+     "d": "Check authentication and authorisation and validate input in every action."
+    },
+    {
+     "t": "Patching",
+     "d": "CVE-2025-55182 (CVSS 10.0) allowed unauthenticated RCE in affected React 19 versions; upgrade to patched releases of React and your framework."
+    }
+   ]
+  }
+ ],
+ "fe-hydration-islands": [
+  {
+   "t": "Hydration basics",
+   "s": "Attaching behaviour to HTML",
+   "k": [
+    {
+     "t": "What hydration restores",
+     "d": "Event listeners, the component tree and application state, usually by re-downloading and re-running component code."
+    },
+    {
+     "t": "Mismatches",
+     "d": "The client must render the same output as the server.",
+     "k": [
+      {
+       "t": "Common causes",
+       "d": "Dates, typeof window checks, matchMedia, and different data on server and client."
+      },
+      {
+       "t": "Fixes",
+       "d": "suppressHydrationWarning for a single unavoidable difference; a two-pass render with useEffect for client-only content; fix data sources."
+      }
+     ]
+    },
+    {
+     "t": "Selective hydration",
+     "d": "With Suspense, React hydrates boundaries independently and prioritises the one the user touches."
+    }
+   ]
+  },
+  {
+   "t": "Islands architecture",
+   "s": "Static sea, interactive islands",
+   "k": [
+    {
+     "t": "Client islands",
+     "d": "Interactive components hydrated separately, possibly with different UI frameworks on one page."
+    },
+    {
+     "t": "Client directives",
+     "d": "load (high priority), idle (medium), visible (low, IntersectionObserver), media (breakpoint), only (skip SSR)."
+    },
+    {
+     "t": "Server islands",
+     "d": "server:defer renders dynamic parts on demand with a fallback, keeping the page shell cacheable."
+    }
+   ]
+  },
+  {
+   "t": "Resumability",
+   "s": "No replay, load on interaction",
+   "k": [
+    {
+     "t": "Serialised state",
+     "d": "State, listeners and closures are written into HTML so the browser can continue where the server stopped."
+    },
+    {
+     "t": "Global loader",
+     "d": "One tiny listener reads attributes like on:click pointing to chunk#symbol and downloads it on demand."
+    },
+    {
+     "t": "Trade-offs",
+     "d": "Code must be serialisable: class instances and streams stay client-only. It requires a different programming style."
+    }
+   ]
+  }
+ ],
+ "fe-app-shell-router": [
+  {
+   "t": "Client-side routing",
+   "s": "Change the view, not the page",
+   "k": [
+    {
+     "t": "History API",
+     "d": "pushState adds an entry, replaceState overwrites the current one, and popstate fires on Back and Forward."
+    },
+    {
+     "t": "Link interception",
+     "d": "Anchor clicks are prevented and handed to the router, keeping real hrefs for accessibility, open in new tab and crawlers."
+    },
+    {
+     "t": "Deep links",
+     "d": "Every URL must work on first load, so the server returns the app or prerendered HTML for any route."
+    }
+   ]
+  },
+  {
+   "t": "Route tree",
+   "s": "Nested layouts and outlets",
+   "k": [
+    {
+     "t": "Nested routes",
+     "d": "Children inherit the parent's path and render into its Outlet."
+    },
+    {
+     "t": "Layout and index routes",
+     "d": "Layout routes share chrome without adding a URL segment; index routes are the default child at the parent's URL."
+    },
+    {
+     "t": "Dynamic segments",
+     "d": "Parts like :teamId become params passed to loaders and components."
+    }
+   ]
+  },
+  {
+   "t": "Speed",
+   "s": "Split, prefetch, load in parallel",
+   "k": [
+    {
+     "t": "Route code splitting",
+     "d": "Each route is a lazy chunk. Combine with prefetching for the likely next page."
+    },
+    {
+     "t": "Route loaders",
+     "d": "Fetch at the router level so code and data load together, not one after the other."
+    },
+    {
+     "t": "Pending UI",
+     "d": "Keep the old view during a transition, show a delayed indicator, and use skeletons for slow content."
+    }
+   ]
+  }
+ ],
+ "fe-micro-frontend-host": [
+  {
+   "t": "Roles",
+   "s": "Who owns what",
+   "k": [
+    {
+     "t": "Host (container)",
+     "d": "Owns the shell: layout, routing, authentication, error handling and loading of remotes."
+    },
+    {
+     "t": "Remote",
+     "d": "A separately built and deployed app that exposes modules, such as a page or widget, through a remote entry file."
+    },
+    {
+     "t": "Shared scope",
+     "d": "A registry of libraries (like React) that builds provide and consume instead of bundling private copies."
+    }
+   ]
+  },
+  {
+   "t": "Module Federation mechanics",
+   "s": "How loading works",
+   "k": [
+    {
+     "t": "exposes and remotes",
+     "d": "exposes lists modules a build offers (keys start with ./). remotes maps a name to name@url.",
+     "k": [
+      {
+       "t": "Dynamic remotes",
+       "d": "When the URL is only known at runtime, load the entry script yourself, init the share scope, then call get()."
+      }
+     ]
+    },
+    {
+     "t": "Shared options",
+     "d": "singleton (one version), requiredVersion (range), eager (bundle into entry, can bloat), shareScope (name).",
+     "k": [
+      {
+       "t": "Version resolution",
+       "d": "A consumer gets the highest version satisfying its range; below the range logs a warning."
+      }
+     ]
+    },
+    {
+     "t": "Asynchronous boundary",
+     "d": "Remote modules always need a chunk load, so the host imports them lazily."
+    }
+   ]
+  },
+  {
+   "t": "Making it safe",
+   "s": "Contracts, isolation, operations",
+   "k": [
+    {
+     "t": "Communication",
+     "d": "Prefer props, custom events and the URL. Keep coupling low and test the contract."
+    },
+    {
+     "t": "Style isolation",
+     "d": "BEM naming, CSS modules, CSS-in-JS or Shadow DOM so teams cannot override each other."
+    },
+    {
+     "t": "Resilience",
+     "d": "Error boundary and fallback around each remote; canary releases; monitoring per slice."
+    },
+    {
+     "t": "Governance",
+     "d": "Automation for pipelines, shared linting and a design system to prevent drift."
+    }
+   ]
+  }
+ ],
+ "fe-design-system": [
+  {
+   "t": "Design tokens",
+   "s": "Decisions as data",
+   "k": [
+    {
+     "t": "Token format",
+     "d": "JSON where each token has a $value and optional $type (colour, dimension, fontFamily, shadow, typography and more). Groups organise tokens; aliases like {group.token} reference another token.",
+     "k": [
+      {
+       "t": "Primitive tokens",
+       "d": "Raw values, such as blue-500."
+      },
+      {
+       "t": "Semantic tokens",
+       "d": "Meaningful roles, such as color-action, that alias primitives."
+      },
+      {
+       "t": "Component tokens",
+       "d": "Optional overrides scoped to one component."
+      }
+     ]
+    },
+    {
+     "t": "Token pipeline",
+     "d": "A build tool transforms the JSON into CSS variables, and into iOS or Android formats when needed."
+    },
+    {
+     "t": "Standard status",
+     "d": "The Design Tokens Format Module 2025.10 is a Community Group draft, not yet a W3C Standard."
+    }
+   ]
+  },
+  {
+   "t": "Components and theming",
+   "s": "Build once, restyle by token",
+   "k": [
+    {
+     "t": "Component API",
+     "d": "Small and composable: variants, sizes and slots rather than dozens of one-off props."
+    },
+    {
+     "t": "Accessibility built in",
+     "d": "Keyboard support, visible focus, correct roles and contrast are the component's job, not each product's."
+    },
+    {
+     "t": "Theming with CSS variables",
+     "d": "Custom properties are inherited and resolved at use. Redefine them under prefers-color-scheme or [data-theme] for dark mode; var() fallbacks cover undefined values."
+    }
+   ]
+  },
+  {
+   "t": "Documentation, testing and delivery",
+   "s": "Trust through process",
+   "k": [
+    {
+     "t": "Storybook",
+     "d": "A workshop for building components in isolation. Each story is one state; docs are generated, and stories double as test cases."
+    },
+    {
+     "t": "Quality gates",
+     "d": "Interaction, accessibility, visual and snapshot tests run in CI against stories."
+    },
+    {
+     "t": "Release management",
+     "d": "Semantic versioning, changelog, deprecations and codemods; 'use client' at entry points for Server Component compatibility."
+    },
+    {
+     "t": "Governance",
+     "d": "Ownership, a contribution path, and adoption metrics so the system stays useful instead of becoming a bottleneck."
+    }
+   ]
+  }
+ ],
+ "fe-global-store-zustand-redux": [
+  {
+   "t": "Kinds of state",
+   "s": "Put each piece of state in the right home",
+   "k": [
+    {
+     "t": "Local state",
+     "d": "useState or useReducer inside one component. Start here; it is the simplest and cheapest."
+    },
+    {
+     "t": "Client (global) state",
+     "d": "Data only the app owns and many components share: theme, sidebar, wizard step, draft. This is what a global store is for."
+    },
+    {
+     "t": "Server state",
+     "d": "Data that lives on the server and arrives asynchronously. It needs caching and refetching, so it belongs in a server-state cache, not the store."
+    },
+    {
+     "t": "URL state",
+     "d": "Filters, tabs and page numbers that should survive refresh and be shareable as links."
+    },
+    {
+     "t": "Form state",
+     "d": "Values, errors and touched flags of a form, usually handled by a form library."
+    }
+   ]
+  },
+  {
+   "t": "Store design",
+   "s": "How the library keeps things predictable",
+   "k": [
+    {
+     "t": "Zustand",
+     "d": "A hook-based store: create() takes state and actions, set() merges updates, and no provider is needed.",
+     "k": [
+      {
+       "t": "Selector",
+       "d": "A function that picks a slice of state. The component re-renders only when that slice changes."
+      },
+      {
+       "t": "Middleware",
+       "d": "Add-ons wrapped around the store, such as persist (saves to storage) and devtools."
+      }
+     ]
+    },
+    {
+     "t": "Redux Toolkit",
+     "d": "The official way to write Redux. A single store, plain-object actions and pure reducers, with less code.",
+     "k": [
+      {
+       "t": "createSlice",
+       "d": "Generates action creators and reducers from one definition; Immer lets you write update code that looks like mutation but stays immutable."
+      },
+      {
+       "t": "configureStore",
+       "d": "Sets up the store, thunk middleware, dev-mode mutation checks and Redux DevTools in one call."
+      },
+      {
+       "t": "createEntityAdapter",
+       "d": "Ready-made reducers and selectors for normalized collections (ids plus entities)."
+      }
+     ]
+    },
+    {
+     "t": "Context",
+     "d": "Built into React. Good for rarely-changing values; every consumer re-renders when the value changes, so it is weaker for fast-moving state."
+    }
+   ]
+  },
+  {
+   "t": "Performance and persistence",
+   "s": "Keep renders small and state safe",
+   "k": [
+    {
+     "t": "Granular subscriptions",
+     "d": "Select the smallest slice, derive values in selectors, and pass ids to children so each one selects its own data."
+    },
+    {
+     "t": "Persist",
+     "d": "Save chosen fields to localStorage or similar. Use partialize to pick fields, version and migrate to survive shape changes, and skipHydration in server-rendered apps to avoid mismatches."
+    },
+    {
+     "t": "DevTools",
+     "d": "Log every action and replay state changes (time travel) to debug how the state got where it is."
+    }
+   ]
+  }
+ ],
+ "fe-server-state-cache-tanstack-query": [
+  {
+   "t": "Fresh, stale and gone",
+   "s": "The life of a cache entry",
+   "k": [
+    {
+     "t": "Fresh",
+     "d": "Within staleTime the cached data is used as-is with no refetch."
+    },
+    {
+     "t": "Stale",
+     "d": "After staleTime (default 0) data is shown instantly but refetched on triggers. This is stale-while-revalidate."
+    },
+    {
+     "t": "Inactive and garbage collected",
+     "d": "When no component uses a query it becomes inactive and is deleted after gcTime (default 5 minutes)."
+    },
+    {
+     "t": "Refetch triggers",
+     "d": "A new component mounting, window focus and network reconnect each refetch stale queries. refetchInterval adds polling."
+    }
+   ]
+  },
+  {
+   "t": "Query keys",
+   "s": "The identity of cached data",
+   "k": [
+    {
+     "t": "Rules",
+     "d": "A top-level array that is JSON-serializable and includes every variable the queryFn uses."
+    },
+    {
+     "t": "Hashing",
+     "d": "Object key order does not matter; array item order does. A property set to undefined matches a key without it."
+    },
+    {
+     "t": "Key factories",
+     "d": "Build keys in one helper (['todos','list',filters]) so a prefix invalidates a whole family and typos are impossible."
+    }
+   ]
+  },
+  {
+   "t": "Dedupe, retry, invalidate",
+   "s": "What the library does for you",
+   "k": [
+    {
+     "t": "Deduplication",
+     "d": "Many components using the same key share one request and one cache entry."
+    },
+    {
+     "t": "Retries",
+     "d": "3 retries by default (0 on the server) with exponential backoff: 1 s doubling, capped at 30 s."
+    },
+    {
+     "t": "Invalidation",
+     "d": "invalidateQueries marks matches stale (overriding staleTime) and refetches active ones. Prefix matching by default, exact: true to narrow, predicate for custom logic."
+    },
+    {
+     "t": "Structural sharing",
+     "d": "Unchanged parts of refetched JSON keep their object reference, so React skips needless re-renders."
+    }
+   ]
+  },
+  {
+   "t": "Server rendering",
+   "s": "Prefetch, dehydrate, hydrate",
+   "k": [
+    {
+     "t": "Per-request client",
+     "d": "Create the QueryClient per request so users never share a cache."
+    },
+    {
+     "t": "Dehydrate and hydrate",
+     "d": "Prefetch on the server, serialise the cache with dehydrate, and restore it in HydrationBoundary on the client."
+    },
+    {
+     "t": "staleTime above 0",
+     "d": "Avoids refetching immediately on the client what the server just fetched."
+    }
+   ]
+  }
+ ],
+ "fe-normalized-cache-entities-by-id": [
+  {
+   "t": "The idea",
+   "s": "One object, one place",
+   "k": [
+    {
+     "t": "Normalization",
+     "d": "Treat the client store like a small database: a table per type, items keyed by id, relationships stored as ids."
+    },
+    {
+     "t": "Denormalization",
+     "d": "Rebuilding the nested shape a component wants from the flat store when it reads."
+    },
+    {
+     "t": "Why",
+     "d": "Avoids duplication, simplifies updates, and limits re-renders to what really changed."
+    }
+   ]
+  },
+  {
+   "t": "In GraphQL clients",
+   "s": "Automatic normalization by id",
+   "k": [
+    {
+     "t": "Cache id",
+     "d": "Apollo's default is __typename and id (or _id) joined by a colon. If none can be built, the object stays nested in its parent."
+    },
+    {
+     "t": "References",
+     "d": "Nested objects are replaced by __ref pointers to the stored entry."
+    },
+    {
+     "t": "Merging",
+     "d": "Same id means incoming fields overwrite and others are kept."
+    },
+    {
+     "t": "Global object identification",
+     "d": "Relay's convention: a Node interface with a globally unique, opaque id and a node(id:) query to refetch any object."
+    }
+   ]
+  },
+  {
+   "t": "Shapes and relationships",
+   "s": "Designing the flat store",
+   "k": [
+    {
+     "t": "byId and allIds",
+     "d": "Redux's explicit shape: items by id plus an array for order. Redux Toolkit's entity adapter uses ids and entities."
+    },
+    {
+     "t": "Related ids on the entity",
+     "d": "Good for one-direction relationships with no data of their own, like an author's bookIds."
+    },
+    {
+     "t": "Join table",
+     "d": "For many-to-many or relationships that carry data (an author's role on a book)."
+    },
+    {
+     "t": "Derived index",
+     "d": "Add something like bookIdsByAuthorId only if profiling shows a bottleneck, updated by the same actions."
+    }
+   ]
+  },
+  {
+   "t": "Keeping it healthy",
+   "s": "Lists, eviction, optimistic layers",
+   "k": [
+    {
+     "t": "List updates",
+     "d": "Creates and deletes change list membership; update the list field explicitly or refetch."
+    },
+    {
+     "t": "Eviction and gc",
+     "d": "evict removes an object; gc removes everything unreachable from the root. retain keeps chosen objects alive."
+    },
+    {
+     "t": "Dangling references",
+     "d": "References left pointing at evicted objects; handle with read functions."
+    }
+   ]
+  }
+ ],
+ "fe-graphql-client": [
+  {
+   "t": "Fragments",
+   "s": "Data needs live with the component",
+   "k": [
+    {
+     "t": "Colocation",
+     "d": "Each component declares a fragment (e.g. AuthorDetails_author). Parents spread child fragments, so needs nest up the tree into one query."
+    },
+    {
+     "t": "Data masking",
+     "d": "A component can read only its own fragment fields. In Apollo turn it on with dataMasking: true; Relay does it by design.",
+     "k": [
+      {
+       "t": "Why it matters",
+       "d": "Removing a field from a child cannot silently break a parent that never declared it."
+      },
+      {
+       "t": "Migrating",
+       "d": "Apollo's @unmask directive lets existing code keep working while you adopt masking step by step."
+      }
+     ]
+    },
+    {
+     "t": "useFragment",
+     "d": "A live view of the cache for one fragment. It never hits the network; the parent query fills the cache."
+    }
+   ]
+  },
+  {
+   "t": "Clients compared",
+   "s": "Pick by app size and needs",
+   "k": [
+    {
+     "t": "Apollo Client",
+     "d": "Flexible, large ecosystem, normalized InMemoryCache, a link chain for auth and retry."
+    },
+    {
+     "t": "Relay",
+     "d": "Compiler-driven and strict: static queries, fragment masking, normalized store, global object ids. Built for large apps."
+    },
+    {
+     "t": "urql",
+     "d": "Lightweight and extensible. Default document cache, with the normalized Graphcache as an add-on."
+    }
+   ]
+  },
+  {
+   "t": "Persisted queries",
+   "s": "Send an id, not the text",
+   "k": [
+    {
+     "t": "Automatic (APQ)",
+     "d": "Hash first; on PERSISTED_QUERY_NOT_FOUND resend with the text. Needs no server setup and shrinks repeat requests."
+    },
+    {
+     "t": "Registered allowlist",
+     "d": "Operations are registered ahead of time and the router can reject anything else (safelisting)."
+    },
+    {
+     "t": "GET and CDNs",
+     "d": "Hashed queries can go over GET so a CDN caches them; mutations and full-length queries stay POST."
+    }
+   ]
+  },
+  {
+   "t": "Request flow",
+   "s": "What happens on one query",
+   "k": [
+    {
+     "t": "Cache policy",
+     "d": "Read the normalized cache first, then the network on a miss or when stale."
+    },
+    {
+     "t": "Links",
+     "d": "Middleware pieces for auth headers, retries, errors and persisted-query hashing."
+    },
+    {
+     "t": "Optimistic response",
+     "d": "Apollo stores a guessed result as a separate layer and removes it when the real response arrives or fails."
+    }
+   ]
+  }
+ ],
+ "fe-form-state-validation": [
+  {
+   "t": "Where the values live",
+   "s": "Controlled versus uncontrolled",
+   "k": [
+    {
+     "t": "Controlled",
+     "d": "React state holds each value; every keystroke re-renders. Simple to reason about, slower for big forms."
+    },
+    {
+     "t": "Uncontrolled",
+     "d": "The DOM holds the value and you read it on submit or through refs. React Hook Form's default model.",
+     "k": [
+      {
+       "t": "register",
+       "d": "Connects a native input by name and attaches rules. Errors appear in formState.errors."
+      },
+      {
+       "t": "Controller",
+       "d": "A wrapper for controlled UI-kit components such as MUI or React-Select that do not expose a plain input ref."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": "When validation runs",
+   "s": "Modes and timing",
+   "k": [
+    {
+     "t": "mode",
+     "d": "onSubmit (default), onBlur, onChange, onTouched, all. The docs warn onChange can hurt performance."
+    },
+    {
+     "t": "reValidateMode",
+     "d": "After a failed submit, fields with errors re-validate; default onChange."
+    },
+    {
+     "t": "defaultValues",
+     "d": "Initial values, plain or async. They are cached, so use reset() to change them."
+    }
+   ]
+  },
+  {
+   "t": "Schema validation",
+   "s": "One definition for rules and types",
+   "k": [
+    {
+     "t": "Zod",
+     "d": "TypeScript-first schemas: parse or safeParse untrusted data and infer the static type from the schema."
+    },
+    {
+     "t": "Resolver",
+     "d": "Plugs a schema library into the form library; it returns values and errors, with error keys matching field names."
+    },
+    {
+     "t": "Shared with the server",
+     "d": "Reuse the same schema in the API or Server Action so rules never drift."
+    }
+   ]
+  },
+  {
+   "t": "Submission and UX",
+   "s": "Finish well",
+   "k": [
+    {
+     "t": "Server errors",
+     "d": "Map them back to fields (setError) or return them as state from a form action (useActionState)."
+    },
+    {
+     "t": "Accessible errors",
+     "d": "Tie messages to inputs, announce them, and focus the first invalid field."
+    },
+    {
+     "t": "Progressive enhancement",
+     "d": "React form actions with Server Functions can submit before JavaScript loads (permalink option)."
+    },
+    {
+     "t": "Double submit",
+     "d": "Disable the button while pending and use an idempotency key for the request."
+    }
+   ]
+  }
+ ],
+ "fe-url-state": [
+  {
+   "t": "What belongs in the URL",
+   "s": "Shareable, restorable view state",
+   "k": [
+    {
+     "t": "Good fits",
+     "d": "Search text, filters, sort, page, selected tab or item - anything someone would share or return to."
+    },
+    {
+     "t": "Keep out",
+     "d": "Secrets, tokens, personal data, large objects and throwaway UI state. URLs land in logs, history and referrers."
+    },
+    {
+     "t": "Path versus query",
+     "d": "Path identifies the resource (/products/42); query refines the view (?sort=price)."
+    }
+   ]
+  },
+  {
+   "t": "Reading and writing",
+   "s": "The browser APIs",
+   "k": [
+    {
+     "t": "URLSearchParams",
+     "d": "get returns the first value or null, getAll returns all, set replaces, append adds, toString serialises. Use append rather than building strings, since a plus sign reads as a space.",
+     "k": [
+      {
+       "t": "Encoding",
+       "d": "Serialising percent-encodes special characters and turns spaces into plus signs; parsing decodes them. Always pass unencoded values to the API."
+      }
+     ]
+    },
+    {
+     "t": "History API",
+     "d": "pushState adds an entry (Back works); replaceState edits the current one. Neither fires popstate; Back and Forward do."
+    },
+    {
+     "t": "Router hooks",
+     "d": "Next.js: useSearchParams (read-only client hook) and the page searchParams prop. Update by building a new string and calling router.push or a Link."
+    }
+   ]
+  },
+  {
+   "t": "Parsing safely",
+   "s": "Params are untrusted input",
+   "k": [
+    {
+     "t": "Schema validation",
+     "d": "Parse to typed values with defaults and fallbacks. TanStack Router's validateSearch does this per route."
+    },
+    {
+     "t": "Serialisation",
+     "d": "Keep top-level keys flat strings so other tools can read them; encode nested values as URL-safe JSON if needed."
+    },
+    {
+     "t": "Defaults",
+     "d": "Omit a param when it equals its default, so URLs stay short and canonical."
+    }
+   ]
+  },
+  {
+   "t": "Rendering and performance",
+   "s": "Server, cache and history",
+   "k": [
+    {
+     "t": "Server rendering",
+     "d": "Pages read searchParams on the server so the first paint matches the URL; in Next.js a static page using useSearchParams needs a Suspense boundary."
+    },
+    {
+     "t": "Data fetching",
+     "d": "Put the params in the data query key so each combination caches on its own."
+    },
+    {
+     "t": "History hygiene",
+     "d": "Debounce text input and use replace so the Back button stays useful."
+    }
+   ]
+  }
+ ],
+ "fe-optimistic-update": [
+  {
+   "t": "The pattern",
+   "s": "Guess, send, reconcile",
+   "k": [
+    {
+     "t": "Optimistic UI",
+     "d": "Render the expected result before the server confirms, because most requests succeed."
+    },
+    {
+     "t": "Pending state",
+     "d": "Mark guessed items (for example pending: true) so users and tests can tell them from confirmed data."
+    },
+    {
+     "t": "Rollback",
+     "d": "If the request fails, return to the last known good state and tell the user."
+    },
+    {
+     "t": "Reconcile",
+     "d": "Replace the guess with the server's response, such as the real id, and invalidate to be sure."
+    }
+   ]
+  },
+  {
+   "t": "In React",
+   "s": "useOptimistic",
+   "k": [
+    {
+     "t": "How it behaves",
+     "d": "Returns optimisticState and a setter. It equals the real value unless an Action is pending; when the Action ends React renders the real value, so a failure reverts automatically."
+    },
+    {
+     "t": "Reducer versus updater",
+     "d": "A reducer receives the latest real value on every re-run, so use it for relative changes and lists; an updater only sees the state from when the transition started."
+    },
+    {
+     "t": "Rules",
+     "d": "Call the setter inside startTransition or an Action prop, never during render, and keep reducers pure."
+    }
+   ]
+  },
+  {
+   "t": "With a data library",
+   "s": "Two approaches in TanStack Query",
+   "k": [
+    {
+     "t": "Via the UI",
+     "d": "Render the pending mutation's variables. No cache change, so nothing to roll back; use useMutationState to show them elsewhere."
+    },
+    {
+     "t": "Via the cache",
+     "d": "Write the guess in onMutate so every component updates.",
+     "k": [
+      {
+       "t": "onMutate",
+       "d": "Cancel outgoing refetches, snapshot the previous data, write the optimistic value, return the snapshot."
+      },
+      {
+       "t": "onError",
+       "d": "Restore the snapshot from the returned context."
+      },
+      {
+       "t": "onSettled",
+       "d": "Invalidate the query to sync with the server whether it worked or not."
+      }
+     ]
+    },
+    {
+     "t": "Apollo optimisticResponse",
+     "d": "A guessed result stored as a separate layer; removed when the real response arrives or an error occurs. New objects use a temporary id."
+    }
+   ]
+  },
+  {
+   "t": "Judgement",
+   "s": "When to use it",
+   "k": [
+    {
+     "t": "Good fits",
+     "d": "Likes, toggles, reorders, comments: high success rate, easy to undo."
+    },
+    {
+     "t": "Poor fits",
+     "d": "Payments, irreversible deletes, anything the server often rejects."
+    },
+    {
+     "t": "Offline",
+     "d": "Pair with a mutation queue so optimistic changes survive reconnecting."
+    }
+   ]
+  }
+ ],
+ "fe-api-client-retry-abort": [
+  {
+   "t": "Cancel and time out",
+   "s": "Never let a request run forever or land late",
+   "k": [
+    {
+     "t": "AbortController",
+     "d": "An object with a signal you pass to fetch. Calling abort() cancels the request and rejects the promise with an AbortError.",
+     "k": [
+      {
+       "t": "AbortSignal.timeout(ms)",
+       "d": "Makes a signal that aborts itself after the time, with a TimeoutError. It counts active time, so it pauses while the page is in the back-forward cache."
+      },
+      {
+       "t": "AbortSignal.any([...])",
+       "d": "Combines signals so the request stops when the user cancels or the timeout fires, whichever is first."
+      }
+     ]
+    },
+    {
+     "t": "Stale-request guard",
+     "d": "Keep the latest controller in a variable and abort it before starting a new request (typeahead, route changes). Ignore AbortError in the catch block."
+    },
+    {
+     "t": "Listener cleanup",
+     "d": "Abort listeners keep a signal alive, so remove them when the work finishes."
+    }
+   ]
+  },
+  {
+   "t": "Retry policy",
+   "s": "Recover from blips without causing outages",
+   "k": [
+    {
+     "t": "What to retry",
+     "d": "Network errors, 429, 502, 503 and 504 are transient. 400, 401, 403 and 404 will fail the same way, so fail fast. Refresh the token once on 401 instead of retrying blindly."
+    },
+    {
+     "t": "Exponential backoff + jitter",
+     "d": "Wait longer after each failure (1 s, 2 s, 4 s ...) up to a cap, and add randomness so many clients do not retry in lockstep.",
+     "k": [
+      {
+       "t": "Retry-After",
+       "d": "A response header with seconds or a date. When present on 429 or 503, use it instead of your own delay."
+      },
+      {
+       "t": "Retry budget",
+       "d": "Limit total retries (a token bucket or a max attempt count) so a long outage does not turn into a retry flood."
+      }
+     ]
+    },
+    {
+     "t": "Idempotency",
+     "d": "An operation is idempotent if repeating it has the same effect as doing it once. POST is not, so send an Idempotency-Key and let the server deduplicate."
+    }
+   ]
+  },
+  {
+   "t": "Client plumbing",
+   "s": "Shared rules in one place",
+   "k": [
+    {
+     "t": "Interceptors / middleware",
+     "d": "Hooks that run on every request or response: add the auth header, refresh an expired token, map errors to a common shape, log timing."
+    },
+    {
+     "t": "Request deduplication",
+     "d": "If two components ask for the same URL at once, share one in-flight promise. Server-state libraries do this by query key."
+    },
+    {
+     "t": "Typed errors",
+     "d": "fetch only rejects on network failure, not on HTTP 4xx or 5xx. Check response.ok and throw a typed error so callers can branch on status."
+    }
+   ]
+  }
+ ],
+ "fe-websocket-client": [
+  {
+   "t": "Connection lifecycle",
+   "s": "A small state machine you own",
+   "k": [
+    {
+     "t": "readyState",
+     "d": "CONNECTING, OPEN, CLOSING, CLOSED. Only send when OPEN; otherwise buffer.",
+     "k": [
+      {
+       "t": "Events",
+       "d": "open, message, error and close. The close event gives code, reason and wasClean, which decide whether to retry."
+      }
+     ]
+    },
+    {
+     "t": "Close codes",
+     "d": "1000 is a normal close, 1001 going away, 1006 an abnormal drop with no Close frame, 1008 a policy violation. Retry on drops; do not loop on policy or auth failures."
+    },
+    {
+     "t": "wss://",
+     "d": "Always use the encrypted form in production. Plain ws:// is blocked on https pages as mixed content."
+    }
+   ]
+  },
+  {
+   "t": "Staying alive",
+   "s": "Detect dead links and recover",
+   "k": [
+    {
+     "t": "Heartbeat",
+     "d": "The browser API has no ping method, so send a tiny app message every few seconds and expect a pong. Timeout means dead.",
+     "k": [
+      {
+       "t": "Ping / Pong frames",
+       "d": "Protocol-level control frames with at most 125 bytes of payload. A peer must answer a Ping with a Pong, so server-side pings are free of client code."
+      }
+     ]
+    },
+    {
+     "t": "Reconnect with backoff + jitter",
+     "d": "Delay grows each attempt up to a cap, with randomness. Reset the delay after a stable connection."
+    },
+    {
+     "t": "Tab visibility and bfcache",
+     "d": "Mobile and sleeping tabs lose sockets. Reconnect on visibilitychange or online events, and close cleanly on pagehide."
+    }
+   ]
+  },
+  {
+   "t": "Messages and scale",
+   "s": "Keep data correct and the UI responsive",
+   "k": [
+    {
+     "t": "Message envelope",
+     "d": "Send {type, id, seq, payload} so the client can route, deduplicate and detect gaps."
+    },
+    {
+     "t": "Resume / catch-up",
+     "d": "Track the last seq; on reconnect send it so the server replays missed events, or refetch a snapshot if too old."
+    },
+    {
+     "t": "Backpressure",
+     "d": "The classic API cannot slow the sender. Check bufferedAmount before sending, and batch or throttle incoming updates before rendering."
+    },
+    {
+     "t": "Binary data",
+     "d": "Set binaryType to arraybuffer to receive binary frames as ArrayBuffer instead of Blob."
+    }
+   ]
+  }
+ ],
+ "fe-sse-client-eventsource": [
+  {
+   "t": "The event stream format",
+   "s": "Plain UTF-8 text over one HTTP response",
+   "k": [
+    {
+     "t": "Response headers",
+     "d": "Content-Type: text/event-stream, plus Cache-Control: no-cache. The server keeps the response open."
+    },
+    {
+     "t": "Fields",
+     "d": "event, data, id and retry. Consecutive data lines are joined with newlines. A blank line ends the event; a line starting with a colon is a comment.",
+     "k": [
+      {
+       "t": "id",
+       "d": "Sets the last event id the browser will send back on reconnect."
+      },
+      {
+       "t": "retry",
+       "d": "Tells the browser how many milliseconds to wait before reconnecting."
+      }
+     ]
+    },
+    {
+     "t": "Named events",
+     "d": "An event: line gives the event a type. Listen with addEventListener(type); unnamed events go to onmessage."
+    }
+   ]
+  },
+  {
+   "t": "EventSource client",
+   "s": "The built-in API and its limits",
+   "k": [
+    {
+     "t": "readyState",
+     "d": "CONNECTING (0), OPEN (1), CLOSED (2). close() ends it for good."
+    },
+    {
+     "t": "Auto reconnect",
+     "d": "The browser reconnects after a drop and sends Last-Event-ID. A non-200 status or wrong content type is fatal; 204 means stop."
+    },
+    {
+     "t": "Limits",
+     "d": "GET only, no custom headers; withCredentials is the only option. For POST or a Bearer token, stream a fetch response instead."
+    }
+   ]
+  },
+  {
+   "t": "Production concerns",
+   "s": "Make it survive the real network",
+   "k": [
+    {
+     "t": "Connection limits",
+     "d": "About 6 per domain on HTTP/1.1 across tabs; around 100 streams on HTTP/2."
+    },
+    {
+     "t": "Proxies and keep-alive",
+     "d": "Disable response buffering and send a comment roughly every 15 s so idle streams are not dropped."
+    },
+    {
+     "t": "Streaming AI tokens",
+     "d": "Send small delta events and append them to state. Handle error events and unknown event types gracefully, and let users stop generation by aborting the request."
+    },
+    {
+     "t": "Pause when hidden",
+     "d": "Close the stream when the tab is hidden and reconnect with the last id when it returns, to save connections and battery."
+    }
+   ]
+  }
+ ],
+ "fe-polling-long-polling": [
+  {
+   "t": "Short polling",
+   "s": "Ask on a timer",
+   "k": [
+    {
+     "t": "Interval choice",
+     "d": "Base it on how stale the data may be. Faster polling multiplies requests by every open tab and user."
+    },
+    {
+     "t": "Cheap polls",
+     "d": "Conditional requests: the server sends an ETag, the client replies with If-None-Match, and an unchanged resource returns 304 with no body."
+    },
+    {
+     "t": "Stop conditions",
+     "d": "End polling when the job is completed or failed, on unmount, or after a maximum duration. Show a timeout message instead of polling forever."
+    }
+   ]
+  },
+  {
+   "t": "Long polling",
+   "s": "Hold the request until there is news",
+   "k": [
+    {
+     "t": "How it works",
+     "d": "The server defers its response until an event or timeout, replies, and the client sends a new request at once."
+    },
+    {
+     "t": "Drawbacks",
+     "d": "Full HTTP headers on every message, a held connection per client, and latency of up to a few network trips. RFC 6202 lists these.",
+     "k": [
+      {
+       "t": "Timeouts",
+       "d": "Keep the hold time below proxy limits; RFC 6202 calls about 30 s safe. Return an empty 200 or 204 on timeout and re-ask."
+      }
+     ]
+    },
+    {
+     "t": "Cache headers",
+     "d": "Send Cache-Control: no-cache so a long poll is never served from a cache."
+    }
+   ]
+  },
+  {
+   "t": "Being a good citizen",
+   "s": "Less load, less battery",
+   "k": [
+    {
+     "t": "Backoff and jitter",
+     "d": "Lengthen the interval while nothing changes, and add random offsets so clients do not synchronise."
+    },
+    {
+     "t": "Visibility and focus",
+     "d": "Pause when document.hidden is true and refetch on visibilitychange. Hidden-tab timers are throttled by browsers anyway."
+    },
+    {
+     "t": "Library support",
+     "d": "TanStack Query has refetchInterval, plus refetch on window focus and reconnect, so you rarely write the loop yourself."
+    }
+   ]
+  }
+ ],
+ "fe-offline-queue-outbox": [
+  {
+   "t": "The outbox pattern",
+   "s": "Write locally, send later",
+   "k": [
+    {
+     "t": "Queue item shape",
+     "d": "{id, type, payload, createdAt, attempts, status}. The id is generated on the client and is also the idempotency key."
+    },
+    {
+     "t": "States",
+     "d": "pending, sending, synced, failed. Show pending items in the UI so users trust that nothing is lost."
+    },
+    {
+     "t": "Durable storage",
+     "d": "Use IndexedDB so the queue survives reloads and is readable from a service worker. Ask for persistent storage so the browser does not evict it."
+    }
+   ]
+  },
+  {
+   "t": "Replaying safely",
+   "s": "Order, retries, duplicates",
+   "k": [
+    {
+     "t": "Triggers",
+     "d": "App start, the online event, a timer with backoff, and the service worker sync event where supported.",
+     "k": [
+      {
+       "t": "Background Sync API",
+       "d": "registration.sync.register(tag) asks the browser to fire a sync event in the service worker when the network is stable. Limited availability, so keep a fallback."
+      }
+     ]
+    },
+    {
+     "t": "Ordering",
+     "d": "Process one item at a time per entity so an update never runs before its create."
+    },
+    {
+     "t": "Idempotency",
+     "d": "The server stores processed keys and returns the earlier result for a repeat. A concurrent retry can get 409, a reused key with a different body 422, per the IETF draft."
+    },
+    {
+     "t": "Retry and give up",
+     "d": "Back off with jitter on transient errors. Move permanent errors to a failed list the user can act on."
+    }
+   ]
+  },
+  {
+   "t": "Conflicts and UX",
+   "s": "What happens when two edits meet",
+   "k": [
+    {
+     "t": "Conflict policies",
+     "d": "Last write wins is simplest but can lose data. Field-level merge keeps more. Asking the user is safest for important documents. CRDTs avoid conflicts but are heavier."
+    },
+    {
+     "t": "Optimistic UI",
+     "d": "Apply the change locally at once with a pending marker, and reconcile when the server answers."
+    },
+    {
+     "t": "Library options",
+     "d": "Workbox Background Sync Queue for plain requests; TanStack Query mutations with networkMode for app-level mutations; a sync engine when you need merging."
+    }
+   ]
+  }
+ ],
+ "fe-accessibility-a11y": [
+  {
+   "t": "Semantic HTML first",
+   "s": "Free behaviour beats custom behaviour",
+   "k": [
+    {
+     "t": "Landmarks and headings",
+     "d": "header, nav, main, footer give screen reader users a page map. One h1 and a logical heading order let them jump by heading.",
+     "k": [
+      {
+       "t": "Skip link",
+       "d": "A first-in-DOM link to main content lets keyboard users bypass repeated navigation (WCAG 2.4.1 Bypass Blocks)."
+      }
+     ]
+    },
+    {
+     "t": "Names, roles, values",
+     "d": "Every control needs an accessible name (label, aria-label, text), a role and a state. Native inputs with a label element get all three."
+    },
+    {
+     "t": "Forms",
+     "d": "Visible label tied with for/id, errors linked with aria-describedby, required state in text and not colour alone."
+    }
+   ]
+  },
+  {
+   "t": "ARIA done right",
+   "s": "Roles are promises",
+   "k": [
+    {
+     "t": "Rules",
+     "d": "Prefer native; do not change native semantics; every interactive ARIA control must work by keyboard; do not hide focusable elements.",
+     "k": [
+      {
+       "t": "Roles, states, properties",
+       "d": "role says what it is, aria-expanded or aria-selected say its state, aria-labelledby and aria-describedby give its name and help text."
+      }
+     ]
+    },
+    {
+     "t": "Authoring Practices patterns",
+     "d": "The WAI-ARIA APG documents keyboard and ARIA for tabs, menu, combobox, dialog, accordion. Copy the pattern, do not invent one."
+    },
+    {
+     "t": "Live regions",
+     "d": "role=status or aria-live=polite for advisory updates, role=alert for urgent ones. Insert the region empty first, then change its text."
+    }
+   ]
+  },
+  {
+   "t": "Keyboard and focus",
+   "s": "Every action reachable without a mouse",
+   "k": [
+    {
+     "t": "Tab order",
+     "d": "Follow DOM order. tabindex=0 joins the sequence, -1 allows script focus only; avoid positive values.",
+     "k": [
+      {
+       "t": "Focus visible",
+       "d": "A clear focus indicator (WCAG 2.4.7). WCAG 2.2 adds that focus must not be hidden by sticky headers or banners (2.4.11)."
+      }
+     ]
+    },
+    {
+     "t": "Widgets",
+     "d": "Roving tabindex moves real focus between items with arrow keys. aria-activedescendant keeps focus on a container such as a combobox input."
+    },
+    {
+     "t": "Dialogs and routes",
+     "d": "Move focus in on open, trap Tab, close on Escape, restore focus to the trigger. On client route changes move focus to the new page heading."
+    }
+   ]
+  },
+  {
+   "t": "Visual and testing",
+   "s": "Contrast, zoom, and how to prove it",
+   "k": [
+    {
+     "t": "Contrast and size",
+     "d": "4.5:1 for text, 3:1 for large text and UI component boundaries (1.4.11); 24 by 24 px targets (2.5.8); content reflows at 400 percent zoom or 320px width.",
+     "k": [
+      {
+       "t": "Motion and preferences",
+       "d": "Respect prefers-reduced-motion and prefers-color-scheme; avoid autoplay and content that flashes."
+      }
+     ]
+    },
+    {
+     "t": "Automated",
+     "d": "eslint-plugin-jsx-a11y in the editor, axe-core in unit and end-to-end tests, Lighthouse in CI. Automation finds only part of real issues."
+    },
+    {
+     "t": "Manual",
+     "d": "Unplug the mouse and complete key flows; test with VoiceOver, NVDA or TalkBack; check at 200 percent zoom."
+    }
+   ]
+  }
+ ],
+ "fe-i18n-l10n": [
+  {
+   "t": "Messages and plurals",
+   "s": "Translators own sentences",
+   "k": [
+    {
+     "t": "Message catalogs",
+     "d": "Key to message maps per locale (en.json, fr.json). Keys are stable ids or the source sentence; add a description for translators.",
+     "k": [
+      {
+       "t": "Extraction",
+       "d": "A tool scans code for message ids, writes the source catalog, and CI fails on missing or unused keys."
+      }
+     ]
+    },
+    {
+     "t": "ICU MessageFormat",
+     "d": "Named placeholders plus plural, select and selectordinal in one string, e.g. {n, plural, =0 {No photos} one {# photo} other {# photos}}."
+    },
+    {
+     "t": "CLDR plural categories",
+     "d": "zero, one, two, few, many, other. Each language uses a subset; other is always present. Never assume 'one means 1' in every language."
+    }
+   ]
+  },
+  {
+   "t": "Formatting with Intl",
+   "s": "Locale-correct output from the browser",
+   "k": [
+    {
+     "t": "Numbers and dates",
+     "d": "Intl.NumberFormat (currency, percent, units, compact) and Intl.DateTimeFormat (date styles, time zones). Pass explicit timeZone; store UTC.",
+     "k": [
+      {
+       "t": "Relative time and lists",
+       "d": "Intl.RelativeTimeFormat gives '3 days ago'; Intl.ListFormat gives 'A, B, and C' in the right language."
+      }
+     ]
+    },
+    {
+     "t": "Sorting and searching",
+     "d": "Intl.Collator compares strings by locale rules (accents, case); Intl.Segmenter splits words or graphemes in languages with no spaces."
+    },
+    {
+     "t": "Names",
+     "d": "Intl.DisplayNames translates region, language and currency names so you need not ship your own lists."
+    }
+   ]
+  },
+  {
+   "t": "Direction and layout",
+   "s": "Right-to-left and text expansion",
+   "k": [
+    {
+     "t": "dir and lang",
+     "d": "Set lang and dir on the html element; dir=auto can help for user-generated text of unknown direction."
+    },
+    {
+     "t": "Logical CSS",
+     "d": "margin-inline-start, padding-inline, inset-inline-end, text-align: start. Flex and grid already follow direction.",
+     "k": [
+      {
+       "t": "What to mirror",
+       "d": "Arrows, back/forward icons, progress bars and slide animations flip; logos, media controls and numerals usually do not."
+      }
+     ]
+    },
+    {
+     "t": "Text expansion",
+     "d": "Translations can be much longer or shorter than English. Avoid fixed widths and test with pseudo-localization."
+    }
+   ]
+  },
+  {
+   "t": "Routing and delivery",
+   "s": "Getting the right language to the right user",
+   "k": [
+    {
+     "t": "Locale detection",
+     "d": "URL segment first, then saved preference, then Accept-Language; offer a visible language switcher and a redirect only on first visit."
+    },
+    {
+     "t": "SEO",
+     "d": "Separate URLs per locale with hreflang alternates, a localized title and description, and lang on html."
+    },
+    {
+     "t": "Bundles",
+     "d": "Lazy-load the locale catalog, split big namespaces by route, and make SSR and client use the same messages to avoid hydration mismatch."
+    }
+   ]
+  }
+ ],
+ "fe-csp-xss-defence": [
+  {
+   "t": "XSS basics",
+   "s": "How script gets onto your page",
+   "k": [
+    {
+     "t": "Types",
+     "d": "Stored (saved then served to everyone), reflected (echoed from the request), DOM-based (client code writes input into a sink).",
+     "k": [
+      {
+       "t": "Common sinks",
+       "d": "innerHTML, outerHTML, document.write, insertAdjacentHTML, eval, setTimeout with a string, script src, and href with javascript: URLs."
+      }
+     ]
+    },
+    {
+     "t": "What an attacker gets",
+     "d": "Anything script can reach: DOM, non-HttpOnly cookies, localStorage, and authenticated API calls made as the user."
+    },
+    {
+     "t": "Context matters",
+     "d": "HTML text, attributes, JavaScript, URLs and CSS each need different encoding; one escape function does not fit all."
+    }
+   ]
+  },
+  {
+   "t": "Prevent: escape and sanitise",
+   "s": "Stop the bug at the source",
+   "k": [
+    {
+     "t": "Safe by default",
+     "d": "Use textContent and framework templating. Treat dangerouslySetInnerHTML, v-html, bypassSecurityTrust and unsafeHTML as red flags in review."
+    },
+    {
+     "t": "Sanitising HTML",
+     "d": "DOMPurify with an allow-list; keep config strict; never edit the string after sanitising; keep the library patched.",
+     "k": [
+      {
+       "t": "URL validation",
+       "d": "Allow only http, https (and mailto where needed) in user-supplied links; reject javascript: and data: schemes."
+      }
+     ]
+    },
+    {
+     "t": "Markdown and rich text",
+     "d": "Render Markdown to HTML then sanitise the output, or use a renderer that emits React elements instead of raw HTML strings."
+    }
+   ]
+  },
+  {
+   "t": "Trusted Types",
+   "s": "Make dangerous sinks type-checked",
+   "k": [
+    {
+     "t": "Policies",
+     "d": "trustedTypes.createPolicy('app', { createHTML: s => DOMPurify.sanitize(s) }) is the only place that turns strings into TrustedHTML.",
+     "k": [
+      {
+       "t": "Enforcement",
+       "d": "require-trusted-types-for 'script' makes plain strings throw; trusted-types lists allowed policy names."
+      }
+     ]
+    },
+    {
+     "t": "Default policy",
+     "d": "A policy named default catches stray strings; use it to find old code during migration, not as the final design."
+    },
+    {
+     "t": "Support",
+     "d": "Baseline 2026 newly available; a tiny fallback keeps code running where the API is missing."
+    }
+   ]
+  },
+  {
+   "t": "Content Security Policy",
+   "s": "Browser-enforced allow-list of what may run",
+   "k": [
+    {
+     "t": "Strict policy",
+     "d": "script-src 'nonce-RANDOM' 'strict-dynamic'; object-src 'none'; base-uri 'none'. Nonce must be fresh and unguessable on every response.",
+     "k": [
+      {
+       "t": "Hash-based",
+       "d": "A SHA-256 or similar hash of each inline script, plus integrity on external ones; good for static pages."
+      }
+     ]
+    },
+    {
+     "t": "Rollout",
+     "d": "Report-only header first, Reporting-Endpoints plus report-to for collecting violations, then enforce. Report-only cannot be set via meta."
+    },
+    {
+     "t": "Related headers",
+     "d": "Subresource Integrity for CDN files, frame-ancestors against clickjacking, sandbox on iframes for untrusted content."
+    }
+   ]
+  }
+ ],
+ "fe-auth-in-the-browser": [
+  {
+   "t": "Where the login proof lives",
+   "s": "Cookie, memory or storage",
+   "k": [
+    {
+     "t": "Session cookie",
+     "d": "Opaque id in an HttpOnly, Secure, SameSite cookie; the server holds the data and can revoke instantly.",
+     "k": [
+      {
+       "t": "Cookie hardening",
+       "d": "__Host- prefix (Secure, Path=/, no Domain), short Max-Age, server-side idle and absolute timeouts."
+      }
+     ]
+    },
+    {
+     "t": "Tokens in the browser",
+     "d": "localStorage is readable by any script (XSS); memory is safer but lost on reload; neither is sent automatically."
+    },
+    {
+     "t": "JWT",
+     "d": "Signed self-contained token. Easy to verify, hard to revoke, so keep it short lived; never store secrets inside, because the payload is only encoded."
+    }
+   ]
+  },
+  {
+   "t": "OAuth 2.0 / OIDC for SPAs",
+   "s": "Authorization Code + PKCE",
+   "k": [
+    {
+     "t": "Flow",
+     "d": "Redirect to the authorization server, user signs in, code returns to the redirect URI, exchange code plus PKCE verifier for tokens. The implicit flow is obsolete.",
+     "k": [
+      {
+       "t": "PKCE",
+       "d": "A one-time random verifier and its hash (challenge) bind the code to the client that started the flow."
+      },
+      {
+       "t": "state and nonce",
+       "d": "state protects the redirect from CSRF; nonce in OIDC binds the ID token to the session."
+      }
+     ]
+    },
+    {
+     "t": "Refresh tokens",
+     "d": "Long lived, so rotate on use or sender-constrain (DPoP), cap lifetime, and tie it to the user session so logout kills it."
+    },
+    {
+     "t": "Silent renew",
+     "d": "Single-flight refresh in one place, handle 401 by refresh and retry once, and coordinate across tabs."
+    }
+   ]
+  },
+  {
+   "t": "Architectures",
+   "s": "From safest to simplest",
+   "k": [
+    {
+     "t": "BFF",
+     "d": "Server is the OAuth client, browser uses a cookie, server proxies API calls to an allow-list. Strongly recommended for sensitive data."
+    },
+    {
+     "t": "Token-mediating backend",
+     "d": "Backend does the code exchange and refresh, but hands the access token to the browser. Access token theft is still possible."
+    },
+    {
+     "t": "Browser-only client",
+     "d": "Everything in the SPA as a public client. Exposed to all attacks in the threat model; use only for low-risk apps."
+    }
+   ]
+  },
+  {
+   "t": "CSRF and CORS",
+   "s": "Making cookies safe to use",
+   "k": [
+    {
+     "t": "CSRF defences",
+     "d": "SameSite, synchronizer token or signed double-submit, custom request header, Origin and Sec-Fetch-Site checks; no state changes on GET."
+    },
+    {
+     "t": "CORS with credentials",
+     "d": "credentials: 'include' needs Access-Control-Allow-Credentials: true and a specific origin, not a wildcard. Preflight is triggered by custom headers."
+    },
+    {
+     "t": "Account safety",
+     "d": "Re-auth for sensitive actions, MFA or passkeys, rate limits, and WCAG 2.2 accessible authentication (no cognitive tests to log in)."
+    }
+   ]
+  }
+ ],
+ "fe-feature-flags-client": [
+  {
+   "t": "Kinds of flags",
+   "s": "Different lifetimes, different owners",
+   "k": [
+    {
+     "t": "Release flag",
+     "d": "Hides unfinished or risky code; short lived. Remove once at 100 percent.",
+     "k": [
+      {
+       "t": "Gradual rollout",
+       "d": "Ramp 1, 10, 50, 100 percent with a stable hash per user, watching errors and Core Web Vitals between steps."
+      }
+     ]
+    },
+    {
+     "t": "Experiment flag",
+     "d": "Splits users into variants to measure a metric; needs exposure events and enough sample size."
+    },
+    {
+     "t": "Ops and permission flags",
+     "d": "Kill switches and entitlement toggles can live longer. Entitlements must still be enforced on the server."
+    }
+   ]
+  },
+  {
+   "t": "Evaluation on the client",
+   "s": "Where and when the value is computed",
+   "k": [
+    {
+     "t": "Context",
+     "d": "User id, plan, country, device and app version sent with each evaluation; consistent bucketing needs a stable id (anonymous id before login).",
+     "k": [
+      {
+       "t": "Anonymous to known",
+       "d": "Keep the same id across login or alias them so a user does not switch variants mid-session."
+      }
+     ]
+    },
+    {
+     "t": "Bootstrap",
+     "d": "Server evaluates and inlines values so first paint is correct; the SDK then refreshes from the service."
+    },
+    {
+     "t": "Updates",
+     "d": "Streaming for instant kill switches, polling for simplicity; cache last-known values for offline or outage."
+    }
+   ]
+  },
+  {
+   "t": "Design and safety",
+   "s": "Keep flags from becoming a mess",
+   "k": [
+    {
+     "t": "Defaults",
+     "d": "Every flag read has a safe default if the service is unreachable. Prefer default off for new features."
+    },
+    {
+     "t": "Placement",
+     "d": "Check a flag at one place per feature (a route, a component boundary), not scattered conditions; avoid nesting flags."
+    },
+    {
+     "t": "Flag debt",
+     "d": "Owner, ticket and expiry date per flag; periodic report of stale flags; delete the dead branch and the flag together."
+    }
+   ]
+  },
+  {
+   "t": "Standards and tooling",
+   "s": "Avoid vendor lock-in",
+   "k": [
+    {
+     "t": "OpenFeature",
+     "d": "A vendor-neutral API: providers translate to the flag system, evaluation context carries user data, hooks add logging or telemetry.",
+     "k": [
+      {
+       "t": "Web SDKs",
+       "d": "Client SDK with React and Angular variants for browser apps."
+      }
+     ]
+    },
+    {
+     "t": "Testing",
+     "d": "Use an in-memory provider in tests to flip flags; cover both branches; run end-to-end with the new variant before ramp-up."
+    },
+    {
+     "t": "Observability",
+     "d": "Tag errors and performance metrics with active flag variants so a bad rollout is easy to spot and roll back."
+    }
+   ]
+  }
+ ],
+ "fe-service-worker": [
+  {
+   "t": "Lifecycle",
+   "s": "Register, install, wait, activate",
+   "k": [
+    {
+     "t": "Register and scope",
+     "d": "register(url, {scope}) ties the worker to an origin and path. It controls only pages inside its scope and needs HTTPS (localhost is allowed)."
+    },
+    {
+     "t": "Install",
+     "d": "Runs once per new script. Use event.waitUntil() to precache the app shell; a failed addAll() fails the install."
+    },
+    {
+     "t": "Waiting and activate",
+     "d": "A new version waits until old pages close. On activate, delete old caches.",
+     "k": [
+      {
+       "t": "skipWaiting()",
+       "d": "Activates the new worker without waiting."
+      },
+      {
+       "t": "clients.claim()",
+       "d": "Lets the active worker take control of already-open pages."
+      }
+     ]
+    },
+    {
+     "t": "Update checks",
+     "d": "The browser fetches the script on navigation, and on events if it has not checked in 24 hours. A byte difference starts a new install."
+    }
+   ]
+  },
+  {
+   "t": "Caching strategies",
+   "s": "From the offline cookbook and Workbox",
+   "k": [
+    {
+     "t": "Cache first",
+     "d": "Answer from cache, fall back to the network. Best for versioned static assets and the usual choice for offline-first."
+    },
+    {
+     "t": "Network first",
+     "d": "Try the network, use the cache if it fails. Good for fresh content, but slow networks wait before falling back, so add a timeout."
+    },
+    {
+     "t": "Stale-while-revalidate",
+     "d": "Serve the cached copy now and refresh it in the background for next time. Good for avatars and non-critical data."
+    },
+    {
+     "t": "Network only / cache only",
+     "d": "Network only for analytics and non-GET requests. Cache only for files you precached at install."
+    }
+   ]
+  },
+  {
+   "t": "Beyond caching",
+   "s": "What else a worker can do",
+   "k": [
+    {
+     "t": "Push and notifications",
+     "d": "A push event wakes the worker to show a notification, even with no tab open. Needs user permission."
+    },
+    {
+     "t": "Background Sync",
+     "d": "A sync event runs when the network returns, ideal for sending a queued outbox. Limited browser availability."
+    },
+    {
+     "t": "Limits",
+     "d": "No DOM, no localStorage, no synchronous APIs. It can be stopped when idle, so keep state in IndexedDB, not in variables."
+    },
+    {
+     "t": "Cache hygiene",
+     "d": "The Cache API never expires entries. Version cache names and cap size and age, and handle QuotaExceededError."
+    }
+   ]
+  }
+ ],
+ "fe-indexeddb": [
+  {
+   "t": "Data model",
+   "s": "Object stores, keys and indexes",
+   "k": [
+    {
+     "t": "Object store",
+     "d": "A named collection of records, like a table but holding JavaScript objects. Any value the structured clone algorithm supports can be stored."
+    },
+    {
+     "t": "Keys",
+     "d": "A keyPath reads the key from a property, autoIncrement generates one, or you pass it yourself on each add."
+    },
+    {
+     "t": "Indexes",
+     "d": "Let you look up records by another field, for example status or date. A unique index rejects duplicates and a compound index covers several fields."
+    },
+    {
+     "t": "Cursors and ranges",
+     "d": "openCursor with a key range walks results in order. getAll() reads a whole range at once."
+    }
+   ]
+  },
+  {
+   "t": "Transactions and versions",
+   "s": "Safe updates and schema changes",
+   "k": [
+    {
+     "t": "Transactions",
+     "d": "Scoped to named stores, in readonly, readwrite or versionchange mode. Failing one aborts and rolls back all of it.",
+     "k": [
+      {
+       "t": "Auto-commit",
+       "d": "A transaction stays active only while requests are pending. Awaiting something that is not an IndexedDB request ends it, and the next request fails."
+      }
+     ]
+    },
+    {
+     "t": "Versioning",
+     "d": "open(name, version) with an integer. onupgradeneeded is the only place to create or delete stores and indexes."
+    },
+    {
+     "t": "Multi-tab behaviour",
+     "d": "When a newer version is requested, other tabs get versionchange and should close their connection, otherwise the upgrade is blocked."
+    }
+   ]
+  },
+  {
+   "t": "Using it well",
+   "s": "Wrappers, limits and safety",
+   "k": [
+    {
+     "t": "Wrappers",
+     "d": "idb makes the API promise-based; Dexie adds a schema declaration, queries and liveQuery for reactive UI; localForage offers a simple key-value API."
+    },
+    {
+     "t": "Quota and persistence",
+     "d": "Best-effort storage can be evicted under pressure. navigator.storage.estimate() reports usage; persist() requests protection. Safari may clear script-written data after 7 days without interaction."
+    },
+    {
+     "t": "Security",
+     "d": "Same-origin only, but an XSS bug can read it, so do not keep long-lived secrets there. Third-party iframes lose access when third-party cookies are blocked."
+    },
+    {
+     "t": "Where it fits",
+     "d": "Offline data, drafts, outboxes, large caches and client-side search indexes; not for tiny flags, which can use Web Storage."
+    }
+   ]
+  }
+ ],
+ "fe-web-storage-cookies": [
+  {
+   "t": "Web Storage",
+   "s": "localStorage and sessionStorage",
+   "k": [
+    {
+     "t": "localStorage",
+     "d": "Key-value strings that persist after the browser closes, shared by every tab of the same origin. Serialize objects with JSON."
+    },
+    {
+     "t": "sessionStorage",
+     "d": "Like localStorage but separate per tab and cleared when the tab closes."
+    },
+    {
+     "t": "Limits",
+     "d": "Synchronous, so it blocks the main thread; about 5 MiB; strings only; not available in workers. In private mode localStorage behaves like sessionStorage."
+    },
+    {
+     "t": "storage event",
+     "d": "Fires in the other same-origin documents when storage changes, useful for cross-tab sync."
+    }
+   ]
+  },
+  {
+   "t": "Cookies",
+   "s": "Small state the server and browser share",
+   "k": [
+    {
+     "t": "Security attributes",
+     "d": "Three flags matter most.",
+     "k": [
+      {
+       "t": "HttpOnly",
+       "d": "JavaScript cannot read the cookie, limiting damage from XSS."
+      },
+      {
+       "t": "Secure",
+       "d": "Sent only over HTTPS."
+      },
+      {
+       "t": "SameSite",
+       "d": "Strict: same-site only. Lax: also top-level navigations from elsewhere (the default). None: cross-site, and requires Secure."
+      }
+     ]
+    },
+    {
+     "t": "Lifetime",
+     "d": "Max-Age (seconds) takes precedence over Expires. Without either it is a session cookie. Delete by resending with Max-Age=0."
+    },
+    {
+     "t": "Prefixes",
+     "d": "__Host- requires Secure, Path=/ and no Domain, so subdomains cannot overwrite the cookie. __Secure- requires Secure."
+    },
+    {
+     "t": "Third-party cookies",
+     "d": "Set by embedded content and increasingly blocked by default, which can break widgets and cross-site sign-in."
+    }
+   ]
+  },
+  {
+   "t": "Choosing and securing",
+   "s": "Decision rules",
+   "k": [
+    {
+     "t": "Decision table",
+     "d": "Preference: localStorage. Draft for one tab: sessionStorage. Auth session: HttpOnly cookie. Big or structured data: IndexedDB. Network responses: Cache Storage."
+    },
+    {
+     "t": "XSS reality",
+     "d": "One XSS bug can read and write all Web Storage on the origin, so never store session ids or secrets there (OWASP). Treat stored data as untrusted input."
+    },
+    {
+     "t": "Origin sharing",
+     "d": "Web Storage has no path scoping; every app on the origin shares it. Use separate subdomains for separate apps."
+    },
+    {
+     "t": "Failure handling",
+     "d": "Wrap reads and writes in try/catch for QuotaExceededError and blocked storage, and let the app run without it."
+    }
+   ]
+  }
+ ],
+ "fe-web-worker": [
+  {
+   "t": "Worker types",
+   "s": "Pick the right kind",
+   "k": [
+    {
+     "t": "Dedicated worker",
+     "d": "Used by one script, created with new Worker(). The most common choice for off-main-thread compute."
+    },
+    {
+     "t": "Shared worker",
+     "d": "Used by many tabs, iframes or workers of the same origin through message ports. It shuts down when nothing references it."
+    },
+    {
+     "t": "Service worker",
+     "d": "A special worker acting as a network proxy; see the Service Worker block. It is not for general computation."
+    },
+    {
+     "t": "Module workers",
+     "d": "Created with {type:'module'} so the worker can use import. Bundlers support new Worker(new URL(..., import.meta.url))."
+    }
+   ]
+  },
+  {
+   "t": "Talking across threads",
+   "s": "Messages, not shared variables",
+   "k": [
+    {
+     "t": "Structured clone",
+     "d": "postMessage copies data, including Dates and circular references, but not functions or DOM nodes."
+    },
+    {
+     "t": "Transferables",
+     "d": "ArrayBuffers and other transferables move with no copy, which matters for large data. The sender loses access."
+    },
+    {
+     "t": "SharedArrayBuffer",
+     "d": "Lets threads read and write the same memory without messaging, but brings concurrency and security concerns, so use it only with a clear need."
+    },
+    {
+     "t": "Comlink",
+     "d": "A tiny RPC layer built on postMessage and proxies: expose() in the worker, wrap() on the page, then call methods with await."
+    }
+   ]
+  },
+  {
+   "t": "When it pays off",
+   "s": "Use cases and costs",
+   "k": [
+    {
+     "t": "Good fits",
+     "d": "Parsing big JSON or CSV, client-side search, image and audio processing, syntax highlighting, encryption and WebAssembly libraries."
+    },
+    {
+     "t": "Main-thread rule",
+     "d": "Keep the main thread for input and rendering. Tasks over 50 ms are long tasks that raise INP."
+    },
+    {
+     "t": "Costs",
+     "d": "Starting a worker, copying data and extra code are overhead, so measure first. Workers cannot use the DOM, localStorage or most window APIs."
+    },
+    {
+     "t": "Lifecycle and CSP",
+     "d": "Call terminate() when finished, handle onerror, and set CSP headers on the worker script because workers do not inherit the page policy."
+    }
+   ]
+  }
+ ],
+ "fe-browser-http-cache": [
+  {
+   "t": "Freshness",
+   "s": "Can the browser reuse it without asking?",
+   "k": [
+    {
+     "t": "Cache-Control: max-age",
+     "d": "The number of seconds a response stays fresh. After that it is stale and must be revalidated before reuse."
+    },
+    {
+     "t": "Age and heuristics",
+     "d": "A shared cache reports elapsed time in Age. With no explicit lifetime, caches may guess, typically 10% of the time since Last-Modified, so always set Cache-Control."
+    },
+    {
+     "t": "immutable",
+     "d": "Says the content will never change, so the browser need not revalidate even on reload."
+    },
+    {
+     "t": "stale-while-revalidate",
+     "d": "After max-age, serve the stale copy immediately for a set window while fetching a fresh one in the background. Defined in RFC 5861."
+    }
+   ]
+  },
+  {
+   "t": "Validation",
+   "s": "Cheap checks when stale",
+   "k": [
+    {
+     "t": "ETag and If-None-Match",
+     "d": "The server tags a version; the client sends the tag back and gets 304 Not Modified if it still matches."
+    },
+    {
+     "t": "Last-Modified",
+     "d": "A date-based validator used with If-Modified-Since. If both are present, If-None-Match takes precedence; send both."
+    },
+    {
+     "t": "no-cache vs no-store",
+     "d": "no-cache: store but always revalidate. no-store: never store. must-revalidate forbids serving stale after expiry."
+    }
+   ]
+  },
+  {
+   "t": "Policy recipes",
+   "s": "What to send for each kind of file",
+   "k": [
+    {
+     "t": "Hashed assets",
+     "d": "Cache-Control: public, max-age=31536000, immutable. The hash in the filename is the cache buster."
+    },
+    {
+     "t": "HTML documents",
+     "d": "Cache-Control: no-cache (often with private) plus an ETag, so users get new asset links after each deploy."
+    },
+    {
+     "t": "APIs and personalised data",
+     "d": "private, plus short max-age or stale-while-revalidate where slightly old is fine; no-store for data that must never hit disk."
+    },
+    {
+     "t": "Vary",
+     "d": "Makes the cache key depend on request headers such as Accept-Language. Avoid Vary: User-Agent and vary on Cookie; use private instead."
+    }
+   ]
+  }
+ ],
+ "fe-bundler-code-splitting": [
+  {
+   "t": "What a bundler does",
+   "s": "From many source files to a few browser-ready files",
+   "k": [
+    {
+     "t": "Module graph",
+     "d": "The bundler starts at an entry file and follows every import to build a graph of all code the app needs. Everything else (minify, split, hash) works on this graph.",
+     "k": [
+      {
+       "t": "ES modules",
+       "d": "import and export are static, so a tool can read them without running the code. This is what makes tree shaking and safe splitting possible."
+      },
+      {
+       "t": "CommonJS",
+       "d": "require() can be dynamic, so bundlers cannot prove what is unused. Prefer ES module builds of packages."
+      }
+     ]
+    },
+    {
+     "t": "Transforms and minify",
+     "d": "TypeScript, JSX and modern syntax are compiled for your target browsers, then minified. esbuild and Rolldown do this very quickly because they are written in Go and Rust."
+    },
+    {
+     "t": "Dev server versus build",
+     "d": "Vite serves source files as native ES modules in development for instant start, and creates an optimised bundle only for production."
+    }
+   ]
+  },
+  {
+   "t": "Tree shaking",
+   "s": "Removing code nobody calls",
+   "k": [
+    {
+     "t": "How it works",
+     "d": "The bundler marks which exports are used and drops the rest. It relies on static import and export statements."
+    },
+    {
+     "t": "Side effects",
+     "d": "A module that does something on import (patches a global, registers a style) cannot be dropped. Packages declare sideEffects in package.json so unused modules can be removed safely."
+    },
+    {
+     "t": "Common leaks",
+     "d": "Importing a whole library object (import _ from 'lodash') pulls everything; import the single function or use an ES build. Barrel files (index.ts re-exporting all) can defeat shaking if modules have side effects."
+    }
+   ]
+  },
+  {
+   "t": "Code splitting",
+   "s": "Cut the output into chunks loaded when needed",
+   "k": [
+    {
+     "t": "Entry points",
+     "d": "Several entries make several bundles, but shared modules get duplicated. Fine for separate pages, weak for one app."
+    },
+    {
+     "t": "Shared chunks",
+     "d": "SplitChunksPlugin in webpack (and Rollup/Rolldown chunking in Vite) pulls code used by many chunks into common files. A vendor chunk keeps rarely changing libraries cacheable."
+    },
+    {
+     "t": "Dynamic import()",
+     "d": "The recommended way. Each import() is a split point, returns a promise, and can be wrapped with React.lazy and Suspense.",
+     "k": [
+      {
+       "t": "Route-based",
+       "d": "One chunk per route. The biggest, simplest win."
+      },
+      {
+       "t": "Component-based",
+       "d": "Lazy-load heavy widgets (rich text editor, chart, map) when they are first shown."
+      },
+      {
+       "t": "Hints",
+       "d": "webpackPrefetch fetches a chunk when idle for a future navigation; webpackPreload fetches it in parallel for the current one."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": "Caching and budgets",
+   "s": "Keep it fast after the first visit and stop it growing",
+   "k": [
+    {
+     "t": "Content hashes",
+     "d": "File names include a hash of their content, so they can be cached as immutable and a change gets a fresh URL."
+    },
+    {
+     "t": "Bundle analyzer",
+     "d": "A treemap of what is inside each chunk (webpack-bundle-analyzer, rollup-plugin-visualizer) shows the big dependencies to replace or lazy-load."
+    },
+    {
+     "t": "Budget in CI",
+     "d": "Fail the build when JavaScript passes a limit, for example with Lighthouse CI or bundlesize. A common starting point is 170 KB of critical-path resources, compressed."
+    }
+   ]
+  }
+ ],
+ "fe-virtualized-list": [
+  {
+   "t": "Why long lists are slow",
+   "s": "Too many DOM nodes",
+   "k": [
+    {
+     "t": "Cost of a big DOM",
+     "d": "More nodes mean more memory and more work for style, layout and paint. Updates after an interaction get slower as the DOM grows, which hurts INP."
+    },
+    {
+     "t": "Lighthouse thresholds",
+     "d": "Lighthouse warns at 800 nodes and treats the DOM as excessive above 1,400."
+    },
+    {
+     "t": "Infinite loading alone is not enough",
+     "d": "Appending pages keeps the first render small, but the DOM keeps growing as the user scrolls."
+    }
+   ]
+  },
+  {
+   "t": "How windowing works",
+   "s": "Render the window, fake the rest",
+   "k": [
+    {
+     "t": "Visible range",
+     "d": "From scrollTop and viewport height, work out the first and last visible index. Render only those rows."
+    },
+    {
+     "t": "Spacer and positioning",
+     "d": "A tall spacer (or total height) keeps the scrollbar honest; rows are placed with absolute position or translateY."
+    },
+    {
+     "t": "Overscan",
+     "d": "Render a few extra rows on each side so quick scrolling does not show blanks."
+    },
+    {
+     "t": "Row sizes",
+     "d": "Fixed heights are simplest. Variable heights use an estimate, then measure each row once rendered and correct the offsets.",
+     "k": [
+      {
+       "t": "Dynamic measurement",
+       "d": "ResizeObserver reports real heights. Cache them so scrolling back does not re-measure."
+      },
+      {
+       "t": "Horizontal and grid",
+       "d": "The same idea works across columns and in two directions for spreadsheets and galleries."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": "Alternatives and complements",
+   "s": "Use the lightest tool that works",
+   "k": [
+    {
+     "t": "Pagination",
+     "d": "Simple, linkable and accessible. Often the right answer when users can reasonably filter or search."
+    },
+    {
+     "t": "content-visibility: auto",
+     "d": "Lets the browser skip rendering of off-screen sections. Set contain-intrinsic-size so the scrollbar is stable. Cut one demo from 232 ms to 30 ms."
+    },
+    {
+     "t": "Infinite loader",
+     "d": "Fetch more data near the end of the list; react-window-infinite-loader and TanStack Query both pair with virtualization."
+    }
+   ]
+  },
+  {
+   "t": "Gotchas to mention",
+   "s": "What interviewers like to hear",
+   "k": [
+    {
+     "t": "Accessibility and find",
+     "d": "Unrendered rows are invisible to Ctrl+F and screen readers. Use aria-rowcount and aria-rowindex and offer search."
+    },
+    {
+     "t": "State inside rows",
+     "d": "Rows unmount when scrolled away, so keep input values and expanded state in the parent or store."
+    },
+    {
+     "t": "Scroll restoration",
+     "d": "Save the measured scroll offset when leaving and restore it on return; an index alone is approximate with dynamic heights."
+    }
+   ]
+  }
+ ],
+ "fe-infinite-scroll": [
+  {
+   "t": "Detecting 'near the end'",
+   "s": "Let the browser tell you",
+   "k": [
+    {
+     "t": "IntersectionObserver",
+     "d": "Watches a target against a root (the viewport by default) and calls you when it crosses thresholds. Asynchronous, so it avoids the layout work of scroll handlers."
+    },
+    {
+     "t": "Sentinel element",
+     "d": "A tiny empty element after the last item. When it becomes visible, fetch the next page."
+    },
+    {
+     "t": "rootMargin",
+     "d": "Grows or shrinks the root box, for example '400px 0px' fires 400px early so the data is ready before the reader arrives."
+    }
+   ]
+  },
+  {
+   "t": "Pagination style",
+   "s": "How the API hands out pages",
+   "k": [
+    {
+     "t": "Offset",
+     "d": "page or offset number. Simple, but inserts and deletes shift later pages and large offsets are slow on big tables."
+    },
+    {
+     "t": "Cursor",
+     "d": "An opaque pointer to the last item seen (after=abc). Stable under inserts and fast. Clients treat it as a black box so the server can change how it works.",
+     "k": [
+      {
+       "t": "Connection spec",
+       "d": "Relay's GraphQL pattern: edges with cursor and node, plus pageInfo with hasNextPage and endCursor."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": "Client cache and state",
+   "s": "Where pages live",
+   "k": [
+    {
+     "t": "useInfiniteQuery",
+     "d": "Stores pages in one cache entry. getNextPageParam reads the cursor from the last page; fetchNextPage loads more; hasNextPage and isFetchingNextPage drive the UI."
+    },
+    {
+     "t": "Refetching",
+     "d": "When stale, pages refetch one by one from the first to avoid stale cursors. maxPages limits memory and refetch cost."
+    },
+    {
+     "t": "Dedupe and ordering",
+     "d": "Merge by id so a shifted item does not appear twice."
+    }
+   ]
+  },
+  {
+   "t": "User experience details",
+   "s": "What makes it feel finished",
+   "k": [
+    {
+     "t": "Load more fallback",
+     "d": "A real button keeps keyboard users and the footer reachable."
+    },
+    {
+     "t": "Scroll restoration",
+     "d": "Remember offset and cursor so Back returns to the same place."
+    },
+    {
+     "t": "Loading and error rows",
+     "d": "Show skeleton rows while loading and an inline retry if a page fails, without losing the pages already shown."
+    },
+    {
+     "t": "Windowing",
+     "d": "Virtualize the combined list once it passes a few hundred rows."
+    }
+   ]
+  }
+ ],
+ "fe-image-pipeline-responsive": [
+  {
+   "t": "Formats",
+   "s": "Smaller files for the same picture",
+   "k": [
+    {
+     "t": "AVIF and WebP",
+     "d": "Modern formats that compress better than JPEG and PNG, supported by all modern browsers. Use a JPEG or PNG fallback."
+    },
+    {
+     "t": "SVG and PNG",
+     "d": "SVG for logos and icons (vector, scales free); PNG when you need lossless with transparency; JPEG, WebP or AVIF for photos."
+    },
+    {
+     "t": "Quality setting",
+     "d": "Test a few quality levels and compare file size against visible quality."
+    }
+   ]
+  },
+  {
+   "t": "Responsive markup",
+   "s": "Let the browser choose",
+   "k": [
+    {
+     "t": "srcset and sizes",
+     "d": "srcset lists files with their widths (w descriptors); sizes says how wide the slot is. The browser combines these with screen size and pixel ratio.",
+     "k": [
+      {
+       "t": "w versus x descriptors",
+       "d": "Use w with sizes for fluid layouts; use x (1x, 2x) for fixed-size images such as logos."
+      }
+     ]
+    },
+    {
+     "t": "picture element",
+     "d": "For art direction (different crops) and format fallback via source type. Always include the img fallback inside."
+    },
+    {
+     "t": "Pixel density",
+     "d": "A 400px slot on a 2x screen wants about an 800px file."
+    }
+   ]
+  },
+  {
+   "t": "Loading strategy",
+   "s": "Right image, right time",
+   "k": [
+    {
+     "t": "Lazy loading",
+     "d": "loading=lazy defers images that are offscreen. Chrome starts loading about 1,250px early on fast connections."
+    },
+    {
+     "t": "LCP image",
+     "d": "Never lazy-load it. Use fetchpriority=high (limited to one or two images) and make sure it is in the initial HTML."
+    },
+    {
+     "t": "Low priority",
+     "d": "fetchpriority=low for early-in-HTML images that are not visible at start, such as hidden carousel slides."
+    }
+   ]
+  },
+  {
+   "t": "Delivery and stability",
+   "s": "Keep it cheap and still",
+   "k": [
+    {
+     "t": "Image CDN",
+     "d": "Resizes, crops and converts on demand from URL parameters, caches variants at the edge."
+    },
+    {
+     "t": "Reserve space",
+     "d": "width and height (or aspect-ratio) let the browser reserve the box before download. This is the main CLS fix for images."
+    },
+    {
+     "t": "Placeholders",
+     "d": "Blur-up with a tiny inline image, dominant color or BlurHash, for a gentle reveal."
+    },
+    {
+     "t": "Framework components",
+     "d": "Next.js Image generates srcset from deviceSizes, serves AVIF or WebP, lazy-loads by default and adds blur placeholders for static imports."
+    }
+   ]
+  }
+ ],
+ "fe-prefetch-preload": [
+  {
+   "t": "Hints for this page",
+   "s": "Start important downloads sooner",
+   "k": [
+    {
+     "t": "preload",
+     "d": "A mandatory, high-priority fetch for something needed very soon but found late (CSS fonts, background images, key chunks). Needs the right as; fonts need crossorigin.",
+     "k": [
+      {
+       "t": "Too many preloads",
+       "d": "If everything is prioritised, nothing is. Unused preloads trigger a console warning."
+      }
+     ]
+    },
+    {
+     "t": "preconnect",
+     "d": "Does DNS, TCP and TLS ahead of time for an origin you will use soon. Add crossorigin for fonts. Use sparingly; idle connections close after about 10 seconds."
+    },
+    {
+     "t": "dns-prefetch",
+     "d": "Only the DNS lookup. A cheaper fallback for less important third-party hosts."
+    },
+    {
+     "t": "fetchpriority",
+     "d": "Raises or lowers a resource's priority relative to others. fetchpriority=high on the LCP image is a common LCP win."
+    }
+   ]
+  },
+  {
+   "t": "Hints for the next page",
+   "s": "Guess where the user goes",
+   "k": [
+    {
+     "t": "rel=prefetch",
+     "d": "Low-priority fetch during idle time for a likely future navigation."
+    },
+    {
+     "t": "Speculation Rules",
+     "d": "JSON in a script tag or HTTP header that asks Chrome to prefetch or prerender URLs. Supports URL lists and document rules matching links on the page.",
+     "k": [
+      {
+       "t": "Prefetch",
+       "d": "Fetch and cache the document without rendering."
+      },
+      {
+       "t": "Prerender",
+       "d": "Render the page in a hidden tab and swap it in on navigation."
+      },
+      {
+       "t": "Eagerness",
+       "d": "immediate, eager, moderate, conservative: how soon speculation fires."
+      }
+     ]
+    },
+    {
+     "t": "Router prefetch",
+     "d": "Frameworks like Next.js Link prefetch the next route's code and data when links enter the viewport or are hovered."
+    }
+   ]
+  },
+  {
+   "t": "Safety and limits",
+   "s": "Be a good citizen",
+   "k": [
+    {
+     "t": "Respect the user",
+     "d": "Chrome suppresses speculation under Save-Data, energy saver and background tabs. Do the same in your own prefetching."
+    },
+    {
+     "t": "Side effects and analytics",
+     "d": "Wait for activation (document.prerendering, prerenderingchange) before tracking, and never prefetch URLs that change state."
+    },
+    {
+     "t": "Scope limits",
+     "d": "Rules apply to full-page navigations in the same tab, not SPA route changes, and prerender is same-origin by default."
+    }
+   ]
+  },
+  {
+   "t": "Measuring it",
+   "s": "Prove it helps",
+   "k": [
+    {
+     "t": "Lab",
+     "d": "DevTools Network shows priority and initiator; Lighthouse flags preload candidates (key requests in a long chain)."
+    },
+    {
+     "t": "Field",
+     "d": "Check LCP and navigation timing in RUM before and after, and watch data use for wasted prefetches."
+    }
+   ]
+  }
+ ],
+ "fe-debounce-throttle": [
+  {
+   "t": "Debounce",
+   "s": "Wait for the pause",
+   "k": [
+    {
+     "t": "Idea",
+     "d": "Each new event resets a timer; the function runs only when the timer finishes with no new events. The last value wins."
+    },
+    {
+     "t": "Best for",
+     "d": "Search-as-you-type, autosave, validation on typing, resize-end logic."
+    },
+    {
+     "t": "Leading versus trailing",
+     "d": "Trailing runs after the pause (default). Leading runs on the first event then ignores the burst, useful for button clicks."
+    }
+   ]
+  },
+  {
+   "t": "Throttle",
+   "s": "Steady rhythm during the burst",
+   "k": [
+    {
+     "t": "Idea",
+     "d": "Allow at most one call per interval, however many events arrive."
+    },
+    {
+     "t": "Best for",
+     "d": "Scroll position, mousemove, drag, resize, progress or analytics pings."
+    },
+    {
+     "t": "Frame-aligned alternative",
+     "d": "For visual changes, save the latest value and apply it in requestAnimationFrame so work lands once per paint and avoids forced layout."
+    }
+   ]
+  },
+  {
+   "t": "Typeahead the right way",
+   "s": "The full pattern",
+   "k": [
+    {
+     "t": "Instant input",
+     "d": "The text field updates immediately; only the side effect is delayed."
+    },
+    {
+     "t": "Debounce, then fetch",
+     "d": "Send one request per pause; ignore very short queries."
+    },
+    {
+     "t": "Cancel and dedupe",
+     "d": "Abort the previous fetch and use query keys so repeated searches hit the cache."
+    },
+    {
+     "t": "Deferred rendering",
+     "d": "useDeferredValue keeps typing responsive while a heavy results list re-renders in the background; it doesn't reduce requests."
+    }
+   ]
+  },
+  {
+   "t": "Better than timers",
+   "s": "Use the platform",
+   "k": [
+    {
+     "t": "IntersectionObserver",
+     "d": "Replaces scroll listeners for lazy loading and infinite scroll."
+    },
+    {
+     "t": "Scheduling",
+     "d": "scheduler.yield or setTimeout splits long tasks so input stays responsive; tasks over 50 ms block interaction."
+    },
+    {
+     "t": "Passive listeners and CSS",
+     "d": "Passive scroll and touch listeners, scroll-snap and sticky positioning avoid JavaScript on the hot path."
+    }
+   ]
+  }
+ ],
+ "fe-core-web-vitals-lcp-inp-cls": [
+  {
+   "t": "LCP: loading",
+   "s": "When the main content shows",
+   "k": [
+    {
+     "t": "What counts",
+     "d": "The largest image, video poster, background image or text block in the viewport. Good is 2.5 s or less; poor is above 4 s."
+    },
+    {
+     "t": "Four subparts",
+     "d": "TTFB (about 40%), resource load delay (under 10%), resource load duration (about 40%), element render delay (under 10%). Optimise the biggest gap first.",
+     "k": [
+      {
+       "t": "TTFB",
+       "d": "Cut redirects, use CDN and caching, consider SSR or streaming."
+      },
+      {
+       "t": "Load delay",
+       "d": "Make the LCP resource discoverable in HTML, preload if hidden in CSS or JS, and never lazy-load it."
+      },
+      {
+       "t": "Load duration",
+       "d": "Smaller modern formats, CDN, caching."
+      },
+      {
+       "t": "Render delay",
+       "d": "Reduce render-blocking CSS and long tasks."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": "INP: responsiveness",
+   "s": "How fast the page reacts",
+   "k": [
+    {
+     "t": "What it measures",
+     "d": "Latency of every click, tap and key press, reported as the worst one (ignoring one outlier per 50). Good is 200 ms or less; poor is above 500 ms."
+    },
+    {
+     "t": "Three phases",
+     "d": "Input delay (main thread busy), processing duration (handlers), presentation delay (next frame)."
+    },
+    {
+     "t": "Fixes",
+     "d": "Split long tasks (over 50 ms) with scheduler.yield, keep handlers small, shrink the DOM, defer third-party scripts, avoid layout thrashing."
+    }
+   ]
+  },
+  {
+   "t": "CLS: visual stability",
+   "s": "Things shouldn't jump",
+   "k": [
+    {
+     "t": "What it measures",
+     "d": "The largest burst of unexpected layout shifts in a session window (shifts less than 1 s apart, up to 5 s). Good is 0.1 or less; poor is above 0.25."
+    },
+    {
+     "t": "Common causes",
+     "d": "Images or video without dimensions, late-injected content, fonts that swap size, ads and embeds."
+    },
+    {
+     "t": "Fixes",
+     "d": "Set width and height or aspect-ratio, reserve slots, animate with transform, show loading states for user actions."
+    }
+   ]
+  },
+  {
+   "t": "Measuring and governing",
+   "s": "Lab, field and budgets",
+   "k": [
+    {
+     "t": "Field data",
+     "d": "CrUX (28-day rolling, Chrome users) and your own RUM. This decides pass or fail."
+    },
+    {
+     "t": "Lab data",
+     "d": "Lighthouse and DevTools for repeatable debugging. Score weights: TBT 30%, LCP 25%, CLS 25%, FCP 10%, Speed Index 10%."
+    },
+    {
+     "t": "Budgets",
+     "d": "Limits on JS size, image size or metrics, enforced in CI (Lighthouse CI, bundlesize). Start from something like 170 KB of critical-path resources."
+    }
+   ]
+  }
+ ],
+ "fe-rum-real-user-data": [
+  {
+   "t": "Lab versus field",
+   "s": "Two ways to measure",
+   "k": [
+    {
+     "t": "Lab (synthetic)",
+     "d": "One controlled test, such as Lighthouse. Repeatable, good for debugging and CI, but it can't capture real interactions or device variety."
+    },
+    {
+     "t": "Field (RUM)",
+     "d": "Real visits, reported as a distribution. Best for knowing what users get and what to prioritise. Take field data first when the two disagree."
+    },
+    {
+     "t": "CrUX",
+     "d": "Google's public dataset of real Chrome users, shown in PageSpeed Insights and the CrUX API. Aggregated, origin or URL level, 28-day rolling window."
+    }
+   ]
+  },
+  {
+   "t": "Collecting in the browser",
+   "s": "APIs and libraries",
+   "k": [
+    {
+     "t": "web-vitals library",
+     "d": "onLCP, onINP, onCLS (plus FCP and TTFB) with correct handling of edge cases. About 3 KB; attribution build adds about 1.5 KB.",
+     "k": [
+      {
+       "t": "Attribution",
+       "d": "Adds the element, URL or interaction behind the value so you know what to fix."
+      },
+      {
+       "t": "reportAllChanges",
+       "d": "Fires on every change; useful for debugging but not recommended for production."
+      }
+     ]
+    },
+    {
+     "t": "PerformanceObserver",
+     "d": "Subscribes to entries on the performance timeline: largest-contentful-paint, layout-shift, event, longtask, navigation, resource. Use buffered: true and check supportedEntryTypes."
+    },
+    {
+     "t": "Navigation and Resource Timing",
+     "d": "Detailed network phases (TTFB, DNS, connect) per page and per resource."
+    }
+   ]
+  },
+  {
+   "t": "Shipping the data",
+   "s": "Reliable and cheap",
+   "k": [
+    {
+     "t": "sendBeacon",
+     "d": "Queues a small POST that completes even as the page closes, without delaying the next page. Limit 64 KiB."
+    },
+    {
+     "t": "visibilitychange",
+     "d": "Fire once when the page becomes hidden. unload and beforeunload are unreliable and block bfcache."
+    },
+    {
+     "t": "Fallback and sampling",
+     "d": "fetch with keepalive when you need headers or a response; sample on big sites; avoid blocking the main thread."
+    }
+   ]
+  },
+  {
+   "t": "Analysing it",
+   "s": "Turn numbers into decisions",
+   "k": [
+    {
+     "t": "Percentiles",
+     "d": "p75 for pass/fail, p90 or p95 for the tail. Avoid averages."
+    },
+    {
+     "t": "Segments",
+     "d": "Route template, device class, connection type, country, browser, logged in or out, release version."
+    },
+    {
+     "t": "Alerting and release tags",
+     "d": "Compare p75 before and after each deploy and alert on regressions; run experiments with server-assigned groups."
+    }
+   ]
+  }
+ ]
 }

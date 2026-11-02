@@ -1,0 +1,301 @@
+{
+ "what": "Internationalization (i18n) is building the app so any language, date format and text direction can plug in without code changes; localization (l10n) is supplying the actual translations and regional formats for each locale. The browser's Intl API and ICU message strings do most of the heavy lifting.",
+ "like": "Like a classroom whiteboard with blank label slots: the layout is fixed once, and each language just fills in its own words, numbers and reading direction.",
+ "why": [
+  "Reach new markets without forking the code",
+  "Plurals, dates, numbers and currency are different per language, and hand-rolled string code gets them wrong",
+  "RTL languages like Arabic and Hebrew need a mirrored layout, which is cheap if you plan for it early"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "loc",
+    "t": "Locale choice|URL, cookie, Accept-Language",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "i18n"
+   },
+   {
+    "id": "cat",
+    "t": "Message catalogs|keys + ICU messages",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "doc"
+   },
+   {
+    "id": "load",
+    "t": "Lazy load|one bundle per locale",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "bundle"
+   },
+   {
+    "id": "fmt",
+    "t": "Intl formatters|date, number, plural, list",
+    "x": 0,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "globe"
+   },
+   {
+    "id": "ui",
+    "t": "Components|t('key'), no string concat",
+    "x": 275,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "laptop"
+   },
+   {
+    "id": "rtl",
+    "t": "Layout|dir attr + logical CSS",
+    "x": 550,
+    "y": 180,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "columns"
+   },
+   {
+    "id": "tms",
+    "t": "Translation workflow|extract, translate, CI check",
+    "x": 275,
+    "y": 340,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "tasks"
+   }
+  ],
+  "edges": [
+   [
+    "loc",
+    "load",
+    "pick bundle"
+   ],
+   [
+    "load",
+    "cat",
+    "fetch"
+   ],
+   [
+    "cat",
+    "ui",
+    "messages"
+   ],
+   [
+    "fmt",
+    "ui",
+    "values"
+   ],
+   [
+    "loc",
+    "rtl",
+    "sets dir + lang"
+   ],
+   [
+    "ui",
+    "tms",
+    "extract keys"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Decide the locale",
+    "d": "Pick it from the URL (/fr/...), a saved preference, or Accept-Language, and put it on the html element as lang and dir. Locale in the URL is best for SEO and sharing.",
+    "hl": [
+     "loc"
+    ]
+   },
+   {
+    "t": "Load only that language",
+    "d": "Each locale's messages are a separate chunk loaded on demand, so users download one language, not twenty.",
+    "hl": [
+     "load",
+     "cat"
+    ]
+   },
+   {
+    "t": "Messages, not string glue",
+    "d": "Keep whole sentences with named placeholders and plural/select rules in ICU MessageFormat. Never build a sentence by joining pieces, because word order differs per language.",
+    "hl": [
+     "cat",
+     "ui"
+    ]
+   },
+   {
+    "t": "Format with Intl",
+    "d": "Intl.DateTimeFormat, NumberFormat, PluralRules, RelativeTimeFormat and ListFormat give locale-correct output from the browser's built-in CLDR data - no big library needed.",
+    "hl": [
+     "fmt"
+    ]
+   },
+   {
+    "t": "Mirror the layout",
+    "d": "Set dir=rtl for right-to-left languages and write CSS with logical properties (margin-inline-start) so one stylesheet works both ways; flip directional icons by hand.",
+    "hl": [
+     "rtl"
+    ]
+   },
+   {
+    "t": "Keep translations flowing",
+    "d": "Extract keys from code, send to translators, and fail CI on missing keys. Pseudo-localization (long, accented fake text) finds clipped layouts before real translations arrive.",
+    "hl": [
+     "tms"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "6",
+   "l": "CLDR plural categories: zero, one, two, few, many, other (other is required in every language)",
+   "s": "https://cldr.unicode.org/index/cldr-spec/plural-rules"
+  },
+  {
+   "v": "2 vs 4",
+   "l": "English uses two plural forms in the CLDR examples, Russian four (one, few, many, other)",
+   "s": "https://cldr.unicode.org/index/cldr-spec/plural-rules"
+  },
+  {
+   "v": "9",
+   "l": "Intl constructors on MDN's list (excluding DurationFormat): NumberFormat, DateTimeFormat, PluralRules, RelativeTimeFormat, ListFormat, Collator, Segmenter, Locale, DisplayNames",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl"
+  }
+ ],
+ "choices": [
+  {
+   "t": "Locale in URL, cookie or header",
+   "d": "URL prefix or subdomain is shareable and crawlable (add hreflang). Cookie or Accept-Language is invisible to links and search engines; use them only to suggest a redirect."
+  },
+  {
+   "t": "Library or Intl only",
+   "d": "Intl covers formatting for free. You still need a library (FormatJS/react-intl, i18next, Lingui, next-intl) for message catalogs, ICU plurals and rich-text placeholders."
+  },
+  {
+   "t": "Load strategy",
+   "d": "Bundle all locales (simple, huge), one chunk per locale (usual), or per-route namespaces (smallest, more requests). SSR must send the right messages to avoid a flash of the wrong language."
+  },
+  {
+   "t": "Physical or logical CSS",
+   "d": "Logical properties (inline-start) make RTL nearly free. Physical left/right need per-direction overrides and are easy to forget."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-design-system-component-library-design-tokens-storybook-theming-ui-kit-frontend",
+   "why": "Bake RTL and text-expansion tolerance into shared components once"
+  },
+  {
+   "slug": "fe-url-state-query-params-search-params-deep-link-shareable-filters-frontend",
+   "why": "Locale in the URL is URL state: shareable, back-button friendly"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Concatenated sentences",
+   "d": "'You have ' + n + ' items' breaks plurals and word order in other languages.",
+   "see": "Wrong plural forms or nonsense grammar in translated pages",
+   "fix": "One ICU message per sentence with plural and select rules"
+  },
+  {
+   "t": "Text overflow",
+   "d": "German or Finnish text is longer than English and clips fixed-width buttons.",
+   "see": "Cut-off labels in pseudo-locale or real translations",
+   "fix": "Flexible layouts, no fixed widths on text, test with pseudo-localization"
+  },
+  {
+   "t": "Hard-coded formats",
+   "d": "toLocaleString with the wrong locale, or a manual MM/DD/YYYY.",
+   "see": "Dates read wrongly by users, 1,234.5 vs 1.234,5 confusion",
+   "fix": "Always pass the user's locale to Intl formatters and store dates as UTC ISO"
+  }
+ ],
+ "say": [
+  "Messages live in per-locale catalogs using ICU MessageFormat, so plurals and word order are the translator's job, not string concatenation in code.",
+  "Dates, numbers, currency, lists and relative time go through the Intl APIs with the user's locale, and each locale's catalog is a lazy-loaded chunk.",
+  "We set lang and dir on the root and use CSS logical properties, so right-to-left is one stylesheet, and the locale lives in the URL for SEO and sharing."
+ ],
+ "followups": [
+  {
+   "q": "How do plurals work across languages?",
+   "a": "CLDR defines up to six categories per language (zero, one, two, few, many, other). ICU messages declare a branch per category and Intl.PluralRules picks the right one, so English needs two forms but Russian needs more."
+  },
+  {
+   "q": "What changes for right-to-left?",
+   "a": "Set dir=rtl and lang on html, use logical CSS properties, mirror directional icons and animations, and keep numbers and Latin snippets correct with bidi isolation where needed."
+  },
+  {
+   "q": "How do you avoid a flash of the wrong language with SSR?",
+   "a": "Resolve the locale on the server from the URL, render with that locale's messages, and ship the same catalog to the client for hydration."
+  }
+ ],
+ "today": "Intl is available across modern browsers and keeps adding formatters (DurationFormat is on MDN's list), so Intl-only formatting is normal. ICU MessageFormat remains the standard translator-facing syntax, supported by FormatJS and others.",
+ "check": [
+  {
+   "q": "Why not build 'You have N photos' by string concatenation?",
+   "a": "Plural rules and word order differ by language",
+   "d": [
+    "It is slower at runtime",
+    "It increases bundle size",
+    "It breaks JSON parsing"
+   ],
+   "why": "Whole-sentence ICU messages let translators handle plural categories and order."
+  },
+  {
+   "q": "How can one stylesheet serve both LTR and RTL layouts?",
+   "a": "Use CSS logical properties and the dir attribute",
+   "d": [
+    "Duplicate the CSS and swap files with a build flag",
+    "Use position: absolute everywhere",
+    "Use transform: scaleX(-1) on body"
+   ],
+   "why": "margin-inline-start and similar properties resolve against the writing direction."
+  },
+  {
+   "q": "Which is required in every language's CLDR plural rules?",
+   "a": "The 'other' category",
+   "d": [
+    "The 'one' category",
+    "The 'zero' category",
+    "The 'many' category"
+   ],
+   "why": "Other is the catch-all form that every language defines."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Unicode CLDR: plural rules",
+   "u": "https://cldr.unicode.org/index/cldr-spec/plural-rules"
+  },
+  {
+   "t": "MDN: Intl",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl"
+  },
+  {
+   "t": "MDN: CSS logical properties and values",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_logical_properties_and_values"
+  },
+  {
+   "t": "FormatJS: intl-messageformat",
+   "u": "https://formatjs.github.io/docs/intl-messageformat/"
+  }
+ ],
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "tool": ""
+}

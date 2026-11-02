@@ -5,18 +5,18 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | # | Prefix | Section | Items |
 |---|---|---|---|
 | 00 | [`sd:guide/`](#00-guide) | How to use this kit | 2 |
-| 01 | [`sd:note/`](#01-note) | Interview notes | 24 |
+| 01 | [`sd:note/`](#01-note) | Interview notes | 30 |
 | 02 | [`sd:client/`](#02-client) | Clients, devices & AI clients | 28 |
 | 03 | [`sd:edge/`](#03-edge) | Edge & networking | 8 |
-| 04 | [`sd:svc/`](#04-svc) | Services & compute | 25 |
-| 05 | [`sd:data/`](#05-data) | Databases & storage | 19 |
+| 04 | [`sd:svc/`](#04-svc) | Services & compute | 29 |
+| 05 | [`sd:data/`](#05-data) | Databases & storage | 20 |
 | 06 | [`sd:cache/`](#06-cache) | Caches | 6 |
 | 07 | [`sd:msg/`](#07-msg) | Messaging & streaming | 9 |
-| 08 | [`sd:ai/`](#08-ai) | AI models & inference | 15 |
-| 09 | [`sd:agent/`](#09-agent) | Agents & orchestration | 18 |
+| 08 | [`sd:ai/`](#08-ai) | AI models & inference | 19 |
+| 09 | [`sd:agent/`](#09-agent) | Agents & orchestration | 26 |
 | 10 | [`sd:rag/`](#10-rag) | Knowledge & retrieval (RAG) | 12 |
-| 11 | [`sd:llmops/`](#11-llmops) | Safety, evals & LLMOps | 11 |
-| 12 | [`sd:ops/`](#12-ops) | Observability, security & ops | 8 |
+| 11 | [`sd:llmops/`](#11-llmops) | Safety, evals & LLMOps | 12 |
+| 12 | [`sd:ops/`](#12-ops) | Observability, security & ops | 10 |
 | 13 | [`sd:ext/`](#13-ext) | External systems | 6 |
 | 14 | [`sd:zone/`](#14-zone) | Boundaries & zones | 9 |
 | 15 | [`sd:link/`](#15-link) | Arrows & connectors | 11 |
@@ -24,8 +24,10 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 17 | [`sd:frame/`](#17-frame) | Device frames | 6 |
 | 18 | [`sd:screen/`](#18-screen) | Screen wireframes | 13 |
 | 19 | [`sd:pattern/`](#19-pattern) | Architecture patterns | 12 |
-| 20 | [`sd:agentic/`](#20-agentic) | Agentic patterns | 12 |
-| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 32 |
+| 20 | [`sd:agentic/`](#20-agentic) | Agentic patterns | 16 |
+| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 50 |
+| 22 | [`sd:fe/`](#22-fe) | Frontend architecture | 39 |
+| 23 | [`sd:fep/`](#23-fep) | Frontend patterns | 14 |
 
 <a id="00-guide"></a>
 ## 00 `sd:guide/` How to use this kit
@@ -64,6 +66,12 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Step 7** - numbered flow marker
 - **Step 8** - numbered flow marker
 - **Step 9** - numbered flow marker
+- **RADIO Framework** - frontend system design interview flow
+- **Frontend Requirements** - checklist devices network a11y i18n offline seo
+- **Core Web Vitals** - lcp inp cls thresholds performance budget cheat sheet
+- **State Placement** - where should this frontend state live
+- **Component API** - props events state frontend interface
+- **Frontend Optimizations** - checklist performance a11y security
 
 <a id="02-client"></a>
 ## 02 `sd:client/` Clients, devices & AI clients
@@ -120,6 +128,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 
 - **Service** - microservice api backend app server
 - **Web Server** - http app server host vm ec2
+- **SSR Web App** - server side rendering nextjs react server components vercel frontend
 - **Worker** - consumer background job processor async
 - **Headless Browser Farm** - playwright puppeteer chromium rendering scraping pool
 - **Scheduler / Cron** - cron job batch scheduled timer
@@ -209,15 +218,17 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Small / Local Model** - slm on-device llama ollama edge model ai
 - **Multimodal Model** - vision image understanding vlm ai
 - **Speech-to-Text** - stt asr whisper transcription voice ai
+- **Typed Classifier** - fast classifier routing intent label confidence structured output jev ai
 - **Text-to-Speech** - tts voice synthesis elevenlabs ai
 - **Turn Detector (VAD)** - voice activity detection end of turn barge-in interruption ai
 - **Generative UI** - typed ui actions component catalog canvas artifacts ai
+- **Visual Renderer (2D / 3D)** - threejs r3f 3d math graphs katex mermaid diagrams simulation canvas ai
 - **Image / Video Gen** - diffusion image generation video generation ai
 - **Embedding Model** - embeddings encoder vectors ai
 - **Reranker** - rerank cross encoder relevance ai
 - **Model Serving (GPU)** - inference vllm triton gpu endpoint ai
-- **AI Gateway / Model Router** - litellm openrouter routing fallback multi provider
-- **Prompt Cache** - prompt caching prefix cache kv cache tokens
+- **AI Gateway / Model Router** - litellm openrouter routing fallback multi provider ai
+- **Prompt Cache** - prompt caching prefix cache kv cache tokens ai
 - **Batch Inference** - batch api offline async bulk jobs ai
 - **Fine-tuned Model** - fine tuning lora sft custom model ai
 - **Training Pipeline** - ml training mlops ai
@@ -232,8 +243,13 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Supervisor Agent** - orchestrator manager multi-agent lead ai agentic
 - **Sub-agent / Worker** - worker agent specialist delegate ai agentic
 - **Planner** - plan task decomposition steps ai agentic
-- **Tools** - function calling tool use api
+- **Tools** - function calling tool use api ai agentic
 - **Agent Skills** - skills instructions scripts progressive disclosure ai agentic
+- **Agent Harness** - deep agents agent sdk framework planning subagents filesystem ai agentic
+- **Context Compaction** - context engineering summarization offload compaction context window rot token budget ai agentic
+- **Agent Filesystem** - virtual filesystem workspace files backend scratchpad notes offload large outputs ai agentic
+- **Context Hub** - versioned instructions skills prompts shared with business users promote ai agentic
+- **Run Config** - per run configuration dynamic agent model tools prompt selection runtime context ai agentic
 - **MCP Server** - model context protocol tools resources server ai agentic
 - **A2A Protocol** - agent to agent communication interop ai agentic
 - **Short-term Memory** - context window conversation buffer session ai agentic
@@ -246,6 +262,9 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Agent Task Queue** - long running jobs async background ai agentic
 - **Trigger / Scheduler** - cron event trigger webhook schedule ai agentic
 - **Agent Registry** - catalog discovery agents directory agent card ai agentic
+- **Agent Channels** - slack github http email entry points channel inbox surfaces ai agentic
+- **Agent Auth Handler** - who is calling principal identity runtime context multi tenant authorization ai agentic
+- **Credential Broker** - user scoped agent scoped oauth tokens delegated access service account consent ai agentic
 
 <a id="10-rag"></a>
 ## 10 `sd:rag/` Knowledge & retrieval (RAG)
@@ -258,7 +277,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Embedding Pipeline** - embed index batch ai retrieval augmented generation
 - **Vector Index** - vector db ann hnsw pgvector pinecone ai retrieval augmented generation
 - **Keyword Index (BM25)** - bm25 full text elasticsearch ai retrieval augmented generation
-- **Hybrid Retriever** - hybrid search retrieval top k
+- **Hybrid Retriever** - hybrid search retrieval top k ai retrieval augmented generation
 - **Late Interaction (ColBERT)** - colbert maxsim multi vector token level retrieval ai retrieval augmented generation
 - **Knowledge Graph** - graphrag entities relations neo4j ai retrieval augmented generation
 - **Context Builder** - prompt assembly context window packing ai retrieval augmented generation
@@ -274,6 +293,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **PII Redaction** - privacy mask pii gdpr ai observability
 - **Prompt Registry** - prompt versioning templates management ai observability
 - **Offline Evals** - eval dataset benchmark regression ai observability
+- **Agent Eval Harness** - task environment verifier harbor terminal bench trajectory sandbox evals ai observability
 - **LLM-as-Judge** - online eval grading judge ai observability
 - **Tracing** - langfuse langsmith opentelemetry spans ai observability
 - **Token & Cost Metering** - usage billing tokens cost budget ai observability
@@ -295,6 +315,8 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Identity Provider** - idp sso okta auth0 cognito
 - **CI/CD** - pipeline deploy github actions
 - **Analytics** - events clickstream product analytics
+- **Error Tracking** - sentry exceptions crash reports stack traces
+- **Uptime / Status** - status page health checks incidents synthetic monitoring
 
 <a id="13-ext"></a>
 ## 13 `sd:ext/` External systems
@@ -441,6 +463,10 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Agentic RAG** - agent chooses retrieval sources ai agent
 - **Agent Memory** - short term long term writer ai agent
 - **Human-in-the-Loop** - approval before risky tools ai agent
+- **Agent Harness** - model plus harness context engineering ai agent
+- **Context Engineering** - offload compact isolate select ai agent
+- **Durable Human-in-the-Loop** - pause for days then resume ai agent
+- **Scoped Credentials** - user vs agent identity by channel ai agent
 - **MCP Architecture** - host client servers ai agent
 - **A2A** - agent to agent across companies ai agent
 
@@ -470,6 +496,8 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Customer Support Agent** - ai helpdesk escalation
 - **Realtime Voice Agent** - phone call speech ai
 - **AI Voice Tutor** - canvas voice learning agent tutor education
+- **Workplace Knowledge Agent** - permission aware enterprise search agent work graph
+- **Production Agent Platform** - managed deep agents harness infrastructure multi tenant
 - **Enterprise AI Gateway** - llm platform governance
 - **AI Visibility Tracker** - aeo geo ai search brand tracking searchable profound
 - **Noise-aware Visibility Score** - repeated runs confidence interval share of voice
@@ -482,3 +510,83 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Search Relevance Eval Loop** - golden set ndcg judgments interleaving
 - **Agentic Search Loop** - plan fan-out judge refine code mode
 - **Pipeline Migration** - merge two data pipelines dual run reconcile backfill
+- **AI Interview Research Platform** - ai moderated interviews qualitative consumer research insights video voice survey
+- **Live AI Moderator** - realtime interview agent adaptive probing follow-up questions discussion guide
+- **Interview Media Pipeline** - upload transcode transcribe diarize clips highlight reel video processing
+- **Insight Synthesis Engine** - qualitative coding themes clustering grounded quotes across interviews analysis
+- **Research Knowledge Base** - ask across all past studies cited answers always-on insights consumer intelligence
+- **FE News Feed** - facebook twitter linkedin timeline infinite feed composer frontend client architecture
+- **FE Autocomplete** - typeahead search box combobox suggestions frontend component
+- **FE Chat App** - messenger whatsapp web slack chat client realtime frontend
+- **FE Photo Gallery** - pinterest instagram masonry image grid gallery frontend
+- **FE E-commerce Storefront** - amazon shopify product listing product detail cart checkout frontend
+- **FE Video Player** - netflix youtube video player adaptive bitrate hls dash mse frontend
+- **FE Collaborative Editor** - google docs notion collaborative rich text editor crdt presence frontend
+- **FE Email Client** - gmail outlook email client inbox offline search frontend
+- **FE Spreadsheet Grid** - google sheets excel airtable data grid table virtualization frontend
+- **FE Travel Booking** - airbnb booking hotel search map listings date picker frontend
+
+<a id="22-fe"></a>
+## 22 `sd:fe/` Frontend architecture
+
+![Frontend architecture](../previews/fe.png)
+
+- **CSR SPA (client render)** - client side rendering single page app react vite frontend
+- **SSG (static pages)** - static site generation prerender build time jamstack astro frontend
+- **ISR / Revalidate** - incremental static regeneration stale while revalidate on demand nextjs frontend
+- **Streaming SSR (Suspense)** - streaming html suspense boundaries ttfb progressive rendering frontend
+- **React Server Components** - rsc server components use client server actions app router frontend
+- **Hydration / Islands** - partial hydration islands architecture resumability astro qwik frontend
+- **App Shell + Router** - client routing history api nested layouts route code split frontend
+- **Micro-frontend Host** - micro frontends module federation composition independent deploy frontend
+- **Design System** - component library design tokens storybook theming ui kit frontend
+- **Global Store (Zustand/Redux)** - client state redux zustand signals context ui state frontend
+- **Server-State Cache (TanStack Query)** - swr stale while revalidate dedupe refetch query keys frontend
+- **Normalized Cache (entities by id)** - normalization apollo relay entity store denormalize frontend
+- **GraphQL Client** - apollo relay urql fragments colocated queries persisted queries frontend
+- **Form State + Validation** - react hook form zod schema validation controlled uncontrolled frontend
+- **URL State** - query params search params deep link shareable filters frontend
+- **Optimistic Update** - optimistic ui rollback pending mutation useoptimistic frontend
+- **API Client (retry, abort)** - fetch wrapper retry backoff abortcontroller dedupe interceptors frontend
+- **WebSocket Client** - socket reconnect heartbeat backoff realtime frontend
+- **SSE Client (EventSource)** - server sent events eventsource stream one way tokens frontend
+- **Polling / Long Polling** - short polling long polling interval fallback frontend
+- **Offline Queue (outbox)** - offline first background sync mutation queue replay frontend
+- **Service Worker** - pwa offline cache storage fetch interception workbox push frontend
+- **IndexedDB** - browser database offline storage dexie structured data frontend
+- **Web Storage / Cookies** - localstorage sessionstorage cookies httponly samesite frontend
+- **Web Worker** - background thread off main thread comlink wasm frontend
+- **Browser HTTP Cache** - cache-control etag immutable hashed assets 304 frontend
+- **Bundler + Code Splitting** - vite webpack rollup esbuild tree shaking dynamic import lazy chunks frontend
+- **Virtualized List** - windowing react-window tanstack virtual large lists dom nodes frontend
+- **Infinite Scroll** - intersection observer cursor pagination load more feed frontend
+- **Image Pipeline (responsive)** - srcset sizes avif webp lazy loading image cdn placeholder frontend
+- **Prefetch / Preload** - resource hints preload preconnect prefetch speculation rules frontend
+- **Debounce / Throttle** - input events typeahead scroll resize frontend
+- **Core Web Vitals (LCP INP CLS)** - performance metrics budget lighthouse ttfb frontend
+- **RUM (real user data)** - real user monitoring web-vitals performance observer beacon frontend
+- **Accessibility (a11y)** - wcag aria keyboard focus screen reader semantic html frontend
+- **i18n / l10n** - internationalization localization rtl translations intl formatting frontend
+- **CSP + XSS Defence** - content security policy xss sanitize trusted types dompurify security frontend
+- **Auth in the Browser** - httponly cookie jwt refresh token oauth pkce csrf bff frontend
+- **Feature Flags (client)** - feature toggles a/b test experiments gradual rollout frontend
+
+<a id="23-fep"></a>
+## 23 `sd:fep/` Frontend patterns
+
+![Frontend patterns](../previews/fep.png)
+
+- **Critical Rendering Path** - browser pipeline html css dom cssom render tree layout paint composite frontend
+- **Rendering Strategies** - csr ssr ssg isr when to use which frontend
+- **Streaming SSR + Hydration** - suspense selective hydration server components frontend
+- **Stale-While-Revalidate Fetching** - tanstack query swr query cache dedupe frontend
+- **Optimistic Update + Rollback** - instant ui mutation snapshot frontend
+- **Offline-First Sync** - local first outbox service worker indexeddb frontend
+- **Realtime Options** - short polling long polling sse websocket comparison frontend
+- **Virtualized Infinite List** - windowing intersection observer cursor pagination frontend
+- **Micro-Frontends** - module federation app shell remotes independent deploy frontend
+- **SPA Auth with BFF** - oauth pkce httponly cookie token handler csrf frontend security
+- **Web Caching Layers** - memory service worker http cache cdn origin cache-control etag frontend
+- **Responsive Image Loading** - srcset sizes lazy loading lcp image cdn avif frontend
+- **Frontend Observability** - rum web vitals js errors beacon dashboards frontend
+- **JavaScript Event Loop** - call stack microtasks task queue render long tasks frontend

@@ -1,0 +1,286 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "React Server Components (RSC) are components that run only on the server, ahead of time, and send their rendered result to the browser instead of their code. Only parts marked 'use client' ship JavaScript and run in the browser.",
+ "like": "Like a kitchen and a dining table: the kitchen (server) does the heavy cooking and plates the food, and only the things you need to touch, like the salt shaker, are placed on your table (client).",
+ "why": [
+  "Less JavaScript to download, because server-only libraries never reach the browser",
+  "Components read the database or API directly, with no extra endpoint and no client waterfall",
+  "Secrets and keys stay on the server"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 290,
+  "nodes": [
+   {
+    "id": "srv",
+    "t": "Server Components|async, read data",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "rsc"
+   },
+   {
+    "id": "db",
+    "t": "Database / API|direct access",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "payload",
+    "t": "RSC payload|rendered tree + client refs",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "msg",
+    "i": "stream"
+   },
+   {
+    "id": "cc",
+    "t": "Client Components|\"use client\", hooks",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "act",
+    "t": "Server Actions|\"use server\" mutations",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "gear"
+   },
+   {
+    "id": "html",
+    "t": "Prerendered HTML|fast first paint",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "ssr"
+   }
+  ],
+  "edges": [
+   [
+    "srv",
+    "db",
+    "await"
+   ],
+   [
+    "srv",
+    "payload",
+    "render"
+   ],
+   [
+    "payload",
+    "cc",
+    "props + refs"
+   ],
+   [
+    "payload",
+    "html",
+    "SSR"
+   ],
+   [
+    "cc",
+    "act",
+    "call"
+   ],
+   [
+    "act",
+    "db",
+    "write"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Server Components render first",
+    "d": "Layouts and pages are Server Components by default in the Next.js App Router. They can be async, await data directly and use secrets.",
+    "hl": [
+     "srv",
+     "db"
+    ]
+   },
+   {
+    "t": "Output is a payload, not code",
+    "d": "React serialises the result into the RSC payload: rendered output, placeholders for Client Components with links to their JS files, and the props passed to them. The same payload is also used to prerender HTML.",
+    "hl": [
+     "srv",
+     "payload",
+     "html"
+    ]
+   },
+   {
+    "t": "'use client' marks the boundary",
+    "d": "A file with 'use client' and everything it imports goes into the client bundle. Server Components can be passed in as children, so they stay on the server.",
+    "hl": [
+     "payload",
+     "cc"
+    ]
+   },
+   {
+    "t": "First load vs navigation",
+    "d": "First load: HTML paints at once, the payload reconciles the trees, then JS hydrates Client Components. Later navigations fetch only the payload and update in place.",
+    "hl": [
+     "html",
+     "payload",
+     "cc"
+    ]
+   },
+   {
+    "t": "Mutate with Server Actions",
+    "d": "Client code calls a 'use server' function that runs on the server and can write data. Treat each one as a public endpoint: authenticate and validate inside.",
+    "hl": [
+     "cc",
+     "act",
+     "db"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "~75 KB",
+   "l": "gzipped JS (markdown and sanitiser libraries) that react.dev's example keeps out of the client with a Server Component",
+   "s": "https://react.dev/reference/rsc/server-components"
+  },
+  {
+   "v": "CVSS 10.0",
+   "l": "severity of CVE-2025-55182, an unauthenticated RCE in RSC server-function handling; fixed in React 19.0.1, 19.1.2, 19.2.1",
+   "s": "https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components"
+  },
+  {
+   "v": "3 parts",
+   "l": "of the RSC payload: rendered server output, client component references, and props passed across the boundary",
+   "s": "https://nextjs.org/docs/app/getting-started/server-and-client-components"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Where to draw the client boundary",
+   "d": "Push 'use client' down to the smallest interactive leaf, such as a search box or like button, so the rest of the layout stays server-only."
+  },
+  {
+   "t": "Server data vs client data library",
+   "d": "Use Server Components for the initial read. Use SWR or TanStack Query in Client Components for polling, focus refetch and mutations that need a live cache."
+  },
+  {
+   "t": "Context and state",
+   "d": "Server Components cannot use state or context. Render providers from a small Client Component that takes children, and place it as deep as possible."
+  },
+  {
+   "t": "Server Actions vs API routes",
+   "d": "Actions give a typed call with form support and progressive enhancement; a REST or GraphQL API is better when other clients such as mobile also need the endpoint."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-hydration-islands-partial-hydration-islands-architecture-resumability-astro-qwik-frontend",
+   "why": "Content-heavy sites that want almost no JS and are not React-based"
+  },
+  {
+   "slug": "fe-csr-spa-client-render-client-side-rendering-single-page-app-react-vite-frontend",
+   "why": "Highly interactive app with no SEO need and no server runtime"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Server secrets leak towards the client",
+   "d": "A shared module that uses an API key is imported into a Client Component.",
+   "see": "Undefined key at runtime or key in bundle analysis",
+   "fix": "Import 'server-only' in that module for a build-time error; only NEXT_PUBLIC_ vars reach the client"
+  },
+  {
+   "t": "Whole app becomes client code",
+   "d": "'use client' placed on a layout or high-level wrapper pulls all its imports into the bundle.",
+   "see": "Big JS bundle, slow hydration",
+   "fix": "Move the directive to leaf components; pass server content as children"
+  },
+  {
+   "t": "Unsafe server functions",
+   "d": "Actions treated as private internals but are reachable HTTP endpoints.",
+   "see": "Unauthorised writes, or exposure to deserialisation bugs",
+   "fix": "Authenticate and validate every action, and keep React and framework patched (CVE-2025-55182 fix)"
+  }
+ ],
+ "say": [
+  "I would default to Server Components for data-heavy pages so database reads happen on the server and the browser only gets rendered output and a small amount of JavaScript.",
+  "I mark only the interactive leaves with 'use client', and pass server-rendered content in as children so the client bundle stays small.",
+  "Server Actions are public HTTP endpoints, so I validate input and check auth inside each one, and I keep React and Next.js patched."
+ ],
+ "followups": [
+  {
+   "q": "Are Server Components the same as SSR?",
+   "a": "No. SSR turns components into HTML on the server and then hydrates them with JS. Server Components never ship their code or hydrate; their output arrives as a payload. Frameworks combine both for first load."
+  },
+  {
+   "q": "Can a Client Component render a Server Component?",
+   "a": "Not by importing it, but a Server Component can pass another Server Component as children or a prop; it is rendered on the server and slotted in."
+  }
+ ],
+ "today": "RSC is now stable in React 19 and is the default in the Next.js App Router. After the December 2025 CVE-2025-55182 disclosure, patch levels of React and the framework are part of the interview-worthy security story.",
+ "check": [
+  {
+   "q": "What is shipped to the browser for a Server Component?",
+   "a": "Its rendered output in the RSC payload, not its code",
+   "d": [
+    "The full component source",
+    "A database connection",
+    "Nothing at all, ever"
+   ],
+   "why": "That is how bundle size shrinks."
+  },
+  {
+   "q": "What does 'use client' do?",
+   "a": "Marks the boundary where the module and its imports join the client bundle",
+   "d": [
+    "Makes the component async",
+    "Forces it to render only on the server",
+    "Disables hydration"
+   ],
+   "why": "It splits the server and client module graphs."
+  },
+  {
+   "q": "Where should you place the 'use client' directive for a large layout with one search box?",
+   "a": "On the search component only",
+   "d": [
+    "On the root layout",
+    "On every file",
+    "In next.config.js"
+   ],
+   "why": "Keeping the directive on the leaf avoids sending the whole layout's code to the client."
+  }
+ ],
+ "sources": [
+  {
+   "t": "React: Server Components",
+   "u": "https://react.dev/reference/rsc/server-components"
+  },
+  {
+   "t": "React: Server Functions",
+   "u": "https://react.dev/reference/rsc/server-functions"
+  },
+  {
+   "t": "Next.js: Server and Client Components",
+   "u": "https://nextjs.org/docs/app/getting-started/server-and-client-components"
+  },
+  {
+   "t": "React blog: CVE-2025-55182",
+   "u": "https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components"
+  }
+ ]
+}

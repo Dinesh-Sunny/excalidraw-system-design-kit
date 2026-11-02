@@ -1,0 +1,278 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Server-Sent Events (SSE) is a one-way stream: the browser opens one HTTP request and the server keeps sending text events down it. The EventSource API reconnects by itself and can resume from the last event id.",
+ "like": "Like a classroom radio: the teacher keeps broadcasting, you only listen, and if the signal drops your radio retunes and tells the teacher the last thing it heard.",
+ "why": [
+  "Perfect for server-to-client updates such as notifications, progress and AI token streams",
+  "Automatic reconnect and resume are built into the browser",
+  "Plain HTTP, so it works with normal auth, proxies and load balancers"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "ui",
+    "t": "UI|appends tokens",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "es",
+    "t": "EventSource|auto reconnect",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "sse"
+   },
+   {
+    "id": "px",
+    "t": "Proxy / CDN|buffering off",
+    "x": 275,
+    "y": 105,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "proxy"
+   },
+   {
+    "id": "srv",
+    "t": "Event stream|text/event-stream",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "stream"
+   },
+   {
+    "id": "id",
+    "t": "Last-Event-ID|resume point",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "kv"
+   }
+  ],
+  "edges": [
+   [
+    "es",
+    "ui",
+    "events"
+   ],
+   [
+    "es",
+    "px",
+    "GET, kept open"
+   ],
+   [
+    "px",
+    "srv",
+    "stream"
+   ],
+   [
+    "srv",
+    "es",
+    "data + id lines"
+   ],
+   [
+    "es",
+    "id",
+    "sends on reconnect"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Open one GET",
+    "d": "new EventSource(url) sends a GET. The server answers 200 with Content-Type text/event-stream and does not close the response.",
+    "hl": [
+     "es",
+     "srv"
+    ]
+   },
+   {
+    "t": "Stream text events",
+    "d": "Each event is a few lines like id:, event: and data:, ended by a blank line. Lines starting with a colon are comments, handy as keep-alives.",
+    "hl": [
+     "srv",
+     "es"
+    ]
+   },
+   {
+    "t": "Handle events",
+    "d": "onmessage handles unnamed events; addEventListener handles named ones. Append the data to state and render.",
+    "hl": [
+     "es",
+     "ui"
+    ]
+   },
+   {
+    "t": "Reconnect and resume",
+    "d": "If the connection drops, the browser reconnects and sends the Last-Event-ID header, so the server can replay what was missed.",
+    "hl": [
+     "es",
+     "id",
+     "srv"
+    ]
+   },
+   {
+    "t": "Keep proxies honest",
+    "d": "Turn off response buffering on proxies and send a comment about every 15 s so idle connections are not cut.",
+    "hl": [
+     "px",
+     "srv"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 300
+ },
+ "numbers": [
+  {
+   "v": "6",
+   "l": "SSE connections per browser per domain over HTTP/1.1, shared by all tabs",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events"
+  },
+  {
+   "v": "100",
+   "l": "default simultaneous streams over HTTP/2, which removes the 6-connection problem",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events"
+  },
+  {
+   "v": "~15 s",
+   "l": "how often the spec suggests sending a comment line to keep legacy proxies from dropping the stream",
+   "s": "https://html.spec.whatwg.org/multipage/server-sent-events.html"
+  },
+  {
+   "v": "204",
+   "l": "an HTTP 204 No Content response tells EventSource to stop reconnecting",
+   "s": "https://html.spec.whatwg.org/multipage/server-sent-events.html"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "SSE or WebSocket",
+   "d": "SSE is simpler when only the server sends. WebSocket is better when the client also sends a lot or you need binary frames."
+  },
+  {
+   "t": "Native EventSource or fetch streaming",
+   "d": "EventSource is GET-only and cannot set headers. For POST bodies or Authorization headers, read the response stream with fetch, for example with the fetch-event-source library."
+  },
+  {
+   "t": "HTTP version",
+   "d": "Over HTTP/1.1 only about 6 connections per domain are shared across tabs. Serve SSE over HTTP/2 to avoid starving other requests."
+  },
+  {
+   "t": "Resume design",
+   "d": "Put an id on every event and have the server replay from Last-Event-ID, otherwise reconnects silently lose data."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-websocket-client-socket-reconnect-heartbeat-backoff-realtime-frontend",
+   "why": "When the client also sends frequent messages or needs binary data"
+  },
+  {
+   "slug": "fe-polling-long-polling-short-polling-long-polling-interval-fallback-frontend",
+   "why": "When updates are rare, or the platform cannot hold long connections"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Proxy buffers the stream",
+   "d": "A proxy or CDN waits to fill a buffer before forwarding.",
+   "see": "Events arrive in big late bursts",
+   "fix": "Disable buffering for the route, send Cache-Control: no-cache and periodic comments"
+  },
+  {
+   "t": "Tab limit on HTTP/1.1",
+   "d": "More than 6 streams per domain across tabs block other requests.",
+   "see": "Pages hang when many tabs are open",
+   "fix": "Use HTTP/2, or share one stream between tabs"
+  },
+  {
+   "t": "Fatal error never retries",
+   "d": "A non-200 status or wrong content type closes the connection for good.",
+   "see": "Stream silently stops after an auth error",
+   "fix": "Detect close in onerror, refresh the token, and create a new EventSource"
+  }
+ ],
+ "say": [
+  "For server-to-client updates like notifications or streamed model output, I use SSE: one long HTTP response with text/event-stream.",
+  "EventSource reconnects automatically and sends Last-Event-ID, so I give each event an id and the server can replay the gap.",
+  "I run it over HTTP/2 and turn off proxy buffering, and if I need POST or an auth header I read the stream with fetch instead of EventSource."
+ ],
+ "followups": [
+  {
+   "q": "Why can't you send an Authorization header with EventSource?",
+   "a": "The constructor takes only a URL and withCredentials. Use cookies, or stream with fetch, which allows any method and headers."
+  },
+  {
+   "q": "How do you stop a stream cleanly?",
+   "a": "Call close() on the client; on the server end the response, or return 204 on reconnect so the browser stops retrying."
+  },
+  {
+   "q": "Why do LLM APIs use SSE?",
+   "a": "Tokens flow one way from server to client over plain HTTP, and SSE gives incremental delivery with simple framing and reconnect behaviour."
+  }
+ ],
+ "today": "SSE is the standard transport for streamed AI responses: for example, the Claude API streams a message as server-sent events such as message_start, content_block_delta and message_stop. Browser apps usually read these with fetch streaming so they can POST and send auth headers.",
+ "check": [
+  {
+   "q": "Which header does the browser send when EventSource reconnects?",
+   "a": "Last-Event-ID",
+   "d": [
+    "If-None-Match",
+    "Retry-After",
+    "X-Resume-From"
+   ],
+   "why": "The browser sends the last id it received so the server can resume."
+  },
+  {
+   "q": "Why prefer HTTP/2 for SSE?",
+   "a": "HTTP/1.1 allows only about 6 connections per domain, shared by all tabs",
+   "d": [
+    "HTTP/2 encrypts the events",
+    "HTTP/1.1 cannot stream",
+    "HTTP/2 makes events binary"
+   ],
+   "why": "HTTP/2 negotiates around 100 streams by default, so tabs do not starve each other."
+  },
+  {
+   "q": "You need to POST a prompt and stream the answer. What now?",
+   "a": "Use fetch and read the response stream",
+   "d": [
+    "Use EventSource with POST",
+    "Use a WebSocket only",
+    "Poll every second"
+   ],
+   "why": "EventSource is GET-only; fetch streaming gives full control of method and headers."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: Using server-sent events",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events"
+  },
+  {
+   "t": "HTML Standard: Server-sent events",
+   "u": "https://html.spec.whatwg.org/multipage/server-sent-events.html"
+  },
+  {
+   "t": "Claude API docs: streaming messages",
+   "u": "https://platform.claude.com/docs/en/build-with-claude/streaming"
+  },
+  {
+   "t": "Azure/fetch-event-source",
+   "u": "https://github.com/Azure/fetch-event-source"
+  }
+ ]
+}

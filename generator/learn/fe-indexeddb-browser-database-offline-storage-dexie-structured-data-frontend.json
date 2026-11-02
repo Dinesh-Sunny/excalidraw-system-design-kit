@@ -1,0 +1,286 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "IndexedDB is the browser's built-in database for large, structured data: objects, files and blobs, with indexes and transactions. It is asynchronous, so it does not freeze the page, and it is the right place for offline data and queues.",
+ "like": "Like a filing cabinet in the classroom with labelled drawers and index cards: you can store a lot, find things by label, and the work is done by a helper so you are never blocked.",
+ "why": [
+  "Stores far more than localStorage without blocking the UI",
+  "Indexes and transactions give fast lookups and safe updates",
+  "Works from the page, workers and service workers, so offline data is shared"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "ui",
+    "t": "App code|reads and writes",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "wr",
+    "t": "Wrapper|idb or Dexie",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "idb"
+   },
+   {
+    "id": "db",
+    "t": "IndexedDB|object stores",
+    "x": 275,
+    "y": 105,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "idb"
+   },
+   {
+    "id": "ix",
+    "t": "Indexes|find by a field",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "table"
+   },
+   {
+    "id": "tx",
+    "t": "Transactions|readonly / readwrite",
+    "x": 275,
+    "y": 275,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "lock"
+   },
+   {
+    "id": "wk",
+    "t": "Worker / SW|same database",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "webworker"
+   }
+  ],
+  "edges": [
+   [
+    "ui",
+    "wr",
+    "promises"
+   ],
+   [
+    "wr",
+    "db",
+    "requests"
+   ],
+   [
+    "db",
+    "ix",
+    "lookup"
+   ],
+   [
+    "tx",
+    "db",
+    "scope + mode"
+   ],
+   [
+    "wk",
+    "db",
+    "same origin"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Open with a version",
+    "d": "indexedDB.open(name, version) returns a request. Schema changes happen only in onupgradeneeded: create object stores and indexes there.",
+    "hl": [
+     "wr",
+     "db"
+    ]
+   },
+   {
+    "t": "Design stores and keys",
+    "d": "An object store is like a table of objects, with a keyPath or auto-generated key. Add indexes for the fields you query, for example by date or status.",
+    "hl": [
+     "db",
+     "ix"
+    ]
+   },
+   {
+    "t": "Use short transactions",
+    "d": "Every read and write happens in a transaction on named stores. It commits when its pending requests finish; do not await unrelated things inside it.",
+    "hl": [
+     "tx",
+     "db"
+    ]
+   },
+   {
+    "t": "Wrap the callbacks",
+    "d": "The raw API is event-based, so teams use a promise wrapper: idb for a thin layer, Dexie for schema, queries and live updates.",
+    "hl": [
+     "ui",
+     "wr"
+    ]
+   },
+   {
+    "t": "Share and protect",
+    "d": "Pages, workers and service workers on the same origin see the same data. Ask for persistent storage for important data and catch QuotaExceededError.",
+    "hl": [
+     "wk",
+     "db"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 385
+ },
+ "numbers": [
+  {
+   "v": "60%",
+   "l": "of total disk a Chromium or Safari origin can use at most (Firefox best-effort: 10% of disk or 10 GiB)",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria"
+  },
+  {
+   "v": "5 MiB",
+   "l": "Web Storage limit per origin - the small box IndexedDB replaces",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria"
+  },
+  {
+   "v": "1",
+   "l": "readwrite transaction can run on an object store at a time, so keep them short",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Which storage for what",
+   "d": "web.dev suggests Cache Storage for network resources, OPFS for file-like content and IndexedDB for other structured data. Avoid localStorage for anything big because it is synchronous."
+  },
+  {
+   "t": "Raw API or wrapper",
+   "d": "The raw API is verbose and event-based. idb adds promises with little else; Dexie adds a declarative schema, a query API and live queries."
+  },
+  {
+   "t": "Schema versioning",
+   "d": "Integer versions with onupgradeneeded migrations. Plan how to migrate each older version, and handle other tabs blocking an upgrade."
+  },
+  {
+   "t": "Eviction and quota",
+   "d": "Data is best-effort by default. Call navigator.storage.persist() for important data, check estimate(), and catch QuotaExceededError."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-web-storage-cookies-localstorage-sessionstorage-cookies-httponly-samesite-frontend",
+   "why": "For tiny settings like a theme, where a synchronous key-value store is enough"
+  },
+  {
+   "slug": "fe-offline-queue-outbox-offline-first-background-sync-mutation-queue-replay-frontend",
+   "why": "When the data you need to keep is a queue of pending actions, built on top of IndexedDB"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Upgrade blocked",
+   "d": "An old tab keeps the previous version open, so the new version waits.",
+   "see": "Database never opens after a deploy",
+   "fix": "Close the connection in onversionchange and show a 'please reload' message on blocked"
+  },
+  {
+   "t": "Transaction finished early",
+   "d": "Awaiting a fetch or timer inside a transaction lets it auto-complete.",
+   "see": "TransactionInactiveError on the next write",
+   "fix": "Fetch first, then open a short transaction and only await IndexedDB requests inside"
+  },
+  {
+   "t": "Quota or eviction",
+   "d": "The disk is full or the browser clears best-effort data.",
+   "see": "Writes throw QuotaExceededError, or data vanishes",
+   "fix": "try/catch writes, trim old data, request persistent storage, and treat the server as the source of truth"
+  }
+ ],
+ "say": [
+  "For anything bigger than a few settings I use IndexedDB: asynchronous, transactional, with indexes, and available in workers and service workers.",
+  "I wrap it with idb or Dexie, version the schema with migrations in onupgradeneeded, and keep transactions short.",
+  "I treat it as a cache of server data - request persistent storage for the important parts and handle QuotaExceededError."
+ ],
+ "followups": [
+  {
+   "q": "Why not localStorage?",
+   "a": "It is synchronous so it blocks the main thread, holds only strings, is limited to about 5 MiB, and is not available in workers."
+  },
+  {
+   "q": "Is IndexedDB data guaranteed to stay?",
+   "a": "No. It is best-effort and can be evicted under storage pressure; navigator.storage.persist() asks for protection, and Safari can clear script-written data after 7 days without interaction."
+  },
+  {
+   "q": "How do you migrate the schema?",
+   "a": "Bump the integer version; in onupgradeneeded create or change stores and indexes, branching on the old version. It is the only place schema can change."
+  }
+ ],
+ "today": "IndexedDB is the standard store for structured offline data, usually behind a wrapper: idb for promises or Dexie for schema and live queries (Dexie Cloud adds sync). The origin private file system covers file-style content, and persistent storage requests protect critical data.",
+ "check": [
+  {
+   "q": "Where can the schema of an IndexedDB database change?",
+   "a": "Inside onupgradeneeded",
+   "d": [
+    "In any transaction",
+    "In the success handler",
+    "Only in a service worker"
+   ],
+   "why": "Stores and indexes are created or deleted only during a version upgrade."
+  },
+  {
+   "q": "Why avoid localStorage for large offline data?",
+   "a": "It is synchronous and blocks the main thread",
+   "d": [
+    "It is encrypted",
+    "It needs HTTPS",
+    "It cannot store strings"
+   ],
+   "why": "It also holds only strings and about 5 MiB."
+  },
+  {
+   "q": "A write throws QuotaExceededError. What do you do?",
+   "a": "Catch it, free space and retry or degrade gracefully",
+   "d": [
+    "Ignore it",
+    "Switch to cookies",
+    "Reload the page forever"
+   ],
+   "why": "MDN recommends wrapping writes in try/catch and freeing space."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: IndexedDB API",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API"
+  },
+  {
+   "t": "MDN: Using IndexedDB",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB"
+  },
+  {
+   "t": "MDN: Storage quotas and eviction criteria",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria"
+  },
+  {
+   "t": "web.dev: Storage for the web",
+   "u": "https://web.dev/articles/storage-for-the-web"
+  },
+  {
+   "t": "Dexie.js",
+   "u": "https://dexie.org/"
+  }
+ ]
+}

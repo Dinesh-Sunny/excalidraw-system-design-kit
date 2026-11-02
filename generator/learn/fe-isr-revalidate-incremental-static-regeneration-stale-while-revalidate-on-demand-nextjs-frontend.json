@@ -1,0 +1,264 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Incremental Static Regeneration (ISR) serves pre-built static pages from a cache and quietly rebuilds them in the background when they get old or when you tell it to. You keep static speed without redeploying the whole site for every content change.",
+ "like": "Like a menu board in a cafe: customers always read the board instantly, and a staff member rewrites one line behind the counter when the dish changes.",
+ "why": [
+  "Static-fast responses with content that still stays fresh",
+  "Huge sites build only the top pages and generate the rest on first visit",
+  "Editors publish and see the update live without a full redeploy"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 290,
+  "nodes": [
+   {
+    "id": "u",
+    "t": "Visitor|requests /blog/1",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "user"
+   },
+   {
+    "id": "cache",
+    "t": "Page cache|HTML + RSC payload",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "cache",
+    "i": "cache"
+   },
+   {
+    "id": "regen",
+    "t": "Regenerate|background render",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "ssr"
+   },
+   {
+    "id": "data",
+    "t": "CMS / database|source of truth",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "hook",
+    "t": "Webhook / action|revalidatePath or Tag",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "webhook"
+   }
+  ],
+  "edges": [
+   [
+    "u",
+    "cache",
+    "request"
+   ],
+   [
+    "cache",
+    "regen",
+    "stale: trigger"
+   ],
+   [
+    "regen",
+    "data",
+    "read"
+   ],
+   [
+    "regen",
+    "cache",
+    "replace entry"
+   ],
+   [
+    "hook",
+    "cache",
+    "invalidate"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Prebuild known pages",
+    "d": "At build, generateStaticParams lists the pages to render. Each is stored in the cache and served instantly.",
+    "hl": [
+     "cache"
+    ]
+   },
+   {
+    "t": "Serve from cache, even when stale",
+    "d": "After the revalidate window passes (60 s in the docs example) the next request still gets the cached page, so nobody waits.",
+    "hl": [
+     "u",
+     "cache"
+    ]
+   },
+   {
+    "t": "Regenerate in the background",
+    "d": "That stale hit starts a fresh render. Once it succeeds the new version replaces the cache entry and later requests get it. If the render throws, the last good page keeps being served.",
+    "hl": [
+     "cache",
+     "regen",
+     "data"
+    ]
+   },
+   {
+    "t": "Invalidate on demand",
+    "d": "When an editor publishes, a Server Action or webhook calls revalidatePath or revalidateTag. The entry is marked stale and the next request regenerates it.",
+    "hl": [
+     "hook",
+     "cache"
+    ]
+   },
+   {
+    "t": "Unknown pages render on first hit",
+    "d": "A new path such as /blog/26 is generated on demand and then cached. With dynamicParams set to false it would 404 instead.",
+    "hl": [
+     "u",
+     "regen"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "60 s",
+   "l": "revalidate value in the Next.js docs example: stale after 60 s, refreshed in the background on the next request",
+   "s": "https://nextjs.org/docs/app/guides/incremental-static-regeneration"
+  },
+  {
+   "v": "1 hour",
+   "l": "recommended style of revalidate time (3600 s) rather than 1 s; use on-demand revalidation if you need precision",
+   "s": "https://nextjs.org/docs/app/guides/incremental-static-regeneration"
+  },
+  {
+   "v": "600 s + 30 s",
+   "l": "HTTP example: max-age=600, stale-while-revalidate=30 lets a cache serve stale for 30 s while it revalidates",
+   "s": "https://www.rfc-editor.org/rfc/rfc5861"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Time-based or on-demand",
+   "d": "Time-based revalidate is simple but lets content be old for up to the window. On-demand (revalidatePath, revalidateTag) updates right after a publish; most teams use both."
+  },
+  {
+   "t": "Path vs tag invalidation",
+   "d": "revalidatePath refreshes a whole route. revalidateTag refreshes only data tagged with that label, useful when one article feeds several pages."
+  },
+  {
+   "t": "Where it can run",
+   "d": "Needs a Node.js runtime or a platform that supports it. It is not available in a static export."
+  },
+  {
+   "t": "Multiple instances",
+   "d": "The default cache is per instance, so on-demand revalidation only hits the instance that got the call. Use a shared cache handler (for example Redis) behind a load balancer."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-ssg-static-pages-static-site-generation-prerender-build-time-jamstack-astro-frontend",
+   "why": "Content only changes on deploy, so a build is all you need"
+  },
+  {
+   "slug": "edge-cdn-cloudfront-akamai-edge-cache-static-assets",
+   "why": "Understand the cache layer in front of the origin that ISR output sits behind"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Users see old content for too long",
+   "d": "Window is long and nothing invalidates it.",
+   "see": "Editors report that published changes are not visible",
+   "fix": "Call revalidatePath or revalidateTag from the publish webhook"
+  },
+  {
+   "t": "Different servers show different pages",
+   "d": "Each instance has its own cache and only one received the invalidation.",
+   "see": "Content flips between refreshes",
+   "fix": "Shared custom cache handler so tag invalidations reach all instances"
+  },
+  {
+   "t": "HTML and navigation payload disagree",
+   "d": "A CDN caches the HTML and the RSC payload with different lifetimes.",
+   "see": "Client navigation shows older content than a hard refresh",
+   "fix": "Cache both together with the same TTL and respect the Vary header"
+  }
+ ],
+ "say": [
+  "ISR gives me static-speed pages that refresh themselves: the cache serves the old page instantly and regenerates in the background after the revalidate window.",
+  "For editorial content I use on-demand revalidation from the publish webhook, keyed by tag so one article update refreshes every page that uses it.",
+  "In production I run a shared cache so every instance sees invalidations, and I keep the revalidate time long as a safety net, such as an hour."
+ ],
+ "followups": [
+  {
+   "q": "What happens if the regeneration fails?",
+   "a": "The last successfully generated page keeps being served, and Next.js retries on the next request, so a failing backend does not blank the page."
+  },
+  {
+   "q": "How is this different from stale-while-revalidate in HTTP?",
+   "a": "Same idea at different layers. HTTP SWR lets a CDN or browser serve a stale response while revalidating; ISR does it for rendered pages inside the framework's own cache."
+  }
+ ],
+ "today": "Next.js now documents ISR both without and with Cache Components (use cache, cacheTag, cacheLife) as the newer caching model, and revalidateTag takes a cache-life profile such as 'max'.",
+ "check": [
+  {
+   "q": "After the revalidate time passes, what does the next request receive?",
+   "a": "The stale cached page, while a fresh one regenerates",
+   "d": [
+    "A 404 until regeneration finishes",
+    "A freshly rendered page after waiting",
+    "An error telling it to retry"
+   ],
+   "why": "Stale-while-revalidate means nobody waits on the render."
+  },
+  {
+   "q": "An editor publishes a post. Fastest way to make it live?",
+   "a": "Call revalidateTag or revalidatePath from the publish hook",
+   "d": [
+    "Wait for the time window only",
+    "Redeploy the whole site",
+    "Clear the user's browser cache"
+   ],
+   "why": "On-demand revalidation invalidates exactly the affected entries."
+  },
+  {
+   "q": "Why can on-demand revalidation seem not to work behind a load balancer?",
+   "a": "Each instance has its own cache and only one was invalidated",
+   "d": [
+    "ISR only works on one request per day",
+    "The CDN deletes tags",
+    "Tags only work in development"
+   ],
+   "why": "The default file-system cache is per instance, so you need a shared cache handler."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Next.js: ISR guide",
+   "u": "https://nextjs.org/docs/app/guides/incremental-static-regeneration"
+  },
+  {
+   "t": "Next.js: How revalidation works",
+   "u": "https://nextjs.org/docs/app/guides/how-revalidation-works"
+  },
+  {
+   "t": "RFC 5861: stale-while-revalidate",
+   "u": "https://www.rfc-editor.org/rfc/rfc5861"
+  }
+ ]
+}

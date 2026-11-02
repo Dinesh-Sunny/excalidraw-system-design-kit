@@ -1,0 +1,309 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Resource hints tell the browser what it will need before it discovers it: preload for critical files on this page, preconnect for a server you will call soon, and prefetch or Speculation Rules for the next page. Done well, navigations feel instant; done carelessly, they waste bandwidth.",
+ "like": "Like a waiter who lays the cutlery and pours water before you order, and quietly preheats the dessert when you glance at the menu's last page.",
+ "why": [
+  "Critical files (hero image, font, key chunk) start downloading earlier, helping LCP",
+  "The next click can feel instant because its HTML or chunk is already fetched",
+  "Early connection setup removes DNS, TCP and TLS wait for third-party origins"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 404,
+  "nodes": [
+   {
+    "id": "h",
+    "t": "HTML head|link hints, headers",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "doc"
+   },
+   {
+    "id": "pl",
+    "t": "preload|needed now, high priority",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "prefetch"
+   },
+   {
+    "id": "pc",
+    "t": "preconnect|early DNS + TCP + TLS",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "plug"
+   },
+   {
+    "id": "pf",
+    "t": "prefetch|next page, low priority",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "cache",
+    "i": "clock"
+   },
+   {
+    "id": "sr",
+    "t": "Speculation Rules|prefetch or prerender",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "prefetch"
+   },
+   {
+    "id": "rt",
+    "t": "SPA router|prefetch chunk on hover",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "router"
+   },
+   {
+    "id": "g",
+    "t": "Guardrails|Save-Data, analytics wait",
+    "x": 280,
+    "y": 300,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "shield"
+   }
+  ],
+  "edges": [
+   [
+    "h",
+    "pl",
+    "critical"
+   ],
+   [
+    "h",
+    "pc",
+    "third party"
+   ],
+   [
+    "h",
+    "sr",
+    "JSON rules"
+   ],
+   [
+    "sr",
+    "pf",
+    "fetch only"
+   ],
+   [
+    "rt",
+    "pf",
+    "chunk"
+   ],
+   [
+    "sr",
+    "g",
+    "limits"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Preload what this page needs",
+    "d": "Use <link rel=preload as=...> for a late-discovered, critical resource: the LCP image behind CSS or JS, a font, or a key script chunk. as sets priority and cache matching; fonts also need crossorigin.",
+    "hl": [
+     "pl"
+    ]
+   },
+   {
+    "t": "Preconnect to key origins",
+    "d": "rel=preconnect starts DNS, TCP and TLS for an origin you will use soon (image CDN, API, font host). Do it for only a few origins; connections idle for about 10 seconds are closed.",
+    "hl": [
+     "pc"
+    ]
+   },
+   {
+    "t": "Prefetch the likely next page",
+    "d": "rel=prefetch fetches at low priority for a future navigation. In a SPA, the router prefetches the next route chunk when a link is hovered or enters the viewport.",
+    "hl": [
+     "pf",
+     "rt"
+    ]
+   },
+   {
+    "t": "Speculate with rules",
+    "d": "A script type=speculationrules block (or Speculation-Rules header) asks Chrome to prefetch or prerender URLs. Prerender renders the page in a hidden tab, so activation is near-instant.",
+    "hl": [
+     "sr"
+    ]
+   },
+   {
+    "t": "Choose eagerness",
+    "d": "immediate fires at once, eager on slight hover, moderate after about 200 ms hover, conservative on pointer down. Pick moderate for most links to avoid waste.",
+    "hl": [
+     "sr"
+    ]
+   },
+   {
+    "t": "Add guardrails",
+    "d": "Defer analytics and side effects until prerender activation (document.prerendering, prerenderingchange), skip Save-Data users, and avoid prefetching logout or add-to-cart URLs.",
+    "hl": [
+     "g"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "About 200 ms",
+   "l": "Hover time before a moderate-eagerness speculation fires on desktop",
+   "s": "https://developer.chrome.com/docs/web-platform/prerender-pages"
+  },
+  {
+   "v": "2 at a time",
+   "l": "Chrome's limit for conservative, moderate and eager speculations (oldest cancelled first); immediate allows 50 prefetches and 10 prerenders",
+   "s": "https://developer.chrome.com/docs/web-platform/prerender-pages"
+  },
+  {
+   "v": "About 3 s",
+   "l": "After load, Chrome warns in the console about a preload that was not used",
+   "s": "https://web.dev/articles/preload-critical-assets"
+  },
+  {
+   "v": "20 to 120 ms",
+   "l": "Typical cost of a DNS lookup that dns-prefetch can save",
+   "s": "https://web.dev/articles/preconnect-and-dns-prefetch"
+  }
+ ],
+ "tool": "Speculation Rules, link rel preload/preconnect/prefetch, framework Link prefetch",
+ "choices": [
+  {
+   "t": "preload or fetchpriority",
+   "d": "If the LCP image is already in the HTML, fetchpriority=high is enough. Preload is for resources the parser cannot see early (CSS backgrounds, fonts, JS-injected images)."
+  },
+  {
+   "t": "Prefetch or prerender",
+   "d": "Prefetch fetches the document only (cheap, safe). Prerender also runs the page in a hidden tab (instant, but costs CPU, memory and may fire side effects). Start with prefetch."
+  },
+  {
+   "t": "Eagerness level",
+   "d": "Eager is aggressive and wasteful; conservative is safest but gives less head start. Moderate (hover) is the common balance."
+  },
+  {
+   "t": "Speculation Rules or router prefetch",
+   "d": "Speculation Rules cover full-page navigations in Chrome and Edge only, not SPA route changes. A SPA needs router-level prefetch of its route chunk and data."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-bundler-code-splitting-vite-webpack-rollup-esbuild-tree-shaking-dynamic-import-lazy-chunks-frontend",
+   "why": "What you prefetch in a SPA: the next route's lazy chunk"
+  },
+  {
+   "slug": "fe-streaming-ssr-suspense-streaming-html-suspense-boundaries-ttfb-progressive-rendering-frontend",
+   "why": "Faster first byte and progressive HTML reduce the need to guess the next page"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Wasted bandwidth",
+   "d": "Too many preloads or aggressive speculation fetch things the user never uses.",
+   "see": "Console warning about unused preload; high data use",
+   "fix": "Preload only the few critical files; use moderate eagerness; respect Save-Data"
+  },
+  {
+   "t": "Double download",
+   "d": "Preload without the right as or crossorigin means the browser fetches the file twice.",
+   "see": "Same URL requested twice in the network tab",
+   "fix": "Set as correctly; add crossorigin for fonts"
+  },
+  {
+   "t": "Inflated analytics or side effects",
+   "d": "A prerendered page fires page-view tracking or actions before the user visits.",
+   "see": "Phantom page views in analytics",
+   "fix": "Wait for document.prerendering to end; keep prefetched URLs side-effect free"
+  }
+ ],
+ "say": [
+  "I preload only what the parser can't discover early, such as the LCP image behind CSS or a font, and preconnect to the image CDN.",
+  "For navigation I use Speculation Rules with moderate eagerness: prefetch first, prerender only for high-confidence links, and I keep GET URLs side-effect free.",
+  "In the SPA, the router prefetches the next route chunk on hover or when the link enters the viewport."
+ ],
+ "followups": [
+  {
+   "q": "What is the risk of prerendering?",
+   "a": "It spends CPU, memory and bandwidth, and runs page code before the user arrives. Analytics and side effects must wait for activation, and the browser treats it as a hint it may ignore."
+  },
+  {
+   "q": "preload versus prefetch?",
+   "a": "Preload is a mandatory, high-priority fetch for the current page. Prefetch is an optional, low-priority fetch for a future navigation."
+  }
+ ],
+ "today": "Speculation Rules are the modern way to prefetch and prerender whole pages in Chromium browsers (Firefox support is partial, Safari has it behind a flag), with eagerness levels and document rules. Preload, preconnect and fetchpriority remain the toolkit for the current page.",
+ "sources": [
+  {
+   "t": "Chrome for Developers: Prerender pages and Speculation Rules",
+   "u": "https://developer.chrome.com/docs/web-platform/prerender-pages"
+  },
+  {
+   "t": "web.dev: Preload critical assets",
+   "u": "https://web.dev/articles/preload-critical-assets"
+  },
+  {
+   "t": "web.dev: Preconnect and dns-prefetch",
+   "u": "https://web.dev/articles/preconnect-and-dns-prefetch"
+  },
+  {
+   "t": "MDN: rel=preload",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel/preload"
+  },
+  {
+   "t": "webpack: Prefetching and preloading",
+   "u": "https://webpack.js.org/guides/code-splitting/"
+  },
+  {
+   "t": "web.dev: Fetch Priority API",
+   "u": "https://web.dev/articles/fetch-priority"
+  }
+ ],
+ "check": [
+  {
+   "q": "When is preload the right tool?",
+   "a": "A critical resource the browser discovers late (a font, or an image set in CSS)",
+   "d": [
+    "Every image on the page",
+    "A link the user might click",
+    "An analytics script"
+   ],
+   "why": "Preload is mandatory and high priority, so keep it for a few critical late-discovered files."
+  },
+  {
+   "q": "What does rel=preconnect do?",
+   "a": "Starts DNS, TCP and TLS to an origin early",
+   "d": [
+    "Downloads the whole origin",
+    "Caches the HTML",
+    "Blocks rendering"
+   ],
+   "why": "It removes connection setup time from later requests to that origin."
+  },
+  {
+   "q": "A downside of prerendering a page?",
+   "a": "It uses CPU and memory and can run side effects before the user visits",
+   "d": [
+    "It makes the current page slower to scroll",
+    "It only works for images",
+    "It needs a service worker"
+   ],
+   "why": "Prerender runs the page in the background, so analytics and side effects must wait for activation."
+  }
+ ]
+}

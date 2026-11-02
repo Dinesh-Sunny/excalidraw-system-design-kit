@@ -1,0 +1,299 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Infinite scroll loads the next page of items automatically when the reader nears the end of the list. It combines an IntersectionObserver that watches a sentinel element with cursor-based pagination from the API.",
+ "like": "Like a conveyor belt of sushi: a new plate rolls out just before the last one runs out, so you never ask for it.",
+ "why": [
+  "Readers keep scrolling with no clicks or page reloads",
+  "Only the first page is fetched up front, so the initial load is small",
+  "Cursors keep the feed stable even when new items arrive"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 404,
+  "nodes": [
+   {
+    "id": "sen",
+    "t": "Sentinel|empty div at list end",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "eye"
+   },
+   {
+    "id": "io",
+    "t": "IntersectionObserver|rootMargin pre-load",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "infscroll"
+   },
+   {
+    "id": "q",
+    "t": "Infinite query|pages + next cursor",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "cache",
+    "i": "querycache"
+   },
+   {
+    "id": "api",
+    "t": "Paged API|limit + cursor",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "server"
+   },
+   {
+    "id": "l",
+    "t": "Feed list|append, dedupe by id",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "grid"
+   },
+   {
+    "id": "v",
+    "t": "Virtualize|cap DOM size",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "virtual"
+   },
+   {
+    "id": "fb",
+    "t": "Load-more button|fallback, a11y",
+    "x": 280,
+    "y": 300,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "check"
+   }
+  ],
+  "edges": [
+   [
+    "sen",
+    "io",
+    "observe"
+   ],
+   [
+    "io",
+    "q",
+    "fetchNext"
+   ],
+   [
+    "q",
+    "api",
+    "after=cursor"
+   ],
+   [
+    "api",
+    "q",
+    "items + next"
+   ],
+   [
+    "q",
+    "l",
+    "pages"
+   ],
+   [
+    "l",
+    "v",
+    "long feed"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Render page one",
+    "d": "Fetch the first page with a limit (for example 20 items) and render it. The response includes a cursor that points to where the next page starts.",
+    "hl": [
+     "api",
+     "l"
+    ]
+   },
+   {
+    "t": "Watch a sentinel",
+    "d": "Place a small empty element after the last item and observe it with IntersectionObserver. No scroll listener or throttling is needed.",
+    "hl": [
+     "sen",
+     "io"
+    ]
+   },
+   {
+    "t": "Trigger early",
+    "d": "Set rootMargin (for example '400px 0px') so the callback fires before the sentinel reaches the screen, and the next page arrives before the reader hits the end.",
+    "hl": [
+     "io"
+    ]
+   },
+   {
+    "t": "Fetch with the cursor",
+    "d": "Call fetchNextPage; the query library sends after=cursor. Guard against double-firing by checking isFetching and hasNextPage.",
+    "hl": [
+     "q",
+     "api"
+    ]
+   },
+   {
+    "t": "Append and dedupe",
+    "d": "Add the new page to the list, de-duplicating by item id, since new items may shift data between pages.",
+    "hl": [
+     "l"
+    ]
+   },
+   {
+    "t": "Keep memory and focus sane",
+    "d": "Virtualize long feeds or cap stored pages, restore scroll position on back navigation, and offer a Load more button so keyboard users and the footer stay reachable.",
+    "hl": [
+     "v",
+     "fb"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "1 observer, 0 scroll listeners",
+   "l": "IntersectionObserver reports when a target crosses a threshold, with no per-scroll callback; rootMargin can trigger before it is visible",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver"
+  },
+  {
+   "v": "maxPages: 3",
+   "l": "TanStack Query's example cap on pages kept in memory (also limits what is refetched)",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+  },
+  {
+   "v": "First fetch, then one per page",
+   "l": "A stale infinite query refetches pages one at a time from the first, to avoid stale cursors",
+   "s": "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+  }
+ ],
+ "tool": "IntersectionObserver, TanStack Query useInfiniteQuery",
+ "choices": [
+  {
+   "t": "Cursor or offset pagination",
+   "d": "Offset (page=3) breaks when items are inserted: you see duplicates or skip rows. A cursor marks a point in the list, so it stays stable, and the server can change how it paginates. GraphQL's connection spec uses cursors."
+  },
+  {
+   "t": "Auto-load or Load more button",
+   "d": "Auto-load feels smooth for feeds. A button is better when the footer matters, for keyboard and screen reader users, and for pages people want to bookmark."
+  },
+  {
+   "t": "Memory strategy",
+   "d": "Keep all pages and virtualize, or cap with maxPages and refetch on scroll back. Pick based on how far users really scroll."
+  },
+  {
+   "t": "Position restore",
+   "d": "Store the scroll offset and the cursor in history state or the query cache so Back returns to the same spot, not the top."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-virtualized-list-windowing-react-window-tanstack-virtual-large-lists-dom-nodes-frontend",
+   "why": "Pair with infinite scroll so the DOM does not grow with every page"
+  },
+  {
+   "slug": "fe-url-state-query-params-search-params-deep-link-shareable-filters-frontend",
+   "why": "Numbered pagination in the URL is linkable and keeps the footer reachable"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Duplicate or missing items",
+   "d": "Offset pagination shifts when new items are inserted at the top.",
+   "see": "The same post shows twice, or one is skipped",
+   "fix": "Use cursor pagination and dedupe by id on the client"
+  },
+  {
+   "t": "Fetch fires repeatedly",
+   "d": "The sentinel stays visible after a short page, or the observer is re-created on each render.",
+   "see": "Network panel shows a burst of identical requests",
+   "fix": "Check isFetching and hasNextPage, observe once, move the sentinel after the new items"
+  },
+  {
+   "t": "Back button resets the feed",
+   "d": "The list state is lost on navigation.",
+   "see": "User returns to the top after opening an item",
+   "fix": "Cache pages, restore scroll offset, and keep the cursor in router state"
+  }
+ ],
+ "say": [
+  "I use cursor pagination so the feed stays correct when new items arrive, and an IntersectionObserver on a sentinel with a rootMargin so the next page is already loading before the reader reaches the end.",
+  "The pages live in an infinite query cache, deduped by id, and I virtualize or cap pages so memory and DOM do not grow forever.",
+  "I keep a Load more button as a fallback because auto-loading hides the footer and is awkward for keyboard users."
+ ],
+ "followups": [
+  {
+   "q": "Why not a scroll event listener?",
+   "a": "It fires constantly and often forces layout when you measure position. IntersectionObserver is asynchronous and fires only when thresholds are crossed, so it is cheaper and needs no throttling."
+  },
+  {
+   "q": "How do you handle new items arriving at the top?",
+   "a": "Do not insert them under the reader. Show a 'new posts' pill, and merge on click. The cursor for older pages stays valid."
+  }
+ ],
+ "today": "TanStack Query's infinite queries, IntersectionObserver and cursor-based connections (Relay spec) are the standard stack. Pair with virtualization or maxPages for long feeds, and keep a visible Load more fallback for accessibility.",
+ "sources": [
+  {
+   "t": "MDN: IntersectionObserver",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver"
+  },
+  {
+   "t": "TanStack Query: Infinite queries",
+   "u": "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+  },
+  {
+   "t": "GraphQL: Pagination",
+   "u": "https://graphql.org/learn/pagination/"
+  },
+  {
+   "t": "web.dev: Virtualize large lists",
+   "u": "https://web.dev/articles/virtualize-long-lists-react-window"
+  }
+ ],
+ "check": [
+  {
+   "q": "Why is cursor pagination better than offset for feeds?",
+   "a": "It stays stable when items are inserted",
+   "d": [
+    "It is always faster to implement",
+    "It needs no API",
+    "It sends the whole feed"
+   ],
+   "why": "A cursor marks a position in the data, so inserts do not shift later pages."
+  },
+  {
+   "q": "What triggers the next page in a modern implementation?",
+   "a": "IntersectionObserver on a sentinel near the end",
+   "d": [
+    "A scroll listener on window with no throttle",
+    "A timer every second",
+    "A page refresh"
+   ],
+   "why": "The observer fires only when the sentinel crosses the threshold, with no per-scroll work."
+  },
+  {
+   "q": "What does rootMargin do?",
+   "a": "Starts loading before the sentinel is visible",
+   "d": [
+    "Changes the page margin in CSS",
+    "Limits the number of items",
+    "Sets the cache lifetime"
+   ],
+   "why": "It grows the root's bounding box, so the callback fires early."
+  }
+ ]
+}

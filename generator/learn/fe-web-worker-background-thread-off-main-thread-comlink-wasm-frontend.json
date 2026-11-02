@@ -1,0 +1,273 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A Web Worker runs JavaScript on a separate background thread, so heavy work such as parsing, search or image processing cannot freeze the page. The page and the worker talk by passing messages, and neither can touch the other's variables or the DOM.",
+ "like": "Like handing a big marking pile to a teaching assistant in another room: you keep talking to the class while they work, and you pass papers back and forth through a slot in the door.",
+ "why": [
+  "Keeps scrolling, typing and animations smooth during heavy computation",
+  "Helps Interaction to Next Paint (INP) by avoiding long tasks",
+  "Pairs with WebAssembly for CPU-heavy libraries"
+ ],
+ "inside": {
+  "nodes": [
+   {
+    "id": "main",
+    "t": "Main thread|UI + input",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "cl",
+    "t": "Comlink|call it like a function",
+    "x": 0,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "plug"
+   },
+   {
+    "id": "msg",
+    "t": "postMessage|copy or transfer",
+    "x": 275,
+    "y": 105,
+    "w": 170,
+    "h": 86,
+    "c": "msg",
+    "i": "channels"
+   },
+   {
+    "id": "wk",
+    "t": "Dedicated worker|background thread",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "webworker"
+   },
+   {
+    "id": "wasm",
+    "t": "WASM module|heavy compute",
+    "x": 550,
+    "y": 190,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "chip"
+   },
+   {
+    "id": "buf",
+    "t": "Transferred buffer|zero-copy move",
+    "x": 275,
+    "y": 275,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "ram"
+   }
+  ],
+  "edges": [
+   [
+    "main",
+    "cl",
+    "await call"
+   ],
+   [
+    "cl",
+    "msg",
+    "wraps"
+   ],
+   [
+    "msg",
+    "wk",
+    "structured clone"
+   ],
+   [
+    "wk",
+    "wasm",
+    "runs"
+   ],
+   [
+    "buf",
+    "msg",
+    "transfer, not copy"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Spot the long task",
+    "d": "Any task over 50 ms is a long task: the browser cannot handle taps or typing until it ends. That hurts INP.",
+    "hl": [
+     "main"
+    ]
+   },
+   {
+    "t": "Start a worker",
+    "d": "new Worker(new URL('./w.js', import.meta.url), {type:'module'}) is the pattern bundlers support. The worker has its own global scope and no DOM.",
+    "hl": [
+     "main",
+     "wk"
+    ]
+   },
+   {
+    "t": "Pass messages",
+    "d": "postMessage copies data with the structured clone algorithm. The worker replies the same way and the main thread updates the DOM.",
+    "hl": [
+     "msg",
+     "wk"
+    ]
+   },
+   {
+    "t": "Transfer big data",
+    "d": "Pass an ArrayBuffer as a transferable and ownership moves with no copy. The sender can no longer use it.",
+    "hl": [
+     "buf",
+     "msg"
+    ]
+   },
+   {
+    "t": "Make it feel like a function",
+    "d": "Comlink wraps postMessage in a proxy, so you write await worker.search(query). Call terminate() when finished.",
+    "hl": [
+     "cl",
+     "wk",
+     "wasm"
+    ]
+   }
+  ],
+  "w": 720,
+  "h": 385
+ },
+ "numbers": [
+  {
+   "v": "50 ms",
+   "l": "a task longer than this is a long task that blocks the main thread",
+   "s": "https://web.dev/articles/optimize-long-tasks"
+  },
+  {
+   "v": "1.1 kB",
+   "l": "size of Comlink (brotli), the helper that hides postMessage",
+   "s": "https://github.com/GoogleChromeLabs/comlink"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Worker or just yield",
+   "d": "For work that can be split, yield to the main thread with scheduler.yield or small chunks. Use a worker when one block is truly heavy, such as parsing a large file or a search index."
+  },
+  {
+   "t": "Copy, transfer or share",
+   "d": "Messages are copied by default. Transferables move large buffers with no copy. SharedArrayBuffer shares memory but MDN warns of determinism and security concerns."
+  },
+  {
+   "t": "Raw postMessage or Comlink",
+   "d": "Raw messages are fine for one or two message types. Comlink gives an async function-call style with exceptions carried across, and Comlink.proxy for callbacks."
+  },
+  {
+   "t": "Dedicated or shared worker",
+   "d": "A dedicated worker serves one script. A shared worker serves many tabs through ports, useful for one shared connection."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-core-web-vitals-lcp-inp-cls-performance-metrics-budget-lighthouse-ttfb-frontend",
+   "why": "To measure whether long tasks hurt INP before adding a worker"
+  },
+  {
+   "slug": "fe-service-worker-pwa-offline-cache-storage-fetch-interception-workbox-push-frontend",
+   "why": "A different kind of worker: a network proxy that handles caching and push, not computation"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Costly copying",
+   "d": "Large objects are structured-cloned on every message.",
+   "see": "The worker is no faster than the main thread, or the page still janks",
+   "fix": "Transfer ArrayBuffers, send smaller messages, or keep the data inside the worker"
+  },
+  {
+   "t": "Not everything crosses",
+   "d": "Functions and DOM nodes cannot be cloned, and the worker has no DOM access.",
+   "see": "DataCloneError or missing window and document",
+   "fix": "Send plain data, let the main thread touch the DOM, and use Comlink.proxy for callbacks"
+  },
+  {
+   "t": "Leaked workers",
+   "d": "A worker started per component is never stopped.",
+   "see": "Memory and CPU grow as the user navigates",
+   "fix": "Reuse one worker or a small pool and call terminate() on cleanup"
+  }
+ ],
+ "say": [
+  "If a task goes over 50 ms and blocks input, I move it to a Web Worker so INP stays good, and the main thread only renders results.",
+  "I transfer big buffers instead of cloning them, and use Comlink so the worker reads like an async function.",
+  "Workers have no DOM, so they return data and the main thread updates the UI; I reuse one worker and terminate it when done."
+ ],
+ "followups": [
+  {
+   "q": "Why can't a worker touch the DOM?",
+   "a": "The DOM is not thread-safe. Workers run on a separate thread, so they only exchange messages, which also makes concurrency bugs hard to create."
+  },
+  {
+   "q": "What is a transferable object?",
+   "a": "A resource such as an ArrayBuffer whose ownership moves to the other thread with no copy. The sender's reference becomes unusable."
+  },
+  {
+   "q": "Does a worker inherit my CSP?",
+   "a": "No, except for data: and blob: workers. Set a Content-Security-Policy header on the worker script itself."
+  }
+ ],
+ "today": "Workers remain the way to get real parallelism in the browser, now often paired with WebAssembly and bundler-friendly module workers. Long-task guidance on web.dev says to do less work per task and yield to the main thread, using workers for the heavy parts.",
+ "check": [
+  {
+   "q": "How long must a task run to count as a long task?",
+   "a": "More than 50 ms",
+   "d": [
+    "More than 1 ms",
+    "More than 1 second",
+    "More than 5 seconds"
+   ],
+   "why": "Over 50 ms the browser cannot respond to input until it ends."
+  },
+  {
+   "q": "You post a 32 MB ArrayBuffer to a worker with the transfer list. What happens to your copy?",
+   "a": "It becomes unusable (ownership moved)",
+   "d": [
+    "It is duplicated",
+    "It is shared and writable by both",
+    "It is compressed"
+   ],
+   "why": "Transfer moves the buffer with no copy; the original is cleared."
+  },
+  {
+   "q": "Which can a dedicated worker NOT do?",
+   "a": "Change the DOM directly",
+   "d": [
+    "Call fetch()",
+    "Use IndexedDB",
+    "Open a WebSocket"
+   ],
+   "why": "Workers have no DOM access; they can use fetch, IndexedDB and WebSockets."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: Using Web Workers",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers"
+  },
+  {
+   "t": "web.dev: Optimize long tasks",
+   "u": "https://web.dev/articles/optimize-long-tasks"
+  },
+  {
+   "t": "GoogleChromeLabs/comlink",
+   "u": "https://github.com/GoogleChromeLabs/comlink"
+  }
+ ]
+}

@@ -1,0 +1,292 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Micro-frontends split a large web app into independently built and deployed pieces, owned by different teams, that a host (container) app composes into one page at runtime. Module Federation is a popular way to do this: each build exposes modules and the host loads them from remote URLs when needed.",
+ "like": "Like a shopping mall: each shop is run by its own team and can refit its shop overnight, while the mall provides the entrance, signs and shared corridors.",
+ "why": [
+  "Teams ship on their own schedule without waiting for a big release",
+  "Large apps can be upgraded or rewritten piece by piece",
+  "Clear ownership: each team owns a vertical slice end to end"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 290,
+  "nodes": [
+   {
+    "id": "host",
+    "t": "Host / container|shell, router, auth",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "mfe"
+   },
+   {
+    "id": "rA",
+    "t": "Remote A: Catalog|own repo and deploy",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "spa"
+   },
+   {
+    "id": "rB",
+    "t": "Remote B: Checkout|own repo and deploy",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "spa"
+   },
+   {
+    "id": "shared",
+    "t": "Shared scope|react as singleton",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "cache",
+    "i": "cache"
+   },
+   {
+    "id": "cdn",
+    "t": "CDN|remoteEntry + chunks",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "globe"
+   },
+   {
+    "id": "ds",
+    "t": "Design system|shared UI primitives",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "dsys"
+   }
+  ],
+  "edges": [
+   [
+    "host",
+    "rA",
+    "load at runtime"
+   ],
+   [
+    "host",
+    "rB",
+    "load at runtime"
+   ],
+   [
+    "rA",
+    "shared",
+    "provide / consume"
+   ],
+   [
+    "rB",
+    "shared",
+    "provide / consume"
+   ],
+   [
+    "rA",
+    "cdn",
+    "served from"
+   ],
+   [
+    "host",
+    "ds",
+    "uses"
+   ],
+   [
+    "rB",
+    "ds",
+    "uses"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Split by business area",
+    "d": "Each team owns a vertical slice - say catalog, checkout, account - with its own repo, pipeline and release. Martin Fowler describes teams owning vertical slices of functionality, often one page each, from idea to production.",
+    "hl": [
+     "rA",
+     "rB"
+    ]
+   },
+   {
+    "t": "The host composes at runtime",
+    "d": "The host owns the layout, routing and authentication. It lists remotes as name@url and loads a remote's entry script only when its route is opened.",
+    "hl": [
+     "host",
+     "rA",
+     "rB",
+     "cdn"
+    ]
+   },
+   {
+    "t": "Expose and import modules",
+    "d": "A remote declares what it exposes (keys start with ./, such as ./Button). The host imports app1/Button as a normal async import. Loading is always asynchronous.",
+    "hl": [
+     "host",
+     "rA"
+    ]
+   },
+   {
+    "t": "Share dependencies carefully",
+    "d": "Both sides register React in a share scope. Without singleton set, each side may load its own copy. Singleton makes the higher version win and warns the lower side.",
+    "hl": [
+     "rA",
+     "rB",
+     "shared"
+    ]
+   },
+   {
+    "t": "Deploy independently",
+    "d": "A team publishes new chunks and a new remote entry; the host picks them up on next load without being rebuilt. Contracts - routes, events, props - must stay backwards compatible.",
+    "hl": [
+     "rB",
+     "cdn",
+     "host"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "false",
+   "l": "default of Module Federation's singleton option, so each side loads its own copy of a shared library unless you turn it on",
+   "s": "https://module-federation.io/configure/shared.html"
+  },
+  {
+   "v": "2 steps",
+   "l": "to use a remote module: load it asynchronously, then evaluate it; remotes can never be used without a chunk load",
+   "s": "https://webpack.js.org/concepts/module-federation/"
+  },
+  {
+   "v": "5 ways",
+   "l": "to integrate micro-frontends in Fowler's article: server-side templates, build-time packages, iframes, JavaScript and Web Components",
+   "s": "https://martinfowler.com/articles/micro-frontends.html"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Do you need it at all",
+   "d": "It solves an organisation problem - many teams, one product - not a technical one. For one or two teams a modular monolith in a monorepo is simpler and lighter."
+  },
+  {
+   "t": "Integration style",
+   "d": "Run-time JavaScript or Module Federation is the usual default. Iframes give the strongest isolation at the cost of routing, deep linking and responsiveness. Build-time packaging forces lockstep releases and is advised against."
+  },
+  {
+   "t": "Shared dependencies",
+   "d": "Sharing React as a singleton avoids duplicate downloads and two Reacts on one page, but ties teams to compatible version ranges. Mismatches log warnings and can break."
+  },
+  {
+   "t": "Styles and shared UI",
+   "d": "Isolate CSS with naming conventions, CSS modules or Shadow DOM, and share only generic primitives through a design system, not domain logic."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-design-system-component-library-design-tokens-storybook-theming-ui-kit-frontend",
+   "why": "One consistent UI across teams without separate deployments"
+  },
+  {
+   "slug": "fe-bundler-code-splitting-vite-webpack-rollup-esbuild-tree-shaking-dynamic-import-lazy-chunks-frontend",
+   "why": "A monorepo with route-level code splitting is often enough"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Duplicate or conflicting React",
+   "d": "Remotes bundle their own copy or share incompatible versions.",
+   "see": "Hook errors, larger downloads, console warnings about versions",
+   "fix": "Configure shared with singleton and a requiredVersion range; set a unique name for each build"
+  },
+  {
+   "t": "Remote down or incompatible",
+   "d": "A remote's URL fails or a new release changes an exposed module.",
+   "see": "Blank region or crash in the host",
+   "fix": "Error boundary and fallback UI around each remote, versioned contracts, canary rollout"
+  },
+  {
+   "t": "Inconsistent look and feel",
+   "d": "Each team solves styling its own way.",
+   "see": "Visual drift and CSS collisions",
+   "fix": "Shared design system and tokens, CSS scoping, regular integration in a production-like environment"
+  }
+ ],
+ "say": [
+  "I would only reach for micro-frontends when several teams need to release independently; the host owns shell, routing and auth, and each team ships a vertical slice.",
+  "With Module Federation the host loads remote entries at runtime, and I share React as a singleton while giving each build a unique name and wrapping every remote in an error boundary.",
+  "Shared UI comes from a design system, and the contracts between slices - routes, events, props - are versioned and tested so teams can deploy without coordination."
+ ],
+ "followups": [
+  {
+   "q": "How do remotes communicate?",
+   "a": "Keep it minimal: custom events, props from the host, or the URL. Treat routes and message formats as contracts and verify them with contract tests."
+  },
+  {
+   "q": "What is the biggest downside?",
+   "a": "Payload size and operational complexity: duplicated dependencies, more pipelines and domains, and consistency between teams all need strong automation and governance."
+  }
+ ],
+ "today": "Module Federation 2.0 adds a manifest, a runtime and a plugin system, works with Webpack and Rspack, and lists DevTools, router and SSR support on its roadmap; Vercel also offers a microfrontends configuration at the platform level.",
+ "check": [
+  {
+   "q": "What is the main reason to adopt micro-frontends?",
+   "a": "Independent delivery by multiple teams",
+   "d": [
+    "Smaller bundles by default",
+    "Avoiding a design system",
+    "Better SEO"
+   ],
+   "why": "It is an organisational scaling pattern; bundle size can get worse."
+  },
+  {
+   "q": "Without singleton enabled, two builds with different React versions will...",
+   "a": "Each load their own copy",
+   "d": [
+    "Fail to compile",
+    "Share the lowest version",
+    "Use the host's version silently"
+   ],
+   "why": "singleton defaults to false, so versions are not forced into one."
+  },
+  {
+   "q": "Which integration approach does Fowler advise against?",
+   "a": "Build-time integration as packages",
+   "d": [
+    "Run-time via JavaScript",
+    "Web Components",
+    "Server-side templates"
+   ],
+   "why": "Publishing each piece as a package forces lockstep releases and defeats independence."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Martin Fowler: Micro Frontends",
+   "u": "https://martinfowler.com/articles/micro-frontends.html"
+  },
+  {
+   "t": "Module Federation docs",
+   "u": "https://module-federation.io/guide/start/index.html"
+  },
+  {
+   "t": "Module Federation: shared",
+   "u": "https://module-federation.io/configure/shared.html"
+  },
+  {
+   "t": "webpack: Module Federation concepts",
+   "u": "https://webpack.js.org/concepts/module-federation/"
+  }
+ ]
+}

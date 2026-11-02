@@ -1,0 +1,304 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Debounce waits until events stop (the user pauses typing) and then runs once; throttle runs at most once per time window while events keep coming (scroll, resize). Both stop a flood of events from causing a flood of work or network requests.",
+ "like": "Debounce is the lift door that stays open while people keep stepping in; throttle is the turnstile that lets one person through every few seconds.",
+ "why": [
+  "A typeahead sends one request per pause, not one per keystroke",
+  "Scroll and resize handlers don't block the main thread on every event",
+  "Fewer long tasks keeps interactions responsive (better INP)"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 404,
+  "nodes": [
+   {
+    "id": "e",
+    "t": "Events|keystrokes, scroll, resize",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "d",
+    "t": "Debounce|run after quiet period",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "debounce"
+   },
+   {
+    "id": "t",
+    "t": "Throttle|at most once per interval",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "debounce"
+   },
+   {
+    "id": "r",
+    "t": "requestAnimationFrame|once per frame",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "clock"
+   },
+   {
+    "id": "a",
+    "t": "AbortController|cancel stale request",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "scissors"
+   },
+   {
+    "id": "df",
+    "t": "useDeferredValue|lag heavy renders",
+    "x": 0,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "layers"
+   },
+   {
+    "id": "api",
+    "t": "API / handler|runs far less often",
+    "x": 280,
+    "y": 300,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "e",
+    "d",
+    "typing"
+   ],
+   [
+    "e",
+    "t",
+    "scroll"
+   ],
+   [
+    "t",
+    "r",
+    "visual"
+   ],
+   [
+    "d",
+    "a",
+    "new query"
+   ],
+   [
+    "d",
+    "api",
+    "one call"
+   ],
+   [
+    "e",
+    "df",
+    "render work"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Spot the burst",
+    "d": "Typing, scroll, resize, mousemove and drag fire many events per second. Work per event adds up: network calls, layout reads, big re-renders.",
+    "hl": [
+     "e"
+    ]
+   },
+   {
+    "t": "Debounce for 'final value'",
+    "d": "Reset a timer on each event; run only after the user pauses for N ms. Ideal for search-as-you-type, autosave and form validation where only the last value matters.",
+    "hl": [
+     "d"
+    ]
+   },
+   {
+    "t": "Throttle for 'steady updates'",
+    "d": "Run at most once every N ms during the burst, optionally on the leading and trailing edge. Ideal for scroll position, resize, drag and analytics pings.",
+    "hl": [
+     "t"
+    ]
+   },
+   {
+    "t": "Use a frame for visual work",
+    "d": "For visual updates, store the latest value in the handler and apply it in requestAnimationFrame, which runs once before each paint (about 60 times a second on a typical display).",
+    "hl": [
+     "r"
+    ]
+   },
+   {
+    "t": "Cancel the stale request",
+    "d": "Even after debouncing, an older response can arrive last. Use AbortController (or a query library) to cancel the previous request and ignore stale results.",
+    "hl": [
+     "a"
+    ]
+   },
+   {
+    "t": "Let React lag the render",
+    "d": "useDeferredValue keeps the input urgent and re-renders the heavy list in the background, interruptibly. It does not reduce network requests, so combine it with debouncing for fetches.",
+    "hl": [
+     "df",
+     "api"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "50 ms",
+   "l": "A task longer than this is a long task; heavy work per event pushes handlers past it",
+   "s": "https://web.dev/articles/optimize-long-tasks"
+  },
+  {
+   "v": "200 ms",
+   "l": "Good INP threshold at the 75th percentile - keep handlers short enough to meet it",
+   "s": "https://web.dev/articles/inp"
+  },
+  {
+   "v": "About 60 Hz",
+   "l": "Typical display refresh rate, so rAF runs about 60 times a second (higher on 120 or 144 Hz screens)",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame"
+  }
+ ],
+ "tool": "lodash, TanStack Pacer, RxJS, requestAnimationFrame, AbortController",
+ "choices": [
+  {
+   "t": "Debounce or throttle",
+   "d": "Debounce when only the final value matters (search, autosave). Throttle when you need updates during the action (scroll, drag, resize)."
+  },
+  {
+   "t": "Delay value and edge",
+   "d": "Short delay feels responsive but sends more requests; long delay feels laggy. Leading-edge runs immediately then ignores the rest; trailing-edge runs at the end. Pick by the UX, then measure."
+  },
+  {
+   "t": "Debounce, rAF or useDeferredValue",
+   "d": "Debounce/throttle limit how often you run (network, cheap logic). rAF aligns visual updates with paint. useDeferredValue adapts to device speed for render cost but does not cut requests."
+  },
+  {
+   "t": "Library or hand-rolled",
+   "d": "A tiny debounce is easy, but cancellation, leading/trailing, flush and cleanup on unmount are easy to get wrong. Use a tested helper and clean up in the effect."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-server-state-cache-tanstack-query-swr-stale-while-revalidate-dedupe-refetch-query-keys-frontend",
+   "why": "Query keys already dedupe and cache repeated searches"
+  },
+  {
+   "slug": "fe-api-client-retry-abort-fetch-wrapper-retry-backoff-abortcontroller-dedupe-interceptors-frontend",
+   "why": "Cancels in-flight requests when the input changes"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Stale response wins",
+   "d": "Request for 'ab' returns after the request for 'abc', so results are out of order.",
+   "see": "Results don't match the input",
+   "fix": "AbortController, or key results by query and ignore anything not current"
+  },
+  {
+   "t": "Debounced call after unmount",
+   "d": "The timer fires after the component is gone and updates dead state.",
+   "see": "Console warning or wrong data on the next page",
+   "fix": "Cancel the timer in the cleanup function"
+  },
+  {
+   "t": "Typing feels laggy",
+   "d": "Debounce delays the visible input update, not just the request.",
+   "see": "Characters appear late in the field",
+   "fix": "Keep the input controlled and instant; debounce only the side effect"
+  }
+ ],
+ "say": [
+  "I keep the input instant and debounce only the request, then abort the previous one, so a typeahead sends one call per pause and never shows out-of-order results.",
+  "For scroll and resize I throttle, or better, use IntersectionObserver or rAF, so handlers don't run more than once per frame.",
+  "If rendering is the bottleneck I reach for useDeferredValue, because it adapts to the device instead of using a fixed delay."
+ ],
+ "followups": [
+  {
+   "q": "Debounce versus useDeferredValue?",
+   "a": "Debounce adds a fixed delay and cuts requests. useDeferredValue has no fixed delay, is interruptible and helps slow renders, but still lets every keystroke fetch. They can be combined."
+  },
+  {
+   "q": "Why not a scroll listener?",
+   "a": "Scroll fires constantly and measuring layout inside it can force reflow. Prefer IntersectionObserver for visibility, CSS for sticky and scroll-snap, and rAF or throttle only when you truly need positions."
+  }
+ ],
+ "today": "Fixed-delay timers are still right for cutting network calls, but React's useDeferredValue and transitions handle render cost, and the platform gives better tools than scroll listeners (IntersectionObserver, CSS scroll-driven animations, scheduler.yield for long work). INP has made handler cost a headline metric.",
+ "sources": [
+  {
+   "t": "react.dev: useDeferredValue",
+   "u": "https://react.dev/reference/react/useDeferredValue"
+  },
+  {
+   "t": "MDN: requestAnimationFrame",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame"
+  },
+  {
+   "t": "web.dev: Debounce your input handlers",
+   "u": "https://web.dev/articles/debounce-your-input-handlers"
+  },
+  {
+   "t": "web.dev: Optimize long tasks",
+   "u": "https://web.dev/articles/optimize-long-tasks"
+  },
+  {
+   "t": "web.dev: Interaction to Next Paint",
+   "u": "https://web.dev/articles/inp"
+  },
+  {
+   "t": "MDN: IntersectionObserver",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver"
+  }
+ ],
+ "check": [
+  {
+   "q": "A search box should call the API only after the user pauses typing. Which technique?",
+   "a": "Debounce",
+   "d": [
+    "Throttle",
+    "Preload",
+    "Virtualize"
+   ],
+   "why": "Debounce waits for a quiet period and then runs once with the final value."
+  },
+  {
+   "q": "Which suits updating a header on scroll at a steady rate?",
+   "a": "Throttle (or rAF)",
+   "d": [
+    "Debounce with a 1 s delay",
+    "Preload",
+    "Cursor pagination"
+   ],
+   "why": "Throttle gives regular updates during the burst; debounce would wait until scrolling stops."
+  },
+  {
+   "q": "Why use AbortController with a debounced search?",
+   "a": "To cancel the previous in-flight request so stale results don't win",
+   "d": [
+    "To make the debounce shorter",
+    "To cache the response",
+    "To skip the API"
+   ],
+   "why": "Responses can return out of order; aborting avoids showing an old one."
+  }
+ ]
+}

@@ -1,0 +1,277 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Streaming server-side rendering sends HTML in chunks as each part of the page becomes ready, instead of waiting for the whole page. Suspense boundaries mark where the page can show a fallback and fill in real content later.",
+ "like": "Like a restaurant bringing the bread and starters straight away while the main course is still cooking, instead of serving everything at once at the end.",
+ "why": [
+  "Users see the page shell right away, so first paint no longer waits for the slowest query",
+  "Slow sections do not block fast ones - each boundary streams on its own",
+  "Hydration can start per section, keeping the page responsive sooner"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 290,
+  "nodes": [
+   {
+    "id": "b",
+    "t": "Browser|paints as bytes arrive",
+    "x": 0,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "srv",
+    "t": "Server render|React streams HTML",
+    "x": 280,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "svc",
+    "i": "ssr"
+   },
+   {
+    "id": "shell",
+    "t": "Static shell|layout + fallbacks first",
+    "x": 560,
+    "y": 20,
+    "w": 160,
+    "h": 84,
+    "c": "edge",
+    "i": "layers"
+   },
+   {
+    "id": "fast",
+    "t": "Fast section|data ready in ms",
+    "x": 560,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "slow",
+    "t": "Slow section|data ready later",
+    "x": 280,
+    "y": 160,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "dbreplica"
+   }
+  ],
+  "edges": [
+   [
+    "b",
+    "srv",
+    "GET /"
+   ],
+   [
+    "srv",
+    "shell",
+    "chunk 1"
+   ],
+   [
+    "srv",
+    "fast",
+    "chunk 2"
+   ],
+   [
+    "slow",
+    "srv",
+    "resolves later"
+   ],
+   [
+    "srv",
+    "b",
+    "swap fallback"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Send the shell immediately",
+    "d": "The server renders everything above the Suspense boundaries - layout, nav and fallback skeletons - and flushes it first. TTFB drops to the time to render that shell.",
+    "hl": [
+     "srv",
+     "shell"
+    ]
+   },
+   {
+    "t": "Browser starts working early",
+    "d": "Because the first chunk includes link and script tags, the browser fetches CSS, JS and fonts while the server is still waiting on data.",
+    "hl": [
+     "b",
+     "shell"
+    ]
+   },
+   {
+    "t": "Each boundary streams on its own",
+    "d": "When a boundary's data resolves, React sends its HTML plus a tiny inline script that swaps out the fallback. No JS bundle is needed for this swap.",
+    "hl": [
+     "srv",
+     "fast",
+     "slow"
+    ]
+   },
+   {
+    "t": "Hydrate selectively",
+    "d": "React hydrates boundaries independently and prioritises the one the user interacts with, so one slow region does not freeze the rest.",
+    "hl": [
+     "b",
+     "srv"
+    ]
+   },
+   {
+    "t": "Mind the status code",
+    "d": "The first chunk fixes the HTTP status at 200. If something fails later, the nearest error boundary renders in place; a real 404 must be decided before streaming starts.",
+    "hl": [
+     "srv"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "300 ms",
+   "l": "React reveals suspended content at most once per 300 ms, so quick boundaries appear together",
+   "s": "https://react.dev/reference/react/Suspense"
+  },
+  {
+   "v": "1024 bytes",
+   "l": "Safari/WebKit buffers a streamed response until it exceeds this size - only matters for tiny demos",
+   "s": "https://nextjs.org/docs/app/guides/streaming"
+  },
+  {
+   "v": "0.8 s",
+   "l": "rough good TTFB; streaming lowers it to the time to render the shell",
+   "s": "https://web.dev/articles/ttfb"
+  },
+  {
+   "v": "200",
+   "l": "status code sent with the first chunk and unchangeable afterwards",
+   "s": "https://nextjs.org/docs/app/guides/streaming"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Where to put boundaries",
+   "d": "Wrap each independent slow region in its own Suspense, close to the data. One big boundary becomes a full-page skeleton and loses the benefit."
+  },
+  {
+   "t": "Keep LCP outside Suspense",
+   "d": "If the hero image or main heading is inside a boundary it cannot paint until the swap. Keep it in the static shell and preload the LCP image."
+  },
+  {
+   "t": "Skeletons that match size",
+   "d": "Fallbacks with the same dimensions as the final content prevent layout shift (CLS) when the swap happens."
+  },
+  {
+   "t": "Infrastructure must not buffer",
+   "d": "Reverse proxies (disable with X-Accel-Buffering: no), some CDNs, compression and serverless platforms can hold chunks back, wiping out the gain."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-react-server-components-rsc-server-components-use-client-server-actions-app-router-frontend",
+   "why": "Streaming is the delivery mechanism; RSC is how the server parts are written"
+  },
+  {
+   "slug": "fe-ssg-static-pages-static-site-generation-prerender-build-time-jamstack-astro-frontend",
+   "why": "If the page is the same for everyone, prebuild it and skip per-request rendering"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Streaming silently buffered",
+   "d": "A proxy, CDN or compression layer collects all chunks first.",
+   "see": "Page appears all at once; Network tab shows no staggered chunks",
+   "fix": "Disable proxy buffering, check CDN support, flush compression; verify with a stream-reading script"
+  },
+  {
+   "t": "LCP gets worse",
+   "d": "Hero content placed behind a Suspense boundary.",
+   "see": "LCP element appears only after a late swap",
+   "fix": "Render LCP content in the shell; preload the hero image"
+  },
+  {
+   "t": "Wrong status for missing pages",
+   "d": "notFound() fires after streaming began.",
+   "see": "Soft 404: status 200 with an error page",
+   "fix": "Check existence before any await or Suspense; Next.js adds noindex to streamed 404s as a fallback"
+  }
+ ],
+ "say": [
+  "I would stream: send the layout and skeletons immediately, then let each Suspense boundary fill in as its data resolves, so TTFB and first paint no longer depend on the slowest query.",
+  "I keep the LCP element out of Suspense, size the skeletons to avoid layout shift, and place a separate boundary around each independent data source.",
+  "I would also check that the proxy, CDN and compression do not buffer the response, because streaming only helps if chunks actually reach the browser."
+ ],
+ "followups": [
+  {
+   "q": "Does streaming hurt SEO?",
+   "a": "Streaming is still server-rendered HTML, so it does not hurt SEO by itself. Next.js resolves metadata before streaming for bots that only read static HTML, and uses noindex on streamed 404s."
+  },
+  {
+   "q": "How is this different from fetching in useEffect?",
+   "a": "Data fetched in an Effect does not trigger Suspense and starts only after JS runs. Streaming starts the work on the server during the first request, and the HTML arrives with the data already rendered."
+  }
+ ],
+ "today": "Frameworks now treat streaming as the default model: Next.js App Router streams around Suspense and loading.js automatically, and Cache Components prerenders a static shell at build time while dynamic parts stream in behind it.",
+ "check": [
+  {
+   "q": "What does the server send first in streaming SSR?",
+   "a": "The static shell with Suspense fallbacks",
+   "d": [
+    "The final HTML for the whole page",
+    "Only JSON data",
+    "The JS bundle alone"
+   ],
+   "why": "The shell lets the browser paint and start loading assets while slow data resolves."
+  },
+  {
+   "q": "Where should the hero image that is your LCP element go?",
+   "a": "Outside Suspense boundaries, in the shell",
+   "d": [
+    "Inside the slowest boundary",
+    "Behind a client-only effect",
+    "Loaded after hydration"
+   ],
+   "why": "Content inside a boundary can only paint after the swap, delaying LCP."
+  },
+  {
+   "q": "A page was found missing after streaming started. What status did the client get?",
+   "a": "200, because headers are already sent",
+   "d": [
+    "404 always",
+    "500",
+    "It changes to 404 automatically"
+   ],
+   "why": "The status is fixed by the first chunk; check before streaming to return a real 404."
+  }
+ ],
+ "sources": [
+  {
+   "t": "web.dev: Rendering on the Web",
+   "u": "https://web.dev/articles/rendering-on-the-web"
+  },
+  {
+   "t": "React: Suspense",
+   "u": "https://react.dev/reference/react/Suspense"
+  },
+  {
+   "t": "Next.js: Streaming guide",
+   "u": "https://nextjs.org/docs/app/guides/streaming"
+  },
+  {
+   "t": "Next.js: loading.js",
+   "u": "https://nextjs.org/docs/app/api-reference/file-conventions/loading"
+  },
+  {
+   "t": "web.dev: TTFB",
+   "u": "https://web.dev/articles/ttfb"
+  }
+ ]
+}
