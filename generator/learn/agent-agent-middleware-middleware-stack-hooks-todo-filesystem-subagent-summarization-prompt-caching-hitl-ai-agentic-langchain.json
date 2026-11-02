@@ -1,0 +1,322 @@
+{
+ "family": "agent",
+ "reviewed": "Nov 2026",
+ "what": "Middleware is code that hooks into every step of an agent's loop: before and after the model call, around each model call and around each tool call. Deep Agents is built from middleware: planning, files, sub-agents, summarization and approvals are each a middleware wrapped around one model loop.",
+ "like": "Like airport security lanes around a flight: every passenger (each model or tool call) passes the same checks in the same order, and any lane can stop, reroute or fix them.",
+ "why": [
+  "Add retries, limits, PII and approvals without touching the agent's prompt or tools",
+  "Each concern lives in one small, testable piece",
+  "Change the model's input or output at exactly the right moment"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "ba",
+    "t": "before_agent|once per run",
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "middleware"
+   },
+   {
+    "id": "bm",
+    "t": "before_model|each turn",
+    "x": 185,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "middleware"
+   },
+   {
+    "id": "wm",
+    "t": "wrap_model_call|retry, fallback, cache",
+    "x": 370,
+    "y": 0,
+    "w": 170,
+    "h": 84,
+    "c": "agent",
+    "i": "middleware"
+   },
+   {
+    "id": "m",
+    "t": "Model|one call",
+    "x": 560,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "ai",
+    "i": "sparkle"
+   },
+   {
+    "id": "am",
+    "t": "after_model|reverse order",
+    "x": 560,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "middleware"
+   },
+   {
+    "id": "wt",
+    "t": "wrap_tool_call|retry, limits, errors",
+    "x": 370,
+    "y": 170,
+    "w": 170,
+    "h": 84,
+    "c": "agent",
+    "i": "middleware"
+   },
+   {
+    "id": "t",
+    "t": "Tools|files, task, todos",
+    "x": 185,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "wrench"
+   },
+   {
+    "id": "aa",
+    "t": "after_agent|once, reverse",
+    "x": 560,
+    "y": 340,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "middleware"
+   }
+  ],
+  "edges": [
+   [
+    "ba",
+    "bm",
+    ""
+   ],
+   [
+    "bm",
+    "wm",
+    ""
+   ],
+   [
+    "wm",
+    "m",
+    "call"
+   ],
+   [
+    "m",
+    "am",
+    ""
+   ],
+   [
+    "am",
+    "wt",
+    "tool calls"
+   ],
+   [
+    "wt",
+    "t",
+    ""
+   ],
+   [
+    "t",
+    "bm",
+    "loop"
+   ],
+   [
+    "am",
+    "aa",
+    "done"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Start of the run",
+    "d": "before_agent runs once per invocation: load memory, check permissions, set up state.",
+    "hl": [
+     "ba"
+    ]
+   },
+   {
+    "t": "Before every model call",
+    "d": "before_model runs each turn, first middleware to last: trim or summarize history, inject todos, count calls.",
+    "hl": [
+     "bm"
+    ]
+   },
+   {
+    "t": "Around the model call",
+    "d": "wrap_model_call nests like functions (the first middleware is outermost). It can call the model zero, one or many times: retry, fall back to another model, use a cache or swap the model.",
+    "hl": [
+     "wm",
+     "m"
+    ]
+   },
+   {
+    "t": "After the model answers",
+    "d": "after_model runs last middleware to first: check the output, redact PII, or pause for a human with an interrupt.",
+    "hl": [
+     "am"
+    ]
+   },
+   {
+    "t": "Around every tool call",
+    "d": "wrap_tool_call wraps each tool: retry with backoff, cap calls, turn errors into messages the model can read. Then the loop goes back to before_model.",
+    "hl": [
+     "wt",
+     "t"
+    ]
+   },
+   {
+    "t": "End of the run",
+    "d": "When there are no more tool calls, after_agent runs once in reverse order, for cleanup, saving memory or a final check.",
+    "hl": [
+     "aa"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "6",
+   "l": "hooks: 4 node-style (before_agent, before_model, after_model, after_agent) and 2 wrap-style (wrap_model_call, wrap_tool_call)",
+   "s": "https://docs.langchain.com/oss/python/langchain/middleware/custom"
+  },
+  {
+   "v": "3",
+   "l": "jump_to targets: end, tools, model",
+   "s": "https://docs.langchain.com/oss/python/langchain/middleware/custom"
+  },
+  {
+   "v": "2",
+   "l": "default max_retries in ToolRetryMiddleware (backoff factor 2.0, max delay 60 s)",
+   "s": "https://docs.langchain.com/oss/python/langchain/middleware/built-in"
+  },
+  {
+   "v": "20",
+   "l": "messages kept by default when SummarizationMiddleware compresses history",
+   "s": "https://docs.langchain.com/oss/python/langchain/middleware/built-in"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Node hook or wrap hook",
+   "d": "Node hooks (before_model, after_model...) read and update state at a fixed point. Wrap hooks control the call itself, so retries, fallbacks, caching and short-circuits belong there."
+  },
+  {
+   "t": "Order of the stack",
+   "d": "before_* run in list order, after_* in reverse, and wraps nest with the first middleware outermost. Put limits and PII guards outside, retries closest to the model."
+  },
+  {
+   "t": "Built-in or custom",
+   "d": "Use built-ins for common jobs (Summarization, HumanInTheLoop, ModelCallLimit, ToolCallLimit, ToolRetry, ModelFallback, PII, ContextEditing). Write custom middleware for your domain rules, with its own state fields."
+  },
+  {
+   "t": "What Deep Agents adds",
+   "d": "FilesystemMiddleware (required: ls, read_file, write_file, edit_file), SubAgentMiddleware (task tool) and opt-in TodoListMiddleware (write_todos) turn a plain agent into a deep agent."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "agent-agent-harness-deep-agents-agent-sdk-framework-planning-subagents-filesystem-ai-agentic",
+   "why": "The whole harness picture, not just the hooks"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Endless loop",
+   "d": "The model keeps calling tools and never stops.",
+   "see": "Runs that hit time or cost limits",
+   "fix": "ModelCallLimitMiddleware and ToolCallLimitMiddleware with exit_behavior end or error"
+  },
+  {
+   "t": "Approval that never resumes",
+   "d": "HumanInTheLoopMiddleware pauses the run, but there is no checkpointer to resume from.",
+   "see": "Interrupts lost after a restart",
+   "fix": "Always pair interrupt_on with a checkpointer"
+  },
+  {
+   "t": "Wrong order",
+   "d": "A retry sits outside a call limit, so each retry counts against the limit, or PII is redacted after it was logged.",
+   "see": "Limits hit early, PII in traces",
+   "fix": "Order the list on purpose: guards outside, retries inside"
+  }
+ ],
+ "say": [
+  "I treat middleware as the harness: one model loop, and every concern as a hook around it.",
+  "Retries, fallbacks and caching go in wrap_model_call; limits, error handling and retries for tools go in wrap_tool_call.",
+  "Order matters: before hooks run in order, after hooks in reverse, and wraps nest, so I put guards on the outside."
+ ],
+ "followups": [
+  {
+   "q": "How would you stop a runaway agent?",
+   "a": "Model and tool call limits per run and per thread, plus a summarization trigger so the context never overflows."
+  },
+  {
+   "q": "How do you add an approval step for risky tools?",
+   "a": "HumanInTheLoopMiddleware with interrupt_on for those tools and a checkpointer, so the run pauses and resumes with approve, edit or reject."
+  },
+  {
+   "q": "Can middleware change the next step?",
+   "a": "Yes: a hook can jump_to end, tools or model if it declares can_jump_to."
+  }
+ ],
+ "today": "LangChain v1 agents and Deep Agents are both built on this middleware system; Deep Agents ships FilesystemMiddleware and SubAgentMiddleware, and task planning became opt-in in v0.7.",
+ "check": [
+  {
+   "q": "Which hook should hold a retry with model fallback?",
+   "a": "wrap_model_call",
+   "d": [
+    "before_agent",
+    "after_agent",
+    "before_model"
+   ],
+   "why": "Wrap hooks control the call itself and can call it again."
+  },
+  {
+   "q": "With middleware [m1, m2, m3], which after_model runs first?",
+   "a": "m3",
+   "d": [
+    "m1",
+    "m2",
+    "They run in parallel"
+   ],
+   "why": "After hooks run in reverse order."
+  },
+  {
+   "q": "What must you add for human approval to work?",
+   "a": "A checkpointer",
+   "d": [
+    "A vector store",
+    "A second model",
+    "A web socket"
+   ],
+   "why": "The run pauses and must be resumed from a saved state."
+  }
+ ],
+ "sources": [
+  {
+   "t": "LangChain - Custom middleware (hooks, order, jump_to)",
+   "u": "https://docs.langchain.com/oss/python/langchain/middleware/custom"
+  },
+  {
+   "t": "LangChain - Built-in middleware",
+   "u": "https://docs.langchain.com/oss/python/langchain/middleware/built-in"
+  },
+  {
+   "t": "Deep Agents - Overview",
+   "u": "https://docs.langchain.com/oss/python/deepagents/overview"
+  },
+  {
+   "t": "Deep Agents - Harness",
+   "u": "https://docs.langchain.com/oss/python/deepagents/harness"
+  }
+ ]
+}

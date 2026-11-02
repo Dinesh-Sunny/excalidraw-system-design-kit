@@ -3230,6 +3230,70 @@
     "Apple DeviceCheck and App Attest",
     "https://developer.apple.com/documentation/devicecheck"
    ]
+  ],
+  "agent-todo-list-write-todos": [
+   [
+    "Deep Agents",
+    "https://docs.langchain.com/oss/python/deepagents/overview"
+   ],
+   [
+    "TodoListMiddleware",
+    "https://docs.langchain.com/oss/python/langchain/middleware/built-in"
+   ]
+  ],
+  "agent-task-tool-spawn-sub-agent": [
+   [
+    "Deep Agents",
+    "https://docs.langchain.com/oss/python/deepagents/overview"
+   ],
+   [
+    "Deep Agents on GitHub",
+    "https://github.com/langchain-ai/deepagents"
+   ]
+  ],
+  "agent-async-sub-agents": [
+   [
+    "Deep Agents",
+    "https://docs.langchain.com/oss/python/deepagents/overview"
+   ],
+   [
+    "LangSmith Deployment",
+    "https://docs.langchain.com/langsmith/deployments"
+   ]
+  ],
+  "agent-backend-router-state-store-disk": [
+   [
+    "Deep Agents",
+    "https://docs.langchain.com/oss/python/deepagents/overview"
+   ],
+   [
+    "LangGraph persistence (store)",
+    "https://docs.langchain.com/oss/python/langgraph/persistence"
+   ]
+  ],
+  "agent-agents-md-memory": [
+   [
+    "Deep Agents",
+    "https://docs.langchain.com/oss/python/deepagents/overview"
+   ],
+   [
+    "AGENTS.md",
+    "https://agents.md/"
+   ]
+  ],
+  "agent-agent-middleware": [
+   [
+    "LangChain middleware",
+    "https://docs.langchain.com/oss/python/langchain/middleware/overview"
+   ],
+   [
+    "Built-in middleware",
+    "https://docs.langchain.com/oss/python/langchain/middleware/built-in"
+   ],
+   [
+    "Deep Agents",
+    "https://docs.langchain.com/oss/python/deepagents/overview"
+   ]
   ]
  },
  "designs": {

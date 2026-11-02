@@ -4359,5 +4359,189 @@
     }
    ]
   }
+ ],
+ "agent-todo-list-write-todos": [
+  {
+   "t": "write_todos",
+   "s": "A plan the agent keeps updating",
+   "k": [
+    {
+     "t": "Statuses",
+     "d": "Each todo is pending, in_progress or completed, stored in agent state."
+    },
+    {
+     "t": "Why",
+     "d": "Long tasks drift; a visible plan keeps the agent on track and gives the UI a progress list."
+    },
+    {
+     "t": "Opt-in",
+     "d": "Since deepagents v0.7 task planning is opt-in (TodoListMiddleware)."
+    }
+   ]
+  }
+ ],
+ "agent-task-tool-spawn-sub-agent": [
+  {
+   "t": "task tool",
+   "s": "Delegate to a sub-agent",
+   "k": [
+    {
+     "t": "Modes",
+     "d": "isolated (default, fresh context) or fork (inherits the parent's history)."
+    },
+    {
+     "t": "Sub-agents",
+     "d": "A general-purpose sub-agent by default, plus custom ones with their own prompt, tools and middleware."
+    },
+    {
+     "t": "Result",
+     "d": "Synchronous sub-agents are stateless and return one report, which keeps the main context small."
+    }
+   ]
+  }
+ ],
+ "agent-async-sub-agents": [
+  {
+   "t": "Async sub-agents",
+   "s": "Long jobs in parallel",
+   "k": [
+    {
+     "t": "Control tools",
+     "d": "Launch, check, update and cancel running sub-agents."
+    },
+    {
+     "t": "When",
+     "d": "Research or code tasks that take minutes, where the main agent keeps working."
+    }
+   ]
+  }
+ ],
+ "agent-backend-router-state-store-disk": [
+  {
+   "t": "Backends",
+   "s": "Where the virtual filesystem lives",
+   "k": [
+    {
+     "t": "StateBackend",
+     "d": "Files in the thread's state; gone with the thread."
+    },
+    {
+     "t": "StoreBackend",
+     "d": "Files in the LangGraph store; shared across threads, used for long-term memory."
+    },
+    {
+     "t": "FilesystemBackend",
+     "d": "Real local disk."
+    },
+    {
+     "t": "Sandbox backends",
+     "d": "Add the execute tool for shell commands."
+    },
+    {
+     "t": "Composite routing",
+     "d": "Route path prefixes (for example /memories/) to different backends."
+    }
+   ]
+  }
+ ],
+ "agent-agents-md-memory": [
+  {
+   "t": "AGENTS.md",
+   "s": "Memory the agent always reads",
+   "k": [
+    {
+     "t": "Loaded at start",
+     "d": "Files passed in the memory parameter are always loaded into context."
+    },
+    {
+     "t": "Self-updating",
+     "d": "The agent can edit them to remember preferences and lessons."
+    },
+    {
+     "t": "vs Skills",
+     "d": "Skills load on demand (progressive disclosure); AGENTS.md is always on."
+    }
+   ]
+  }
+ ],
+ "agent-agent-middleware": [
+  {
+   "t": "Hooks",
+   "s": "6 places to step in",
+   "k": [
+    {
+     "t": "Node-style",
+     "d": "before_agent (once), before_model (each turn), after_model (each response), after_agent (once). They read state and return updates."
+    },
+    {
+     "t": "Wrap-style",
+     "d": "wrap_model_call and wrap_tool_call wrap the call and may call the handler zero, one or many times.",
+     "k": [
+      {
+       "t": "Use for",
+       "d": "Retries, fallbacks, caching, swapping the model, turning tool errors into messages."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": "Ordering",
+   "s": "Why the list order matters",
+   "k": [
+    {
+     "t": "Before hooks",
+     "d": "Run first to last."
+    },
+    {
+     "t": "After hooks",
+     "d": "Run last to first."
+    },
+    {
+     "t": "Wraps",
+     "d": "Nest like functions: the first middleware wraps all the others."
+    }
+   ]
+  },
+  {
+   "t": "State and control",
+   "s": "Change data and flow",
+   "k": [
+    {
+     "t": "Custom state",
+     "d": "Extend AgentState with your own fields; node hooks return a dict merged into state."
+    },
+    {
+     "t": "jump_to",
+     "d": "Send the run to end, tools or model; declare it with can_jump_to."
+    }
+   ]
+  },
+  {
+   "t": "Built-ins",
+   "s": "Ready middleware by job",
+   "k": [
+    {
+     "t": "Reliability",
+     "d": "ToolRetryMiddleware, ModelRetryMiddleware, ModelFallbackMiddleware, ToolErrorMiddleware."
+    },
+    {
+     "t": "Cost and loops",
+     "d": "ModelCallLimitMiddleware, ToolCallLimitMiddleware."
+    },
+    {
+     "t": "Context",
+     "d": "SummarizationMiddleware, ContextEditingMiddleware, LLMToolSelectorMiddleware."
+    },
+    {
+     "t": "Safety",
+     "d": "HumanInTheLoopMiddleware (needs a checkpointer), PIIMiddleware (block, redact, mask, hash)."
+    },
+    {
+     "t": "Deep Agents",
+     "d": "FilesystemMiddleware (required), SubAgentMiddleware (task tool), TodoListMiddleware (opt-in since v0.7)."
+    }
+   ]
+  }
  ]
 }

@@ -13,7 +13,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 06 | [`sd:cache/`](#06-cache) | Caches | 6 |
 | 07 | [`sd:msg/`](#07-msg) | Messaging & streaming | 9 |
 | 08 | [`sd:ai/`](#08-ai) | AI models & inference | 19 |
-| 09 | [`sd:agent/`](#09-agent) | Agents & orchestration | 26 |
+| 09 | [`sd:agent/`](#09-agent) | Agents & orchestration | 37 |
 | 10 | [`sd:rag/`](#10-rag) | Knowledge & retrieval (RAG) | 12 |
 | 11 | [`sd:llmops/`](#11-llmops) | Safety, evals & LLMOps | 12 |
 | 12 | [`sd:ops/`](#12-ops) | Observability, security & ops | 10 |
@@ -24,7 +24,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 17 | [`sd:frame/`](#17-frame) | Device frames | 6 |
 | 18 | [`sd:screen/`](#18-screen) | Screen wireframes | 13 |
 | 19 | [`sd:pattern/`](#19-pattern) | Architecture patterns | 12 |
-| 20 | [`sd:agentic/`](#20-agentic) | Agentic patterns | 16 |
+| 20 | [`sd:agentic/`](#20-agentic) | Agentic patterns | 21 |
 | 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 52 |
 | 22 | [`sd:fe/`](#22-fe) | Frontend architecture | 49 |
 | 23 | [`sd:fep/`](#23-fep) | Frontend patterns | 15 |
@@ -266,6 +266,17 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Agent Channels** - slack github http email entry points channel inbox surfaces ai agentic
 - **Agent Auth Handler** - who is calling principal identity runtime context multi tenant authorization ai agentic
 - **Credential Broker** - user scoped agent scoped oauth tokens delegated access service account consent ai agentic
+- **Todo List (write_todos)** - planning todos pending in progress completed task plan deep agents ai agentic langchain
+- **Task Tool (spawn sub-agent)** - delegate subagent isolated fork general purpose context isolation ai agentic langchain
+- **Async Sub-agents** - parallel background launch check update cancel subagents ai agentic langchain
+- **Backend Router (State / Store / Disk)** - composite backend statebackend storebackend filesystembackend routes paths virtual filesystem ai agentic langchain
+- **AGENTS.md Memory** - memory file always loaded instructions agent updates self improving ai agentic langchain
+- **Agent Middleware** - middleware stack hooks todo filesystem subagent summarization prompt caching hitl ai agentic langchain
+- **Filesystem Permissions** - allow deny rules read write paths globs first match ai agentic langchain
+- **Code Interpreter (eval, QuickJS)** - programmatic tool calling javascript scoped runtime no shell ai agentic langchain
+- **Agent Server (LangSmith Deployment)** - langgraph runtime durable execution threads runs assistants deployment managed deep agents ai agentic langchain
+- **Agent Event Stream** - streaming messages tool calls subagent streams todo ui progress ai agentic langchain
+- **ACP (agent in editor)** - agent client protocol zed editor ide integration ai agentic langchain
 
 <a id="10-rag"></a>
 ## 10 `sd:rag/` Knowledge & retrieval (RAG)
@@ -475,6 +486,11 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Scoped Credentials** - user vs agent identity by channel ai agent
 - **MCP Architecture** - host client servers ai agent
 - **A2A** - agent to agent across companies ai agent
+- **Deep Agent Anatomy** - langchain deepagents create_deep_agent middleware todos filesystem subagents summarization ai agent
+- **Sub-agent Delegation** - task tool isolated fork sync async subagents deep agents ai agent
+- **Backend Routing** - composite backend state store filesystem sandbox memories deep agents ai agent
+- **Middleware Hooks** - langchain agent middleware before_agent before_model wrap_model_call after_model wrap_tool_call after_agent loop deep agents ai agent
+- **Deep Agent Middleware Stack** - filesystem subagent todo summarization hitl limits retry fallback pii middleware langchain ai agent
 
 <a id="21-tpl"></a>
 ## 21 `sd:tpl/` Full interview designs
