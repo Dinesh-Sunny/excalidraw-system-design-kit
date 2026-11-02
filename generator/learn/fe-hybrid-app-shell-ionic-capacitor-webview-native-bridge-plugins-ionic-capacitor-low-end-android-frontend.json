@@ -1,0 +1,286 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A hybrid app ships your web app inside a native shell: Capacitor hosts it in the phone's WebView and gives it native features through plugins, while Ionic supplies mobile-style UI components. One codebase reaches iOS, Android and the web.",
+ "like": "Like a picture frame: the picture is your web app, and the frame (Capacitor) lets it hang on the phone's wall and use the doorbell, camera and storage.",
+ "why": [
+  "One Angular codebase for web, iOS and Android",
+  "Native features such as camera or push through plugins",
+  "Ships through the app stores and can still be updated over the air"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 310,
+  "nodes": [
+   {
+    "id": "ang",
+    "t": "Angular + Ionic UI|your web code",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "hybrid"
+   },
+   {
+    "id": "wv",
+    "t": "WebView|runs the JS",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "br",
+    "t": "Capacitor bridge|JS to native calls",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "plug"
+   },
+   {
+    "id": "pl",
+    "t": "Plugins|camera, storage, push",
+    "x": 550,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "mobile"
+   },
+   {
+    "id": "os",
+    "t": "iOS / Android|native runtime",
+    "x": 275,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "desktop"
+   },
+   {
+    "id": "api",
+    "t": "Backend API|your server",
+    "x": 0,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "ang",
+    "wv",
+    "runs in"
+   ],
+   [
+    "wv",
+    "br",
+    "plugin call"
+   ],
+   [
+    "br",
+    "pl",
+    "native code"
+   ],
+   [
+    "pl",
+    "os",
+    "device APIs"
+   ],
+   [
+    "ang",
+    "api",
+    "HTTPS"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Build the web app",
+    "d": "You write Angular with Ionic components and build normal web assets.",
+    "hl": [
+     "ang"
+    ]
+   },
+   {
+    "t": "Wrap in a native container",
+    "d": "Capacitor is a native runtime that runs those assets in the system WebView on iOS and Android.",
+    "hl": [
+     "wv"
+    ]
+   },
+   {
+    "t": "Call native via plugins",
+    "d": "Capacitor's Plugin API (Swift for iOS, Java for Android, JavaScript for web) exposes device features to your JS.",
+    "hl": [
+     "br",
+     "pl"
+    ]
+   },
+   {
+    "t": "Respect the WebView budget",
+    "d": "A WebView on a cheap phone is slow: keep JS small, defer heavy code, virtualise long lists, and avoid big DOM trees.",
+    "hl": [
+     "wv"
+    ]
+   },
+   {
+    "t": "Virtualise lists",
+    "d": "ion-virtual-scroll was removed in Ionic 7; use Angular CDK cdk-virtual-scroll-viewport inside ion-content.",
+    "hl": [
+     "ang"
+    ]
+   },
+   {
+    "t": "Ship and update",
+    "d": "Release through the stores; web-only fixes can follow through live updates.",
+    "hl": [
+     "os"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "iOS 15.0 / Android 7.0 (API 24)",
+   "l": "minimum OS versions for the current Capacitor release",
+   "s": "https://capacitorjs.com/docs/main/reference/support-policy"
+  },
+  {
+   "v": "365 KiB",
+   "l": "compressed JS budget to load in 3 s on a mid-range phone at P75 for JS-heavy apps (650 KiB at 5 s)",
+   "s": "https://infrequently.org/2024/01/performance-inequality-gap-2024/"
+  },
+  {
+   "v": "56 px / 900 / 1350",
+   "l": "docs example itemSize, minBufferPx and maxBufferPx for CDK virtual scroll in Ionic",
+   "s": "https://ionicframework.com/docs/angular/virtual-scroll"
+  },
+  {
+   "v": "v8",
+   "l": "current Capacitor docs version",
+   "s": "https://capacitorjs.com/docs"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Hybrid or native or cross-platform native",
+   "d": "Hybrid reuses web skills and one codebase; truly native gives best performance and platform feel; choose by team skills and performance needs."
+  },
+  {
+   "t": "Capacitor or Cordova",
+   "d": "Capacitor is the modern native container that keeps close to web standards; Cordova is the older alternative."
+  },
+  {
+   "t": "WebView performance plan",
+   "d": "Set a JS budget from the slowest target phone, lazy-load routes and use @defer, virtualise lists, and test on a real low-end Android device."
+  },
+  {
+   "t": "Where native code is needed",
+   "d": "If a plugin does not exist, write a small custom plugin or use the native SDK; keep the bridge calls coarse."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-service-worker-pwa-offline-cache-storage-fetch-interception-workbox-push-frontend",
+   "why": "A web-only install route when you do not need store distribution or native plugins"
+  },
+  {
+   "slug": "fe-virtualized-list-windowing-react-window-tanstack-virtual-large-lists-dom-nodes-frontend",
+   "why": "The general idea behind long lists on slow phones"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Jank on cheap Android",
+   "d": "Large JS bundle and large DOM in an old WebView.",
+   "see": "Slow start, laggy scroll and taps",
+   "fix": "Budget JS, lazy-load, virtual scroll, test on a low-end device"
+  },
+  {
+   "t": "Chatty bridge",
+   "d": "Many small plugin calls in a loop.",
+   "see": "Dropped frames during native calls",
+   "fix": "Batch work into fewer, coarser native calls"
+  },
+  {
+   "t": "Unsupported OS version",
+   "d": "App minimum OS below what Capacitor supports.",
+   "see": "Build or runtime failures on old devices",
+   "fix": "Set the app minimum to the Capacitor minimum (iOS 15.0, Android API 24)"
+  }
+ ],
+ "say": [
+  "I use Angular with Ionic components in a Capacitor shell, so one codebase ships to iOS, Android and web, with native features through plugins.",
+  "On low-end Android I treat the WebView as the bottleneck: a JS budget, lazy loading with @defer, CDK virtual scroll for lists, and testing on a real cheap phone.",
+  "Web-only fixes go out through live updates, native changes through the stores."
+ ],
+ "followups": [
+  {
+   "q": "Why not go fully native?",
+   "a": "Hybrid gives one codebase and web skills; if the product needs heavy animation or deep platform features, native or a native-rendering framework fits better."
+  },
+  {
+   "q": "How do you keep long lists smooth?",
+   "a": "Use CDK virtual scroll inside ion-content so only the visible rows exist in the DOM, with fixed item sizes."
+  }
+ ],
+ "today": "Capacitor is on v8 with iOS 15 and Android 7 as minimums, and Ionic points list virtualisation to the Angular CDK since ion-virtual-scroll was removed.",
+ "check": [
+  {
+   "q": "What does Capacitor do?",
+   "a": "Runs your web app in a native WebView and exposes device features via plugins",
+   "d": [
+    "Compiles Angular to machine code",
+    "Replaces the backend",
+    "Renders UI with native widgets only"
+   ],
+   "why": "It is a native container and runtime for web apps."
+  },
+  {
+   "q": "What replaced ion-virtual-scroll?",
+   "a": "Angular CDK virtual scrolling",
+   "d": [
+    "ion-infinite-scroll only",
+    "Plain ngFor",
+    "A service worker"
+   ],
+   "why": "ion-virtual-scroll was removed in Ionic 7; the docs recommend the CDK."
+  },
+  {
+   "q": "Main performance risk on cheap Android hybrid apps?",
+   "a": "Too much JavaScript and DOM in the WebView",
+   "d": [
+    "Too few plugins",
+    "Too small icons",
+    "Using HTTPS"
+   ],
+   "why": "A slow device plus a big bundle means slow start and scroll."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Capacitor docs",
+   "u": "https://capacitorjs.com/docs"
+  },
+  {
+   "t": "Capacitor support policy",
+   "u": "https://capacitorjs.com/docs/main/reference/support-policy"
+  },
+  {
+   "t": "Ionic: virtual scroll with Angular",
+   "u": "https://ionicframework.com/docs/angular/virtual-scroll"
+  },
+  {
+   "t": "Performance Inequality Gap 2024",
+   "u": "https://infrequently.org/2024/01/performance-inequality-gap-2024/"
+  }
+ ]
+}

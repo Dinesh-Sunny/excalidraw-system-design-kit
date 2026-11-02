@@ -1,0 +1,281 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Live updates (OTA, over the air) let an installed Capacitor or Ionic app download a new web bundle (HTML, CSS, JavaScript) without going through app-store review. They only work for changes compatible with the installed native binary, so each bundle should be gated by a minimum native version.",
+ "like": "Like swapping the pages inside a book cover: you can change the pages anytime, but if the new pages need a bigger cover you must print a new book.",
+ "why": [
+  "Ship a bug fix to users in minutes, not days of store review",
+  "Roll out gradually and roll back fast if it goes wrong",
+  "Keep one web code line across many native versions safely"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 310,
+  "nodes": [
+   {
+    "id": "ci",
+    "t": "Build + sign|new web bundle",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "cicd"
+   },
+   {
+    "id": "ch",
+    "t": "Update channel|prod, beta, staging",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "flag"
+   },
+   {
+    "id": "cdn",
+    "t": "Bundle store / CDN|hosts the files",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "cloud"
+   },
+   {
+    "id": "app",
+    "t": "Installed app|native binary + SDK",
+    "x": 0,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "mobile"
+   },
+   {
+    "id": "gate",
+    "t": "Version gate|min native version",
+    "x": 275,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "shield"
+   },
+   {
+    "id": "rb",
+    "t": "Rollback|revert to last good",
+    "x": 550,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "fallback"
+   }
+  ],
+  "edges": [
+   [
+    "ci",
+    "ch",
+    "publish"
+   ],
+   [
+    "ch",
+    "cdn",
+    "assign"
+   ],
+   [
+    "app",
+    "gate",
+    "check"
+   ],
+   [
+    "gate",
+    "cdn",
+    "download if compatible"
+   ],
+   [
+    "app",
+    "rb",
+    "launch fails"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Change only the web layer",
+    "d": "Live updates cover binary-compatible changes: HTML, CSS, JavaScript and assets.",
+    "hl": [
+     "ci"
+    ]
+   },
+   {
+    "t": "Publish to a channel",
+    "d": "Channels give separate tracks (dev, staging, production, QA). A channel can be paused, and devices can be routed to a build.",
+    "hl": [
+     "ch"
+    ]
+   },
+   {
+    "t": "Gate by native version",
+    "d": "Restrict each bundle to compatible native app versions. Adding a plugin or changing native dependencies needs a new store release first.",
+    "hl": [
+     "gate"
+    ]
+   },
+   {
+    "t": "Download and apply",
+    "d": "The app SDK checks for a bundle, downloads it, then applies it on next start or via a reload call.",
+    "hl": [
+     "app",
+     "cdn"
+    ]
+   },
+   {
+    "t": "Roll out gradually",
+    "d": "Stage the release (for example 10, 25, 50, then 100 percent) and watch errors.",
+    "hl": [
+     "ch"
+    ]
+   },
+   {
+    "t": "Roll back automatically",
+    "d": "If the app fails to launch after an update it reverts to the last good bundle, and you can also roll back from console, CLI or API.",
+    "hl": [
+     "rb"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "31 Dec 2027",
+   "l": "Ionic Appflow shutdown date; it is no longer sold to new customers",
+   "s": "https://capawesome.io/compare/ionic-appflow/"
+  },
+  {
+   "v": "10/25/50/100%",
+   "l": "gradual rollout steps offered by Capawesome Cloud live updates",
+   "s": "https://capawesome.io/cloud/live-updates/"
+  },
+  {
+   "v": "$9 vs $49 /month",
+   "l": "starting price quoted for Capawesome live updates vs Appflow (vendor's own comparison)",
+   "s": "https://capawesome.io/compare/ionic-appflow/"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Which service",
+   "d": "Appflow is closing at the end of 2027 and is not sold to new customers; alternatives such as Capawesome Cloud and Capgo offer channels and rollback. Check current pricing and features yourself."
+  },
+  {
+   "t": "What may go over the air",
+   "d": "Only web-layer changes. Anything touching native code, plugins or project files goes through the stores."
+  },
+  {
+   "t": "Version gating",
+   "d": "Tag every bundle with the minimum native version it needs so older binaries never receive an incompatible bundle."
+  },
+  {
+   "t": "Store policy",
+   "d": "Google Play bans downloading executable code except code run in an interpreter or VM such as JavaScript in a WebView; keep updates to the web layer and check Apple's current rules."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-feature-flags-client-feature-toggles-a-b-test-experiments-gradual-rollout-frontend",
+   "why": "To switch behaviour inside an already shipped bundle without a new download"
+  },
+  {
+   "slug": "fe-service-worker-pwa-offline-cache-storage-fetch-interception-workbox-push-frontend",
+   "why": "On the web, a service worker updates assets; on mobile this is the store-free equivalent"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Bundle needs a newer native plugin",
+   "d": "A web bundle calls a plugin the installed binary does not have.",
+   "see": "Crashes or missing features on older app versions",
+   "fix": "Gate by minimum native version and ship the binary first"
+  },
+  {
+   "t": "Bad bundle reaches everyone",
+   "d": "No staged rollout.",
+   "see": "Error spike after release",
+   "fix": "Gradual rollout, a channel for QA, and automatic rollback on launch failure"
+  },
+  {
+   "t": "Tampered or wrong bundle",
+   "d": "Updates not verified.",
+   "see": "Unexpected code on devices",
+   "fix": "Code-sign bundles so devices install only what you publish"
+  }
+ ],
+ "say": [
+  "I use live updates only for binary-compatible web changes, and gate each bundle with a minimum native version.",
+  "I release through channels with a gradual rollout and automatic rollback, and sign the bundles.",
+  "Anything that adds or changes a native plugin goes through the stores first; I would pick a maintained service because Appflow shuts down at the end of 2027."
+ ],
+ "followups": [
+  {
+   "q": "Is this allowed by the app stores?",
+   "a": "Google Play exempts code that runs in an interpreter or VM, such as JavaScript in a WebView. Keep to web-layer changes and re-read current Apple and Google rules."
+  },
+  {
+   "q": "How do you avoid breaking old app versions?",
+   "a": "Tag bundles with the minimum native version, and keep web code backward compatible for versions still in the field."
+  }
+ ],
+ "today": "With Appflow closing on 31 Dec 2027, teams are moving to services such as Capawesome Cloud and Capgo that provide channels, gradual rollout, signing and automatic rollback for Capacitor apps.",
+ "check": [
+  {
+   "q": "What can a live update change?",
+   "a": "Web layer: HTML, CSS, JavaScript, assets",
+   "d": [
+    "Native plugins",
+    "Android manifest",
+    "iOS project files"
+   ],
+   "why": "Native changes need a store release."
+  },
+  {
+   "q": "How do you stop an old binary getting an incompatible bundle?",
+   "a": "Gate bundles by minimum native version",
+   "d": [
+    "Ship bigger bundles",
+    "Disable rollback",
+    "Use the same channel for everyone"
+   ],
+   "why": "Version gating keeps compatible bundles with compatible binaries."
+  },
+  {
+   "q": "A bundle crashes on launch. What should happen?",
+   "a": "Revert to the last good bundle",
+   "d": [
+    "Retry the bad bundle forever",
+    "Force a store update",
+    "Ignore it"
+   ],
+   "why": "Automatic rollback restores the previous bundle and stops retrying the broken one."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Ionic Appflow: Live Updates",
+   "u": "https://ionic.io/docs/appflow/deploy/intro"
+  },
+  {
+   "t": "Capawesome: Appflow comparison",
+   "u": "https://capawesome.io/compare/ionic-appflow/"
+  },
+  {
+   "t": "Capawesome Cloud: live updates",
+   "u": "https://capawesome.io/cloud/live-updates/"
+  },
+  {
+   "t": "Google Play: Device and Network Abuse",
+   "u": "https://support.google.com/googleplay/android-developer/answer/9888379?hl=en"
+  }
+ ]
+}

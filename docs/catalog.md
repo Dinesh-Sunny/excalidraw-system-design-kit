@@ -5,7 +5,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | # | Prefix | Section | Items |
 |---|---|---|---|
 | 00 | [`sd:guide/`](#00-guide) | How to use this kit | 2 |
-| 01 | [`sd:note/`](#01-note) | Interview notes | 30 |
+| 01 | [`sd:note/`](#01-note) | Interview notes | 31 |
 | 02 | [`sd:client/`](#02-client) | Clients, devices & AI clients | 28 |
 | 03 | [`sd:edge/`](#03-edge) | Edge & networking | 8 |
 | 04 | [`sd:svc/`](#04-svc) | Services & compute | 29 |
@@ -25,9 +25,9 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 18 | [`sd:screen/`](#18-screen) | Screen wireframes | 13 |
 | 19 | [`sd:pattern/`](#19-pattern) | Architecture patterns | 12 |
 | 20 | [`sd:agentic/`](#20-agentic) | Agentic patterns | 16 |
-| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 50 |
-| 22 | [`sd:fe/`](#22-fe) | Frontend architecture | 39 |
-| 23 | [`sd:fep/`](#23-fep) | Frontend patterns | 14 |
+| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 52 |
+| 22 | [`sd:fe/`](#22-fe) | Frontend architecture | 49 |
+| 23 | [`sd:fep/`](#23-fep) | Frontend patterns | 15 |
 
 <a id="00-guide"></a>
 ## 00 `sd:guide/` How to use this kit
@@ -72,6 +72,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **State Placement** - where should this frontend state live
 - **Component API** - props events state frontend interface
 - **Frontend Optimizations** - checklist performance a11y security
+- **React to Angular** - concept map hooks signals rxjs ngrx frontend
 
 <a id="02-client"></a>
 ## 02 `sd:client/` Clients, devices & AI clients
@@ -525,6 +526,8 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **FE Email Client** - gmail outlook email client inbox offline search frontend
 - **FE Spreadsheet Grid** - google sheets excel airtable data grid table virtualization frontend
 - **FE Travel Booking** - airbnb booking hotel search map listings date picker frontend
+- **FE Mobile Money App** - fintech wallet withdraw payout hybrid ionic capacitor offline low-end android frontend
+- **FE Admin Dashboard** - employer hr portal back office data table bulk upload roles frontend
 
 <a id="22-fe"></a>
 ## 22 `sd:fe/` Frontend architecture
@@ -570,6 +573,16 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **CSP + XSS Defence** - content security policy xss sanitize trusted types dompurify security frontend
 - **Auth in the Browser** - httponly cookie jwt refresh token oauth pkce csrf bff frontend
 - **Feature Flags (client)** - feature toggles a/b test experiments gradual rollout frontend
+- **Signals + Zoneless (Angular)** - angular signals computed effect zoneless change detection onpush frontend
+- **Deferrable Views (@defer)** - angular defer lazy blocks incremental hydration triggers placeholder frontend
+- **RxJS Streams (NgRx)** - observables switchmap mergemap debouncetime ngrx store effects signalstore frontend
+- **Hybrid App Shell (Ionic + Capacitor)** - webview native bridge plugins ionic capacitor low-end android frontend
+- **Live Updates (OTA)** - over the air web bundle update channels rollback capgo appflow capawesome frontend
+- **Deep Links (App / Universal)** - app links universal links assetlinks aasa routing frontend
+- **Push Notifications (FCM / APNs)** - firebase cloud messaging permissions token topics mobile frontend
+- **Secure Storage + Biometrics** - keychain keystore face fingerprint step-up auth mobile frontend
+- **Money Formatting (minor units, Intl)** - currency integer minor units intl numberformat iso 4217 rounding fintech frontend
+- **App Hardening (integrity, pinning)** - play integrity app check root jailbreak detection certificate pinning session timeout masvs frontend
 
 <a id="23-fep"></a>
 ## 23 `sd:fep/` Frontend patterns
@@ -590,3 +603,4 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Responsive Image Loading** - srcset sizes lazy loading lcp image cdn avif frontend
 - **Frontend Observability** - rum web vitals js errors beacon dashboards frontend
 - **JavaScript Event Loop** - call stack microtasks task queue render long tasks frontend
+- **Idempotent Payment Submit** - double tap safe retry idempotency key pay button fintech frontend

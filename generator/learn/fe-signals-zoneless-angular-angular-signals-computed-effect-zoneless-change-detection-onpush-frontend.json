@@ -1,0 +1,284 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "Angular signals are small reactive values: you read them like functions, derive new ones with computed, and Angular knows exactly which templates to refresh. Zoneless change detection then drops zone.js, so a screen updates only when a signal, an event listener or markForCheck says something changed.",
+ "like": "Like sticky notes with strings attached: when one note changes, only the notes tied to it get re-read, instead of the teacher re-checking the whole wall after every sound in the room.",
+ "why": [
+  "Less work per tap on a slow phone, because only affected views are checked",
+  "Smaller start-up cost: no zone.js patching of browser APIs",
+  "State flow is easy to trace: signal, computed, template"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 450,
+  "nodes": [
+   {
+    "id": "sig",
+    "t": "signal()|writable state",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "signals"
+   },
+   {
+    "id": "comp",
+    "t": "computed()|lazy, memoized",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "signals"
+   },
+   {
+    "id": "eff",
+    "t": "effect()|side effects only",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "gear"
+   },
+   {
+    "id": "tpl",
+    "t": "Template|reads signals",
+    "x": 275,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "ssr"
+   },
+   {
+    "id": "sched",
+    "t": "Scheduler|marks view dirty",
+    "x": 550,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "clock"
+   },
+   {
+    "id": "dom",
+    "t": "DOM update|only dirty views",
+    "x": 275,
+    "y": 300,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "browser"
+   }
+  ],
+  "edges": [
+   [
+    "sig",
+    "comp",
+    "read"
+   ],
+   [
+    "comp",
+    "tpl",
+    "read in template"
+   ],
+   [
+    "sig",
+    "eff",
+    "tracked"
+   ],
+   [
+    "tpl",
+    "sched",
+    "notify"
+   ],
+   [
+    "sched",
+    "dom",
+    "check dirty views"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Hold state in a signal",
+    "d": "signal(0) wraps a value; you read it by calling count() and change it with set or update.",
+    "hl": [
+     "sig"
+    ]
+   },
+   {
+    "t": "Derive with computed",
+    "d": "computed() is lazy and memoized: it runs on first read and reuses its cached value until a dependency changes. Only signals actually read are tracked.",
+    "hl": [
+     "comp"
+    ]
+   },
+   {
+    "t": "Templates subscribe by reading",
+    "d": "When a template reads a signal, Angular records that link. Updating the signal is one of the notifications that schedule change detection.",
+    "hl": [
+     "sig",
+     "tpl"
+    ]
+   },
+   {
+    "t": "Zoneless scheduling",
+    "d": "Without zone.js, change detection is triggered by signal updates, bound listeners, markForCheck (AsyncPipe calls it), setInput and dirty views being attached.",
+    "hl": [
+     "tpl",
+     "sched"
+    ]
+   },
+   {
+    "t": "Effects stay small",
+    "d": "Use effect() only to talk to non-reactive APIs such as logging or a third-party widget. Prefer computed, linkedSignal or resource to derive state.",
+    "hl": [
+     "eff"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "v21+",
+   "l": "Angular version where zoneless is the default",
+   "s": "https://angular.dev/guide/zoneless"
+  },
+  {
+   "v": "v20.2",
+   "l": "provideZonelessChangeDetection marked stable since",
+   "s": "https://angular.dev/api/core/provideZonelessChangeDetection"
+  },
+  {
+   "v": "5",
+   "l": "notifications that schedule change detection in a zoneless app (markForCheck, setInput, signal update, bound listener, dirty view attach)",
+   "s": "https://angular.dev/guide/zoneless"
+  },
+  {
+   "v": "365 KiB",
+   "l": "compressed JS budget for a JS-heavy app to load in 3 s on a mid-range phone at P75",
+   "s": "https://infrequently.org/2024/01/performance-inequality-gap-2024/"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Signal or RxJS",
+   "d": "Signals are for current state you read synchronously (a value now). RxJS is for events over time: debounce, cancel, retry, websockets. Bridge them with toSignal and toObservable."
+  },
+  {
+   "t": "computed or effect",
+   "d": "If the result is data, use computed (or linkedSignal when it must also be writable). Effects are for side effects on non-reactive code, and are the last resort."
+  },
+  {
+   "t": "Go zoneless now or later",
+   "d": "New apps on v21+ get zoneless by default. Older apps add provideZonelessChangeDetection (v20) and then remove zone.js from polyfills once every component notifies Angular properly."
+  },
+  {
+   "t": "OnPush",
+   "d": "OnPush is recommended with zoneless but not required; Default components still work if they receive one of the notifications."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-global-store-zustand-redux-client-state-redux-zustand-signals-context-ui-state-frontend",
+   "why": "Same idea of fine-grained state, in the React world"
+  },
+  {
+   "slug": "fe-rxjs-streams-ngrx-observables-switchmap-mergemap-debouncetime-ngrx-store-effects-signalstore-frontend",
+   "why": "For events over time such as typeahead, retries and cancellation"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Mutated state with no notification",
+   "d": "Code changes a plain field or a form value (for example setValue) with no signal, markForCheck or listener.",
+   "see": "The screen does not update until something else happens",
+   "fix": "Hold the state in a signal or call markForCheck; use the zoneless checker in dev"
+  },
+  {
+   "t": "Signal read after await in an effect",
+   "d": "Reads after an await are not tracked.",
+   "see": "Effect runs once and never again",
+   "fix": "Read signals before the await, or use untracked deliberately"
+  },
+  {
+   "t": "Code waiting on NgZone events",
+   "d": "onStable, onMicrotaskEmpty and isStable do nothing useful without zone.js.",
+   "see": "Third-party code hangs waiting for stability",
+   "fix": "Use afterNextRender or afterEveryRender, and PendingTasks for SSR"
+  }
+ ],
+ "say": [
+  "I hold current state in signals and derive with computed, and keep RxJS for event streams like typeahead and retries.",
+  "On low-end phones I go zoneless with OnPush-style components so a tap only checks the views whose signals changed, and I drop zone.js payload.",
+  "I keep effects rare: they are for side effects on non-reactive APIs, not for copying state around."
+ ],
+ "followups": [
+  {
+   "q": "Why not just use RxJS for everything?",
+   "a": "Observables need subscriptions and cleanup, and a template needs an initial value. Signals give synchronous reads and automatic dependency tracking; RxJS still wins for time-based work."
+  },
+  {
+   "q": "What breaks when you remove zone.js?",
+   "a": "Anything that changed state without telling Angular: plain field mutations, unwrapped form updates and code waiting on NgZone stability events."
+  }
+ ],
+ "today": "Zoneless is the default from Angular v21 and the provider has been stable since v20.2, so new Angular apps are signal-first and zone.js-free; the docs steer you to computed, linkedSignal and resource rather than effect.",
+ "check": [
+  {
+   "q": "In a zoneless app, which of these schedules change detection?",
+   "a": "Updating a signal that a template reads",
+   "d": [
+    "Any setTimeout finishing",
+    "Mutating a plain object field",
+    "Any Promise resolving"
+   ],
+   "why": "Without zone.js only explicit notifications such as signal updates, listeners and markForCheck schedule it."
+  },
+  {
+   "q": "What is computed()?",
+   "a": "A lazy, memoized, read-only derived signal",
+   "d": [
+    "A writable signal",
+    "An effect that runs on every tick",
+    "An RxJS operator"
+   ],
+   "why": "It runs on first read and caches until a dependency changes."
+  },
+  {
+   "q": "When is effect() the right tool?",
+   "a": "To call a non-reactive API such as logging or a third-party widget",
+   "d": [
+    "To derive one signal from another",
+    "To fetch data on every render",
+    "To replace computed"
+   ],
+   "why": "The docs recommend computed, linkedSignal or resource for derivations and effect only for side effects."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Angular docs: zoneless",
+   "u": "https://angular.dev/guide/zoneless"
+  },
+  {
+   "t": "Angular docs: signals",
+   "u": "https://angular.dev/guide/signals"
+  },
+  {
+   "t": "Angular API: provideZonelessChangeDetection",
+   "u": "https://angular.dev/api/core/provideZonelessChangeDetection"
+  },
+  {
+   "t": "Performance Inequality Gap 2024",
+   "u": "https://infrequently.org/2024/01/performance-inequality-gap-2024/"
+  },
+  {
+   "t": "Angular: RxJS interop",
+   "u": "https://angular.dev/ecosystem/rxjs-interop"
+  }
+ ]
+}

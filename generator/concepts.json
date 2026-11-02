@@ -3589,5 +3589,775 @@
     }
    ]
   }
+ ],
+ "fe-signals-zoneless-angular": [
+  {
+   "t": "Signals",
+   "s": "Reactive values you read by calling them",
+   "k": [
+    {
+     "t": "signal",
+     "d": "A wrapper around a value. Read with count(), change with set or update, expose asReadonly() so consumers cannot write."
+    },
+    {
+     "t": "computed",
+     "d": "A derived, read-only signal.",
+     "k": [
+      {
+       "t": "Lazy",
+       "d": "Runs on the first read, not when defined."
+      },
+      {
+       "t": "Memoized",
+       "d": "Reuses its cached value until a dependency changes."
+      },
+      {
+       "t": "Dynamic dependencies",
+       "d": "Only signals actually read in the branch taken are tracked."
+      }
+     ]
+    },
+    {
+     "t": "linkedSignal and resource",
+     "d": "linkedSignal is writable state derived from other signals; resource loads async data from signals. Both are preferred over effect for derivations."
+    }
+   ]
+  },
+  {
+   "t": "Zoneless change detection",
+   "s": "Angular without zone.js",
+   "k": [
+    {
+     "t": "Why",
+     "d": "zone.js adds payload and start-up cost, makes stack traces harder to read, and patches browser APIs so new APIs can be unpatched."
+    },
+    {
+     "t": "What triggers a check",
+     "d": "markForCheck (AsyncPipe calls it), setInput, a signal update read by a template, bound listeners, and attaching a dirty view."
+    },
+    {
+     "t": "Migrating",
+     "d": "Add provideZonelessChangeDetection on v20, drop zone.js from polyfills, replace NgZone stability events with afterNextRender or afterEveryRender."
+    },
+    {
+     "t": "SSR",
+     "d": "Use PendingTasks so server rendering waits for async work; Router and HttpClient already do."
+    }
+   ]
+  },
+  {
+   "t": "Signals vs RxJS",
+   "s": "Pick by the shape of the problem",
+   "k": [
+    {
+     "t": "Signals",
+     "d": "Synchronous current value, simple derived state, template binding."
+    },
+    {
+     "t": "RxJS",
+     "d": "Events over time: debounce, cancel, retry, websockets."
+    },
+    {
+     "t": "Bridge",
+     "d": "toSignal and toObservable from rxjs-interop connect the two."
+    }
+   ]
+  },
+  {
+   "t": "Low-end device angle",
+   "s": "Why this matters on cheap phones",
+   "k": [
+    {
+     "t": "Less checking",
+     "d": "Only views tied to changed signals are refreshed."
+    },
+    {
+     "t": "Smaller start-up",
+     "d": "No zone.js to download or patch with."
+    },
+    {
+     "t": "Budget",
+     "d": "A JS-heavy app has about 365 KiB compressed JS to load in 3 s at P75 on a mid-range device."
+    }
+   ]
+  }
+ ],
+ "fe-deferrable-views-defer": [
+  {
+   "t": "Blocks",
+   "s": "The parts of a @defer",
+   "k": [
+    {
+     "t": "@defer",
+     "d": "Splits components, directives and pipes inside into a separate lazy chunk. They must be standalone."
+    },
+    {
+     "t": "@placeholder",
+     "d": "Shown before the trigger. minimum keeps it visible long enough to avoid flicker."
+    },
+    {
+     "t": "@loading",
+     "d": "Shown while the chunk loads. after delays its appearance, minimum sets how long it stays."
+    },
+    {
+     "t": "@error",
+     "d": "Shown if the chunk fails to load."
+    }
+   ]
+  },
+  {
+   "t": "Triggers",
+   "s": "When the chunk loads",
+   "k": [
+    {
+     "t": "Interaction triggers",
+     "d": "on interaction (click or keydown) and on hover (mouseover or focusin)."
+    },
+    {
+     "t": "Visibility and time",
+     "d": "on viewport uses IntersectionObserver options; on idle (default) and on timer(500ms) wait for time; on immediate fires after non-deferred content renders."
+    },
+    {
+     "t": "when condition",
+     "d": "Fires once an expression turns truthy and does not revert."
+    },
+    {
+     "t": "Prefetch",
+     "d": "prefetch on <trigger> downloads the code early, separate from when it renders."
+    }
+   ]
+  },
+  {
+   "t": "Incremental hydration",
+   "s": "SSR + @defer",
+   "k": [
+    {
+     "t": "Hydrate triggers",
+     "d": "hydrate on (idle, viewport, interaction, hover, immediate, timer), hydrate when, and hydrate never."
+    },
+    {
+     "t": "Event replay",
+     "d": "Events fired before hydration are queued and replayed afterwards; enabled automatically."
+    },
+    {
+     "t": "Order",
+     "d": "Hydration runs from the top-most dehydrated block down to the triggered child."
+    }
+   ]
+  },
+  {
+   "t": "Pitfalls",
+   "s": "What to say you watch for",
+   "k": [
+    {
+     "t": "Layout shift",
+     "d": "Avoid deferring visible-at-load content."
+    },
+    {
+     "t": "Barrel files and ViewChild",
+     "d": "Both can keep a deferred component in the main bundle."
+    },
+    {
+     "t": "Accessibility",
+     "d": "Wrap deferred content in an aria-live region so screen readers announce it."
+    }
+   ]
+  }
+ ],
+ "fe-rxjs-streams-ngrx": [
+  {
+   "t": "RxJS basics",
+   "s": "Streams of values over time",
+   "k": [
+    {
+     "t": "Observable",
+     "d": "A source that pushes values over time and can be subscribed to and unsubscribed from."
+    },
+    {
+     "t": "Operators",
+     "d": "Small functions in a pipe that transform a stream, such as map, debounceTime and retry."
+    },
+    {
+     "t": "Cleanup",
+     "d": "Use the async pipe, toSignal or takeUntilDestroyed instead of manual subscribe."
+    }
+   ]
+  },
+  {
+   "t": "Flattening operators",
+   "s": "What to do when an inner request overlaps",
+   "k": [
+    {
+     "t": "switchMap",
+     "d": "Cancels the previous inner observable. Use for reads like search and route data."
+    },
+    {
+     "t": "concatMap",
+     "d": "Queues inner observables and runs them one by one in order. Use for writes that must keep order."
+    },
+    {
+     "t": "mergeMap",
+     "d": "Runs all in parallel. Use for independent work; results may arrive out of order."
+    },
+    {
+     "t": "exhaustMap",
+     "d": "Ignores new values while one is active. Use for submit and pay buttons, paired with an idempotency key."
+    }
+   ]
+  },
+  {
+   "t": "NgRx Store",
+   "s": "Global, traceable state",
+   "k": [
+    {
+     "t": "Actions and reducers",
+     "d": "Actions describe what happened; reducers compute the next state in a pure way."
+    },
+    {
+     "t": "Selectors",
+     "d": "Read and derive slices of state efficiently."
+    },
+    {
+     "t": "Effects",
+     "d": "Listen to actions, run side effects like API calls, dispatch result actions."
+    }
+   ]
+  },
+  {
+   "t": "NgRx SignalStore",
+   "s": "Lighter feature state",
+   "k": [
+    {
+     "t": "Building blocks",
+     "d": "A store is composed from features that add state, computed values and methods, all exposed as signals."
+    },
+    {
+     "t": "Store vs SignalStore",
+     "d": "Store for app-wide shared state and strict traceability; SignalStore for feature or component state with less boilerplate."
+    }
+   ]
+  }
+ ],
+ "fe-hybrid-app-shell-ionic-capacitor": [
+  {
+   "t": "Parts of the stack",
+   "s": "Who does what",
+   "k": [
+    {
+     "t": "Ionic",
+     "d": "Mobile-style UI components that run in Angular."
+    },
+    {
+     "t": "Capacitor",
+     "d": "A native runtime that hosts the web app in a WebView and offers a Plugin API."
+    },
+    {
+     "t": "Plugins",
+     "d": "Native code (Swift on iOS, Java on Android) exposed to JavaScript, plus a web fallback."
+    }
+   ]
+  },
+  {
+   "t": "WebView performance budget",
+   "s": "Plan for the slowest phone",
+   "k": [
+    {
+     "t": "JS budget",
+     "d": "For JS-heavy apps, about 365 KiB compressed to load in 3 s and 650 KiB in 5 s at P75.",
+     "k": [
+      {
+       "t": "Test device",
+       "d": "Use a real low-end Android phone, not only a fast laptop."
+      }
+     ]
+    },
+    {
+     "t": "Lazy loading",
+     "d": "Split routes and use @defer for heavy widgets."
+    },
+    {
+     "t": "Long lists",
+     "d": "Use CDK virtual scroll inside ion-content so only visible rows are in the DOM."
+    }
+   ]
+  },
+  {
+   "t": "Platform support",
+   "s": "Minimums to remember",
+   "k": [
+    {
+     "t": "Capacitor minimums",
+     "d": "iOS 15.0 and Android 7.0 (API 24) for the current release."
+    },
+    {
+     "t": "Docs version",
+     "d": "Capacitor docs are at v8."
+    }
+   ]
+  },
+  {
+   "t": "Hybrid vs alternatives",
+   "s": "How to justify the choice",
+   "k": [
+    {
+     "t": "Hybrid",
+     "d": "One codebase and web skills, store distribution, native features via plugins."
+    },
+    {
+     "t": "PWA",
+     "d": "No store, fewer native features."
+    },
+    {
+     "t": "Native",
+     "d": "Best performance and platform feel, separate codebases."
+    }
+   ]
+  }
+ ],
+ "fe-live-updates-ota": [
+  {
+   "t": "What OTA can and cannot do",
+   "s": "The golden rule",
+   "k": [
+    {
+     "t": "Allowed",
+     "d": "HTML, CSS, JavaScript and assets that work with the installed binary."
+    },
+    {
+     "t": "Not allowed",
+     "d": "Adding or removing a plugin, native dependencies, Android or iOS project changes. These need a store release."
+    },
+    {
+     "t": "Store rules",
+     "d": "Google Play allows downloaded code that runs in an interpreter or VM, such as JavaScript in a WebView; confirm Apple's current wording yourself."
+    }
+   ]
+  },
+  {
+   "t": "Release safety",
+   "s": "Ship small, stage, revert",
+   "k": [
+    {
+     "t": "Channels",
+     "d": "Separate tracks like dev, staging and production; pause or route devices to a build."
+    },
+    {
+     "t": "Gradual rollout",
+     "d": "Staged percentages (10, 25, 50, 100) while you watch errors."
+    },
+    {
+     "t": "Rollback",
+     "d": "Manual from console, CLI or API, and automatic when a device fails to launch after an update."
+    },
+    {
+     "t": "Signing",
+     "d": "Code-signed bundles so only your builds install."
+    }
+   ]
+  },
+  {
+   "t": "Version gating",
+   "s": "The interview answer",
+   "k": [
+    {
+     "t": "Minimum native version",
+     "d": "Each bundle declares the lowest native build it supports; older binaries are not offered it."
+    },
+    {
+     "t": "Backward compatibility",
+     "d": "Web code must still work with native versions in the field."
+    }
+   ]
+  },
+  {
+   "t": "Service landscape",
+   "s": "Vendors change, principles do not",
+   "k": [
+    {
+     "t": "Appflow",
+     "d": "Shutting down on 31 Dec 2027 and no longer sold to new customers."
+    },
+    {
+     "t": "Alternatives",
+     "d": "Capawesome Cloud and Capgo, among others; compare features and pricing yourself."
+    }
+   ]
+  }
+ ],
+ "fe-deep-links-app-universal": [
+  {
+   "t": "Link types",
+   "s": "What kind of link opens an app",
+   "k": [
+    {
+     "t": "Android App Links",
+     "d": "Verified https links. The OS checks https://host/.well-known/assetlinks.json against your package name and signing fingerprint when the app installs.",
+     "k": [
+      {
+       "t": "autoVerify",
+       "d": "An intent filter flag that tells Android to verify the host automatically (API 23+)."
+      },
+      {
+       "t": "Digital Asset Links",
+       "d": "The JSON format of assetlinks.json: relation, target namespace android_app, package name, SHA256 fingerprints."
+      }
+     ]
+    },
+    {
+     "t": "iOS Universal Links",
+     "d": "https links that open the app when the apple-app-site-association file on your domain lists the app ID (TEAMID.BUNDLEID) and paths. The file has no extension.",
+     "k": [
+      {
+       "t": "Associated Domains",
+       "d": "The Xcode capability where you add applinks:your-domain to enable the feature."
+      }
+     ]
+    },
+    {
+     "t": "Custom URL scheme",
+     "d": "myapp:// links. Easy, but not domain-verified and no web fallback."
+    }
+   ]
+  },
+  {
+   "t": "Handling inside the app",
+   "s": "From OS event to the right screen",
+   "k": [
+    {
+     "t": "appUrlOpen",
+     "d": "The Capacitor App plugin event that gives your code the opened URL. You parse the path yourself."
+    },
+    {
+     "t": "Router handoff",
+     "d": "In Angular call router.navigateByUrl inside NgZone.run so change detection runs. Keep an allowlist of routable paths."
+    },
+    {
+     "t": "Cold start vs warm start",
+     "d": "The link may arrive before the UI is ready, so queue it and replay when the router is initialised."
+    }
+   ]
+  },
+  {
+   "t": "Safe by design",
+   "s": "What interviewers probe for fintech",
+   "k": [
+    {
+     "t": "Auth first, then route",
+     "d": "A pending-link store holds the target while login or biometric unlock runs, then navigation replays."
+    },
+    {
+     "t": "Untrusted parameters",
+     "d": "Treat link parameters like user input. Pre-fill at most, never execute, and let the server validate."
+    },
+    {
+     "t": "Test and monitor",
+     "d": "After install wait for async verification, then use adb get-app-links on Android and tap real links on a device."
+    }
+   ]
+  }
+ ],
+ "fe-push-notifications-fcm-apns": [
+  {
+   "t": "Delivery path",
+   "s": "How a message reaches the phone",
+   "k": [
+    {
+     "t": "FCM",
+     "d": "Google's service for Android and, via APNs, iOS. You send through the HTTP v1 API using a registration token or a topic."
+    },
+    {
+     "t": "APNs",
+     "d": "Apple's service. iOS gives the app an APNs token once Push Notifications capability and registration are set up."
+    },
+    {
+     "t": "Token",
+     "d": "An opaque address for one app install on one device. It can change, so the app re-sends it on launch.",
+     "k": [
+      {
+       "t": "Stale token",
+       "d": "One no longer valid. FCM answers UNREGISTERED (404) and you delete it."
+      },
+      {
+       "t": "Refresh cadence",
+       "d": "Monthly refresh balances battery and detection per Firebase guidance."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": "Permission and UX",
+   "s": "Getting a yes and keeping it",
+   "k": [
+    {
+     "t": "Android 13 runtime permission",
+     "d": "POST_NOTIFICATIONS is off by default for new installs targeting 13+. You choose when to ask."
+    },
+    {
+     "t": "Pre-prompt",
+     "d": "Your own screen explaining the benefit before the system dialog, so users do not burn the one-shot prompt."
+    },
+    {
+     "t": "Channels",
+     "d": "Android 8.0+ groups notifications into channels that users control individually, such as security alerts vs promotions."
+    }
+   ]
+  },
+  {
+   "t": "Message types",
+   "s": "What you send",
+   "k": [
+    {
+     "t": "Notification message",
+     "d": "Displayed by the OS when the app is in the background."
+    },
+    {
+     "t": "Data message",
+     "d": "Delivered to app code. On Android a killed app needs a native FirebaseMessagingService to react."
+    },
+    {
+     "t": "Topics",
+     "d": "Subscribe devices to a named group such as offers and send one message to all."
+    },
+    {
+     "t": "Doze and priority",
+     "d": "Android Doze can delay delivery; high-priority FCM messages are suggested for time-sensitive alerts."
+    }
+   ]
+  },
+  {
+   "t": "Handling taps",
+   "s": "From notification to screen",
+   "k": [
+    {
+     "t": "pushNotificationActionPerformed",
+     "d": "Fires when the user taps. Read a link from the data and route through the deep-link and auth guard."
+    },
+    {
+     "t": "Foreground display",
+     "d": "presentationOptions decide if a push shows while the app is open."
+    }
+   ]
+  }
+ ],
+ "fe-secure-storage-biometrics": [
+  {
+   "t": "Where to store what",
+   "s": "Match the data to the store",
+   "k": [
+    {
+     "t": "Keychain and Keystore",
+     "d": "OS-protected storage for secrets, with keys held in secure hardware where available."
+    },
+    {
+     "t": "Preferences",
+     "d": "Capacitor's replacement for localStorage; survives OS clearing but is not encrypted storage or a database.",
+     "k": [
+      {
+       "t": "Good for",
+       "d": "Theme, language, non-sensitive flags."
+      },
+      {
+       "t": "Not for",
+       "d": "Tokens, keys, personal financial data."
+      }
+     ]
+    },
+    {
+     "t": "In memory only",
+     "d": "Access tokens and decrypted data live in RAM and are dropped on background or logout."
+    },
+    {
+     "t": "Identity Vault",
+     "d": "A Capacitor-team product wrapping Keychain and Keystore with biometric locking, so you avoid low-level APIs."
+    }
+   ]
+  },
+  {
+   "t": "Biometrics",
+   "s": "Proving the owner is present",
+   "k": [
+    {
+     "t": "Face ID and fingerprint",
+     "d": "Local checks done by the OS. The app never sees the biometric data, only a pass or fail, or a key use."
+    },
+    {
+     "t": "Strength classes",
+     "d": "BIOMETRIC_STRONG (Class 3) is the bar for sensitive use; BIOMETRIC_WEAK (Class 2) is looser."
+    },
+    {
+     "t": "Device credential fallback",
+     "d": "PIN or password when biometrics fail. Needs API 30+ to combine with strong biometrics in one prompt."
+    },
+    {
+     "t": "Key invalidation",
+     "d": "Keys can be invalidated when a new biometric is enrolled, forcing a full re-login."
+    }
+   ]
+  },
+  {
+   "t": "Step-up authentication",
+   "s": "Extra proof for risky actions",
+   "k": [
+    {
+     "t": "What triggers it",
+     "d": "Withdraw, add payee, change password, view full card number."
+    },
+    {
+     "t": "Server verification",
+     "d": "The backend checks a fresh proof or short-lived step-up token, so a modified client cannot skip it."
+    },
+    {
+     "t": "Idle and absolute timeouts",
+     "d": "OWASP gives 2-5 minutes idle for high-value apps; enforce on the server."
+    }
+   ]
+  }
+ ],
+ "fe-money-formatting-minor-units-intl": [
+  {
+   "t": "Representing money",
+   "s": "Exact numbers, clear currency",
+   "k": [
+    {
+     "t": "Minor units",
+     "d": "The smallest unit of a currency, such as cents. Amounts are stored as integers: 1099 means 10.99 USD."
+    },
+    {
+     "t": "ISO 4217",
+     "d": "The standard list of currency codes and their minor-unit digits. USD has 2, JPY has 0.",
+     "k": [
+      {
+       "t": "Zero-decimal",
+       "d": "JPY style: 500 means 500 yen."
+      },
+      {
+       "t": "Special cases",
+       "d": "Stripe notes ISK and UGX are sent as two-decimal values ending in 00 for backward compatibility."
+      }
+     ]
+    },
+    {
+     "t": "Safe integer limit",
+     "d": "JS numbers are exact only up to 9007199254740991; beyond that use BigInt or decimals."
+    }
+   ]
+  },
+  {
+   "t": "Formatting",
+   "s": "Intl.NumberFormat at the edge",
+   "k": [
+    {
+     "t": "style currency",
+     "d": "Set style:'currency' with a required currency code. Locale decides symbol position, grouping and separators."
+    },
+    {
+     "t": "currencyDisplay and sign",
+     "d": "symbol, narrowSymbol, code, name; currencySign accounting shows negatives in parentheses."
+    },
+    {
+     "t": "Rounding",
+     "d": "roundingMode defaults to halfExpand; options include halfEven, floor, ceil and trunc. roundingIncrement supports cash rounding."
+    }
+   ]
+  },
+  {
+   "t": "Input and safety",
+   "s": "Getting money in and out",
+   "k": [
+    {
+     "t": "Parsing input",
+     "d": "Validate the string against the currency's digits then convert to an integer once. Never multiply a float."
+    },
+    {
+     "t": "Idempotency",
+     "d": "A client-generated unique key per action (UUID v4, up to 255 chars on Stripe) makes retries safe."
+    },
+    {
+     "t": "Server is source of truth",
+     "d": "Fees, tax and totals are calculated server-side; the client only previews."
+    }
+   ]
+  }
+ ],
+ "fe-app-hardening-integrity-pinning": [
+  {
+   "t": "Standards",
+   "s": "How to talk about mobile security",
+   "k": [
+    {
+     "t": "OWASP MASVS",
+     "d": "The Mobile Application Security Verification Standard with groups STORAGE, CRYPTO, AUTH, NETWORK, PLATFORM, CODE, RESILIENCE and PRIVACY."
+    },
+    {
+     "t": "MASTG and MASWE",
+     "d": "The testing guide and weakness list that map to MASVS controls, including insecure certificate validation and insecure pinning."
+    }
+   ]
+  },
+  {
+   "t": "App and device integrity",
+   "s": "Is this the real app on a real device",
+   "k": [
+    {
+     "t": "Play Integrity verdicts",
+     "d": "Account, app and device verdicts. Device labels range from MEETS_BASIC_INTEGRITY up to MEETS_STRONG_INTEGRITY.",
+     "k": [
+      {
+       "t": "Nonce and requestHash",
+       "d": "Bind the verdict to a request to stop replay and tampering."
+      },
+      {
+       "t": "Standard vs classic",
+       "d": "Standard is fast and cached; classic is slower and for rare high-value checks."
+      }
+     ]
+    },
+    {
+     "t": "Firebase App Check",
+     "d": "Providers (Play Integrity, App Attest, DeviceCheck) produce a token your backend or Firebase service validates."
+    },
+    {
+     "t": "Root and jailbreak signals",
+     "d": "Local checks raise effort but can be bypassed, so use them as signals."
+    }
+   ]
+  },
+  {
+   "t": "Transport protection",
+   "s": "Pin what you trust",
+   "k": [
+    {
+     "t": "Certificate and key pinning",
+     "d": "Restrict TLS to specific public key hashes (SPKI SHA-256) via the network security config."
+    },
+    {
+     "t": "Backup pin and expiry",
+     "d": "A backup pin avoids lock-out on key rotation; an expiry date disables pinning after the date."
+    },
+    {
+     "t": "Cleartext off",
+     "d": "Android 9+ disables cleartext HTTP by default for apps targeting API 28+."
+    }
+   ]
+  },
+  {
+   "t": "Sessions",
+   "s": "Timeouts that really expire",
+   "k": [
+    {
+     "t": "Idle timeout",
+     "d": "2-5 minutes for high-value apps, 15-30 for low-risk, enforced on the server."
+    },
+    {
+     "t": "Absolute timeout",
+     "d": "Caps session life regardless of activity, for example 4-8 hours for an office workday."
+    },
+    {
+     "t": "Session ID entropy",
+     "d": "At least 64 bits from a CSPRNG."
+    }
+   ]
+  }
  ]
 }

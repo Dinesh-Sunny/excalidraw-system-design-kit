@@ -1,0 +1,282 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "A @defer block tells Angular to put the components inside it into a separate chunk and load it later, on a trigger such as idle time, entering the viewport or a click. With server rendering, incremental hydration uses the same blocks to wake parts of the page up only when needed.",
+ "like": "Like packing only today's books in your school bag and fetching the others from the locker the moment the timetable says you need them.",
+ "why": [
+  "Smaller first download, so the first screen appears sooner",
+  "Heavy widgets (charts, editors) cost nothing until used",
+  "Server-rendered pages can become interactive piece by piece"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 310,
+  "nodes": [
+   {
+    "id": "main",
+    "t": "Main bundle|shell + placeholder",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "bundle"
+   },
+   {
+    "id": "trig",
+    "t": "Trigger|idle, viewport, click",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "target"
+   },
+   {
+    "id": "net",
+    "t": "Chunk fetch|lazy JS file",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "cloud"
+   },
+   {
+    "id": "ph",
+    "t": "@placeholder|shown first",
+    "x": 0,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "ssr"
+   },
+   {
+    "id": "load",
+    "t": "@loading / @error|while or if it fails",
+    "x": 275,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "gauge"
+   },
+   {
+    "id": "view",
+    "t": "Real component|rendered in place",
+    "x": 550,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "layers"
+   }
+  ],
+  "edges": [
+   [
+    "main",
+    "ph",
+    "renders"
+   ],
+   [
+    "trig",
+    "net",
+    "fires"
+   ],
+   [
+    "net",
+    "load",
+    "in flight"
+   ],
+   [
+    "net",
+    "view",
+    "arrives"
+   ],
+   [
+    "main",
+    "trig",
+    "waits for"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Wrap the heavy part",
+    "d": "Put a component, directive or pipe inside @defer. Angular splits their code into its own chunk, provided they are standalone.",
+    "hl": [
+     "main"
+    ]
+   },
+   {
+    "t": "Show a placeholder",
+    "d": "@placeholder renders before the trigger fires. Its minimum parameter keeps it on screen long enough to avoid flicker.",
+    "hl": [
+     "ph"
+    ]
+   },
+   {
+    "t": "Pick a trigger",
+    "d": "on idle is the default. Others: viewport, interaction, hover, immediate, timer, and when <condition>. Several triggers separated by semicolons act as OR.",
+    "hl": [
+     "trig"
+    ]
+   },
+   {
+    "t": "Prefetch ahead",
+    "d": "prefetch on idle downloads the chunk early while the content still renders on interaction, so the click feels instant.",
+    "hl": [
+     "trig",
+     "net"
+    ]
+   },
+   {
+    "t": "Loading and errors",
+    "d": "@loading (with after and minimum timers) covers the wait; @error covers a failed fetch.",
+    "hl": [
+     "load"
+    ]
+   },
+   {
+    "t": "Hydrate on demand (SSR)",
+    "d": "With SSR, hydrate on triggers keep server HTML static until a trigger fires; events before that are queued and replayed.",
+    "hl": [
+     "view"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "6 + 1",
+   "l": "on-triggers (idle, viewport, interaction, hover, immediate, timer) plus the when condition",
+   "s": "https://angular.dev/guide/templates/defer"
+  },
+  {
+   "v": "6",
+   "l": "hydrate on triggers for incremental hydration, in 3 trigger types (on, when, never)",
+   "s": "https://angular.dev/guide/incremental-hydration"
+  },
+  {
+   "v": "100 ms / 1 s",
+   "l": "docs example for @loading after and minimum, to avoid flashing a spinner",
+   "s": "https://angular.dev/guide/templates/defer"
+  },
+  {
+   "v": "500 ms",
+   "l": "docs example for @placeholder minimum",
+   "s": "https://angular.dev/guide/templates/defer"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Which trigger",
+   "d": "viewport for below-the-fold sections, interaction or hover for things a user must ask for, idle for nice-to-haves. Avoid immediate, timer and viewport on content visible at load: it can raise layout shift."
+  },
+  {
+   "t": "Prefetch or not",
+   "d": "Combine a cheap render trigger with prefetch on idle so the code is already there when the user acts."
+  },
+  {
+   "t": "Defer vs route lazy loading",
+   "d": "Routes split by page; @defer splits inside a page. Use both: lazy routes for screens, @defer for heavy widgets."
+  },
+  {
+   "t": "SSR strategy",
+   "d": "Plain SSR renders the placeholder only. Incremental hydration renders main content on the server and hydrates blocks on demand."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-bundler-code-splitting-vite-webpack-rollup-esbuild-tree-shaking-dynamic-import-lazy-chunks-frontend",
+   "why": "The general idea of dynamic import and chunks that @defer builds on"
+  },
+  {
+   "slug": "fe-hydration-islands-partial-hydration-islands-architecture-resumability-astro-qwik-frontend",
+   "why": "Other ways to hydrate a page in parts"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Layout shift",
+   "d": "Deferring content visible on first load, or a placeholder with a different size.",
+   "see": "CLS worsens in lab and field data",
+   "fix": "Do not defer above-the-fold content; give the placeholder the same dimensions"
+  },
+  {
+   "t": "Chunk stays in main bundle",
+   "d": "A deferred component is also referenced outside the block, in a ViewChild query, or imported via a barrel file.",
+   "see": "Bundle analyser shows no size drop",
+   "fix": "Reference it only inside @defer and import from the component file directly"
+  },
+  {
+   "t": "Cascading requests",
+   "d": "Nested @defer blocks with the same trigger fire together or in a waterfall.",
+   "see": "Slow, chained network requests",
+   "fix": "Give nested blocks different triggers and prefetch"
+  }
+ ],
+ "say": [
+  "I defer heavy, below-the-fold or on-demand widgets with @defer on viewport or interaction, and prefetch on idle so it still feels instant.",
+  "I keep above-the-fold content out of @defer and size the placeholder to match, to protect layout shift.",
+  "With SSR I use incremental hydration so the server renders the page and each block hydrates on its own trigger, with events replayed."
+ ],
+ "followups": [
+  {
+   "q": "What happens to @defer on the server?",
+   "a": "The placeholder is rendered and triggers do not run. With incremental hydration, main content renders on the server and hydrate triggers wake blocks later."
+  },
+  {
+   "q": "How do you prove it helped?",
+   "a": "Compare the initial bundle size and LCP, INP and CLS before and after, using a bundle analyser and field data."
+  }
+ ],
+ "today": "Incremental hydration is on by default whenever provideClientHydration() is used, with event replay included, so deferred blocks double as hydration boundaries in current Angular.",
+ "check": [
+  {
+   "q": "Which trigger is the default for @defer?",
+   "a": "on idle",
+   "d": [
+    "on viewport",
+    "on interaction",
+    "immediate"
+   ],
+   "why": "If no trigger is given Angular uses on idle."
+  },
+  {
+   "q": "What must a deferred component be to leave the main bundle?",
+   "a": "Standalone and referenced only inside the block",
+   "d": [
+    "Declared in the root module",
+    "Imported through a barrel file",
+    "Used in a ViewChild"
+   ],
+   "why": "Non-standalone or externally referenced dependencies load eagerly."
+  },
+  {
+   "q": "Why avoid deferring above-the-fold content?",
+   "a": "It can increase cumulative layout shift",
+   "d": [
+    "It disables SSR",
+    "It breaks routing",
+    "It removes the placeholder"
+   ],
+   "why": "Late-arriving content moves the layout."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Angular docs: deferrable views",
+   "u": "https://angular.dev/guide/templates/defer"
+  },
+  {
+   "t": "Angular docs: incremental hydration",
+   "u": "https://angular.dev/guide/incremental-hydration"
+  },
+  {
+   "t": "Angular docs: hydration",
+   "u": "https://angular.dev/guide/hydration"
+  }
+ ]
+}

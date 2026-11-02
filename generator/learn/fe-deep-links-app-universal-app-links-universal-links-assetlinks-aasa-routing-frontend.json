@@ -1,0 +1,296 @@
+{
+ "what": "A deep link is a normal https link that opens your app straight on the right screen, such as a withdraw page, instead of the home screen. Android App Links and iOS Universal Links prove to the phone that your website and your app belong together, then your app routes the path inside.",
+ "like": "Like a friend's flat key card that only works because the building manager (your website) has written their name on the guest list - the door opens straight to the right room.",
+ "why": [
+  "One link works in email, SMS, QR codes and the web, and falls back to the website if the app is not installed",
+  "The OS checks domain ownership, so another app cannot quietly claim your links",
+  "Users land on the exact screen, which lifts conversion for flows like pay or withdraw"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "link",
+    "t": "Link tapped|https://app.bank.com/withdraw",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "deeplink"
+   },
+   {
+    "id": "host",
+    "t": "Your domain|/.well-known files",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "doc"
+   },
+   {
+    "id": "os",
+    "t": "OS verifies|assetlinks / AASA",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "shield"
+   },
+   {
+    "id": "app",
+    "t": "App opens|appUrlOpen event",
+    "x": 0,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "mobile"
+   },
+   {
+    "id": "guard",
+    "t": "Auth guard|session? else login",
+    "x": 275,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "key"
+   },
+   {
+    "id": "route",
+    "t": "Router|withdraw screen",
+    "x": 550,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "router"
+   },
+   {
+    "id": "api",
+    "t": "Backend|re-checks every action",
+    "x": 275,
+    "y": 325,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   }
+  ],
+  "edges": [
+   [
+    "link",
+    "os",
+    "tap"
+   ],
+   [
+    "os",
+    "host",
+    "fetch file"
+   ],
+   [
+    "os",
+    "app",
+    "verified"
+   ],
+   [
+    "app",
+    "guard",
+    "path"
+   ],
+   [
+    "guard",
+    "route",
+    "signed in"
+   ],
+   [
+    "route",
+    "api",
+    "confirm + call"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Host the proof files",
+    "d": "Android needs https://your-domain/.well-known/assetlinks.json with your package name and signing certificate SHA256 fingerprint. iOS needs /.well-known/apple-app-site-association (no file extension) listing TEAMID.BUNDLEID and the allowed paths.",
+    "hl": [
+     "host"
+    ]
+   },
+   {
+    "t": "Declare the domain in the app",
+    "d": "Android adds an intent filter with android:autoVerify=\"true\" and your https host. iOS adds the Associated Domains capability with applinks:your-domain.",
+    "hl": [
+     "os",
+     "app"
+    ]
+   },
+   {
+    "t": "The OS verifies and hands the URL over",
+    "d": "On a tap the OS opens your app if verification passed, otherwise the browser. Nothing routes itself: your code must listen.",
+    "hl": [
+     "link",
+     "os",
+     "app"
+    ]
+   },
+   {
+    "t": "Listen and parse",
+    "d": "Register an appUrlOpen listener at startup (Capacitor App plugin), pull out the path, and in Angular call router.navigateByUrl inside NgZone.run.",
+    "hl": [
+     "app"
+    ]
+   },
+   {
+    "t": "Authenticate first, then route",
+    "d": "Park the target path as a pending link, run the auth guard (login, biometric unlock), and only then navigate to the withdraw screen. Treat every query parameter as untrusted input.",
+    "hl": [
+     "guard",
+     "route"
+    ]
+   },
+   {
+    "t": "Never trust the link for money",
+    "d": "The link only opens a screen. Amount, payee and approval are re-validated on the backend, and the user confirms with a step-up.",
+    "hl": [
+     "route",
+     "api"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "20 s+",
+   "l": "wait after install before testing Android autoVerify, because verification is asynchronous",
+   "s": "https://developer.android.com/training/app-links/verify-android-applinks"
+  },
+  {
+   "v": "up to 7 days",
+   "l": "for assetlinks.json changes to propagate on Android 15+ via background re-verification",
+   "s": "https://developer.android.com/training/app-links/verify-android-applinks"
+  },
+  {
+   "v": "API 23",
+   "l": "Android 6.0 is where automatic App Links verification starts on install",
+   "s": "https://developer.android.com/training/app-links/verify-android-applinks"
+  }
+ ],
+ "choices": [
+  {
+   "t": "Verified https links or custom scheme",
+   "d": "Verified https links (App Links, Universal Links) are domain-proven and fall back to the website. A custom scheme like myapp:// is simpler but unverified and has no web fallback, so use it only for internal callbacks."
+  },
+  {
+   "t": "Where to route the pending link",
+   "d": "Keep the target in memory or a short-lived store and replay it after login, so a logged-out user is never shown a protected screen and never loses the destination."
+  },
+  {
+   "t": "One URL space for web and app",
+   "d": "If web and app paths match, one router table serves both. If they differ you need a URL-pattern mapping layer, as the Capacitor guide notes."
+  },
+  {
+   "t": "Allowlist routes",
+   "d": "Only paths on an explicit allowlist are routed. Everything else goes to home, so a crafted link cannot reach internal or debug screens."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-url-state-query-params-search-params-deep-link-shareable-filters-frontend",
+   "why": "The same shareable-URL idea on the web, where the browser already handles routing"
+  },
+  {
+   "slug": "fe-hybrid-app-shell-ionic-capacitor-webview-native-bridge-plugins-ionic-capacitor-low-end-android-frontend",
+   "why": "The Capacitor shell that receives the link event and hosts your Angular router"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Link opens the browser, not the app",
+   "d": "The hosted proof file is missing, wrong, or the signing fingerprint or Team ID does not match the build.",
+   "see": "Tapping the link shows the website even with the app installed",
+   "fix": "Validate assetlinks.json and the AASA file for the exact build, and re-test after install"
+  },
+  {
+   "t": "Deep link skips login",
+   "d": "The handler navigates straight to the target before the auth guard runs.",
+   "see": "A logged-out user sees the withdraw form",
+   "fix": "Route through a guard; store the pending link and replay it after sign-in"
+  },
+  {
+   "t": "Parameters trusted",
+   "d": "The link carries amount or payee and the screen executes them.",
+   "see": "A phishing link pre-fills a transfer",
+   "fix": "Links only select a screen; the server and a step-up confirm every transfer"
+  }
+ ],
+ "say": [
+  "I use verified App Links and Universal Links, with assetlinks.json and the apple-app-site-association file on our domain, so the OS proves we own the link.",
+  "On appUrlOpen I park the path, run the auth guard first, then navigate - so a deep link into a withdraw screen never bypasses login.",
+  "The link only opens a screen; amounts and payees are validated on the backend and confirmed with biometric step-up."
+ ],
+ "followups": [
+  {
+   "q": "What if the user is not logged in when they tap the link?",
+   "a": "Save the target as a pending link, send them through login or biometric unlock, then replay the navigation. They land on the intended screen after authenticating."
+  },
+  {
+   "q": "What if the app is not installed?",
+   "a": "A verified https link simply opens your website, so the same URL still works. Add a smart banner or store redirect on that page for installs."
+  }
+ ],
+ "today": "Verified https links are the standard on both platforms, and Android 15 re-verifies in the background so proof-file changes take up to 7 days to reach devices. Capacitor 8 docs still use the appUrlOpen event with your framework router.",
+ "check": [
+  {
+   "q": "Which file proves domain ownership for Android App Links?",
+   "a": "assetlinks.json under /.well-known/",
+   "d": [
+    "manifest.json in the app root",
+    "robots.txt",
+    "apple-app-site-association"
+   ],
+   "why": "Android fetches https://host/.well-known/assetlinks.json for each autoVerify host."
+  },
+  {
+   "q": "A deep link targets a withdraw screen. What happens first?",
+   "a": "Authentication, then routing to the screen",
+   "d": [
+    "Route immediately, then ask for login",
+    "Move the money, then confirm",
+    "Cache the amount in the URL"
+   ],
+   "why": "Park the link, authenticate, then navigate, and let the server confirm any action."
+  },
+  {
+   "q": "In Capacitor, what makes the app react to an opened link?",
+   "a": "An appUrlOpen listener you register",
+   "d": [
+    "The OS routes automatically",
+    "A service worker",
+    "The AASA file itself"
+   ],
+   "why": "The OS only opens the app; your listener reads the URL and calls the router."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Capacitor: Deep Links",
+   "u": "https://capacitorjs.com/docs/guides/deep-links"
+  },
+  {
+   "t": "Android: Verify App Links",
+   "u": "https://developer.android.com/training/app-links/verify-android-applinks"
+  },
+  {
+   "t": "OWASP MASVS",
+   "u": "https://mas.owasp.org/MASVS/"
+  }
+ ],
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "tool": ""
+}

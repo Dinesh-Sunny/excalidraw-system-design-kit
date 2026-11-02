@@ -1,0 +1,306 @@
+{
+ "what": "Money is stored and sent as whole numbers of the smallest unit (minor units), for example 1099 for 10.99 USD, and only turned into text at the last step with Intl.NumberFormat. This avoids floating point rounding errors and handles currencies with 0, 2 or 3 decimal places.",
+ "like": "Like counting coins instead of pounds: you count 1099 pennies exactly, then write 10.99 on the receipt.",
+ "why": [
+  "Floating point can drift (0.1 + 0.2), which is unacceptable for balances",
+  "Different currencies have different decimals, so a hardcoded 100 is a bug",
+  "Intl formats symbol, grouping and decimals per locale, so you do not write a formatter"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "api",
+    "t": "API|{amount:1099, currency:USD}",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   },
+   {
+    "id": "model",
+    "t": "Money model|integer + ISO 4217",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "money"
+   },
+   {
+    "id": "fmt",
+    "t": "Intl.NumberFormat|locale + currency",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "i18n"
+   },
+   {
+    "id": "ui",
+    "t": "UI|$10.99",
+    "x": 550,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "in",
+    "t": "User input|\"10.99\" text",
+    "x": 0,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "form"
+   },
+   {
+    "id": "conv",
+    "t": "Parse to minor units|round once",
+    "x": 275,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "gear"
+   },
+   {
+    "id": "idem",
+    "t": "Idempotency key|safe retry",
+    "x": 275,
+    "y": 325,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "idem"
+   }
+  ],
+  "edges": [
+   [
+    "api",
+    "model",
+    "receive"
+   ],
+   [
+    "model",
+    "fmt",
+    "divide by 10^digits"
+   ],
+   [
+    "fmt",
+    "ui",
+    "text"
+   ],
+   [
+    "in",
+    "conv",
+    "string"
+   ],
+   [
+    "conv",
+    "model",
+    "integer"
+   ],
+   [
+    "model",
+    "idem",
+    "send + key"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Store integers in minor units",
+    "d": "Stripe-style APIs take amounts in the currency's smallest unit: 1000 is 10 USD, 10 is 10 JPY. Always carry the currency code with the number.",
+    "hl": [
+     "api",
+     "model"
+    ]
+   },
+   {
+    "t": "Know the currency's exponent",
+    "d": "ISO 4217 says how many minor digits a currency has. Intl.NumberFormat defaults to that value, so JPY shows no decimals.",
+    "hl": [
+     "model",
+     "fmt"
+    ]
+   },
+   {
+    "t": "Format only for display",
+    "d": "Divide by 10 to the power of the digits, then format with new Intl.NumberFormat(locale, {style:'currency', currency}). Currency is required or it throws a TypeError.",
+    "hl": [
+     "fmt",
+     "ui"
+    ]
+   },
+   {
+    "t": "Parse input carefully",
+    "d": "Take the typed text, validate against the currency's digits, and convert to an integer once. Avoid parseFloat times 100.",
+    "hl": [
+     "in",
+     "conv"
+    ]
+   },
+   {
+    "t": "Round deliberately",
+    "d": "Intl default roundingMode is halfExpand (ties away from zero). Business rules such as banker's rounding should be chosen explicitly and agreed with the backend.",
+    "hl": [
+     "conv",
+     "fmt"
+    ]
+   },
+   {
+    "t": "Send with an idempotency key",
+    "d": "Generate a UUID per user action so a retry after a dropped connection does not move money twice. The server remains the source of truth for totals.",
+    "hl": [
+     "model",
+     "idem"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "9007199254740991",
+   "l": "Number.MAX_SAFE_INTEGER (2^53 - 1), the largest integer JS numbers hold exactly",
+   "s": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER"
+  },
+  {
+   "v": "1000 vs 10",
+   "l": "the amount for 10 USD (two decimals) versus 10 JPY (zero decimals) in a Stripe request",
+   "s": "https://docs.stripe.com/currencies"
+  },
+  {
+   "v": "255 chars",
+   "l": "maximum length of a Stripe idempotency key",
+   "s": "https://docs.stripe.com/api/idempotent_requests"
+  },
+  {
+   "v": "24 hours",
+   "l": "minimum age before Stripe v1 may prune an idempotency key",
+   "s": "https://docs.stripe.com/api/idempotent_requests"
+  }
+ ],
+ "choices": [
+  {
+   "t": "Integer minor units or decimal library",
+   "d": "Integers are simplest and exact up to 2^53 - 1. Use BigInt or a decimal library for FX rates, crypto or very large values."
+  },
+  {
+   "t": "Where to do math",
+   "d": "Totals, fees and tax come from the server. The client formats and previews; it does not become a second ledger."
+  },
+  {
+   "t": "Locale for display",
+   "d": "Format with the user's locale, but keep the currency from the account, not the locale. A UK user can hold USD."
+  },
+  {
+   "t": "Symbol, code or narrow symbol",
+   "d": "currencyDisplay offers symbol, narrowSymbol, code and name. Use code when several dollar currencies could confuse."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-i18n-l10n-internationalization-localization-rtl-translations-intl-formatting-frontend",
+   "why": "The wider topic of locale-aware dates, numbers and plurals using Intl"
+  },
+  {
+   "slug": "fe-form-state-validation-react-hook-form-zod-schema-validation-controlled-uncontrolled-frontend",
+   "why": "Validating and parsing amount inputs before they become minor units"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Floats for money",
+   "d": "Prices are stored as 0.1 style numbers and summed on the client.",
+   "see": "Totals off by a penny, mismatches with the server",
+   "fix": "Integers in minor units, math on the server"
+  },
+  {
+   "t": "Hardcoded 100",
+   "d": "Every currency is divided by 100.",
+   "see": "JPY amounts shown 100x too small",
+   "fix": "Use the ISO 4217 exponent via Intl or a currency table"
+  },
+  {
+   "t": "Double submit",
+   "d": "A retry after a timeout repeats the transfer.",
+   "see": "Duplicate debits",
+   "fix": "Idempotency key per user action, generated once"
+  }
+ ],
+ "say": [
+  "I keep money as integer minor units plus an ISO 4217 currency code, never floats, and only format at the edge with Intl.NumberFormat.",
+  "I never hardcode 100: JPY has zero decimals, so the exponent comes from the currency.",
+  "Writes carry an idempotency key so retries are safe, and the server owns the totals."
+ ],
+ "followups": [
+  {
+   "q": "How do you handle rounding?",
+   "a": "Intl defaults to halfExpand, but money rules decide the mode. Agree one rule with the backend, round once at conversion, and never round repeatedly."
+  },
+  {
+   "q": "What about huge or fractional amounts?",
+   "a": "Past 2^53 - 1 plain numbers lose precision, so use BigInt or strings. For FX and crypto use a decimal library on the server."
+  }
+ ],
+ "today": "Intl.NumberFormat now supports rounding modes and increments, so cash rounding like nickel rounding is a config option. Payment APIs standardise on minor units and idempotency keys.",
+ "check": [
+  {
+   "q": "How is 10.99 USD sent to a Stripe-style API?",
+   "a": "1099",
+   "d": [
+    "10.99",
+    "109.9",
+    "11"
+   ],
+   "why": "Amounts are integers in the currency's smallest unit."
+  },
+  {
+   "q": "Why not use floats for money?",
+   "a": "Binary floating point cannot represent many decimals exactly",
+   "d": [
+    "They are slower",
+    "They cannot be negative",
+    "They need a library"
+   ],
+   "why": "Rounding drift makes totals wrong; integers stay exact."
+  },
+  {
+   "q": "What stops a retried request moving money twice?",
+   "a": "An idempotency key",
+   "d": [
+    "A bigger timeout",
+    "A cache header",
+    "A locale setting"
+   ],
+   "why": "The server returns the saved result for a repeated key instead of acting again."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MDN: Intl.NumberFormat",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat"
+  },
+  {
+   "t": "MDN: Number.MAX_SAFE_INTEGER",
+   "u": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER"
+  },
+  {
+   "t": "Stripe: Currencies",
+   "u": "https://docs.stripe.com/currencies"
+  },
+  {
+   "t": "Stripe: Idempotent requests",
+   "u": "https://docs.stripe.com/api/idempotent_requests"
+  }
+ ],
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "tool": ""
+}

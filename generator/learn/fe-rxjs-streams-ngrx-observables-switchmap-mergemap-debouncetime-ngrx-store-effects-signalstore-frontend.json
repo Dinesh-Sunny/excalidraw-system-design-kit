@@ -1,0 +1,285 @@
+{
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "what": "RxJS models things that happen over time (typing, clicks, HTTP responses, sockets) as streams you can combine, cancel and retry. NgRx builds on it: the Store keeps shared state with actions and reducers, and SignalStore is a lighter, signal-based way to hold feature state.",
+ "like": "Like a conveyor belt of parcels with rules at each station: drop the old parcel when a new one arrives, or queue them, or ignore new ones while one is being handled.",
+ "why": [
+  "Race conditions like stale search results are solved by one operator choice",
+  "Shared state gets one predictable path, with time-travel debugging in dev tools",
+  "Retries, debounce and cancellation are built in instead of hand-written"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 310,
+  "nodes": [
+   {
+    "id": "ui",
+    "t": "UI events|typing, clicks",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "browser"
+   },
+   {
+    "id": "pipe",
+    "t": "RxJS pipe|debounce, switchMap",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "rxjs"
+   },
+   {
+    "id": "api",
+    "t": "HTTP / socket|inner request",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "cloud"
+   },
+   {
+    "id": "eff",
+    "t": "NgRx Effects|side effects",
+    "x": 275,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "gear"
+   },
+   {
+    "id": "store",
+    "t": "Store / SignalStore|state in one place",
+    "x": 550,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "store"
+   },
+   {
+    "id": "sel",
+    "t": "Selectors / signals|read by views",
+    "x": 0,
+    "y": 160,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "signals"
+   }
+  ],
+  "edges": [
+   [
+    "ui",
+    "pipe",
+    "events"
+   ],
+   [
+    "pipe",
+    "api",
+    "flatten"
+   ],
+   [
+    "api",
+    "eff",
+    "response"
+   ],
+   [
+    "eff",
+    "store",
+    "dispatch / patch"
+   ],
+   [
+    "store",
+    "sel",
+    "read"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Events become a stream",
+    "d": "A user action or socket message is an observable value pushed over time.",
+    "hl": [
+     "ui"
+    ]
+   },
+   {
+    "t": "Shape it in a pipe",
+    "d": "Operators like debounceTime tame noisy input before any request is made.",
+    "hl": [
+     "pipe"
+    ]
+   },
+   {
+    "t": "Choose the flattening operator",
+    "d": "switchMap cancels the previous inner request when a new value arrives (good for reads). concatMap queues, mergeMap runs in parallel, exhaustMap ignores new values while one is running (good for a pay button).",
+    "hl": [
+     "pipe",
+     "api"
+    ]
+   },
+   {
+    "t": "Run side effects in one place",
+    "d": "With the NgRx Store, Effects listen for actions, call APIs and dispatch result actions, keeping components free of request code.",
+    "hl": [
+     "eff"
+    ]
+   },
+   {
+    "t": "Hold state predictably",
+    "d": "The Store updates through reducers; SignalStore holds feature state as signals with methods that patch it.",
+    "hl": [
+     "store"
+    ]
+   },
+   {
+    "t": "Views read, not fetch",
+    "d": "Components read selectors or store signals and stay simple.",
+    "hl": [
+     "sel"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "1",
+   "l": "inner observable exhaustMap allows at a time; new projections are ignored until it completes",
+   "s": "https://reactivex.io/rxjs/file/es6/operators/exhaustMap.js.html"
+  },
+  {
+   "v": "2",
+   "l": "NgRx learning paths in the docs: Global Store and SignalStore",
+   "s": "https://ngrx.io"
+  },
+  {
+   "v": "v22",
+   "l": "current NgRx docs version at time of writing",
+   "s": "https://ngrx.io"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "switchMap, mergeMap, concatMap or exhaustMap",
+   "d": "Reads (search, route data): switchMap, so stale responses are cancelled. Writes that must all happen in order: concatMap. Independent parallel work: mergeMap. Double-click protection such as login or pay: exhaustMap."
+  },
+  {
+   "t": "Store or SignalStore",
+   "d": "Store (actions, reducers, effects, selectors) suits large teams, app-wide shared state and strict traceability. SignalStore suits feature or component state with less boilerplate."
+  },
+  {
+   "t": "Signals or RxJS inside a component",
+   "d": "Use signals for the current value and RxJS where you need time operators, then bridge with toSignal."
+  },
+  {
+   "t": "Unsubscribing",
+   "d": "Prefer the async pipe, toSignal or takeUntilDestroyed over manual subscribe to avoid leaks."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-signals-zoneless-angular-angular-signals-computed-effect-zoneless-change-detection-onpush-frontend",
+   "why": "When you only need current state and derived values"
+  },
+  {
+   "slug": "fe-server-state-cache-tanstack-query-swr-stale-while-revalidate-dedupe-refetch-query-keys-frontend",
+   "why": "When most of the state is just cached server data"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Wrong flattening operator on a payment",
+   "d": "mergeMap or switchMap on a pay button lets a double tap send two requests, or cancel the first on the client while the server still charges.",
+   "see": "Duplicate charges or an unknown outcome",
+   "fix": "exhaustMap on the click, plus an idempotency key on the request"
+  },
+  {
+   "t": "Stale search results",
+   "d": "mergeMap on typeahead lets a slow old response overwrite a newer one.",
+   "see": "Results flicker to an older query",
+   "fix": "debounceTime then switchMap"
+  },
+  {
+   "t": "Leaked subscriptions",
+   "d": "Manual subscribe never torn down.",
+   "see": "Memory growth and duplicate handlers",
+   "fix": "async pipe, toSignal or takeUntilDestroyed"
+  }
+ ],
+ "say": [
+  "For reads like search I use debounceTime then switchMap so a newer query cancels the older one.",
+  "For writes I choose by intent: concatMap when order matters, exhaustMap for a pay button, with an idempotency key on the server call.",
+  "I use the NgRx Store when many features share state and I want traceability, and SignalStore for feature-level state with less ceremony."
+ ],
+ "followups": [
+  {
+   "q": "Does switchMap cancel the server work?",
+   "a": "It unsubscribes on the client, which aborts the HTTP request, but the server may still have processed it. That is why writes use idempotency keys and not switchMap."
+  },
+  {
+   "q": "When would you not use NgRx at all?",
+   "a": "For small apps or purely local state, signals and services are enough; add the Store when state is shared widely and needs tracing."
+  }
+ ],
+ "today": "NgRx now documents two first-class paths, the global Store and SignalStore, so modern Angular teams often keep Store for app-wide state and use SignalStore for features, with signals as the read model.",
+ "check": [
+  {
+   "q": "Typeahead search: which operator after debounceTime?",
+   "a": "switchMap",
+   "d": [
+    "mergeMap",
+    "exhaustMap",
+    "concatMap"
+   ],
+   "why": "switchMap cancels the previous request so only the latest result is used."
+  },
+  {
+   "q": "A pay button gets double-tapped. Which operator protects it?",
+   "a": "exhaustMap",
+   "d": [
+    "switchMap",
+    "mergeMap",
+    "debounceTime alone"
+   ],
+   "why": "exhaustMap ignores new values while the inner request is active."
+  },
+  {
+   "q": "Which NgRx option fits small feature-level state with little boilerplate?",
+   "a": "SignalStore",
+   "d": [
+    "Store with Effects only",
+    "Router Store",
+    "A global reducer per component"
+   ],
+   "why": "SignalStore is the signal-based option designed for feature state."
+  }
+ ],
+ "sources": [
+  {
+   "t": "NgRx docs",
+   "u": "https://ngrx.io"
+  },
+  {
+   "t": "NgRx SignalStore guide",
+   "u": "https://ngrx.io/guide/signals/signal-store"
+  },
+  {
+   "t": "RxJS exhaustMap source docs",
+   "u": "https://reactivex.io/rxjs/file/es6/operators/exhaustMap.js.html"
+  },
+  {
+   "t": "RxJS documentation",
+   "u": "https://rxjs.dev/"
+  },
+  {
+   "t": "Angular: RxJS interop",
+   "u": "https://angular.dev/ecosystem/rxjs-interop"
+  }
+ ]
+}

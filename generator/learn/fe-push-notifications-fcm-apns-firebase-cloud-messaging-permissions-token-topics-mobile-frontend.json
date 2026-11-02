@@ -1,0 +1,307 @@
+{
+ "what": "Push notifications let your server wake a phone with a short message even when the app is closed. FCM (Firebase Cloud Messaging) carries them to Android, and APNs (Apple Push Notification service) carries them to iOS; each device gets a token that your server stores.",
+ "like": "Like a doorbell with a number on it: the post office (FCM or APNs) knows the number, you just give them the number and the message.",
+ "why": [
+  "Re-engage users with alerts like payment received or login attempt",
+  "Works when the app is closed, using the OS delivery channel",
+  "One server call can target a single device, a topic, or many devices"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "app",
+    "t": "App|asks permission",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "pushnote"
+   },
+   {
+    "id": "os",
+    "t": "OS|permission + token",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "mobile"
+   },
+   {
+    "id": "api",
+    "t": "Your backend|stores tokens",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "server"
+   },
+   {
+    "id": "db",
+    "t": "Token table|user, device, last seen",
+    "x": 550,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "db"
+   },
+   {
+    "id": "fcm",
+    "t": "FCM / APNs|delivery service",
+    "x": 275,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "cloud"
+   },
+   {
+    "id": "dev",
+    "t": "Device|shows notification",
+    "x": 0,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "bell"
+   },
+   {
+    "id": "evt",
+    "t": "Event|payment, alert",
+    "x": 275,
+    "y": 325,
+    "w": 170,
+    "h": 86,
+    "c": "msg",
+    "i": "queue"
+   }
+  ],
+  "edges": [
+   [
+    "app",
+    "os",
+    "ask"
+   ],
+   [
+    "os",
+    "api",
+    "token"
+   ],
+   [
+    "api",
+    "db",
+    "save"
+   ],
+   [
+    "evt",
+    "api",
+    "trigger"
+   ],
+   [
+    "api",
+    "fcm",
+    "send"
+   ],
+   [
+    "fcm",
+    "dev",
+    "deliver"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Ask at the right moment",
+    "d": "Android 13 (API 33) made POST_NOTIFICATIONS a runtime permission, off by default for new installs. Call requestPermissions after a user action or a short explainer, not at first launch.",
+    "hl": [
+     "app",
+     "os"
+    ]
+   },
+   {
+    "t": "Register and get a token",
+    "d": "After permission, register() returns an FCM token on Android and an APNs-backed token on iOS through the registration event.",
+    "hl": [
+     "os",
+     "app"
+    ]
+   },
+   {
+    "t": "Send the token to your server",
+    "d": "Upload it with the signed-in user and device id, and refresh it on each launch. The server keeps a last-seen timestamp.",
+    "hl": [
+     "api",
+     "db"
+    ]
+   },
+   {
+    "t": "Server sends through FCM or APNs",
+    "d": "On an event your backend calls the FCM HTTP v1 API (which also reaches iOS via APNs) with the token or a topic.",
+    "hl": [
+     "evt",
+     "api",
+     "fcm"
+    ]
+   },
+   {
+    "t": "Handle receive and tap",
+    "d": "pushNotificationReceived fires in the foreground; pushNotificationActionPerformed fires on tap, and that handler hands a deep link to the router.",
+    "hl": [
+     "dev",
+     "app"
+    ]
+   },
+   {
+    "t": "Clean up stale tokens",
+    "d": "Delete tokens FCM reports as UNREGISTERED (HTTP 404) and run a job that drops tokens not seen inside your window.",
+    "hl": [
+     "api",
+     "db"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "API 33",
+   "l": "Android 13 is where POST_NOTIFICATIONS became a runtime permission",
+   "s": "https://developer.android.com/develop/ui/views/notifications/notification-permission"
+  },
+  {
+   "v": "270 days",
+   "l": "of inactivity after which FCM expires an Android registration",
+   "s": "https://firebase.google.com/docs/cloud-messaging/manage-tokens"
+  },
+  {
+   "v": "monthly",
+   "l": "token refresh balances battery and stale detection; more often than weekly gives no benefit",
+   "s": "https://firebase.google.com/docs/cloud-messaging/manage-tokens"
+  },
+  {
+   "v": "API 26",
+   "l": "Android 8.0 is where notification channels start",
+   "s": "https://capacitorjs.com/docs/apis/push-notifications"
+  }
+ ],
+ "choices": [
+  {
+   "t": "Notification or data message",
+   "d": "Notification messages are shown by the OS. Data-only messages let the app decide, but on Android pushNotificationReceived does not fire if the app was killed unless you add a native FirebaseMessagingService."
+  },
+  {
+   "t": "Topics or per-user tokens",
+   "d": "Topics fit broadcasts like market news. Account events like a login alert need per-user tokens so the server controls who gets what."
+  },
+  {
+   "t": "When to prompt for permission",
+   "d": "Pre-prompt with your own explainer screen and trigger the system dialog from a user action. A denial is hard to undo."
+  },
+  {
+   "t": "What goes in the payload",
+   "d": "Keep it generic, such as You have a new payment, and fetch details after the user opens and authenticates. Lock screens and logs can expose payloads."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-service-worker-pwa-offline-cache-storage-fetch-interception-workbox-push-frontend",
+   "why": "Web push for installed PWAs, using the Push API and a service worker instead of FCM native tokens"
+  },
+  {
+   "slug": "fe-websocket-client-socket-reconnect-heartbeat-backoff-realtime-frontend",
+   "why": "Realtime updates while the app is open, with no OS delivery involved"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Prompt at first launch",
+   "d": "The system dialog appears before the user sees any value.",
+   "see": "Low opt-in and a permanent denial",
+   "fix": "Ask in context after a user action, with an explainer screen first"
+  },
+  {
+   "t": "Stale tokens pile up",
+   "d": "Tokens are never removed after uninstall or inactivity.",
+   "see": "Rising send errors and wasted sends",
+   "fix": "Delete on UNREGISTERED and prune by last-seen window"
+  },
+  {
+   "t": "Sensitive data in the payload",
+   "d": "Balances or codes are sent in the notification body.",
+   "see": "Private data on lock screens",
+   "fix": "Send an opaque id; load details after authentication"
+  }
+ ],
+ "say": [
+  "I request notification permission in context, because on Android 13 it is a runtime permission and a denial is hard to reverse.",
+  "I store the FCM or APNs token per user and device with a last-seen time, refresh it monthly, and delete tokens FCM reports as unregistered.",
+  "Payloads stay generic; tapping the push deep-links into the app, which authenticates before showing anything sensitive."
+ ],
+ "followups": [
+  {
+   "q": "What about silent pushes on iOS?",
+   "a": "The Capacitor plugin does not support iOS remote background push, so design so that a normal visible notification or a fetch on open covers critical updates."
+  },
+  {
+   "q": "How do you handle the user denying permission?",
+   "a": "Keep working without push, offer an in-app inbox, and show a settings shortcut with an explanation when they later choose to enable it."
+  }
+ ],
+ "today": "Android 13+ requires an explicit permission and a good prompt strategy matters more than the plumbing. FCM guidance now centres on tracking token freshness and pruning stale registrations.",
+ "check": [
+  {
+   "q": "Which Android version made notifications a runtime permission?",
+   "a": "Android 13 (API 33)",
+   "d": [
+    "Android 8.0",
+    "Android 10",
+    "Android 15 only"
+   ],
+   "why": "POST_NOTIFICATIONS arrived with API 33."
+  },
+  {
+   "q": "After how long of inactivity does FCM expire an Android token?",
+   "a": "270 days",
+   "d": [
+    "24 hours",
+    "7 days",
+    "Never"
+   ],
+   "why": "FCM treats a registration as expired after 270 days without activity."
+  },
+  {
+   "q": "Best content for a push about a bank transfer?",
+   "a": "A generic alert that opens the app, then authenticate and load details",
+   "d": [
+    "The full balance in the body",
+    "The one-time code",
+    "The account number"
+   ],
+   "why": "Lock screens and logs can expose payloads, so keep details behind login."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Capacitor: Push Notifications",
+   "u": "https://capacitorjs.com/docs/apis/push-notifications"
+  },
+  {
+   "t": "Android: Notification runtime permission",
+   "u": "https://developer.android.com/develop/ui/views/notifications/notification-permission"
+  },
+  {
+   "t": "Firebase: Manage FCM tokens",
+   "u": "https://firebase.google.com/docs/cloud-messaging/manage-tokens"
+  },
+  {
+   "t": "Firebase Cloud Messaging",
+   "u": "https://firebase.google.com/docs/cloud-messaging"
+  }
+ ],
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "tool": ""
+}

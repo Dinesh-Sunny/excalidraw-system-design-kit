@@ -1,0 +1,314 @@
+{
+ "what": "App hardening makes a mobile banking app harder to fake, tamper with or spy on. The app collects an integrity proof from the OS (Play Integrity, App Attest), pins its server certificate, and the server judges the result and ends idle sessions.",
+ "like": "Like a bank checking the courier's ID badge and the sealed envelope before accepting a delivery, then closing the window if nobody speaks for a few minutes.",
+ "why": [
+  "Blocks fake or modified apps from calling your API",
+  "Pinning makes man-in-the-middle proxies fail on the device",
+  "Server-side timeouts protect accounts even if the app is stolen or left open"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "app",
+    "t": "App|asks for integrity token",
+    "x": 0,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "client",
+    "i": "harden"
+   },
+   {
+    "id": "os",
+    "t": "Play Integrity / App Attest|signed verdict",
+    "x": 275,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "ext",
+    "i": "shield"
+   },
+   {
+    "id": "api",
+    "t": "Backend|verifies verdict + nonce",
+    "x": 550,
+    "y": 20,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "gateway"
+   },
+   {
+    "id": "pin",
+    "t": "Pinned TLS|public key hashes",
+    "x": 0,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "edge",
+    "i": "lock"
+   },
+   {
+    "id": "pol",
+    "t": "Policy|allow, limit, step-up, deny",
+    "x": 550,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "svc",
+    "i": "policy"
+   },
+   {
+    "id": "sess",
+    "t": "Session store|idle + absolute timeout",
+    "x": 275,
+    "y": 175,
+    "w": 170,
+    "h": 86,
+    "c": "data",
+    "i": "clock"
+   },
+   {
+    "id": "mon",
+    "t": "Telemetry|log before enforcing",
+    "x": 275,
+    "y": 325,
+    "w": 170,
+    "h": 86,
+    "c": "ops",
+    "i": "chart"
+   }
+  ],
+  "edges": [
+   [
+    "app",
+    "os",
+    "request"
+   ],
+   [
+    "os",
+    "app",
+    "token"
+   ],
+   [
+    "app",
+    "api",
+    "call + token"
+   ],
+   [
+    "api",
+    "pol",
+    "verdict"
+   ],
+   [
+    "pol",
+    "sess",
+    "enforce"
+   ],
+   [
+    "app",
+    "pin",
+    "TLS"
+   ],
+   [
+    "api",
+    "mon",
+    "log"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Start from a standard",
+    "d": "OWASP MASVS groups controls into STORAGE, CRYPTO, AUTH, NETWORK, PLATFORM, CODE, RESILIENCE and PRIVACY, so you can say what you cover and why.",
+    "hl": [
+     "app"
+    ]
+   },
+   {
+    "t": "Ask the OS for an attestation",
+    "d": "Play Integrity returns device, app and account verdicts; App Check wraps Play Integrity, App Attest or DeviceCheck into a token your backend can validate.",
+    "hl": [
+     "app",
+     "os"
+    ]
+   },
+   {
+    "t": "Verify on the server",
+    "d": "The backend checks the nonce or requestHash to stop replay, then appRecognitionVerdict and licensing, then device labels. Never trust a verdict decided inside the app.",
+    "hl": [
+     "os",
+     "api"
+    ]
+   },
+   {
+    "t": "Respond in tiers",
+    "d": "Allow, allow with limits, step-up or deny, rather than a hard block. Run in telemetry mode first to see false positives.",
+    "hl": [
+     "api",
+     "pol",
+     "mon"
+    ]
+   },
+   {
+    "t": "Pin the certificate carefully",
+    "d": "Pin SubjectPublicKeyInfo hashes in the network security config, always include a backup pin, and consider an expiry so a missed rotation cannot lock users out.",
+    "hl": [
+     "pin"
+    ]
+   },
+   {
+    "t": "Enforce sessions on the server",
+    "d": "Idle timeout 2-5 minutes for high-value apps and an absolute timeout, both kept server-side because client timers can be manipulated.",
+    "hl": [
+     "sess",
+     "pol"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "10,000/day",
+   "l": "default Play Integrity request quota across all installs, extendable on request",
+   "s": "https://developer.android.com/google/play/integrity/overview"
+  },
+  {
+   "v": "few hundred ms",
+   "l": "typical Play Integrity standard request latency (classic takes a few seconds)",
+   "s": "https://developer.android.com/google/play/integrity/overview"
+  },
+  {
+   "v": "2-5 min",
+   "l": "common idle timeout for high-value applications (15-30 min for low-risk)",
+   "s": "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+  },
+  {
+   "v": "64 bits",
+   "l": "minimum entropy for session identifiers",
+   "s": "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+  }
+ ],
+ "choices": [
+  {
+   "t": "Standard or classic integrity request",
+   "d": "Standard is the recommended default: faster and replay-protected by Google Play. Classic fits rare, high-value checks but you must manage the nonce."
+  },
+  {
+   "t": "Pin the leaf, the key or a CA",
+   "d": "Pinning public key hashes with a backup pin survives certificate renewal; pinning only a leaf risks outages. Without a backup pin you need an app update to recover."
+  },
+  {
+   "t": "Block or tier the response",
+   "d": "Tiered responses such as limits or a CAPTCHA reduce harm to legitimate users on odd devices. Collect telemetry first."
+  },
+  {
+   "t": "Client detection vs server judgement",
+   "d": "Root or jailbreak checks in the app can be hooked and bypassed. Use them as signals; the decision belongs on the server."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "fe-csp-xss-defence-content-security-policy-xss-sanitize-trusted-types-dompurify-security-frontend",
+   "why": "The web counterpart for stopping injected script and data theft"
+  },
+  {
+   "slug": "fe-auth-in-the-browser-httponly-cookie-jwt-refresh-token-oauth-pkce-csrf-bff-frontend",
+   "why": "Session and token design that the idle and absolute timeouts apply to"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Pinning without a backup",
+   "d": "The pinned key rotates and the app has no second pin.",
+   "see": "All requests fail until users update",
+   "fix": "Backup pin, expiry, and a staged rollout plan for key changes"
+  },
+  {
+   "t": "Integrity verdict trusted locally",
+   "d": "The app decides if the device is fine.",
+   "see": "Hooked apps skip checks",
+   "fix": "Send the token to the backend and enforce there"
+  },
+  {
+   "t": "Client-side timeout only",
+   "d": "A timer in the app logs the user out.",
+   "see": "Stolen tokens stay valid",
+   "fix": "Server-side idle and absolute expiry on every token"
+  }
+ ],
+ "say": [
+  "I map the app to OWASP MASVS and treat resilience features as defence in depth, not the main control.",
+  "Integrity tokens from Play Integrity or App Check are verified on the server with a nonce, and the response is tiered rather than a hard block.",
+  "I pin public keys with a backup pin, and idle timeouts of a few minutes are enforced on the server."
+ ],
+ "followups": [
+  {
+   "q": "Can root detection stop attackers?",
+   "a": "No. It raises effort, but code on the device can be modified. Use signals plus server-side controls, short-lived tokens and step-up for risky actions."
+  },
+  {
+   "q": "What breaks if you pin wrongly?",
+   "a": "Users cannot connect after a certificate or key change. Mitigate with backup pins, pin-set expiry, and planned rotation."
+  }
+ ],
+ "today": "Attestation moved to server-judged verdicts: Play Integrity standard requests and Firebase App Check. Android's own docs warn pinning limits flexibility, so teams pin keys with backups and roll out carefully.",
+ "check": [
+  {
+   "q": "Where should an integrity verdict be judged?",
+   "a": "On your backend",
+   "d": [
+    "Inside the app",
+    "In the CDN",
+    "In the browser cache"
+   ],
+   "why": "Client-side checks can be bypassed on a compromised device."
+  },
+  {
+   "q": "What should accompany a pin-set?",
+   "a": "A backup pin",
+   "d": [
+    "A bigger timeout",
+    "A cookie",
+    "A second app"
+   ],
+   "why": "Without a backup pin a key change needs an app update."
+  },
+  {
+   "q": "Where is idle timeout enforced?",
+   "a": "On the server",
+   "d": [
+    "Only in a JS timer",
+    "In the manifest",
+    "In the keyboard"
+   ],
+   "why": "OWASP says timeout management must be enforced server-side."
+  }
+ ],
+ "sources": [
+  {
+   "t": "OWASP MASVS",
+   "u": "https://mas.owasp.org/MASVS/"
+  },
+  {
+   "t": "Android: Play Integrity API",
+   "u": "https://developer.android.com/google/play/integrity/overview"
+  },
+  {
+   "t": "Firebase App Check",
+   "u": "https://firebase.google.com/docs/app-check"
+  },
+  {
+   "t": "Android: Network security config",
+   "u": "https://developer.android.com/privacy-and-security/security-config"
+  },
+  {
+   "t": "OWASP: Session Management",
+   "u": "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+  }
+ ],
+ "family": "frontend",
+ "reviewed": "Nov 2026",
+ "tool": ""
+}
