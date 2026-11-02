@@ -4,6 +4,12 @@ All notable changes to the kit. Versions follow [Semantic Versioning](https://se
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-02
+LangChain Deep Agents. The library now has 477 items.
+- 11 new agent blocks for the `deepagents` harness: Todo List (write_todos), Task Tool (spawn sub-agent), Async Sub-agents, Backend Router (State / Store / Disk), AGENTS.md Memory, Agent Middleware, Filesystem Permissions, Code Interpreter (eval, QuickJS), Agent Server (LangSmith Deployment), Agent Event Stream and ACP (agent in editor).
+- 5 new agentic patterns: Deep Agent Anatomy, Middleware Hooks (the 6 hooks placed in one loop, with ordering and jump_to), Middleware Stack (harness middleware plus limits, retries, fallback and PII), Sub-agent Delegation (isolated, fork, async) and Backend Routing.
+- A new "Deep Agents (LangChain)" starter pack.
+
 ## [1.7.1] - 2026-11-02
 - 5 loop links (`sd:link/`) for drawing loops on the canvas: Loop Arrow, Tool Call Loop (LLM calls a tool, the result comes back), Self Loop (repeat until done), Agent Loop Ring (think, act, observe) and Retry Loop (dashed, with backoff). The library now has 461 items.
 

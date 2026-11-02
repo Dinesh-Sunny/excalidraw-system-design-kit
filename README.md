@@ -13,7 +13,7 @@
 **Draw any system design or agentic AI architecture on Excalidraw in minutes, by typing instead of dragging.**
 
 [![Latest release](https://img.shields.io/github/v/release/Dinesh-Sunny/excalidraw-system-design-kit?label=release&color=5b57d1)](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest)
-[![Items](https://img.shields.io/badge/items-461-2f9e44)](docs/catalog.md)
+[![Items](https://img.shields.io/badge/items-477-2f9e44)](docs/catalog.md)
 [![Full designs](https://img.shields.io/badge/full%20designs-21-e67700)](#-whats-inside)
 [![Agentic patterns](https://img.shields.io/badge/agentic%20patterns-12-9c36b5)](#-whats-inside)
 [![Excalidraw](https://img.shields.io/badge/made%20for-Excalidraw-6965db)](https://excalidraw.com)
@@ -321,6 +321,7 @@ Details and how to add items: [generator/README.md](generator/README.md).
 - [x] Practice mode, Explore map, lessons and real tools in blocks, AI search, voice tutor, agent and interview research designs, 17 starter packs (v1.6)
 - [x] Frontend system design: 49 blocks (incl. Angular + hybrid mobile), 15 patterns, 12 designs with RADIO practice (v1.7)
 - [x] Loop links for agent and tool-call loops (v1.7.1)
+- [x] LangChain Deep Agents: 11 blocks, middleware hooks and stack, delegation and backend patterns (v1.8)
 - [ ] Listed on libraries.excalidraw.com ([#2967](https://github.com/excalidraw/excalidraw-libraries/pull/2967))
 - [ ] Cloud-provider variants (AWS / GCP / Azure names on the same cards)
 - [ ] More AI designs: eval pipeline, fine-tuning platform, agent marketplace
