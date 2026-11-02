@@ -19,7 +19,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 12 | [`sd:ops/`](#12-ops) | Observability, security & ops | 10 |
 | 13 | [`sd:ext/`](#13-ext) | External systems | 6 |
 | 14 | [`sd:zone/`](#14-zone) | Boundaries & zones | 9 |
-| 15 | [`sd:link/`](#15-link) | Arrows & connectors | 11 |
+| 15 | [`sd:link/`](#15-link) | Arrows & connectors | 16 |
 | 16 | [`sd:ui/`](#16-ui) | UI components | 31 |
 | 17 | [`sd:frame/`](#17-frame) | Device frames | 6 |
 | 18 | [`sd:screen/`](#18-screen) | Screen wireframes | 13 |
@@ -362,6 +362,11 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Request and Response** - pair
 - **Fan-out** - one to many arrows
 - **Elbow Arrow** - orthogonal route
+- **Loop Arrow** - circular cycle repeat loop agent loop tool loop
+- **Tool Call Loop** - llm calls tool result back two way loop agent
+- **Self Loop** - repeat until done retry same box loop
+- **Agent Loop Ring** - think act observe reason tool loop react
+- **Retry Loop** - backoff retry dashed loop
 
 <a id="16-ui"></a>
 ## 16 `sd:ui/` UI components

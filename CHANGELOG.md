@@ -4,6 +4,9 @@ All notable changes to the kit. Versions follow [Semantic Versioning](https://se
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-11-02
+- 5 loop links (`sd:link/`) for drawing loops on the canvas: Loop Arrow, Tool Call Loop (LLM calls a tool, the result comes back), Self Loop (repeat until done), Agent Loop Ring (think, act, observe) and Retry Loop (dashed, with backoff). The library now has 461 items.
+
 ## [1.7.0] - 2026-11-02
 Frontend system design. The library now has 456 items (up from 371).
 - 39 new frontend building blocks (`sd:fe/`), each with its own icon, a sourced lesson, nested concepts and real tools: rendering (CSR, SSG, ISR, streaming SSR, React Server Components, islands, app shell + router, micro-frontends, design system), state and data (global store, server-state cache, normalized cache, GraphQL client, forms, URL state, optimistic updates), network and realtime (API client, WebSocket, SSE, polling, offline outbox), the browser platform (Service Worker, IndexedDB, storage and cookies, Web Workers, HTTP cache), performance (code splitting, virtualized lists, infinite scroll, responsive images, prefetch, debounce, Core Web Vitals, RUM) and quality (accessibility, i18n, CSP + XSS, auth in the browser, feature flags).

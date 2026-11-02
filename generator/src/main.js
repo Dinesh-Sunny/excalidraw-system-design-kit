@@ -10,7 +10,7 @@ import { UI, FRAMES, SCREENS } from "./ui.js";
 import { FE_SECTIONS, FE_PATTERNS, FE_TEMPLATES, FE_NOTES } from "./frontend.js";
 
 const items = []; // {name, section, skel}
-export const KIT = "sd", KIT_VERSION = "1.7.0";
+export const KIT = "sd", KIT_VERSION = "1.7.1";
 const add = (cat, label, skel, section) => items.push({ name: `${KIT}:${cat}/ ${label}`, section: section || cat, skel });
 const one = (s) => s.replace(/\n/g, " ");
 
@@ -125,6 +125,17 @@ add("link", "Write Path - mutate", L("write", { c: "#e03131" }));
 add("link", "Request and Response - pair", [arr(0, 0, 220, 0, { strokeColor: "#495057", strokeWidth: 2, label: { text: "request", fontSize: 14 } }), arr(220, 44, 0, 44, { strokeColor: "#495057", strokeWidth: 2, strokeStyle: "dashed", label: { text: "response", fontSize: 14 } })]);
 add("link", "Fan-out - one to many arrows", [0, 70, 140].map((y) => arr(0, 70, 200, y, { strokeColor: "#495057", strokeWidth: 2 })));
 add("link", "Elbow Arrow - orthogonal route", [{ type: "arrow", x: 0, y: 0, points: [[0, 0], [110, 0], [110, 120], [220, 120]], strokeColor: "#495057", strokeWidth: 2, roundness: null, endArrowhead: "arrow" }]);
+
+// loop links (v1.7.1): curved arrows for agent / tool-call loops
+const ARC = (cx, cy, r, a0, a1, n = 7) => Array.from({ length: n }, (_, k) => { const t = (a0 + (a1 - a0) * k / (n - 1)) * Math.PI / 180; return [Math.round(cx + r * Math.cos(t)), Math.round(cy + r * Math.sin(t))]; });
+const curve = (pts, o = {}) => ({ type: "arrow", x: pts[0][0], y: pts[0][1], points: pts.map(([a, b]) => [a - pts[0][0], b - pts[0][1]]), roundness: { type: 2 }, strokeWidth: 2, strokeColor: o.c || "#495057", strokeStyle: o.s || "solid", endArrowhead: "arrow", startArrowhead: null, ...(o.label ? { label: { text: o.label, fontSize: 14 } } : {}) });
+add("link", "Loop Arrow - circular cycle repeat loop agent loop tool loop", [curve(ARC(70, 70, 60, -60, 250, 9), { c: "#9c36b5" }), txt(46, 60, "loop", { fontSize: 16, strokeColor: "#9c36b5" })]);
+add("link", "Tool Call Loop - llm calls tool result back two way loop agent", [curve(ARC(110, 70, 100, 200, 340), { c: "#9c36b5", label: "tool call" }), curve(ARC(110, 30, 100, 20, 160), { c: "#2f9e44", label: "result" })]);
+add("link", "Self Loop - repeat until done retry same box loop", [{ type: "arrow", x: 0, y: 0, points: [[0, 0], [60, 0], [60, -80], [-80, -80], [-80, -26]], strokeColor: "#9c36b5", strokeWidth: 2, roundness: null, endArrowhead: "arrow", startArrowhead: null },
+  txt(-40, -112, "repeat until done", { fontSize: 14, strokeColor: "#9c36b5" })]);
+add("link", "Agent Loop Ring - think act observe reason tool loop react", [curve(ARC(100, 100, 80, -80, 30, 5), { c: "#9c36b5" }), curve(ARC(100, 100, 80, 40, 150, 5), { c: "#9c36b5" }), curve(ARC(100, 100, 80, 160, 270, 5), { c: "#9c36b5" }),
+  txt(150, 20, "think", { fontSize: 16, strokeColor: "#9c36b5" }), txt(132, 176, "act", { fontSize: 16, strokeColor: "#9c36b5" }), txt(-62, 92, "observe", { fontSize: 16, strokeColor: "#9c36b5" })]);
+add("link", "Retry Loop - backoff retry dashed loop", [curve(ARC(70, 70, 60, -60, 250, 9), { c: "#e67700", s: "dashed" }), txt(40, 52, "retry", { fontSize: 16, strokeColor: "#e67700" }), txt(30, 72, "+ backoff", { fontSize: 13, strokeColor: "#e67700" })]);
 
 // ================= 13 UI =================
 section("ui", "16", "UI components", "client", "wireframe building blocks");
