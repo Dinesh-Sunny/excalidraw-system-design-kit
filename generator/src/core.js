@@ -519,3 +519,26 @@ Object.assign(ICONS, {
     E(x + 17, y + 24, 15, 15, c, "#ffe8cc", 1.3), E(x + 21, y + 28, 3, 3, c, c, 1), E(x + 26, y + 32, 3, 3, c, c, 1)],
   flags: (x, y, c) => [P(x, y, [[4, 2], [4, 38]], c, 2), PC(x, y, [[4, 3], [24, 3], [20, 9], [24, 15], [4, 15]], c, "#b2f2bb", 1.4), R(x + 16, y + 24, 23, 12, c, "#a5d8ff", 1.3), E(x + 28, y + 25.5, 9, 9, c, WHITE, 1.2)],
 });
+
+// v1.7: Angular + hybrid mobile + fintech frontend blocks.
+const PHONE = (x, y, c, fill = WHITE, w = 22, h = 38) => [R(x, y, w, h, c, fill, 1.5), P(x, y, [[w / 2 - 3, h - 4], [w / 2 + 3, h - 4]], c, 1.2)];
+Object.assign(ICONS, {
+  signals: (x, y, c) => [E(x + 15, y + 15, 10, 10, c, c, 1), P(x, y, [[11, 9], [8, 14], [8, 26], [11, 31]], c, 1.6, { roundness: { type: 2 } }), P(x, y, [[29, 9], [32, 14], [32, 26], [29, 31]], c, 1.6, { roundness: { type: 2 } }),
+    P(x, y, [[5, 4], [1, 12], [1, 28], [5, 36]], c, 1.4, { roundness: { type: 2 } }), P(x, y, [[35, 4], [39, 12], [39, 28], [35, 36]], c, 1.4, { roundness: { type: 2 } })],
+  defer: (x, y, c) => [PC(x, y, [[4, 2], [22, 2], [13, 19]], c, "#fff3bf", 1.4), PC(x, y, [[4, 36], [22, 36], [13, 19]], c, "#ffe066", 1.4), P(x, y, [[2, 2], [24, 2]], c, 2), P(x, y, [[2, 36], [24, 36]], c, 2),
+    rect(x + 26, y + 10, 13, 18, { strokeColor: c, backgroundColor: WHITE, strokeWidth: 1.3, strokeStyle: "dashed", roundness: null })],
+  rxjs: (x, y, c) => [P(x, y, [[1, 20], [39, 20]], c, 1.5), P(x, y, [[35, 16], [39, 20], [35, 24]], c, 1.5), E(x + 3, y + 14, 11, 11, c, "#fcc2d7", 1.3), E(x + 15, y + 14, 11, 11, c, "#a5d8ff", 1.3), E(x + 26, y + 14, 7, 11, c, "#b2f2bb", 1.3),
+    P(x, y, [[6, 33], [26, 33]], c, 1.2), P(x, y, [[30, 29], [30, 37]], c, 1.6), P(x, y, [[8, 4], [16, 10]], c, 1, { strokeStyle: "dashed" })],
+  hybrid: (x, y, c) => [...PHONE(x + 9, y + 1, c), R(x + 11, y + 6, 18, 24, c, "#e7f5ff", 1.1, false), P(x, y, [[11, 11], [29, 11]], c, 1), T2(x + 13, y + 14, "</>", c, 8),
+    R(x + 0, y + 16, 7, 9, c, "#ffec99", 1.1), R(x + 33, y + 16, 7, 9, c, "#ffec99", 1.1), P(x, y, [[7, 20.5], [9, 20.5]], c, 1.2), P(x, y, [[31, 20.5], [33, 20.5]], c, 1.2)],
+  ota: (x, y, c) => [PC(x, y, [[9, 15], [5, 11], [7, 6], [12, 4], [16, 1], [23, 1], [27, 4], [33, 5], [35, 10], [31, 15]], c, "#e7f5ff", 1.3, { roundness: { type: 2 } }), P(x, y, [[20, 8], [20, 26]], c, 1.6), P(x, y, [[16, 22], [20, 26], [24, 22]], c, 1.6),
+    ...PHONE(x + 12, y + 27, c, WHITE, 16, 13)],
+  deeplink: (x, y, c) => [R(x + 2, y + 15, 18, 10, c, WHITE, 1.8), R(x + 14, y + 15, 18, 10, c, WHITE, 1.8), P(x, y, [[14, 20], [20, 20]], c, 1.8), P(x, y, [[27, 8], [38, 8], [38, 3]], c, 1.4), P(x, y, [[30, 3], [38, 3]], c, 1.4),
+    T2(x + 3, y + 28, "app://", c, 8)],
+  pushnote: (x, y, c) => [...PHONE(x + 6, y + 2, c), R(x + 9, y + 9, 16, 6, c, "#d0ebff", 1, false), E(x + 24, y + 0, 14, 14, c, "#ff8787", 1.3), T2(x + 28.5, y + 1.5, "1", WHITE, 10)],
+  biometric: (x, y, c) => [ell(x + 2, y + 2, 28, 34, { strokeColor: c, backgroundColor: WHITE, strokeWidth: 1.4 }), ell(x + 7, y + 8, 18, 24, { strokeColor: c, backgroundColor: "transparent", strokeWidth: 1.3 }),
+    ell(x + 12, y + 14, 8, 13, { strokeColor: c, backgroundColor: "transparent", strokeWidth: 1.2 }), P(x, y, [[16, 18], [16, 32]], c, 1.3), R(x + 26, y + 26, 13, 12, c, "#ffec99", 1.2), P(x, y, [[29, 26], [29, 22], [32.5, 19], [36, 22], [36, 26]], c, 1.2, { roundness: { type: 2 } })],
+  money: (x, y, c) => [E(x + 1, y + 26, 22, 8, c, "#ffe066", 1.3), E(x + 1, y + 20, 22, 8, c, "#ffe066", 1.3), E(x + 1, y + 14, 22, 8, c, "#ffd43b", 1.3), R(x + 25, y + 4, 14, 11, c, WHITE, 1.2, false), T2(x + 26.5, y + 5, "00", c, 9),
+    P(x, y, [[22, 10], [25, 10]], c, 1)],
+  harden: (x, y, c) => [...PHONE(x + 1, y + 1, c), PC(x, y, [[29, 12], [39, 16], [38, 27], [29, 36], [20, 27], [19, 16]], c, "#d3f9d8", 1.4, { roundness: { type: 2 } }), P(x, y, [[24.5, 23], [28, 27], [34, 19]], c, 1.6)],
+});

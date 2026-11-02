@@ -13,7 +13,7 @@
 **Draw any system design or agentic AI architecture on Excalidraw in minutes, by typing instead of dragging.**
 
 [![Latest release](https://img.shields.io/github/v/release/Dinesh-Sunny/excalidraw-system-design-kit?label=release&color=5b57d1)](https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/releases/latest)
-[![Items](https://img.shields.io/badge/items-442-2f9e44)](docs/catalog.md)
+[![Items](https://img.shields.io/badge/items-456-2f9e44)](docs/catalog.md)
 [![Full designs](https://img.shields.io/badge/full%20designs-21-e67700)](#-whats-inside)
 [![Agentic patterns](https://img.shields.io/badge/agentic%20patterns-12-9c36b5)](#-whats-inside)
 [![Excalidraw](https://img.shields.io/badge/made%20for-Excalidraw-6965db)](https://excalidraw.com)
@@ -105,7 +105,7 @@ A single Excalidraw library where **every item is a finished, labelled, colour-c
 | LLMOps | `sd:llmops/` | Guardrails, PII redaction, prompt registry, evals, LLM-as-judge, tracing, token and cost metering, red teaming, fallback |
 | Boundaries and arrows | `sd:zone/` `sd:link/` | Region, AZ, VPC, subnets, trust boundary; REST, gRPC, WebSocket, async, replication arrows |
 | UI/UX | `sd:ui/` `sd:frame/` `sd:screen/` | 31 UI parts, device frames, 13 ready screens (login, feed, chat, ride booking, checkout, admin dashboard, AI assistant...) |
-| Frontend | `sd:fe/` `sd:fep/` | Rendering (CSR, SSG, ISR, streaming SSR, Server Components, islands), state and data caches, WebSocket/SSE/polling, Service Worker, IndexedDB, Web Workers, code splitting, virtual lists, images, Core Web Vitals, RUM, a11y, i18n, CSP, browser auth, flags; 14 frontend patterns |
+| Frontend | `sd:fe/` `sd:fep/` | Rendering (CSR, SSG, ISR, streaming SSR, Server Components, islands), state and data caches, WebSocket/SSE/polling, Service Worker, IndexedDB, Web Workers, code splitting, virtual lists, images, Core Web Vitals, RUM, a11y, i18n, CSP, browser auth, flags; Angular signals, @defer, RxJS/NgRx, Ionic + Capacitor, OTA, push, biometrics, money; 15 frontend patterns |
 | Patterns | `sd:pattern/` `sd:agentic/` | Cache-aside, sharding, CQRS, saga, outbox, multi-region; prompt chaining, routing, orchestrator-workers, evaluator-optimizer, multi-agent, agentic RAG, MCP, A2A |
 | Full designs | `sd:tpl/` | URL shortener, rate limiter, chat, news feed, video streaming, ride sharing, notifications, web crawler, payments, autocomplete, file sync, ticket booking, proximity, LLM chat app, RAG, AI agent platform, coding agent, deep research agent, support agent, realtime voice agent, enterprise AI gateway |
 
@@ -260,9 +260,9 @@ Full rules: [docs/naming.md](docs/naming.md).
 
 Or browse and search them all on the [showcase page](https://dinesh-sunny.github.io/excalidraw-system-design-kit/).
 
-<details><summary><b>Full interview designs</b> (<code>sd:tpl/</code>, 50)</summary><img src="previews/tpl.png" alt="Full designs"></details>
-<details><summary><b>Frontend building blocks</b> (<code>sd:fe/</code>, 39)</summary><img src="previews/fe.png" alt="Frontend building blocks"></details>
-<details><summary><b>Frontend patterns</b> (<code>sd:fep/</code>, 14)</summary><img src="previews/fep.png" alt="Frontend patterns"></details>
+<details><summary><b>Full interview designs</b> (<code>sd:tpl/</code>, 52)</summary><img src="previews/tpl.png" alt="Full designs"></details>
+<details><summary><b>Frontend building blocks</b> (<code>sd:fe/</code>, 49)</summary><img src="previews/fe.png" alt="Frontend building blocks"></details>
+<details><summary><b>Frontend patterns</b> (<code>sd:fep/</code>, 15)</summary><img src="previews/fep.png" alt="Frontend patterns"></details>
 <details><summary><b>Agentic patterns</b> (<code>sd:agentic/</code>, 12)</summary><img src="previews/agentic.png" alt="Agentic patterns"></details>
 <details><summary><b>Agents</b> (<code>sd:agent/</code>)</summary><img src="previews/agent.png" alt="Agents"></details>
 <details><summary><b>AI models</b> (<code>sd:ai/</code>)</summary><img src="previews/ai.png" alt="AI models"></details>
@@ -285,9 +285,9 @@ Or browse and search them all on the [showcase page](https://dinesh-sunny.github
 | Ready labelled cards (icon + name + colour) | ❌ | ✅ |
 | Insert by typing (named for Command Palette) | some | ✅ every item |
 | Section filtering (`sd:data/`) | ❌ | ✅ |
-| Full interview designs with key-decision notes | ❌ | ✅ 50 |
+| Full interview designs with key-decision notes | ❌ | ✅ 52 |
 | Agentic AI parts and patterns | ❌ | ✅ 64 items |
-| Frontend system design (blocks, patterns, RADIO designs) | ❌ | ✅ 63 items |
+| Frontend system design (blocks, patterns, RADIO designs) | ❌ | ✅ 77 items |
 | UI/UX wireframe screens | rarely | ✅ 13 screens |
 | Consistent colour language + legend | ❌ | ✅ |
 | Versioned releases + changelog | rarely | ✅ |
@@ -319,7 +319,7 @@ Details and how to add items: [generator/README.md](generator/README.md).
 - [x] A distinct icon for every block, new site with install guide (v1.4)
 - [x] Canvas fit: compact groups and flows, notes below, 20 px grid (v1.5)
 - [x] Practice mode, Explore map, lessons and real tools in blocks, AI search, voice tutor, agent and interview research designs, 17 starter packs (v1.6)
-- [x] Frontend system design: 39 blocks, 14 patterns, 10 designs with RADIO practice (v1.7)
+- [x] Frontend system design: 49 blocks (incl. Angular + hybrid mobile), 15 patterns, 12 designs with RADIO practice (v1.7)
 - [ ] Listed on libraries.excalidraw.com ([#2967](https://github.com/excalidraw/excalidraw-libraries/pull/2967))
 - [ ] Cloud-provider variants (AWS / GCP / Azure names on the same cards)
 - [ ] More AI designs: eval pipeline, fine-tuning platform, agent marketplace

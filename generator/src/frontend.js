@@ -103,10 +103,10 @@ export const FE_TEMPLATES = [
     notes: "Key decisions (RADIO)\n- Every filter lives in the URL: shareable,\n  back button, SSR can read it\n- Map is a lazy chunk; list and map share\n  one result set (hover sync)\n- Debounce map moves before searching\n- Dates: locale aware, keyboard friendly\n- Idempotency key on the booking submit" } },
   { name: "FE Mobile Money App - fintech wallet withdraw payout hybrid ionic capacitor offline low-end android frontend", spec: {
     title: "Mobile Money App (Frontend)", sub: "A wallet that works on cheap phones and patchy data · show money right, never pay twice",
-    nodes: [["u", "User\n(low-end Android)", "mobile", "client", 0, 0, 160], ["shell", "Hybrid App Shell\n(Capacitor /\nWebView)", "router", "client", 1.4, 0, 170], ["auth", "Login + Biometrics\n(secure storage)", "tokenauth", "client", 2.8, 0, 170],
+    nodes: [["u", "User\n(low-end Android)", "mobile", "client", 0, 0, 160], ["shell", "Hybrid App Shell\n(Capacitor /\nWebView)", "hybrid", "client", 1.4, 0, 170], ["auth", "Login + Biometrics\n(secure storage)", "biometric", "client", 2.8, 0, 170],
       ["bal", "Balance Screen\n(cached, shows\n\"updated 2m ago\")", "querycache", "client", 4.2, 0, 170], ["api", "Wallet API\n(BFF)", "gateway", "edge", 5.6, 0], ["wd", "Withdraw Flow\n(fee, net amount,\nconfirm)", "form", "client", 4.2, 1.3, 170],
-      ["idem", "Idempotency Key\n+ Outbox\n(retry safe)", "offlineq", "client", 5.6, 1.3, 170], ["st", "Status Tracker\n(pending -> paid)", "optimistic", "client", 2.8, 1.3, 170], ["push", "Push (FCM)", "bell", "svc", 2.8, 2.6],
-      ["rc", "Remote Config\n+ Flags\n(per country)", "flags", "client", 1.4, 1.3, 160], ["loc", "Locale\n(language,\ncurrency, numbers)", "i18n", "client", 0, 1.3, 160], ["ota", "Live Updates\n(OTA web bundle)", "bundle", "client", 1.4, 2.6, 160],
+      ["idem", "Idempotency Key\n+ Outbox\n(retry safe)", "offlineq", "client", 5.6, 1.3, 170], ["st", "Status Tracker\n(pending -> paid)", "optimistic", "client", 2.8, 1.3, 170], ["push", "Push (FCM)", "pushnote", "client", 2.8, 2.6],
+      ["rc", "Remote Config\n+ Flags\n(per country)", "flags", "client", 1.4, 1.3, 160], ["loc", "Locale + Money\n(language,\nIntl currency)", "money", "client", 0, 1.3, 160], ["ota", "Live Updates\n(OTA web bundle)", "ota", "client", 1.4, 2.6, 160],
       ["rum", "RUM + Crashes\n(p75 on low-end)", "rum", "ops", 4.2, 2.6, 160]],
     edges: [["u", "shell", "open"], ["shell", "auth", "unlock"], ["auth", "bal", "session"], ["bal", "api", "GET /balance", B], ["bal", "wd", "withdraw"], ["wd", "idem", "submit"], ["idem", "api", "POST + key"], ["wd", "st", "pending"],
       ["push", "st", "paid"], ["shell", "rc", "on start"], ["rc", "loc", "country"], ["rc", "ota", "channel"], ["st", "rum", "", DOT]],
@@ -176,6 +176,18 @@ export const FE_SECTIONS = [
     ["CSP + XSS\nDefence", "csp", "content security policy xss sanitize trusted types dompurify security"],
     ["Auth in the\nBrowser", "tokenauth", "httponly cookie jwt refresh token oauth pkce csrf bff"],
     ["Feature Flags\n(client)", "flags", "feature toggles a/b test experiments gradual rollout"],
+  ], tags: "frontend" },
+  { cat: "fe", no: "22", label: "Angular + hybrid mobile", theme: "client", noSection: true, items: [
+    ["Signals + Zoneless\n(Angular)", "signals", "angular signals computed effect zoneless change detection onpush"],
+    ["Deferrable Views\n(@defer)", "defer", "angular defer lazy blocks incremental hydration triggers placeholder"],
+    ["RxJS Streams\n(NgRx)", "rxjs", "observables switchmap mergemap debouncetime ngrx store effects signalstore"],
+    ["Hybrid App Shell\n(Ionic + Capacitor)", "hybrid", "webview native bridge plugins ionic capacitor low-end android"],
+    ["Live Updates\n(OTA)", "ota", "over the air web bundle update channels rollback capgo appflow capawesome"],
+    ["Deep Links\n(App / Universal)", "deeplink", "app links universal links assetlinks aasa routing"],
+    ["Push Notifications\n(FCM / APNs)", "pushnote", "firebase cloud messaging permissions token topics mobile"],
+    ["Secure Storage +\nBiometrics", "biometric", "keychain keystore face fingerprint step-up auth mobile"],
+    ["Money Formatting\n(minor units, Intl)", "money", "currency integer minor units intl numberformat iso 4217 rounding fintech"],
+    ["App Hardening\n(integrity, pinning)", "harden", "play integrity app check root jailbreak detection certificate pinning session timeout masvs"],
   ], tags: "frontend" },
 ];
 
@@ -250,6 +262,11 @@ export const FE_PATTERNS = [
       ["micro", "Microtasks\n(promises)", "queue", "msg", 0, 1.2], ["raf", "Render\n(rAF, style,\nlayout, paint)", "picture", "client", 0, 2.4]],
     edges: [["stack", "web", "setTimeout, fetch"], ["web", "task", "callback ready"], ["task", "stack", "next task"], ["stack", "micro", "drain all", B], ["micro", "raf", "then render"]],
     notes: "- One task, all microtasks, then render\n- Tasks over 50 ms are long tasks\n- Split work: yield, Web Worker" } },
+  { name: "Idempotent Payment Submit - double tap safe retry idempotency key pay button fintech frontend", spec: { title: "Idempotent Payment Submit", sub: "Tap twice, retry, lose the reply: pay once",
+    nodes: [["btn", "Pay button\n(disabled while\nin flight)", "form", "client", 0, 0, 160], ["key", "Key per attempt\n(UUID v4, kept\nuntil done)", "idem", "client", 1.3, 0, 160], ["out", "Outbox\n(retry with the\nsame key)", "offlineq", "client", 2.6, 0, 160],
+      ["api", "Payments API\n(stores key +\nresponse)", "gateway", "edge", 3.9, 0, 160], ["st", "Pending ->\npaid / failed", "optimistic", "client", 2.6, 1.2, 160], ["push", "Push / poll\nfor final state", "pushnote", "client", 3.9, 1.2, 160]],
+    edges: [["btn", "key", "1. new key"], ["key", "out", "2. queue"], ["out", "api", "3. POST + key", B], ["out", "st", "4. pending"], ["api", "push", "5. settled"], ["push", "st", "6. update"]],
+    notes: "- Same key on every retry; new key only\n  for a new payment\n- Server replays the first response\n- Never show success before the server\n- RxJS: exhaustMap on the pay click" } },
 ];
 
 // ---- frontend notes (sd:note/) ----
@@ -260,4 +277,5 @@ export const FE_NOTES = [
   ["State Placement - where should this frontend state live", "Where does this state live?\n\nServer data ......... query cache\nShared UI ........... global store\nOne component ....... local state\nFilters, tabs ....... URL\nForm inputs ......... form library\nSurvives reload ..... IndexedDB /\n                      localStorage\nTokens .............. HttpOnly cookie\n                      (never in JS)", { fs: 14, font: 3, stroke: "#6741d9", fill: "#f3f0ff" }],
   ["Component API - props events state frontend interface", "Component API\n\n<Autocomplete\n  value / defaultValue  (controlled?)\n  onChange / onSelect   (events)\n  fetcher(query, signal)\n  renderItem            (slot)\n  debounceMs, minChars\n  aria-label            (a11y)\n/>\n\nInside: query, results, open,\n  activeIndex, status", { fs: 14, font: 3, stroke: "#4263eb", fill: "#edf2ff" }],
   ["Frontend Optimizations - checklist performance a11y security", "Optimizations to mention\n\nSpeed: SSR/stream, code split, lazy\n  images, preload LCP, virtualize lists\nNetwork: cache, dedupe, debounce,\n  abort stale, prefetch on intent\nA11y: semantic HTML, focus, keyboard,\n  live regions, reduced motion\nSecurity: escape output, CSP,\n  HttpOnly cookies, CSRF\ni18n: Intl dates/numbers, RTL\nObserve: RUM vitals + errors", { stroke: "#2f9e44", fill: "#ebfbee" }],
+  ["React to Angular - concept map hooks signals rxjs ngrx frontend", "React -> Angular\n\nuseState ........... signal()\nuseMemo ............ computed()\nuseEffect .......... effect()\nReact.memo ......... OnPush / signals\nReact.lazy ......... lazy routes, @defer\nReact Query ........ TanStack Query (Angular)\nRedux / Zustand .... NgRx Store / SignalStore\nfetch + abort ...... HttpClient + switchMap\nContext ............ DI services\nNext.js SSR ........ Angular SSR +\n                     incremental hydration", { fs: 14, font: 3, stroke: "#c2255c", fill: "#fff0f6" }],
 ];
