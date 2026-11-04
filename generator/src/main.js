@@ -10,7 +10,7 @@ import { UI, FRAMES, SCREENS } from "./ui.js";
 import { FE_SECTIONS, FE_PATTERNS, FE_TEMPLATES, FE_NOTES } from "./frontend.js";
 
 const items = []; // {name, section, skel}
-export const KIT = "sd", KIT_VERSION = "1.8.0";
+export const KIT = "sd", KIT_VERSION = "1.8.1";
 const add = (cat, label, skel, section) => items.push({ name: `${KIT}:${cat}/ ${label}`, section: section || cat, skel });
 const one = (s) => s.replace(/\n/g, " ");
 
@@ -41,9 +41,17 @@ add("guide", "Colour legend - category key", (() => {
 section("note", "01", "Interview notes", "msg");
 const card = (w, h0, text, o = {}) => [rect(0, 0, w, Math.max(h0 < 160 ? h0 : 0, 28 + text.split("\n").length * (o.fs || 16) * 1.25), { strokeColor: o.stroke || "#e67700", backgroundColor: o.fill || "#fff9db", strokeWidth: 2, strokeStyle: o.dash ? "dashed" : "solid",
   label: { text, fontSize: o.fs || 16, textAlign: "left", verticalAlign: "top", strokeColor: INK, fontFamily: o.font || 5 } })];
-add("note", "Interview Flow - steps checklist 45 min", card(330, 250, "Interview flow (45 min)\n\n1. Requirements ............ 5 min\n2. Estimates ................... 5 min\n3. API design .................. 5 min\n4. Data model .................. 5 min\n5. High-level design ....... 10 min\n6. Deep dives .................. 10 min\n7. Bottlenecks + wrap-up .. 5 min"));
+add("note", "Interview Flow - steps checklist 45 min", card(330, 250, "Interview flow (45 min)\n\n1. Requirements ............ 5 min\n2. Core entities ............. 2 min\n3. Estimates ................... 3 min\n4. API design .................. 5 min\n5. Data model .................. 5 min\n6. High-level design ....... 10 min\n7. Deep dives .................. 10 min\n8. Bottlenecks + wrap-up .. 5 min"));
 add("note", "Requirements - functional non-functional", card(340, 330, "Requirements\n\nFunctional\n- Users can ...\n- Users can ...\n- Out of scope: ...\n\nNon-functional\n- Scale: DAU ..., QPS ...\n- Latency: p99 < ... ms\n- Availability: 99.9x %\n- Consistency: strong / eventual\n- Durability, security, cost"));
 add("note", "Capacity Estimates - back of envelope qps storage", card(360, 300, "Back-of-envelope\n\nDAU: ...\nRead QPS = DAU x reads / 86,400 = ...\nWrite QPS = ...   Peak = 2-3 x avg\nStorage / day = writes x size = ...\n5 years = per day x 1,825 = ...\nBandwidth = QPS x payload = ...\nCache (80/20): 20% of daily reads\nServers = peak QPS / per-server QPS", { fs: 15 }));
+add("note", "Core Entities - main objects nouns domain model checklist", card(340, 300, "Core entities (2 min)\n\nThe main things the system stores\nand moves. Nouns only, no columns yet.\n\n- User\n- ...\n- ...\n- ...\n\nHow they relate\n  User 1 : N ...\n  ... N : M ...\n\nAdd fields later in the data model", { stroke: "#2f9e44", fill: "#ebfbee" }));
+add("note", "Core Entities Map - entity boxes relations 1 to n", (() => {
+  const E = (x, y, name, f) => [rect(x, y, 170, 40, { strokeColor: "#2f9e44", backgroundColor: "#b2f2bb", strokeWidth: 2, roundness: null, label: { text: name, fontSize: 18, strokeColor: INK } }),
+    rect(x, y + 40, 170, 16 + f.length * 20, { strokeColor: "#2f9e44", backgroundColor: WHITE, strokeWidth: 2, roundness: null, label: { text: f.join("\n"), fontSize: 14, textAlign: "left", verticalAlign: "top", strokeColor: INK, fontFamily: 3 } })];
+  return [txt(0, 0, "Core entities", { fontSize: 20 }), ...E(0, 40, "User", ["id", "name"]), ...E(280, 40, "Post", ["id", "user_id", "text"]), ...E(140, 240, "Like", ["user_id", "post_id"]),
+    arr(176, 80, 274, 80, { strokeColor: INK, strokeWidth: 2, label: { text: "1 : N", fontSize: 14 } }), arr(85, 146, 160, 234, { strokeColor: INK, strokeWidth: 2, label: { text: "1 : N", fontSize: 14 } }),
+    arr(365, 166, 290, 234, { strokeColor: INK, strokeWidth: 2, label: { text: "1 : N", fontSize: 14 } })];
+})());
 add("note", "API Design - rest endpoints contract", card(400, 230, "API design\n\nPOST   /v1/items           -> 201 {id}\nGET    /v1/items/{id}      -> 200\nGET    /v1/items?cursor=&limit=20\nDELETE /v1/items/{id}      -> 204\n\nAuth: Bearer JWT · Idempotency-Key\nRate limited · cursor pagination", { fs: 14, font: 3, stroke: ACCENT, fill: "#edf2ff" }));
 const table = (x, y, name, fields, th = T.data) => [rect(x, y, 260, 38, { strokeColor: th.stroke, backgroundColor: th.fill, strokeWidth: 2, roundness: null, label: { text: name, fontSize: 17, strokeColor: INK, fontFamily: 3 } }),
   rect(x, y + 38, 260, 14 + fields.length * 22, { strokeColor: th.stroke, backgroundColor: WHITE, strokeWidth: 2, roundness: null, label: { text: fields.join("\n"), fontSize: 14, textAlign: "left", verticalAlign: "top", strokeColor: INK, fontFamily: 3 } })];

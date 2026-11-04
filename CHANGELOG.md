@@ -4,6 +4,9 @@ All notable changes to the kit. Versions follow [Semantic Versioning](https://se
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-11-04
+- Core Entities: a checklist note and a Core Entities Map (entity boxes with 1 : N links) for the step right after requirements. Both are in the Interview starter pack, and the Interview Flow note now has the Core entities step (2 min). The library now has 479 items.
+
 ## [1.8.0] - 2026-11-02
 LangChain Deep Agents. The library now has 477 items.
 - 11 new agent blocks for the `deepagents` harness: Todo List (write_todos), Task Tool (spawn sub-agent), Async Sub-agents, Backend Router (State / Store / Disk), AGENTS.md Memory, Agent Middleware, Filesystem Permissions, Code Interpreter (eval, QuickJS), Agent Server (LangSmith Deployment), Agent Event Stream and ACP (agent in editor).

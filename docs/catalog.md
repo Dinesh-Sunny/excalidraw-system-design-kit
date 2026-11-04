@@ -5,7 +5,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | # | Prefix | Section | Items |
 |---|---|---|---|
 | 00 | [`sd:guide/`](#00-guide) | How to use this kit | 2 |
-| 01 | [`sd:note/`](#01-note) | Interview notes | 31 |
+| 01 | [`sd:note/`](#01-note) | Interview notes | 33 |
 | 02 | [`sd:client/`](#02-client) | Clients, devices & AI clients | 28 |
 | 03 | [`sd:edge/`](#03-edge) | Edge & networking | 8 |
 | 04 | [`sd:svc/`](#04-svc) | Services & compute | 29 |
@@ -45,6 +45,8 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Interview Flow** - steps checklist 45 min
 - **Requirements** - functional non-functional
 - **Capacity Estimates** - back of envelope qps storage
+- **Core Entities** - main objects nouns domain model checklist
+- **Core Entities Map** - entity boxes relations 1 to n
 - **API Design** - rest endpoints contract
 - **Data Model** - table entity schema
 - **Data Model** - one to many relation erd
