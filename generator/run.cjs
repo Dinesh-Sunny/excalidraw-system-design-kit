@@ -9,5 +9,5 @@ fs.writeFileSync('out/System Design Kit.excalidrawlib',JSON.stringify(res.lib));
 const errs=res.report.filter(r=>r.error);console.log('items',res.report.length,'errors',errs.length);errs.slice(0,5).forEach(e=>console.log(e.name,e.error.slice(0,400)));
 fs.writeFileSync('out/report.json',JSON.stringify(res.report,null,0));
 if(process.argv[2]!=='nosvg'){fs.mkdirSync('out/svg',{recursive:true});
- for(const it of res.lib.libraryItems){const svg=await pg.evaluate(e=>window.SVG(e),it.elements);fs.writeFileSync('out/svg/'+it.id+'.svg',svg)}}
+ for(const it of res.lib.libraryItems){if(it.id.startsWith('sdk-emoji-'))continue;const svg=await pg.evaluate(e=>window.SVG(e),it.elements);fs.writeFileSync('out/svg/'+it.id+'.svg',svg)}}
 await b.close();srv.close()})().catch(e=>{console.error(e);process.exit(1)});

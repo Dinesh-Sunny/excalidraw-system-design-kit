@@ -3,6 +3,12 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+
+## [1.9.0] - 2026-11-05
+Emoji, an Estimator and a Tools menu. The library now has 4,443 items (up from 479).
+- Every Unicode emoji (Emoji 18, from emojibase-data 18.0.0) in a new `sd:emoji/` section: 1,923 emoji plus all 2,040 skin-tone versions, named with the official Unicode name and searchable tags, for example `sd:emoji/ Rocket - travel places transport space emoji`.
+- Blocks site: an Emoji category with the 9 Unicode groups, a skin-tone picker, search, recently used, keyboard arrows, and one tap to copy any emoji into Excalidraw. Emoji also show up under block search results.
+- Tools menu in the header on every page, with quick links into the estimator (latency budget, uptime budget, how the numbers connect, what-ifs, interview script, numbers worth knowing) and the 45-min playbook.
 - Estimator page (`/estimate/`): rough numbers in (users, writes, reads per write, peak, sizes, years, copies, latency and availability targets), non-functional requirements out as a sticky note you can copy to Excalidraw, as text, Markdown or a link. Cards with the maths for writes, reads, storage, bandwidth, cache and servers; a latency budget built from real latency numbers; an uptime budget with parts-in-a-row maths; blocks that fit the numbers. Starting points match the practice questions.
 - Learn on the same page: why we estimate, how to use it, how every number connects (tap along the chain from inputs to results to design choices), what-if comparisons, a five-point interview script revealed one at a time, and words to know.
 - Practice estimates step links to the estimator with the same numbers; every footer links to it.

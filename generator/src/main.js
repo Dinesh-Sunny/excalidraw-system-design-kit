@@ -10,7 +10,7 @@ import { UI, FRAMES, SCREENS } from "./ui.js";
 import { FE_SECTIONS, FE_PATTERNS, FE_TEMPLATES, FE_NOTES } from "./frontend.js";
 
 const items = []; // {name, section, skel}
-export const KIT = "sd", KIT_VERSION = "1.8.1";
+export const KIT = "sd", KIT_VERSION = "1.9.0";
 const add = (cat, label, skel, section) => items.push({ name: `${KIT}:${cat}/ ${label}`, section: section || cat, skel });
 const one = (s) => s.replace(/\n/g, " ");
 
@@ -163,6 +163,12 @@ for (const p of FE_PATTERNS) add("fep", p.name, diagram(p.spec));
 section("tpl", "21", "Full interview designs", "ai", "classic questions, ready to adapt");
 for (const p of [...TEMPLATES, ...AI_TEMPLATES, ...AEO_TEMPLATES, ...RESEARCH_TEMPLATES, ...FE_TEMPLATES]) add("tpl", p.name, diagram(p.spec));
 
+// ================= 24 EMOJI =================
+// every Unicode emoji and skin tone, named for library search (data: emoji-data.py from emojibase-data)
+import EMOJI from "../emoji.data.json";
+section("emoji", "24", "Emoji", "msg", 'search "sd:emoji/" or a word like "rocket"');
+for (const [name, ch] of EMOJI) add("emoji", name.replace(/^sd:emoji\/ /, ""), [txt(0, 0, ch, { fontSize: 56 })]);
+
 // ================= build =================
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 function finalize(skel) {
@@ -195,6 +201,8 @@ window.BUILD = async () => {
   for (const it of items) {
     try {
       const elements = finalize(it.skel.map(applyDefaults));
+      // emoji: sequences the build machine's font can't join measure as several glyphs; current systems draw one
+      if (it.section === "emoji" && elements.length === 1 && elements[0].type === "text" && elements[0].width > 72) elements[0].width = 70;
       libraryItems.push({ id: "sdk-" + slug(it.name.replace(/^sd:/, "")), status: "unpublished", created, name: it.name, elements });
       report.push({ name: it.name, section: it.section, n: elements.length });
     } catch (e) { report.push({ name: it.name, error: String(e && e.stack || e) }); }

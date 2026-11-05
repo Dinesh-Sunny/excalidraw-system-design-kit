@@ -39,8 +39,22 @@ sd:<section>/ <Item name> - <search tags>
 | 19 | `sd:pattern/` | Architecture patterns |
 | 20 | `sd:agentic/` | Agentic patterns |
 | 21 | `sd:tpl/` | Full interview designs |
+| 22 | `sd:fe/` | Frontend architecture |
+| 23 | `sd:fep/` | Frontend patterns |
+| 24 | `sd:emoji/` | Emoji, every Unicode emoji and skin tone |
 
 Each section starts with a divider tile (`SD NN SECTION - ...`) so the library grid reads in blocks.
+
+## Emoji names
+
+Emoji follow the same format. The item name is the official Unicode (CLDR) name in Title Case; a skin tone goes after a comma; the tags start with the category and group, then common words and the GitHub shortcode.
+
+```
+sd:emoji/ Rocket - travel places transport space launch emoji
+sd:emoji/ Waving Hand, Medium Skin Tone - people fingers open hand wave hello medium skin tone emoji
+```
+
+Search `sd:emoji/` for all of them, or any word: `sd:emoji/ heart`, `sd:emoji/ thumbs up`. On the site they live under Blocks > Emoji, with a skin-tone picker.
 
 ## Colours
 

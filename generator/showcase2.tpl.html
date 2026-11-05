@@ -784,9 +784,10 @@ const count = c => items.filter(i => i.cat === c).length;
 const $ = s => document.querySelector(s), rows = $("#rows"), q = $("#q"), rail = $("#rail");
 let cat = "all";
 let startItem = null;
-try { const h = decodeURIComponent(location.hash.slice(1)); if (LABEL[h]) cat = h; else if (h === "board") cat = "board"; else if (h.startsWith("pack=")) cat = "pack:" + h.slice(5); else if (h.startsWith("i=")) startItem = h.slice(2); else if (h.startsWith("b=")) { try { const shared = h.slice(2).split(","); localStorage.setItem("sdk-board", JSON.stringify([...new Set([...JSON.parse(localStorage.getItem("sdk-board") || "[]"), ...shared])])); } catch (e) {} cat = "board"; } } catch (e) {}
+try { const h = decodeURIComponent(location.hash.slice(1)); if (LABEL[h] || h === "emoji") cat = h; else if (h === "board") cat = "board"; else if (h.startsWith("pack=")) cat = "pack:" + h.slice(5); else if (h.startsWith("i=")) startItem = h.slice(2); else if (h.startsWith("b=")) { try { const shared = h.slice(2).split(","); localStorage.setItem("sdk-board", JSON.stringify([...new Set([...JSON.parse(localStorage.getItem("sdk-board") || "[]"), ...shared])])); } catch (e) {} cat = "board"; } } catch (e) {}
 
 rail.innerHTML = ORDER.filter(c => c === "all" || count(c)).map(c => `<button class="cat" type="button" data-c="${c}" aria-pressed="${c === cat}">${I(ICON[c])}<span>${LABEL[c]}</span></button>`).join("");
+rail.insertAdjacentHTML("beforeend", `<button class="cat" type="button" data-c="emoji" aria-pressed="${cat === "emoji"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 14.5c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8"/><circle cx="9.2" cy="10" r=".6" fill="currentColor"/><circle cx="14.8" cy="10" r=".6" fill="currentColor"/></svg><span>Emoji</span></button>`);
 rail.addEventListener("click", e => { const b = e.target.closest(".cat"); if (!b) return; go(b.dataset.c); });
 $("#tries").innerHTML = TRIES.map(t => `<button class="try" type="button">${t}</button>`).join("") + `<button class="try dice" type="button" data-rand="1"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="3"/><circle cx="7.3" cy="7.3" r=".9" fill="currentColor"/><circle cx="12.7" cy="12.7" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/></svg>surprise me</button>`;
 $("#tries").addEventListener("click", e => { if (e.target.closest("[data-rand]")) return surprise(); const b = e.target.closest(".try"); if (!b) return; q.value = b.textContent; cat = "all"; draw(true); });
@@ -878,6 +879,7 @@ function draw(scroll) {
   const term = q.value.trim().toLowerCase();
   rows.textContent = "";
   document.body.classList.toggle("filtering", !!(term || cat !== "all"));
+  if (cat === "emoji") { if (window.EMO) EMO.view(rows, term); else rows.innerHTML = `<section class="row"><h2>Emoji</h2><p>Loading the emoji...</p></section>`; if (scroll) $("#main").scrollIntoView({ block: "start" }); return; }
   const pk = cat.startsWith("pack:") ? PK[cat.slice(5)] : null;
   if (pk || cat === "board") {
     const list = pk ? pk.items : board.map(s => BYSLUG.get(s));
@@ -893,7 +895,7 @@ function draw(scroll) {
     sec.innerHTML = `<h2>${term ? "Results" : LABEL[cat]} <span class="n">${list.length}</span></h2>`;
     if (!list.length) { sec.innerHTML += `<div class="empty"><b>Nothing yet</b>Try a shorter word, or one of these:<div class="chips" style="justify-content:center;margin-top:14px">${TRIES.map(t => `<button class="chip try" type="button">${t}</button>`).join("")}</div></div>`; }
     else { const g = document.createElement("div"); g.className = "grid"; fill(g, list); sec.append(g); }
-    rows.append(sec); rows.insertAdjacentHTML("beforeend", exploreHTML(list));
+    rows.append(sec); if (term && cat === "all" && window.EMO) EMO.hits(term, sec); rows.insertAdjacentHTML("beforeend", exploreHTML(list));
   } else {
     const going = Object.keys(PQ).map(s => [s, prog(s)]).filter(x => x[1]).sort((a, b) => b[1].at - a[1].at);
     if (going.length) rows.append(trackRow("Continue practising", going, { raw: going.map(([s, g]) => { const k = BYSLUG.get(PQ[s][2]); return `<a class="card" href="practice/#q=${s}"><div class="open"><div class="ph"><img loading="lazy" alt="" src="${k ? k.img : ""}"><span class="pbadge">${g.done ? "Done" : "In progress"}</span></div><div class="ct">${esc(PQ[s][0])}</div><div class="cm">${progLabel(g)}</div></div></a>`; }).join(""), extra: `<a class="more2" href="practice/">All questions</a>` }));
@@ -1370,7 +1372,7 @@ if (location.hash === "#get" && kit.showModal) { tab("web"); kit.showModal(); }
 if (cat.startsWith("pack:") && !PK[cat.slice(5)]) cat = "all";
 draw(false); renderTray();
 if (startItem && BYSLUG.has(startItem)) open(BYSLUG.get(startItem));
-addEventListener("hashchange", () => { const h = decodeURIComponent(location.hash.slice(1)); if (h.startsWith("i=") && BYSLUG.has(h.slice(2))) { if (!cur || slug(cur) !== h.slice(2)) open(BYSLUG.get(h.slice(2))); } else if (h.startsWith("pack=") && PK[h.slice(5)]) { if (sheet.open) sheet.close(); go("pack:" + h.slice(5)); } else if (LABEL[h] || h === "board") { if (sheet.open) sheet.close(); go(h); } });
+addEventListener("hashchange", () => { const h = decodeURIComponent(location.hash.slice(1)); if (h.startsWith("i=") && BYSLUG.has(h.slice(2))) { if (!cur || slug(cur) !== h.slice(2)) open(BYSLUG.get(h.slice(2))); } else if (h.startsWith("pack=") && PK[h.slice(5)]) { if (sheet.open) sheet.close(); go("pack:" + h.slice(5)); } else if (LABEL[h] || h === "board" || h === "emoji") { if (sheet.open) sheet.close(); go(h); } });
 /* contact links: address assembled at runtime to keep scrapers off it */
 (() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
 /* growth: live trust numbers (shown only once they are big enough to help), freshness, love wall, share loop */
@@ -1408,3 +1410,4 @@ window.addEventListener("sdk-copied", () => { copies++; let asked = false; try {
   scan(document); new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => n.nodeType === 1 && scan(n.parentNode || n)))).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
+<script src="emoji/emoji.js" defer></script>

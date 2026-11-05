@@ -1,6 +1,6 @@
 const fs=require('fs');const {chromium}=require('playwright');
 const lib=JSON.parse(fs.readFileSync('out/System Design Kit.excalidrawlib'));const rep=JSON.parse(fs.readFileSync('out/report.json'));
-const secs={};lib.libraryItems.forEach((it,i)=>{const s=rep[i].section;(secs[s]=secs[s]||[]).push(it)});
+const secs={};lib.libraryItems.forEach((it,i)=>{if(it.id.startsWith('sdk-emoji-'))return;const s=rep[i].section;(secs[s]=secs[s]||[]).push(it)});
 const only=process.argv.slice(2);
 (async()=>{const b=await chromium.launch();const pg=await b.newPage({viewport:{width:1600,height:900}});
 for(const [s,its] of Object.entries(secs)){ if(only.length&&!only.includes(s))continue;

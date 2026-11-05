@@ -1,6 +1,8 @@
 import json,re,sys,os,shutil
 SP=os.environ.get('SDK_SP','/tmp')
 lib=json.load(open('out/System Design Kit.excalidrawlib'))['libraryItems']
+# emoji (sd:emoji/, always last in the library) have their own browser on the site (emoji/emoji.js), not cards
+lib=[it for it in lib if not it['name'].startswith('sd:emoji/')]
 rep=json.load(open('out/report.json'))
 thumbs={t['name']:t['img'] for t in json.load(open('out/thumbs.json'))}
 secs=[];items_pages=[];items_art=[]
@@ -11,7 +13,7 @@ for it,r in zip(lib,rep):
     items_art.append({'id':it['id'],'name':it['name'],'section':r['section'],'img':thumbs[it['name']]})
 N=len(items_pages)
 tpl=open('showcase2.tpl.html').read().replace('/*__LEARN_TOOLS__*/',open('learn-tools.js').read())
-VERSION='1.8.1'
+VERSION='1.9.0'
 REPO='https://github.com/Dinesh-Sunny/excalidraw-system-design-kit'
 THEMEBTN='<button class="ibtn" id="theme" type="button" aria-label="Switch theme"><svg class="i-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 12.5A6.5 6.5 0 0 1 7.5 4a6.5 6.5 0 1 0 8.5 8.5z"/></svg><svg class="i-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.6M10 15.9v1.6M2.5 10h1.6M15.9 10h1.6M4.7 4.7l1.1 1.1M14.2 14.2l1.1 1.1M4.7 15.3l1.1-1.1M14.2 5.8l1.1-1.1"/></svg></button>'
 GHSVG='<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>'
@@ -254,6 +256,12 @@ json.dump(TREE,open('out/pages/explore/tree.json','w'),separators=(',',':'),ensu
 t=ptpl.replace('__NAV__',NAV('../','explore','../sponsor/')).replace('__FOOT__',FOOT('../','../sponsor/','Explore')).replace('__BASECSS__',base).replace('__HEADINIT__',headinit).replace('__THEMEBTN__',themebtn).replace('__SPONSOR__',SPJ).replace('__TITLE__','Explore - System Design Kit').replace('__ROBOTS__','index').replace('__BODY__',open('explore.body.html').read().replace('/*__DRILLCSS__*/',open('drill.css').read())).replace('__SCRIPT__',open('explore.js').read().replace('/*__DRILLJS__*/',open('drill.js').read()))
 open('out/pages/explore/index.html','w').write(t)
 print('explore', os.path.getsize('out/pages/explore/tree.json')//1024,'KB tree', len(_secs),'sections')
+
+# ---- Emoji browser for the Blocks page (data from emoji-data.py, UI from emoji-ui.js) ----
+import shutil as _sh, subprocess as _sp
+os.makedirs('out/pages/emoji',exist_ok=True)
+if not os.path.exists('out/pages/emoji/emoji.json'): _sp.run(['python3','emoji-data.py'],check=True)
+_sh.copy('emoji-ui.js','out/pages/emoji/emoji.js'); print('emoji browser', os.path.getsize('out/pages/emoji/emoji.json')//1024,'KB data')
 
 # ---- Estimator: rough numbers in, non-functional requirements out ----
 os.makedirs('out/pages/estimate',exist_ok=True)

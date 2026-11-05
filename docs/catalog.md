@@ -28,6 +28,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 52 |
 | 22 | [`sd:fe/`](#22-fe) | Frontend architecture | 49 |
 | 23 | [`sd:fep/`](#23-fep) | Frontend patterns | 15 |
+| 24 | [`sd:emoji/`](#24-emoji) | Emoji | 3963 |
 
 <a id="00-guide"></a>
 ## 00 `sd:guide/` How to use this kit
@@ -627,3 +628,19 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Frontend Observability** - rum web vitals js errors beacon dashboards frontend
 - **JavaScript Event Loop** - call stack microtasks task queue render long tasks frontend
 - **Idempotent Payment Submit** - double tap safe retry idempotency key pay button fintech frontend
+
+## 24 emoji
+
+Every Unicode emoji (emojibase-data 18.0.0, Unicode emoji 18) as a 56 px text item, plus every skin-tone version: 1,923 emoji and 2,040 skin tones, 3,963 items. Browse them on the site under Blocks > Emoji, or search the library for `sd:emoji/` and a word.
+
+| Group | Emoji |
+|---|---|
+| 😀 Smileys & Emotion | 172 |
+| 👋 People & Body | 390 |
+| 🐻 Animals & Nature | 161 |
+| 🍔 Food & Drink | 132 |
+| ✈️ Travel & Places | 221 |
+| ⚽ Activities | 85 |
+| 💡 Objects | 268 |
+| ❤️ Symbols | 224 |
+| 🏁 Flags | 270 |
