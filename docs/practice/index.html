@@ -807,6 +807,8 @@ body.run > header.nav, body.run > footer { display: none }
 .cf input:focus { outline: 0; border-color: var(--sketch) } .cf em { font-style: normal; font: 400 12px/1 var(--font-mono) }
 .cout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
 .co { display: grid; gap: 2px; padding: 12px; border-radius: var(--r-md); background: var(--surface-sunk) }
+.estw { justify-self: start; margin-top: 4px }
+.estl { grid-column: 1 / -1; font: 500 13px/18px var(--font-sans); color: var(--ink); text-underline-offset: 3px }
 .co span { font: 500 11px/14px var(--font-mono); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .04em }
 .co b { font: 400 28px/1.1 var(--font-serif) } .co small { font: 400 12px/16px var(--font-sans); color: var(--ink-muted) }
 .apis, .ents { display: grid; gap: 8px }
@@ -1004,7 +1006,7 @@ body.run > header.nav, body.run > footer { display: none }
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<footer class="gut"><div class="wrap"><span><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v1.8.1</a> · MIT · free, no sign-up</span><span class="help">Happy to help: <a data-mail="Practice" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span class="fnav"><a href="../">Blocks</a> · <a href="../practice/">Practice</a> · <a href="../explore/">Explore</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="../sponsor/">Sponsor</a></span></div></footer>
+<footer class="gut"><div class="wrap"><span><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v1.8.1</a> · MIT · free, no sign-up</span><span class="help">Happy to help: <a data-mail="Practice" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span class="fnav"><a href="../">Blocks</a> · <a href="../practice/">Practice</a> · <a href="../explore/">Explore</a> · <a href="../estimate/">Estimator</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="../sponsor/">Sponsor</a></span></div></footer>
 
 <script>
 /* Drill: walk a tree of ideas the way Finder's column view works.
@@ -1229,10 +1231,11 @@ function hintOf(x) { const w = String(x).split(/[:(→]/)[0].trim(); return w.le
 function calcHTML() {
   const c = rec().calc || { dau: 10, act: 10, rw: 10, size: 1, years: 5 };
   const f = (k, l, u, step) => `<label class="cf"><span>${l}</span><input type="number" min="0" step="${step}" data-calc="${k}" value="${c[k]}"><em>${u}</em></label>`;
-  return `<div class="tool calc"><div class="cin">${f("dau", "Daily active users", "million", "any")}${f("act", "Writes per user per day", "", "any")}${f("rw", "Reads per write", "x", "any")}${f("size", "Size per write", "KB", "any")}${f("years", "Keep data for", "years", "any")}</div><div class="cout" id="cout">${calcOut(c)}</div></div>`;
+  return `<div class="tool calc"><div class="cin">${f("dau", "Daily active users", "million", "any")}${f("act", "Writes per user per day", "", "any")}${f("rw", "Reads per write", "x", "any")}${f("size", "Size per write", "KB", "any")}${f("years", "Keep data for", "years", "any")}</div><div class="cout" id="cout">${calcOut(c)}</div><a class="estl" id="estl" href="${estHref()}">Open the full estimator: latency, uptime and what it means for the design →</a></div>`;
 }
 const fmtN = n => n >= 1e12 ? (n / 1e12).toFixed(1) + " T" : n >= 1e9 ? (n / 1e9).toFixed(1) + " B" : n >= 1e6 ? (n / 1e6).toFixed(1) + " M" : n >= 1e3 ? (n / 1e3).toFixed(1) + " k" : Math.round(n) + "";
 const fmtB = b => b >= 1e15 ? (b / 1e15).toFixed(1) + " PB" : b >= 1e12 ? (b / 1e12).toFixed(1) + " TB" : b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : (b / 1e3).toFixed(1) + " KB";
+function estHref() { const c = rec().calc, q = Q && Q.slug; if (!c) return "../estimate/" + (q ? "#q=" + q : ""); return `../estimate/#${q ? "q=" + q + "&" : ""}u=${c.dau}M&w=${c.act}&r=${c.rw}&s=${c.size}KB&y=${c.years}`; }
 function calcOut(c) {
   const w = c.dau * 1e6 * c.act / 86400, r = w * c.rw, st = c.dau * 1e6 * c.act * c.size * 1e3;
   const o = (l, v, s) => `<div class="co"><span>${l}</span><b>${v}</b>${s ? `<small>${s}</small>` : ""}</div>`;
@@ -1549,7 +1552,7 @@ function renderWalk(k) {
   const keep = qlast; qlast = { ok: n < total || !!WKN["_f" + step] }; const board = boardHTML(k, R, n); qlast = keep;
   const dots = R.map((r, i) => `<i class="${i < n ? "ok" : i === n ? "now" : ""}"></i>`).join("");
   st.innerHTML = `<div class="qcol"><div class="qtop"><span class="qtt">${esc(S.t)}</span><div class="dots">${dots}</div><span class="cnt2">${n} of ${total}</span></div>
-    <div class="board2 b-${k}">${board}</div></div>`;
+    <div class="board2 b-${k}">${board}</div>${k === "est" ? `<a class="estl estw" href="${estHref()}">Work these numbers in the estimator →</a>` : ""}</div>`;
   const f = st.querySelector(".fresh"); if (f && n > 1) requestAnimationFrame(() => f.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
   const more = n < total;
   buttons(more ? `Next point<span class="kbd">→</span>` : step < LAST() ? `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>` : `All designs`, more ? `<button class="link" type="button" data-x="wkall">Show all</button>` : "");
@@ -1585,7 +1588,7 @@ function renderScore() {
 /* ---- inputs ---- */
 function hookNotes(key) { const nt = $("#nt"); if (!nt) return; nt.addEventListener("input", () => sub("notes", { [key]: nt.value })); }
 function hookTools() {
-  document.querySelectorAll("[data-calc]").forEach(i => i.addEventListener("input", () => { const c = { ...(rec().calc || { dau: 10, act: 10, rw: 10, size: 1, years: 5 }), [i.dataset.calc]: Math.max(0, +i.value || 0) }; put({ calc: c }); $("#cout").innerHTML = calcOut(c); }));
+  document.querySelectorAll("[data-calc]").forEach(i => i.addEventListener("input", () => { const c = { ...(rec().calc || { dau: 10, act: 10, rw: 10, size: 1, years: 5 }), [i.dataset.calc]: Math.max(0, +i.value || 0) }; put({ calc: c }); $("#cout").innerHTML = calcOut(c); const el = $("#estl"); if (el) el.href = estHref(); }));
   document.querySelectorAll(".api input, .api select").forEach(el => el.addEventListener("input", () => { const rows = [...document.querySelectorAll(".api")].map(r => ({ m: r.querySelector('[data-api="m"]').value, p: r.querySelector('[data-api="p"]').value, r: r.querySelector('[data-api="r"]').value })); sub("mine", { api: rows }); }));
   document.querySelectorAll(".ent input, .ent select").forEach(el => el.addEventListener("input", () => { const rows = [...document.querySelectorAll(".ent")].map(r => ({ n: r.querySelector('[data-ent="n"]').value, f: r.querySelector('[data-ent="f"]').value, s: r.querySelector('[data-ent="s"]').value, k: r.querySelector('[data-ent="k"]').value })); sub("mine", { data: rows }); }));
   document.querySelectorAll("[data-add]").forEach(inp => inp.addEventListener("keydown", e => {

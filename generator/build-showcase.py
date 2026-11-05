@@ -47,7 +47,7 @@ def FOOT(pre, spurl, mail='Help'):
     home=pre or './'
     return (f'<footer class="gut"><div class="wrap"><span><a href="{REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v{VERSION}</a> · MIT · free, no sign-up</span>'
       f'<span class="help">Happy to help: <a data-mail="{mail}" href="#contact">Email</a> · <a href="{REPO}/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="{REPO}/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span>'
-      f'<span class="fnav"><a href="{home}">Blocks</a> · <a href="{pre}practice/">Practice</a> · <a href="{pre}explore/">Explore</a> · <a href="{REPO}/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="{spurl}">Sponsor</a></span></div></footer>')
+      f'<span class="fnav"><a href="{home}">Blocks</a> · <a href="{pre}practice/">Practice</a> · <a href="{pre}explore/">Explore</a> · <a href="{pre}estimate/">Estimator</a> · <a href="{REPO}/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="{spurl}">Sponsor</a></span></div></footer>')
 # practice questions, and which questions use each block (both ways between Blocks and Practice)
 from kitmap import find as kitfind
 PQ={};USES={}
@@ -247,3 +247,9 @@ json.dump(TREE,open('out/pages/explore/tree.json','w'),separators=(',',':'),ensu
 t=ptpl.replace('__NAV__',NAV('../','explore','../sponsor/')).replace('__FOOT__',FOOT('../','../sponsor/','Explore')).replace('__BASECSS__',base).replace('__HEADINIT__',headinit).replace('__THEMEBTN__',themebtn).replace('__SPONSOR__',SPJ).replace('__TITLE__','Explore - System Design Kit').replace('__ROBOTS__','index').replace('__BODY__',open('explore.body.html').read().replace('/*__DRILLCSS__*/',open('drill.css').read())).replace('__SCRIPT__',open('explore.js').read().replace('/*__DRILLJS__*/',open('drill.js').read()))
 open('out/pages/explore/index.html','w').write(t)
 print('explore', os.path.getsize('out/pages/explore/tree.json')//1024,'KB tree', len(_secs),'sections')
+
+# ---- Estimator: rough numbers in, non-functional requirements out ----
+os.makedirs('out/pages/estimate',exist_ok=True)
+t=ptpl.replace('__NAV__',NAV('../','estimate','../sponsor/')).replace('__FOOT__',FOOT('../','../sponsor/','Estimator')).replace('__BASECSS__',base).replace('__HEADINIT__',headinit).replace('__THEMEBTN__',themebtn).replace('__SPONSOR__',SPJ).replace('__TITLE__','Capacity estimator for system design - System Design Kit').replace('__ROBOTS__','index').replace('__BODY__',open('estimate.body.html').read()).replace('__SCRIPT__',open('estimate.js').read()+'\n'+open('estimate.learn.js').read())
+open('out/pages/estimate/index.html','w').write(t)
+print('estimate page',len(t)//1024,'KB')

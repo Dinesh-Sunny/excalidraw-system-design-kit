@@ -3,6 +3,9 @@
 All notable changes to the kit. Versions follow [Semantic Versioning](https://semver.org): new items = minor, renames or removals = major.
 
 ## [Unreleased]
+- Estimator page (`/estimate/`): rough numbers in (users, writes, reads per write, peak, sizes, years, copies, latency and availability targets), non-functional requirements out as a sticky note you can copy to Excalidraw, as text, Markdown or a link. Cards with the maths for writes, reads, storage, bandwidth, cache and servers; a latency budget built from real latency numbers; an uptime budget with parts-in-a-row maths; blocks that fit the numbers. Starting points match the practice questions.
+- Learn on the same page: why we estimate, how to use it, how every number connects (tap along the chain from inputs to results to design choices), what-if comparisons, a five-point interview script revealed one at a time, and words to know.
+- Practice estimates step links to the estimator with the same numbers; every footer links to it.
 
 ## [1.8.1] - 2026-11-04
 - Core Entities: a checklist note and a Core Entities Map (entity boxes with 1 : N links) for the step right after requirements. Both are in the Interview starter pack, and the Interview Flow note now has the Core entities step (2 min). The library now has 479 items.
