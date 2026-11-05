@@ -96,6 +96,7 @@ function toHash() {
 }
 function fromHash(h) {
   const o = new URLSearchParams(h.replace(/^#/, "")); if (![...o.keys()].length) return false;
+  const go = o.get("go"); if (go) { setTimeout(() => goTo(go), 80); if ([...o.keys()].length === 1) return "go"; }
   const q = o.get("q"); Q = PQ[q] ? q : "";
   S = { ...DEF, ...(Q ? PQ[Q].v : {}) }; H = [...(Q ? (PQ[Q].hops || DEFHOPS) : DEFHOPS)];
   for (const k in F) if (o.has(k)) { const v = F[k].seg ? parseFloat(o.get(k)) : parse(o.get(k), F[k].k === "ms" || F[k].k === "p" ? F[k].k : F[k].k === "b" ? "b" : "n"); if (v != null && isFinite(v) && v >= 0) S[k] = v; }
@@ -288,7 +289,17 @@ document.addEventListener("click", e => { document.querySelectorAll("details.men
 document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll("details.menu[open]").forEach(d => { d.open = false; d.querySelector("summary").focus(); }); });
 $("#fby").addEventListener("click", e => { ev("fb-love/estimator"); e.target.disabled = true; e.target.textContent = "Thank you"; });
 $("#fbs").href = `${REPO}/issues/new?template=3-polish.yml&title=${encodeURIComponent("[Estimator] ")}`;
-addEventListener("hashchange", () => { if (fromHash(location.hash)) { drawPresets(); syncInputs(); draw(true); } });
+addEventListener("hashchange", () => { const r = fromHash(location.hash); if (r === true) { drawPresets(); syncInputs(); draw(true); } });
+/* the header Tools menu links here with #go=<part>: glide to it, keep the numbers */
+function goTo(id) {
+  const tm = document.querySelector(".nav details.ntools"); if (tm) tm.open = false;
+  if (id === "ref") $("#ref").open = true;
+  const el = $("#" + id); if (!el) return;
+  if (typeof goSec === "function" && el.classList.contains("lsec")) goSec(id);
+  else { const y = el.getBoundingClientRect().top + scrollY - (navEl ? navEl.offsetHeight : 56) - 14; scrollTo({ top: y, behavior: RM.matches ? "auto" : "smooth" }); }
+  el.classList.add("spot"); setTimeout(() => el.classList.remove("spot"), 1600);
+  const h = toHash(); history.replaceState(null, "", h ? "#" + h : location.pathname); ev("estimate/go/" + id);
+}
 
 /* the slim strip on phones: shows while the inputs fill the screen */
 const navEl = document.querySelector(".nav");
@@ -305,7 +316,7 @@ $("#refb").innerHTML = `<div><h3>Time</h3><dl>${HOPS.filter(h => ["dc", "mem", "
 
 /* ---------- start ---------- */
 (() => {
-  if (!fromHash(location.hash)) { const s = store("sdk-estimate"); if (s && s.S) { S = { ...DEF, ...s.S }; Q = PQ[s.Q] ? s.Q : ""; H = Array.isArray(s.H) ? s.H.filter(x => HOP[x]) : [...DEFHOPS]; } }
+  if (fromHash(location.hash) !== true) { const s = store("sdk-estimate"); if (s && s.S) { S = { ...DEF, ...s.S }; Q = PQ[s.Q] ? s.Q : ""; H = Array.isArray(s.H) ? s.H.filter(x => HOP[x]) : [...DEFHOPS]; } }
   drawInputs(); drawPresets(); draw(); liveTick();
 })();
 /* fade the bottom of the input panel while more fields sit below */
