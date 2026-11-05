@@ -1027,7 +1027,7 @@ body.run > header.nav, body.run > footer { display: none }
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<footer class="gut"><div class="wrap"><span><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v1.9.0</a> · MIT · free, no sign-up</span><span class="help">Happy to help: <a data-mail="Practice" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span class="fnav"><a href="../">Blocks</a> · <a href="../practice/">Practice</a> · <a href="../explore/">Explore</a> · <a href="../estimate/">Estimator</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="../sponsor/">Sponsor</a></span></div></footer>
+<footer class="gut"><div class="wrap"><span><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v1.9.1</a> · MIT · free, no sign-up</span><span class="help">Happy to help: <a data-mail="Practice" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span class="fnav"><a href="../">Blocks</a> · <a href="../practice/">Practice</a> · <a href="../explore/">Explore</a> · <a href="../estimate/">Estimator</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="../sponsor/">Sponsor</a></span></div></footer>
 
 <script>
 /* Drill: walk a tree of ideas the way Finder's column view works.
@@ -1573,7 +1573,7 @@ function renderWalk(k) {
   const keep = qlast; qlast = { ok: n < total || !!WKN["_f" + step] }; const board = boardHTML(k, R, n); qlast = keep;
   const dots = R.map((r, i) => `<i class="${i < n ? "ok" : i === n ? "now" : ""}"></i>`).join("");
   st.innerHTML = `<div class="qcol"><div class="qtop"><span class="qtt">${esc(S.t)}</span><div class="dots">${dots}</div><span class="cnt2">${n} of ${total}</span></div>
-    <div class="board2 b-${k}">${board}</div>${k === "est" ? `<a class="estl estw" href="${estHref()}">Work these numbers in the estimator →</a>` : ""}</div>`;
+    <div class="board2 b-${k}">${board}</div>${k === "est" ? `<a class="estl estw" href="${estHref()}">Work these numbers in the estimator →</a>` : ""}${k === "data" ? `<a class="estl estw" href="../#pack=interview">Draw it with the data model kit: ERD tables, keys, join tables →</a>` : ""}</div>`;
   const f = st.querySelector(".fresh"); if (f && n > 1) requestAnimationFrame(() => f.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
   const more = n < total;
   buttons(more ? `Next point<span class="kbd">→</span>` : step < LAST() ? `Next: ${esc(STEPS[step + 1].t)}<span class="kbd">↵</span>` : `All designs`, more ? `<button class="link" type="button" data-x="wkall">Show all</button>` : "");

@@ -10,7 +10,7 @@ import { UI, FRAMES, SCREENS } from "./ui.js";
 import { FE_SECTIONS, FE_PATTERNS, FE_TEMPLATES, FE_NOTES } from "./frontend.js";
 
 const items = []; // {name, section, skel}
-export const KIT = "sd", KIT_VERSION = "1.9.0";
+export const KIT = "sd", KIT_VERSION = "1.9.1";
 const add = (cat, label, skel, section) => items.push({ name: `${KIT}:${cat}/ ${label}`, section: section || cat, skel });
 const one = (s) => s.replace(/\n/g, " ");
 
@@ -53,11 +53,79 @@ add("note", "Core Entities Map - entity boxes relations 1 to n", (() => {
     arr(365, 166, 290, 234, { strokeColor: INK, strokeWidth: 2, label: { text: "1 : N", fontSize: 14 } })];
 })());
 add("note", "API Design - rest endpoints contract", card(400, 230, "API design\n\nPOST   /v1/items           -> 201 {id}\nGET    /v1/items/{id}      -> 200\nGET    /v1/items?cursor=&limit=20\nDELETE /v1/items/{id}      -> 204\n\nAuth: Bearer JWT · Idempotency-Key\nRate limited · cursor pagination", { fs: 14, font: 3, stroke: ACCENT, fill: "#edf2ff" }));
-const table = (x, y, name, fields, th = T.data) => [rect(x, y, 260, 38, { strokeColor: th.stroke, backgroundColor: th.fill, strokeWidth: 2, roundness: null, label: { text: name, fontSize: 17, strokeColor: INK, fontFamily: 3 } }),
-  rect(x, y + 38, 260, 14 + fields.length * 22, { strokeColor: th.stroke, backgroundColor: WHITE, strokeWidth: 2, roundness: null, label: { text: fields.join("\n"), fontSize: 14, textAlign: "left", verticalAlign: "top", strokeColor: INK, fontFamily: 3 } })];
-add("note", "Data Model - table entity schema", table(0, 0, "users", ["id          PK  bigint", "name            varchar", "email     UQ   varchar", "created_at  timestamp"]));
-add("note", "Data Model - one to many relation erd", [...table(0, 0, "users", ["id          PK  bigint", "name            varchar"]), ...table(380, 0, "posts", ["id          PK  bigint", "user_id     FK  bigint", "body            text", "created_at  timestamp"]),
-  arr(266, 60, 374, 60, { strokeColor: INK, strokeWidth: 2, label: { text: "1 : N", fontSize: 14 } })]);
+// ---------- data model: ERD boxes (Dinesh's template) ----------
+// header = table name; rows = column | keys (PK FK UQ IX NN) | type | -> reference; footer = DB, index, shard and the "because"
+// rows are one monospace text so a new row is one new line; relation lines are bound so they follow the boxes
+const COL = (n, k = "", t = "", r = "") => (n.padEnd(13) + k.padEnd(9) + t.padEnd(10) + (r ? (r.startsWith("--") ? r : "→ " + r) : "")).trimEnd();
+const snap = (v) => Math.ceil(v / 20) * 20;
+function erd(x, y, name, rows, foot = [], o = {}) {
+  const th = o.th || T.data, fs = 15, ffs = 13;
+  const lines = rows.map((r) => (Array.isArray(r) ? COL(...r) : r));
+  const longest = Math.max(...lines.map((l) => l.length), ...foot.map((f) => f.length * (ffs / fs)), name.length + 4);
+  const w = o.w || Math.max(320, snap(longest * fs * 0.6 + 40));
+  const head = nid("tbl"), body = nid("tbl"), bh = snap(22 + lines.length * fs * 1.25);
+  const els = [
+    rect(x, y, w, 40, { id: head, strokeColor: th.stroke, backgroundColor: th.fill, strokeWidth: 2, roundness: null, label: { text: name, fontSize: 18, strokeColor: INK, fontFamily: 3 } }),
+    rect(x, y + 40, w, bh, { id: body, strokeColor: th.stroke, backgroundColor: WHITE, strokeWidth: 2, roundness: null, label: { text: lines.join("\n"), fontSize: fs, textAlign: "left", verticalAlign: "top", strokeColor: INK, fontFamily: 3 } }),
+  ];
+  let h = 40 + bh;
+  if (foot.length) {
+    const fh = snap(18 + foot.length * ffs * 1.25);
+    els.push(rect(x, y + h, w, fh, { strokeColor: th.stroke, backgroundColor: "#f8f9fa", strokeWidth: 1, strokeStyle: "dashed", roundness: null, label: { text: foot.join("\n"), fontSize: ffs, textAlign: "left", verticalAlign: "top", strokeColor: MUTED, fontFamily: 3 } }));
+    h += fh;
+  }
+  return { els, w, h, head, body, x, y };
+}
+// one-to-many: crow's foot "one" at the parent, "many" at the child
+const rel = (a, b, x1, y1, x2, y2, label, kind = "1n") => arr(x1, y1, x2, y2, {
+  start: { id: a }, end: { id: b }, strokeColor: INK, strokeWidth: 2,
+  startArrowhead: kind === "11" || kind === "1n" ? "crowfoot_one" : "crowfoot_many", endArrowhead: kind === "11" ? "crowfoot_one" : "crowfoot_many",
+  ...(label ? { label: { text: label, fontSize: 14, strokeColor: INK } } : {}) });
+const SQL = { fill: "#b2f2bb", stroke: "#2f9e44" }, WIDE = { fill: "#ffd8a8", stroke: "#e8590c" };
+const USERS = [["id", "PK", "bigint"], ["email", "UQ NN", "varchar"], ["name", "", "varchar"], ["created_at", "NN", "timestamp"]];
+
+add("note", "Data Model - table entity schema", (() => { const t = erd(0, 0, "users", [...USERS, ["...", "", ""]], ["DB: Postgres · because: small, relational", "Index: email (UQ) → log in by email"]); return t.els; })());
+add("note", "Data Model - one to many relation erd", (() => {
+  const u = erd(0, 0, "users", USERS.slice(0, 3), ["DB: Postgres"]);
+  const d = erd(0, u.h + 120, "documents", [["id", "PK", "uuid"], ["owner_id", "FK IX NN", "bigint", "users.id"], ["title", "", "varchar"], ["updated_at", "IX", "timestamp"], ["deleted_at", "", "timestamp", "-- null = live"]],
+    ["Index: (owner_id, updated_at) → my docs, newest first", "Soft delete: deleted_at lets users undo"]);
+  return [...u.els, ...d.els, rel(u.body, d.head, 120, u.h, 120, u.h + 120, "1 : N  owns")];
+})());
+add("note", "Join Table - many to many n:m erd composite key data model", (() => {
+  const u = erd(0, 0, "users", USERS.slice(0, 2)), d = erd(560, 0, "documents", [["id", "PK", "uuid"], ["title", "", "varchar"]]);
+  const p = erd(240, 260, "permissions", [["doc_id", "PK FK", "uuid", "documents.id"], ["user_id", "PK FK IX", "bigint", "users.id"], ["role", "NN", "varchar", "-- viewer|editor"], ["granted_at", "", "timestamp"]],
+    ["PK (doc_id, user_id): one role per user per doc", "Index: user_id → docs shared with me", "DB: Postgres · strong consistency"]);
+  return [...u.els, ...d.els, ...p.els, rel(u.body, p.head, 120, u.h, 300, 260, "1 : N"), rel(d.body, p.head, 680, d.h, 600, 260, "1 : N"),
+    txt(0, p.y + p.h + 30, "users N : M documents = a join table holding the pairs", { fontSize: 16, strokeColor: MUTED })];
+})());
+add("note", "Wide-Column Table - partition key clustering key cassandra data model", (() => {
+  const t = erd(0, 0, "edits", [["doc_id", "PK·part", "uuid"], ["version", "PK·clust", "bigint"], ["op_id", "UQ", "uuid", "-- dedupe retries"], ["user_id", "FK", "bigint"], ["type", "NN", "varchar"], ["payload", "", "text"], ["created_at", "", "timestamp"]],
+    ["DB: Cassandra / Bigtable · append-only, huge writes", "Query: edits of one doc after version N", "Shard key: doc_id"], { th: WIDE });
+  return [...t.els, txt(0, t.h + 30, "Partition key = which machine holds it.\nClustering key = sort order inside it.", { fontSize: 16, strokeColor: MUTED })];
+})());
+add("note", "Keys and Types - pk fk uq ix nn bigint uuid legend data model", card(460, 400,
+  "Keys and types\n\nPK  primary key, unique row id\nFK  points to another table's PK\nUQ  no two rows share it\nIX  indexed, a query is fast\nNN  never empty\n\nbigint     counting id, one DB hands it out\nuuid       any device makes it, works offline\nvarchar    short text\ntext       long text\ntimestamp  store in UTC\njsonb      flexible extra fields\nenum       a fixed set of values",
+  { fs: 15, font: 3, stroke: "#2f9e44", fill: "#ebfbee" }));
+add("note", "Query Check - api call to index fast path data model", card(460, 340,
+  "Every API call has a fast path\n\nGET /items/{id}\n  one row by id  →  PK\nGET /items?cursor=\n  mine, newest first  →  IX (owner_id, created_at)\nshared with me\n  rows by user  →  IX (user_id)\nappend event\n  by parent, in order  →  partition + cluster key",
+  { fs: 14, font: 3, stroke: "#1971c2", fill: "#e7f5ff" }));
+add("note", "Data Model Card - db choice index shard storage template", card(400, 380,
+  "Data model\n\n<table>   DB: ... because ...\n  id PK, ...FK, fields\n  Index: (...) → for which query\n  Shard key: ...\n\nSQL: related data that must be right\nWide-column: huge append-only writes\nBig files → object storage\nHot data → cache\nTemporary → Redis with expiry",
+  { fs: 15 }));
+add("note", "Data Model Example - google docs collaborative editor erd", (() => {
+  const u = erd(0, 0, "users", USERS.slice(0, 3), ["DB: Postgres"]);
+  const p = erd(440, 0, "permissions", [["doc_id", "PK FK", "uuid"], ["user_id", "PK FK IX", "bigint"], ["role", "NN", "varchar"]], ["DB: Postgres · strong"]);
+  const d = erd(880, 0, "documents", [["id", "PK", "uuid"], ["owner_id", "FK IX", "bigint"], ["title", "", "varchar"], ["version", "", "bigint"]], ["Index: (owner_id, updated_at)"]);
+  const yb = Math.max(u.h, p.h, d.h) + 140;
+  const e = erd(520, yb, "edits", [["doc_id", "PK·part", "uuid"], ["version", "PK·clust", "bigint"], ["op_id", "UQ", "uuid"], ["user_id", "FK", "bigint"], ["op", "", "text"]], ["DB: Cassandra · shard: doc_id"], { th: WIDE });
+  const s2 = erd(940, yb, "snapshots", [["doc_id", "PK FK", "uuid"], ["version", "PK", "bigint"], ["storage_key", "", "varchar"]], ["Content in object storage"]);
+  const dx = d.x + d.w / 2, yc = yb + Math.max(e.h, s2.h) + 50;
+  return [...u.els, ...p.els, ...d.els, ...e.els, ...s2.els,
+    rel(u.body, p.body, u.w, 80, 440, 80, "1 : N"), rel(d.body, p.body, 880, 80, 440 + p.w, 80, "1 : N"),
+    rel(d.body, e.head, dx - 60, d.h, e.x + e.w / 2, yb, "1 : N"), rel(d.body, s2.head, dx + 60, d.h, s2.x + s2.w / 2, yb, "1 : N"),
+    ...card(440, 160, "Not tables\n\nPresence (cursors) → Redis, 30 s expiry\nHot snapshots → Redis cache\nSnapshot files → object storage", { fs: 15, stroke: "#868e96", fill: "#f8f9fa", dash: true }).map((r) => ({ ...r, x: 0, y: yb })),
+    txt(0, yc, "Say: users, documents and permissions need joins and must be right, so Postgres.\nEdits are append-only and huge, so a wide-column store split by doc_id.", { fontSize: 16, strokeColor: MUTED })];
+})());
 add("note", "Trade-offs - pros cons decision", card(340, 200, "Trade-off\n\nChose: ...\n+ gains ...\n- costs ...\nAlternative: ... (why not)", { stroke: "#1971c2", fill: "#e7f5ff" }));
 add("note", "Bottleneck - spof risk callout", card(300, 150, "! Bottleneck / SPOF\n\nRisk: ...\nFix: replicate / shard / cache / queue", { stroke: "#e03131", fill: "#fff5f5", dash: true }));
 add("note", "Deep Dive - focus area", card(300, 170, "Deep dive: ...\n\n- How it works\n- Failure modes\n- Scaling it 10x", { stroke: "#6741d9", fill: "#f3f0ff" }));

@@ -854,7 +854,7 @@ a.card .open { cursor: pointer }
   <div class="row2"><a class="pill primary" href="#companies" data-tab="co">For companies</a><a class="pill ghost" href="#you" data-tab="you">For you</a></div>
 </div></section>
 
-<footer class="gut"><div class="wrap"><span><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v1.9.0</a> · MIT · free, no sign-up</span><span class="help">Happy to help: <a data-mail="Sponsorship" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span class="fnav"><a href="../">Blocks</a> · <a href="../practice/">Practice</a> · <a href="../explore/">Explore</a> · <a href="../estimate/">Estimator</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="./">Sponsor</a></span></div></footer>
+<footer class="gut"><div class="wrap"><span><a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v1.9.1</a> · MIT · free, no sign-up</span><span class="help">Happy to help: <a data-mail="Sponsorship" href="#contact">Email</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=q-a" target="_blank" rel="noopener">Ask a question</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/discussions/new?category=ideas" target="_blank" rel="noopener">Share an idea</a></span><span class="fnav"><a href="../">Blocks</a> · <a href="../practice/">Practice</a> · <a href="../explore/">Explore</a> · <a href="../estimate/">Estimator</a> · <a href="https://github.com/Dinesh-Sunny/excalidraw-system-design-kit/blob/main/docs/interview-playbook.md" target="_blank" rel="noopener">45-min playbook</a> · <a href="./">Sponsor</a></span></div></footer>
 
 <div class="sticky" id="sticky"><div class="s1" id="stTxt"></div><a class="pill primary" id="stGo" href="#" target="_blank" rel="noopener">Sponsor</a></div>
 
@@ -989,7 +989,7 @@ $("#theme").onclick = () => { const d = document.documentElement, t = d.dataset.
 /* contact links: address assembled at runtime to keep scrapers off it */
 (() => { const c = SP.contact || {}; if (!c.user) return; document.querySelectorAll("a[data-mail]").forEach(a => { a.href = `mailto:${c.user}@${c.domain}?subject=${encodeURIComponent("System Design Kit - " + a.dataset.mail)}`; }); })();
 /* audience proof: real numbers only, shown once they help */
-(() => { const out = [`<span><b>455</b> blocks people copy into designs</span>`];
+(() => { const out = [`<span><b>461</b> blocks people copy into designs</span>`];
   fetch("https://api.github.com/repos/Dinesh-Sunny/excalidraw-system-design-kit").then(r => r.ok ? r.json() : null).then(j => { if (j) { if (j.stargazers_count >= 25) out.push(`<span><b>${j.stargazers_count}</b> GitHub stars</span>`); const d = (Date.now() - new Date(j.pushed_at)) / 864e5; if (d < 14) out.push(`<span>Updated <b>${d < 1 ? "today" : Math.floor(d) + "d ago"}</b></span>`); } document.getElementById("aud").innerHTML = out.join(""); }).catch(() => { document.getElementById("aud").innerHTML = out.join(""); });
 })();
 /* motion: reveal on scroll */

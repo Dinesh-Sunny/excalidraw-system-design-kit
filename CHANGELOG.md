@@ -4,6 +4,14 @@ All notable changes to the kit. Versions follow [Semantic Versioning](https://se
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-11-05
+A proper data model kit, so the data model step needs no back and forth. The library now has 4,449 items.
+- ERD tables in one format: table name on top, then column, keys (PK FK UQ IX NN) and type in aligned rows, `→ table.id` for foreign keys, `-- note` for notes, and a footer for the database, indexes, shard key and the "because". One new row = one new line.
+- Relation lines use crow's-foot ends (one / many) and stay attached when you move the tables.
+- New: Data Model Card (tables, DB choice, index per query, shard key, where big, hot and temporary data go), Keys and Types (PK FK UQ IX NN, bigint vs uuid, varchar, text, timestamp in UTC, jsonb, enum), Join Table (N : M with a composite key), Wide-Column Table (partition and clustering keys), Query Check (every API call has a fast path), and a worked Google Docs example (users, permissions, documents, edits, snapshots, plus what is not a table).
+- The two existing Data Model items use the new format (same names and ids).
+- All in the Interview starter pack; Practice's data step links to it.
+
 ## [1.9.0] - 2026-11-05
 Emoji, an Estimator and a Tools menu. The library now has 4,443 items (up from 479).
 - Every Unicode emoji (Emoji 18, from emojibase-data 18.0.0) in a new `sd:emoji/` section: 1,923 emoji plus all 2,040 skin-tone versions, named with the official Unicode name and searchable tags, for example `sd:emoji/ Rocket - travel places transport space emoji`.
