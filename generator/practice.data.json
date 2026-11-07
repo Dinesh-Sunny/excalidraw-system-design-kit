@@ -3927,5 +3927,91 @@
    "Bottleneck: huge exports and imports. Fix: background jobs with progress and download links.",
    "Next: saved views, column settings, and audit search."
   ]
+ },
+ "agent-runtime-platform": {
+  "level": "Hard",
+  "track": "AI",
+  "companies": [],
+  "reqF": [
+   "Tenants start agent runs through an API, chat channels or a schedule, and stream progress live",
+   "A run can last 30+ minutes, with tens of model calls, tool calls and code runs",
+   "If a worker crashes or is redeployed, the run carries on from its last step on another worker",
+   "Agents run untrusted, model-written code safely",
+   "Tenants set budgets; a run stops cleanly when it hits its cap",
+   "Engineers can open any run, see every step and replay it from any point"
+  ],
+  "reqN": [
+   "Isolation: no tenant can see another tenant's data, code, secrets or tools",
+   "Durability: no run is lost on a crash or deploy; each step happens once from the user's view",
+   "Fairness: one tenant's burst can't starve the others",
+   "Cost control: spend is metered per call and enforced before the next call",
+   "Observability: every step is traced with tokens, cost, latency and errors"
+  ],
+  "est": [
+   "Assume 2k tenants, 500k runs/day, peak ~20 runs/s starting",
+   "Average run ~10 min -> ~20 x 600 s = ~12k runs in flight at peak -> long-lived leases on a worker pool, not request threads",
+   "~40 steps per run, checkpoint ~50 KB each -> ~2 MB per run, ~1 TB/day -> keep the last steps hot, move finished runs to cheap storage",
+   "~30% of runs execute code -> ~4k sandboxes alive at peak; a microVM boots in ~125 ms, so start on demand and keep a small warm pool",
+   "Traces: ~40 spans per run -> ~20M spans/day; sample content, keep metadata for every span"
+  ],
+  "api": [
+   "POST /v1/runs {agent, input, budget_usd} -> run_id (Idempotency-Key header)",
+   "GET /v1/runs/:id/events (SSE stream of steps)",
+   "POST /v1/runs/:id/resume {approval | input} / POST /v1/runs/:id/cancel",
+   "GET /v1/runs/:id/trace and POST /v1/runs/:id/replay {from_step}",
+   "PUT /v1/tenants/:id/limits {max_concurrency, monthly_budget_usd}"
+  ],
+  "data": [
+   "runs (run_id, tenant_id, agent, status, budget, spent, lease_owner, lease_expires_at)",
+   "checkpoints (run_id, step, state blob, created_at) - append only",
+   "steps / spans (run_id, step, kind: model | tool | code, tokens, cost, latency, error)",
+   "tenant limits + spend ledger (tenant_id, period, spent_usd, cap_usd)",
+   "tool grants (tenant_id, agent, MCP server, allowed tools, scopes)"
+  ],
+  "blocks": {
+   "cl": "Runs start from the API, a chat channel or a schedule; all of them become the same run request.",
+   "ctl": "The control plane authenticates the tenant, applies limits and writes the run row before anything runs.",
+   "ts": "Every model call, tool call and code run is a span. You can open a run, step through it and replay from any checkpoint.",
+   "sp": "Before each model call the meter checks what this run and tenant have spent; at the cap the run pauses or stops cleanly.",
+   "q": "A queue with a lane per tenant and concurrency caps, so one tenant's burst waits its turn.",
+   "w": "Workers lease a run, run the agent loop and renew the lease with heartbeats. If a worker dies, the lease expires and another worker takes over.",
+   "ck": "State is saved after every step, so a new worker resumes from the last step, not from the start.",
+   "gw": "Every model call goes through one gateway: routing, retries, fallbacks and token counts for the meter.",
+   "llm": "The models doing the thinking, usually a mix of large and small ones.",
+   "sbx": "Model-written code runs in a fresh microVM per run, with no secrets and only the network it needs.",
+   "mg": "Tool calls go through an MCP gateway that checks the tenant's grants, swaps in the right token and logs every call.",
+   "mcp": "The tools themselves: search, CRM, code hosts, internal APIs, each behind MCP."
+  },
+  "dives": [
+   [
+    "A worker crashes 20 minutes into a run. What happens?",
+    "The worker held a lease with a heartbeat. The heartbeat stops, the lease expires, and the run goes back on the queue. Another worker loads the last checkpoint and carries on. Steps with side effects carry an idempotency key, so a step that was half done is not done twice."
+   ],
+   [
+    "How do you isolate untrusted code from many tenants?",
+    "One sandbox per run, never shared across tenants. Containers share the host kernel, so for untrusted code use a microVM (Firecracker: its own guest kernel, boots in about 125 ms) or a user-space kernel like gVisor. No secrets inside, egress through an allowlist proxy, CPU, memory and time limits, and the sandbox is destroyed when the run ends."
+   ],
+   [
+    "How do you enforce a budget when cost is only known after the call?",
+    "Meter every call at the gateway and keep a running total per run and per tenant. Before each call, check spent plus a worst-case estimate (max output tokens x price) against the cap. Hard cap: stop or pause the run with a clear status. Soft cap: alert the tenant. Reconcile with the provider's usage later."
+   ],
+   [
+    "How do tools stay safe when agents call them for many tenants?",
+    "All tool calls go through an MCP gateway. It checks which tools this tenant and agent may use, swaps in a token issued for that server (never passes the user's token through), and logs every call. With the 2026-07-28 MCP spec the gateway can route on the Mcp-Method and Mcp-Name headers without reading the body."
+   ],
+   [
+    "How do you debug a run that went wrong yesterday?",
+    "Open its trace: every step is a span with inputs, outputs, tokens and cost (OpenTelemetry GenAI conventions make them portable). Load the checkpoint before the bad step, change the prompt or tool, and replay from there in a sandbox. Turn the failure into an eval case."
+   ],
+   [
+    "How do you keep the platform fair under a burst?",
+    "Per-tenant queues with weighted fair scheduling, max concurrent runs per tenant, token rate limits at the gateway, and priority lanes for interactive runs over batch ones."
+   ]
+  ],
+  "wrap": [
+   "Bottlenecks: sandbox start-up at peak (warm pool), checkpoint writes (batch, compress), trace volume (sample content)",
+   "Next: evals that replay real traces before every prompt or model change",
+   "Next: per-tenant regions for data residency"
+  ]
  }
 }

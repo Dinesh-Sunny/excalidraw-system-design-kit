@@ -5263,5 +5263,109 @@
     ]
    }
   ]
+ },
+ "agent-runtime-platform": {
+  "modern": [
+   [
+    "Microvms for agent code",
+    "Firecracker or gVisor sandboxes per run are now the default for model-written code, with warm pools to hide start-up time."
+   ],
+   [
+    "Durable execution",
+    "Runs checkpoint every step and resume on any worker, so long agent runs survive crashes and deploys."
+   ],
+   [
+    "Stateless MCP behind gateways",
+    "The 2026-07-28 MCP spec drops sessions and adds Mcp-Method and Mcp-Name headers, so gateways and load balancers route tool calls without reading bodies."
+   ],
+   [
+    "Spend caps per run and tenant",
+    "Budgets are enforced before each model call, not on the monthly invoice."
+   ],
+   [
+    "Traces as the source of evals",
+    "OpenTelemetry GenAI spans make runs portable; failed runs become replayable eval cases."
+   ]
+  ],
+  "extra": {
+   "t": "Runs that last",
+   "look": "They want to hear leases, checkpoints, idempotent steps, isolation and budgets explained simply, with numbers.",
+   "rounds": [
+    [
+     "A worker dies mid-run. What brings the run back?",
+     "The lease expires and another worker resumes from the last checkpoint",
+     [
+      "The client retries the whole run",
+      "A cron job restarts every run at midnight",
+      "Nothing, runs are best effort"
+     ]
+    ],
+    [
+     "Which sandbox for untrusted code from many tenants?",
+     "A fresh microVM (or gVisor) per run, no secrets inside",
+     [
+      "One shared container per tenant",
+      "A thread in the worker process",
+      "The tenant's own laptop"
+     ]
+    ],
+    [
+     "When do you check the spend cap?",
+     "Before every model call, with a worst-case estimate",
+     [
+      "Once a month on the invoice",
+      "Only when the run finishes",
+      "Never, providers do it"
+     ]
+    ],
+    [
+     "A tool call reaches the MCP gateway with the user's token for another API. What does the gateway do?",
+     "Refuses to pass it through and uses a token issued for that server",
+     [
+      "Passes it through as is",
+      "Logs it and passes it through",
+      "Strips auth and calls anyway"
+     ]
+    ]
+   ]
+  },
+  "scenarios": [
+   {
+    "id": "coding",
+    "name": "Background coding agents",
+    "blurb": "Agents that pick up issues, write code in a sandbox and open pull requests.",
+    "lens": "Sandbox per run, repo access by grant, long runs, review before merge.",
+    "reqF": [
+     "Each run clones a repo into its own sandbox, runs tests and opens a pull request"
+    ],
+    "dives": [
+     [
+      "How does the sandbox get the code without getting your secrets?",
+      "The worker mints a short-lived, repo-scoped token, the sandbox clones with it, and egress is limited to the code host and package mirrors. The token expires with the run."
+     ]
+    ],
+    "wrap": [
+     "Next: cache dependency layers in the warm pool to cut start-up time."
+    ]
+   },
+   {
+    "id": "support",
+    "name": "Support agents at scale",
+    "blurb": "Many short runs that look up orders and draft replies for many brands.",
+    "lens": "Huge fan-out, tight budgets per brand, human approval for refunds.",
+    "reqF": [
+     "Refunds above a limit wait for a person, then the run resumes"
+    ],
+    "dives": [
+     [
+      "How does a run wait hours for an approval?",
+      "It saves a checkpoint and releases its lease; no worker waits. The approval call puts it back on the queue and any worker resumes it."
+     ]
+    ],
+    "wrap": [
+     "Next: per-brand eval sets built from real traces."
+    ]
+   }
+  ]
  }
 }

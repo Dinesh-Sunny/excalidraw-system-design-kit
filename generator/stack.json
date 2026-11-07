@@ -3294,6 +3294,70 @@
     "Deep Agents",
     "https://docs.langchain.com/oss/python/deepagents/overview"
    ]
+  ],
+  "agent-microvm-sandbox": [
+   [
+    "Firecracker",
+    "https://firecracker-microvm.github.io/"
+   ],
+   [
+    "gVisor",
+    "https://gvisor.dev/"
+   ],
+   [
+    "Kata Containers",
+    "https://katacontainers.io/"
+   ],
+   [
+    "E2B",
+    "https://e2b.dev/"
+   ]
+  ],
+  "agent-trace-store-replay": [
+   [
+    "OpenTelemetry GenAI",
+    "https://opentelemetry.io/docs/specs/semconv/gen-ai/"
+   ],
+   [
+    "LangSmith",
+    "https://docs.langchain.com/langsmith"
+   ],
+   [
+    "Langfuse",
+    "https://langfuse.com/"
+   ],
+   [
+    "Arize Phoenix",
+    "https://phoenix.arize.com/"
+   ]
+  ],
+  "agent-spend-cap-cost-meter": [
+   [
+    "LiteLLM budgets",
+    "https://docs.litellm.ai/docs/proxy/users"
+   ],
+   [
+    "OpenMeter",
+    "https://openmeter.io/"
+   ],
+   [
+    "Stripe usage billing",
+    "https://docs.stripe.com/billing/subscriptions/usage-based"
+   ]
+  ],
+  "agent-mcp-gateway": [
+   [
+    "Amazon Bedrock AgentCore Gateway",
+    "https://aws.amazon.com/bedrock/agentcore/"
+   ],
+   [
+    "Tyk MCP Gateway",
+    "https://tyk.io/docs/ai-management/mcp-gateway/protocol-versions"
+   ],
+   [
+    "Docker MCP Gateway",
+    "https://docs.docker.com/ai/mcp-gateway/"
+   ]
   ]
  },
  "designs": {
@@ -3505,6 +3569,20 @@
    "qc": "TanStack Query",
    "form": "Zod + Angular Reactive Forms",
    "bulk": "Papa Parse"
+  },
+  "agent-runtime-platform": {
+   "cl": "REST API + Slack app + cron schedules",
+   "ctl": "Go or Python service + Postgres (runs, tenants, limits)",
+   "ts": "OpenTelemetry GenAI spans -> LangSmith or Langfuse",
+   "sp": "LiteLLM budgets or a spend ledger in Postgres + Redis counters",
+   "q": "Postgres queue (SKIP LOCKED) or SQS with per-tenant lanes",
+   "w": "Agent harness on Temporal or the LangGraph runtime",
+   "ck": "Postgres checkpointer + S3 for large state",
+   "gw": "LiteLLM or a cloud AI gateway",
+   "llm": "Claude, plus a small model for routing",
+   "sbx": "Firecracker microVMs (E2B) or gVisor on Kubernetes",
+   "mg": "MCP gateway (AgentCore Gateway, Tyk, Docker)",
+   "mcp": "MCP servers for search, code host, CRM"
   }
  }
 }

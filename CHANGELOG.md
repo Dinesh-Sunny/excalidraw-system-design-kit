@@ -4,6 +4,14 @@ All notable changes to the kit. Versions follow [Semantic Versioning](https://se
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-11-07
+Agent infrastructure: run agents at scale, safely. The library now has 4,454 items.
+- New full design: Agent Runtime Platform (control plane, fair run queue, workers with leases, a checkpoint per step, a microVM per run, LLM gateway, spend caps, MCP gateway and replayable traces), with a practice question: 6 deep dives, 2026 upgrades, a "Runs that last" round and two scenarios (background coding agents, support agents at scale).
+- 4 new agent blocks, each with its own icon, a sourced lesson and real tools: MicroVM Sandbox (Firecracker / gVisor), Trace Store + Replay (OpenTelemetry GenAI spans), Spend Cap / Cost Meter and MCP Gateway (2026-07-28 MCP spec: stateless, Mcp-Method and Mcp-Name headers).
+- A new "Agent infrastructure" starter pack (14 blocks) with a Practise pill.
+- Deep links such as `#pack=`, `#board` or a section now scroll straight to the content instead of stopping at the hero.
+- "LLM Gateway" boxes in practice designs now link to the AI Gateway block, and the how-to guide card shows the current version.
+
 ## [1.9.1] - 2026-11-05
 A proper data model kit, so the data model step needs no back and forth. The library now has 4,449 items.
 - ERD tables in one format: table name on top, then column, keys (PK FK UQ IX NN) and type in aligned rows, `→ table.id` for foreign keys, `-- note` for notes, and a footer for the database, indexes, shard key and the "because". One new row = one new line.

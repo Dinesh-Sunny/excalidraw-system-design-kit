@@ -1,0 +1,269 @@
+{
+ "family": "agent",
+ "reviewed": "Nov 2026",
+ "what": "A Trace Store keeps every step of every agent run as spans: each model call, tool call and code run with its inputs, outputs, tokens, cost and time. Replay loads the saved state before any step and runs it again, so you can see what went wrong and test a fix.",
+ "like": "Like a flight recorder plus a rewind button: you can play the whole trip back, stop just before the bump, change one thing and fly that part again.",
+ "why": [
+  "Agent bugs hide in step 27 of 40; logs alone won't show them",
+  "Cost and latency per step show where the money and time go",
+  "Failed runs become eval cases you can replay before every change"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "run",
+    "t": "Agent Run|steps 1..n",
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "harness"
+   },
+   {
+    "id": "sp",
+    "t": "Spans|model, tool, code",
+    "x": 280,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "llmops",
+    "i": "trace"
+   },
+   {
+    "id": "ts",
+    "t": "Trace Store|by run and tenant",
+    "x": 560,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "llmops",
+    "i": "tracereplay"
+   },
+   {
+    "id": "ck",
+    "t": "Checkpoints|state per step",
+    "x": 0,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "disk"
+   },
+   {
+    "id": "ui",
+    "t": "Run Viewer|step through",
+    "x": 560,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "llmops",
+    "i": "chart"
+   },
+   {
+    "id": "rp",
+    "t": "Replay|from step k",
+    "x": 280,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "tracereplay"
+   },
+   {
+    "id": "ev",
+    "t": "Eval Set|failed runs",
+    "x": 280,
+    "y": 340,
+    "w": 160,
+    "h": 84,
+    "c": "llmops",
+    "i": "evalenv"
+   }
+  ],
+  "edges": [
+   [
+    "run",
+    "sp",
+    "emit"
+   ],
+   [
+    "sp",
+    "ts",
+    "export"
+   ],
+   [
+    "ts",
+    "ui",
+    "open run"
+   ],
+   [
+    "run",
+    "ck",
+    "save"
+   ],
+   [
+    "ui",
+    "rp",
+    "pick step"
+   ],
+   [
+    "ck",
+    "rp",
+    "load state"
+   ],
+   [
+    "rp",
+    "ev",
+    "keep as case"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Emit a span per step",
+    "d": "Each model call, tool call and code run becomes a span with tokens, cost, latency and errors. OpenTelemetry GenAI names them invoke_agent, execute_tool and so on.",
+    "hl": [
+     "run",
+     "sp"
+    ]
+   },
+   {
+    "t": "Store by run",
+    "d": "Spans land in the trace store keyed by run, tenant and conversation, so one run reads as one tree.",
+    "hl": [
+     "ts"
+    ]
+   },
+   {
+    "t": "Open the run",
+    "d": "The viewer shows the steps in order with what went in and out of each.",
+    "hl": [
+     "ui"
+    ]
+   },
+   {
+    "t": "Replay from a step",
+    "d": "Load the checkpoint saved before the bad step, change a prompt, model or tool, and run from there in a sandbox.",
+    "hl": [
+     "ck",
+     "rp"
+    ]
+   },
+   {
+    "t": "Keep it as an eval",
+    "d": "The failing run becomes a test case that every future change must pass.",
+    "hl": [
+     "ev"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "invoke_agent",
+   "l": "OpenTelemetry GenAI operation for an agent run span (create_agent, execute_tool too)",
+   "s": "https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-agent-spans.md"
+  },
+  {
+   "v": "Opt-in",
+   "l": "capturing prompts and outputs on spans (gen_ai.input.messages / output.messages)",
+   "s": "https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-agent-spans.md"
+  },
+  {
+   "v": "Development",
+   "l": "stability of most GenAI agent attributes today, so pin a version",
+   "s": "https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-agent-spans.md"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Content or metadata",
+   "d": "Always keep metadata (tokens, cost, latency, errors). Capture prompts and outputs only where allowed: it is opt-in in the GenAI conventions and may hold personal data."
+  },
+  {
+   "t": "Sampling",
+   "d": "Keep every failed or expensive run in full; sample the content of healthy ones."
+  },
+  {
+   "t": "Replay with real or recorded tools",
+   "d": "Recorded tool results make replay repeatable and safe; real tools test the live path but need a sandbox and no side effects."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "agent-agent-state-checkpoint-state-store-checkpoint-resume-langgraph-ai-agentic",
+   "why": "Just the saved state, when you don't need the trace view"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Replay with side effects",
+   "d": "Replaying step 12 sends the email again.",
+   "see": "Duplicate actions after debugging",
+   "fix": "Replay with recorded tool results or in a sandbox; side-effect tools need idempotency keys"
+  },
+  {
+   "t": "Secrets and PII in traces",
+   "d": "Prompts and tool outputs land in a store many people can read.",
+   "see": "Personal data in the trace viewer",
+   "fix": "Redact before export, opt-in content capture, tenant-scoped access"
+  },
+  {
+   "t": "Traces you can't join",
+   "d": "Model spans and tool spans have different ids.",
+   "see": "Runs split into fragments",
+   "fix": "One trace per run, propagate context into tools and sub-agents"
+  }
+ ],
+ "say": [
+  "Every step is a span with tokens, cost and latency, using the OpenTelemetry GenAI conventions so it's portable.",
+  "With a checkpoint per step I can replay from any point, using recorded tool results so nothing runs twice.",
+  "Failed runs become eval cases, so a fix has to pass them before it ships."
+ ],
+ "followups": [
+  {
+   "q": "How do you keep trace costs down?",
+   "a": "Metadata for every span, content only for failures, expensive runs and a small sample of the rest."
+  },
+  {
+   "q": "How do you replay without sending the email again?",
+   "a": "Recorded tool results, or a sandbox where side-effect tools are stubbed."
+  }
+ ],
+ "today": "The OpenTelemetry GenAI agent conventions are still marked Development, and tracing tools such as LangSmith, Langfuse and Phoenix read them.",
+ "check": [
+  {
+   "q": "Why record tool results for replay?",
+   "a": "So the replay is repeatable and has no side effects",
+   "d": [
+    "To save tokens",
+    "Because tools are slow",
+    "To hide errors"
+   ],
+   "why": "Real tools can change or act again."
+  },
+  {
+   "q": "What should every span keep, even when content is off?",
+   "a": "Tokens, cost, latency and errors",
+   "d": [
+    "The full prompt",
+    "The user's password",
+    "Nothing"
+   ],
+   "why": "Metadata is cheap and safe, and it explains cost and failures."
+  }
+ ],
+ "sources": [
+  {
+   "t": "OpenTelemetry - GenAI agent spans",
+   "u": "https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-agent-spans.md"
+  },
+  {
+   "t": "LangGraph - Time travel (replay from a checkpoint)",
+   "u": "https://docs.langchain.com/oss/python/langgraph/use-time-travel"
+  }
+ ]
+}

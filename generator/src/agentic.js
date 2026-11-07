@@ -125,6 +125,15 @@ export const AI_TEMPLATES = [
     edges: [["ch", "auth", "request"], ["auth", "q", "principal"], ["sched", "q", "timed run"], ["q", "rt", "run"], ["hub", "rt", "versioned context"], ["rt", "gw", "model calls"], ["gw", "obs", "traces, cost", D],
       ["rt", "mem", "recall, save"], ["rt", "sbx", "run code"], ["rt", "cred", "tool call as principal"], ["cred", "mcp", "scoped token"]],
     notes: "Key decisions\n- Who is calling decides tokens + memory\n- Durable runs: checkpoint, pause, resume\n- Queue with priority, one run per thread\n- Context versioned with business users\n- Code only inside a sandbox\n- Evals in real environments gate changes" } },
+  { name: "Agent Runtime Platform - run agents at scale long traces crash resume per tenant isolation sandbox spend caps", spec: {
+    title: "Agent Runtime Platform", sub: "Run many agents for many tenants · 30+ min runs that survive crashes, stay isolated and stay on budget",
+    nodes: [["cl", "Clients + Channels\n(API, Slack, cron)", "channels", "client", 0, 1, 170], ["ctl", "Control Plane\n(runs API, tenants)", "service", "svc", 1.4, 1, 170], ["sp", "Spend Cap /\nCost Meter", "spendcap", "llmops", 2.8, 0],
+      ["q", "Run Queue\n(fair per tenant)", "tasks", "agent", 2.8, 1], ["ts", "Trace Store\n+ Replay", "tracereplay", "llmops", 1.4, 0], ["w", "Agent Workers\n(harness, leases)", "harness", "agent", 4.2, 1, 170],
+      ["ck", "Checkpoint Store\n(state per step)", "disk", "data", 4.2, 2, 170], ["gw", "LLM Gateway", "lbai", "ai", 4.2, 0], ["llm", "LLM", "sparkle", "ai", 5.6, 0],
+      ["sbx", "MicroVM Sandbox\n(one per run)", "microvm", "agent", 2.8, 2, 170], ["mg", "MCP Gateway", "mcpgw", "agent", 5.6, 1], ["mcp", "MCP Servers\n(tools)", "mcpserver", "agent", 5.6, 2]],
+    edges: [["cl", "ctl", "start run"], ["ctl", "sp", "budget check"], ["ctl", "q", "enqueue"], ["q", "w", "lease"], ["w", "ck", "checkpoint"], ["w", "gw", "model calls"], ["gw", "llm"], ["gw", "sp", "tokens, cost", D],
+      ["w", "sbx", "run code"], ["w", "mg", "tool calls"], ["mg", "mcp", "scoped, audited"], ["w", "ts", "spans", D]],
+    notes: "Key decisions\n- Runs are durable: checkpoint each step, lease + heartbeat, resume on any worker\n- Fair queue per tenant, concurrency caps\n- Untrusted code in a microVM per run, no secrets inside\n- Every model call metered; hard cap stops the run\n- Tools only through the MCP gateway (authz, audit)\n- Traces replay any step for debugging and evals" } },
   { name: "Enterprise AI Gateway - llm platform governance", spec: {
     title: "Enterprise AI Gateway", sub: "One front door for every team's LLM calls",
     nodes: [["apps", "Internal Apps\n& Agents", "users", "client", 0, 1], ["gw", "AI Gateway\n(auth, quotas)", "lb", "ai", 1.5, 1], ["sc", "Semantic Cache", "cache", "cache", 1.5, -0.3], ["g", "Guardrails\n+ PII Redaction", "shield", "llmops", 1.5, 2.3],

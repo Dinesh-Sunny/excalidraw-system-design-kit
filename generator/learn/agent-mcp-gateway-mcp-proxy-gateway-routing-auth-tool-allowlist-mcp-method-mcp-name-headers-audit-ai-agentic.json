@@ -1,0 +1,268 @@
+{
+ "family": "agent",
+ "reviewed": "Nov 2026",
+ "what": "An MCP Gateway sits between agents and MCP servers. It checks which tools each tenant and agent may call, swaps in the right token for each server, routes the call and logs it, so tools stay safe and visible in one place.",
+ "like": "Like a hotel front desk for tools: guests ask the desk, the desk checks their key card, sends the request to the right room and writes it in the book.",
+ "why": [
+  "One place for tool permissions instead of one per agent",
+  "Agents never hold the tokens for downstream APIs",
+  "Every tool call is audited and rate limited"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "ag",
+    "t": "Agent|tools/call",
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "harness"
+   },
+   {
+    "id": "gw",
+    "t": "MCP Gateway|reads Mcp-Method, Mcp-Name",
+    "x": 280,
+    "y": 0,
+    "w": 180,
+    "h": 84,
+    "c": "agent",
+    "i": "mcpgw"
+   },
+   {
+    "id": "pol",
+    "t": "Grants|tenant, agent, tool",
+    "x": 560,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "lock"
+   },
+   {
+    "id": "tok",
+    "t": "Token Swap|issued for that server",
+    "x": 560,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "credbroker"
+   },
+   {
+    "id": "s1",
+    "t": "MCP Server|CRM",
+    "x": 280,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "mcpserver"
+   },
+   {
+    "id": "s2",
+    "t": "MCP Server|code host",
+    "x": 0,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "mcpserver"
+   },
+   {
+    "id": "log",
+    "t": "Audit Log|every call",
+    "x": 280,
+    "y": 340,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "doc"
+   }
+  ],
+  "edges": [
+   [
+    "ag",
+    "gw",
+    "request"
+   ],
+   [
+    "gw",
+    "pol",
+    "allowed?"
+   ],
+   [
+    "pol",
+    "tok",
+    "yes"
+   ],
+   [
+    "tok",
+    "s1",
+    "call"
+   ],
+   [
+    "gw",
+    "s2",
+    "route"
+   ],
+   [
+    "gw",
+    "log",
+    "record"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Read the headers",
+    "d": "With the 2026-07-28 spec every request carries Mcp-Method and Mcp-Name headers, so the gateway routes without parsing the body, and rejects requests where they disagree.",
+    "hl": [
+     "ag",
+     "gw"
+    ]
+   },
+   {
+    "t": "Check the grant",
+    "d": "Is this tool allowed for this tenant and agent? Unknown tools are denied.",
+    "hl": [
+     "pol"
+    ]
+   },
+   {
+    "t": "Swap the token",
+    "d": "The gateway uses a token issued for that server. It never passes the caller's token through.",
+    "hl": [
+     "tok"
+    ]
+   },
+   {
+    "t": "Route the call",
+    "d": "Stateless MCP has no sessions, so any server instance can take the request.",
+    "hl": [
+     "s1",
+     "s2"
+    ]
+   },
+   {
+    "t": "Record it",
+    "d": "Every call is logged with tenant, agent, tool and result, and rate limited per tenant.",
+    "hl": [
+     "log"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "2026-07-28",
+   "l": "MCP spec revision: stateless, no initialize handshake, no Mcp-Session-Id",
+   "s": "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/"
+  },
+  {
+   "v": "Mcp-Method + Mcp-Name",
+   "l": "required headers on Streamable HTTP so gateways route without reading the body",
+   "s": "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/"
+  },
+  {
+   "v": "ttlMs + cacheScope",
+   "l": "cache hints on list results; a gateway that filters a list sets cacheScope private",
+   "s": "https://tyk.io/docs/ai-management/mcp-gateway/protocol-versions"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Allowlist or denylist",
+   "d": "Allowlist per tenant and agent. New tools are off until granted."
+  },
+  {
+   "t": "Filter lists or block calls",
+   "d": "Do both: hide tools a tenant can't use from tools/list (and mark that list private), and still check every call."
+  },
+  {
+   "t": "One gateway or one per team",
+   "d": "One shared gateway keeps policy and audit in one place; split only for data residency."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "agent-mcp-server-model-context-protocol-tools-resources-server-ai-agentic",
+   "why": "The server side of the same protocol"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Token passthrough",
+   "d": "The gateway forwards the caller's token to a downstream API.",
+   "see": "Downstream logs show the wrong identity; controls skipped",
+   "fix": "MCP servers must not accept tokens not issued for them; swap tokens per server"
+  },
+  {
+   "t": "Headers and body disagree",
+   "d": "A request says one tool in the header and calls another in the body.",
+   "see": "Policy bypass",
+   "fix": "Reject mismatches, as the spec requires"
+  },
+  {
+   "t": "State handle guessing",
+   "d": "A cart or workflow id passed as an argument is reused by another user.",
+   "see": "Cross-tenant access",
+   "fix": "Bind handles to the verified user server-side; random ids"
+  }
+ ],
+ "say": [
+  "All tool calls go through an MCP gateway: grants per tenant and agent, token swap, audit and rate limits.",
+  "With the stateless 2026-07-28 spec it routes on Mcp-Method and Mcp-Name headers and any server instance can answer.",
+  "It never passes a user's token through; each server gets a token issued for it."
+ ],
+ "followups": [
+  {
+   "q": "How do you add a new tool safely?",
+   "a": "Register the server, grant it to one agent in one tenant, watch the audit log, then widen."
+  },
+  {
+   "q": "Why not let agents call servers directly?",
+   "a": "Then every agent holds tokens and its own policy; the gateway keeps both in one place."
+  }
+ ],
+ "today": "Gateways such as AgentCore Gateway and Tyk support both the 2025-11-25 and 2026-07-28 MCP revisions.",
+ "check": [
+  {
+   "q": "What must an MCP server do with a token issued for another API?",
+   "a": "Reject it",
+   "d": [
+    "Pass it through",
+    "Log it and pass it through",
+    "Cache it"
+   ],
+   "why": "The MCP security guide forbids token passthrough."
+  },
+  {
+   "q": "Why do the new Mcp-Method and Mcp-Name headers help a gateway?",
+   "a": "It can route and authorize without reading the body",
+   "d": [
+    "They encrypt the call",
+    "They replace OAuth",
+    "They hold the session id"
+   ],
+   "why": "Routing on headers is faster and simpler; the server rejects mismatches."
+  }
+ ],
+ "sources": [
+  {
+   "t": "MCP - 2026-07-28 release candidate",
+   "u": "https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/"
+  },
+  {
+   "t": "MCP - Security best practices",
+   "u": "https://modelcontextprotocol.io/specification/latest/basic/security_best_practices"
+  },
+  {
+   "t": "Tyk - MCP protocol versions",
+   "u": "https://tyk.io/docs/ai-management/mcp-gateway/protocol-versions"
+  }
+ ]
+}

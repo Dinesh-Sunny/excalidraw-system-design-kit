@@ -10,7 +10,7 @@ import { UI, FRAMES, SCREENS } from "./ui.js";
 import { FE_SECTIONS, FE_PATTERNS, FE_TEMPLATES, FE_NOTES } from "./frontend.js";
 
 const items = []; // {name, section, skel}
-export const KIT = "sd", KIT_VERSION = "1.9.1";
+export const KIT = "sd", KIT_VERSION = "1.10.0";
 const add = (cat, label, skel, section) => items.push({ name: `${KIT}:${cat}/ ${label}`, section: section || cat, skel });
 const one = (s) => s.replace(/\n/g, " ");
 

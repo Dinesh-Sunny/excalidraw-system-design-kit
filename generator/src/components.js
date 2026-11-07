@@ -159,6 +159,10 @@ export const SECTIONS = [
     ["Agent Channels", "channels", "slack github http email entry points channel inbox surfaces"],
     ["Agent Auth Handler", "principal", "who is calling principal identity runtime context multi tenant authorization"],
     ["Credential Broker", "credbroker", "user scoped agent scoped oauth tokens delegated access service account consent"],
+    ["MicroVM Sandbox", "microvm", "agent sandbox firecracker gvisor kata isolation untrusted code per run microvm"],
+    ["Trace Store\n+ Replay", "tracereplay", "agent traces spans opentelemetry genai replay rewind time travel debug runs"],
+    ["Spend Cap /\nCost Meter", "spendcap", "budget token cost meter per tenant per run limit quota llm spend"],
+    ["MCP Gateway", "mcpgw", "mcp proxy gateway routing auth tool allowlist mcp-method mcp-name headers audit"],
   ], tags: "ai agentic" },
   { cat: "agent", no: "09", label: "Deep Agents (LangChain)", theme: "agent", noSection: true, items: [
     ["Todo List\n(write_todos)", "todolist", "planning todos pending in progress completed task plan deep agents"],

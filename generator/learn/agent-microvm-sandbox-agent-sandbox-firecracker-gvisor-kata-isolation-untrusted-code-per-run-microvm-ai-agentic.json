@@ -1,0 +1,279 @@
+{
+ "family": "agent",
+ "reviewed": "Nov 2026",
+ "what": "A MicroVM Sandbox runs code the model wrote inside a tiny virtual machine with its own kernel, one per run. If the code is buggy or hostile, it can only break its own little machine, never the host or another tenant.",
+ "like": "Like giving each guest their own sealed test kitchen instead of a shared one: whatever they spill stays in their room, and the room is thrown away when they leave.",
+ "why": [
+  "Model-written code is untrusted code, even when your users are friendly",
+  "Containers share the host kernel; a microVM or a user-space kernel adds a real wall",
+  "Fresh per run means nothing leaks from one tenant or run to the next"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "w",
+    "t": "Agent Worker|asks to run code",
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "harness"
+   },
+   {
+    "id": "pool",
+    "t": "Warm Pool|ready microVMs",
+    "x": 280,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "microvm"
+   },
+   {
+    "id": "vm",
+    "t": "MicroVM|own guest kernel",
+    "x": 560,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "microvm"
+   },
+   {
+    "id": "lim",
+    "t": "Limits|CPU, memory, time",
+    "x": 560,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "gauge"
+   },
+   {
+    "id": "eg",
+    "t": "Egress Proxy|allowlist only",
+    "x": 280,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "wall"
+   },
+   {
+    "id": "out",
+    "t": "Result|stdout, files",
+    "x": 0,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "doc"
+   },
+   {
+    "id": "bye",
+    "t": "Destroy|after the run",
+    "x": 280,
+    "y": 340,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "cube"
+   }
+  ],
+  "edges": [
+   [
+    "w",
+    "pool",
+    "claim"
+   ],
+   [
+    "pool",
+    "vm",
+    "boot or reuse"
+   ],
+   [
+    "vm",
+    "lim",
+    ""
+   ],
+   [
+    "vm",
+    "eg",
+    "network"
+   ],
+   [
+    "vm",
+    "out",
+    "result"
+   ],
+   [
+    "out",
+    "w",
+    ""
+   ],
+   [
+    "vm",
+    "bye",
+    "run ends"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Ask for a sandbox",
+    "d": "The worker asks for a sandbox for this run. A small warm pool hides boot time at peak.",
+    "hl": [
+     "w",
+     "pool"
+    ]
+   },
+   {
+    "t": "Boot a microVM",
+    "d": "Firecracker starts a guest in about 125 ms with under 5 MiB of overhead, so one VM per run is affordable.",
+    "hl": [
+     "pool",
+     "vm"
+    ]
+   },
+   {
+    "t": "Fence it in",
+    "d": "CPU, memory and wall-clock limits stop runaway loops; no secrets are mounted inside.",
+    "hl": [
+     "vm",
+     "lim"
+    ]
+   },
+   {
+    "t": "Control the network",
+    "d": "All traffic goes through an egress proxy with an allowlist (package mirror, code host), so data can't be sent anywhere else.",
+    "hl": [
+     "eg"
+    ]
+   },
+   {
+    "t": "Return and destroy",
+    "d": "Only stdout and chosen files come back. The VM is thrown away when the run ends.",
+    "hl": [
+     "out",
+     "bye"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "<=125 ms",
+   "l": "Firecracker boot, from InstanceStart to guest init (minimal kernel)",
+   "s": "https://github.com/firecracker-microvm/firecracker/blob/main/SPECIFICATION.md"
+  },
+  {
+   "v": "<=5 MiB",
+   "l": "Firecracker VMM memory overhead for a 1 vCPU, 128 MiB microVM",
+   "s": "https://github.com/firecracker-microvm/firecracker/blob/main/SPECIFICATION.md"
+  },
+  {
+   "v": ">95%",
+   "l": "guest compute vs bare metal (Firecracker target)",
+   "s": "https://github.com/firecracker-microvm/firecracker/blob/main/SPECIFICATION.md"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Container, gVisor or microVM",
+   "d": "Containers are fast but share the host kernel. gVisor puts a user-space kernel (the Sentry) between the app and the host: VM-like isolation, process-like footprint, some syscall overhead. A microVM (Firecracker, Kata) gives each run its own kernel."
+  },
+  {
+   "t": "Fresh or reused",
+   "d": "Fresh per run is safest. Reuse only within the same run or tenant, and reset the filesystem between uses."
+  },
+  {
+   "t": "Warm pool size",
+   "d": "Size the pool from peak start rate x boot time plus a margin; everything else boots on demand."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "agent-code-sandbox-code-execution-e2b-container-isolated-ai-agentic",
+   "why": "The simple box when you don't need to show the isolation level"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Secrets inside the sandbox",
+   "d": "An API key mounted for convenience is one print() away from the model.",
+   "see": "Keys in tool outputs or traces",
+   "fix": "No secrets inside; short-lived, scoped tokens minted per run only when needed"
+  },
+  {
+   "t": "Open network",
+   "d": "Hostile code sends data out or attacks internal services.",
+   "see": "Unexpected egress, calls to metadata IPs",
+   "fix": "Egress proxy with an allowlist; block private ranges"
+  },
+  {
+   "t": "Cold starts at peak",
+   "d": "Every run waits for a boot plus dependency install.",
+   "see": "p95 start time climbs with load",
+   "fix": "Warm pool, snapshots and cached dependency layers"
+  }
+ ],
+ "say": [
+  "Model-written code is untrusted, so each run gets its own sandbox, never shared across tenants.",
+  "For many tenants I'd use a microVM like Firecracker or gVisor, not a plain container, because containers share the host kernel.",
+  "No secrets inside, egress through an allowlist, hard limits, and the VM is destroyed at the end."
+ ],
+ "followups": [
+  {
+   "q": "Why not just Docker?",
+   "a": "Containers share the host kernel, so one kernel bug can let code escape. For untrusted multi-tenant code add a stronger wall: gVisor or a microVM."
+  },
+  {
+   "q": "How do you keep start-up fast?",
+   "a": "A warm pool sized from the peak start rate, plus snapshots or cached dependency layers."
+  },
+  {
+   "q": "How does code get repo access?",
+   "a": "A short-lived, repo-scoped token minted for the run, with egress limited to the code host."
+  }
+ ],
+ "today": "Hosted agent sandboxes (E2B and others) run on Firecracker microVMs; gVisor runs as runsc under Docker and Kubernetes.",
+ "check": [
+  {
+   "q": "Why is a plain container weaker for untrusted code?",
+   "a": "It shares the host kernel",
+   "d": [
+    "It has no filesystem",
+    "It can't run Python",
+    "It is slower than a VM"
+   ],
+   "why": "Escapes go through the shared kernel; microVMs and gVisor put another layer in between."
+  },
+  {
+   "q": "What should never be inside the sandbox?",
+   "a": "Long-lived secrets",
+   "d": [
+    "The code to run",
+    "A scratch filesystem",
+    "CPU limits"
+   ],
+   "why": "Anything inside can be read by the code the model wrote."
+  }
+ ],
+ "sources": [
+  {
+   "t": "Firecracker - Specification",
+   "u": "https://github.com/firecracker-microvm/firecracker/blob/main/SPECIFICATION.md"
+  },
+  {
+   "t": "gVisor - What is gVisor?",
+   "u": "https://gvisor.dev/docs/"
+  },
+  {
+   "t": "MCP - Security best practices (sandboxing local servers)",
+   "u": "https://modelcontextprotocol.io/specification/latest/basic/security_best_practices"
+  }
+ ]
+}

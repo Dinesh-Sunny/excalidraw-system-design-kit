@@ -13,7 +13,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 06 | [`sd:cache/`](#06-cache) | Caches | 6 |
 | 07 | [`sd:msg/`](#07-msg) | Messaging & streaming | 9 |
 | 08 | [`sd:ai/`](#08-ai) | AI models & inference | 19 |
-| 09 | [`sd:agent/`](#09-agent) | Agents & orchestration | 37 |
+| 09 | [`sd:agent/`](#09-agent) | Agents & orchestration | 41 |
 | 10 | [`sd:rag/`](#10-rag) | Knowledge & retrieval (RAG) | 12 |
 | 11 | [`sd:llmops/`](#11-llmops) | Safety, evals & LLMOps | 12 |
 | 12 | [`sd:ops/`](#12-ops) | Observability, security & ops | 10 |
@@ -25,7 +25,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 | 18 | [`sd:screen/`](#18-screen) | Screen wireframes | 13 |
 | 19 | [`sd:pattern/`](#19-pattern) | Architecture patterns | 12 |
 | 20 | [`sd:agentic/`](#20-agentic) | Agentic patterns | 21 |
-| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 52 |
+| 21 | [`sd:tpl/`](#21-tpl) | Full interview designs | 53 |
 | 22 | [`sd:fe/`](#22-fe) | Frontend architecture | 49 |
 | 23 | [`sd:fep/`](#23-fep) | Frontend patterns | 15 |
 | 24 | [`sd:emoji/`](#24-emoji) | Emoji | 3963 |
@@ -269,6 +269,10 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **Agent Channels** - slack github http email entry points channel inbox surfaces ai agentic
 - **Agent Auth Handler** - who is calling principal identity runtime context multi tenant authorization ai agentic
 - **Credential Broker** - user scoped agent scoped oauth tokens delegated access service account consent ai agentic
+- **MicroVM Sandbox** - agent sandbox firecracker gvisor kata isolation untrusted code per run microvm ai agentic
+- **Trace Store + Replay** - agent traces spans opentelemetry genai replay rewind time travel debug runs ai agentic
+- **Spend Cap / Cost Meter** - budget token cost meter per tenant per run limit quota llm spend ai agentic
+- **MCP Gateway** - mcp proxy gateway routing auth tool allowlist mcp-method mcp-name headers audit ai agentic
 - **Todo List (write_todos)** - planning todos pending in progress completed task plan deep agents ai agentic langchain
 - **Task Tool (spawn sub-agent)** - delegate subagent isolated fork general purpose context isolation ai agentic langchain
 - **Async Sub-agents** - parallel background launch check update cancel subagents ai agentic langchain
@@ -523,6 +527,7 @@ Every item, by section. Search the library for the prefix (for example `sd:data/
 - **AI Voice Tutor** - canvas voice learning agent tutor education
 - **Workplace Knowledge Agent** - permission aware enterprise search agent work graph
 - **Production Agent Platform** - managed deep agents harness infrastructure multi tenant
+- **Agent Runtime Platform** - run agents at scale long traces crash resume per tenant isolation sandbox spend caps
 - **Enterprise AI Gateway** - llm platform governance
 - **AI Visibility Tracker** - aeo geo ai search brand tracking searchable profound
 - **Noise-aware Visibility Score** - repeated runs confidence interval share of voice

@@ -1,0 +1,260 @@
+{
+ "family": "agent",
+ "reviewed": "Nov 2026",
+ "what": "A Spend Cap / Cost Meter counts what every model call costs and keeps a running total per run, user, team and tenant. Before the next call it checks the cap, so a run stops calmly at its budget instead of surprising someone on the invoice.",
+ "like": "Like a prepaid phone plan: every call ticks down the balance, and when it reaches zero the next call simply doesn't go through.",
+ "why": [
+  "Agents loop; one stuck run can make thousands of calls",
+  "Tenants and teams need budgets they can trust",
+  "Cost per step shows which agent or prompt to fix first"
+ ],
+ "inside": {
+  "w": 720,
+  "h": 430,
+  "nodes": [
+   {
+    "id": "w",
+    "t": "Agent Run|wants a model call",
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "harness"
+   },
+   {
+    "id": "chk",
+    "t": "Cap Check|spent + estimate",
+    "x": 280,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "llmops",
+    "i": "spendcap"
+   },
+   {
+    "id": "gw",
+    "t": "LLM Gateway|counts tokens",
+    "x": 560,
+    "y": 0,
+    "w": 160,
+    "h": 84,
+    "c": "ai",
+    "i": "lbai"
+   },
+   {
+    "id": "led",
+    "t": "Spend Ledger|run, team, tenant",
+    "x": 560,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "data",
+    "i": "table"
+   },
+   {
+    "id": "cnt",
+    "t": "Fast Counters|Redis",
+    "x": 280,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "cache",
+    "i": "cache"
+   },
+   {
+    "id": "stop",
+    "t": "Stop or Pause|clear status",
+    "x": 0,
+    "y": 170,
+    "w": 160,
+    "h": 84,
+    "c": "agent",
+    "i": "check"
+   },
+   {
+    "id": "al",
+    "t": "Alerts|soft cap",
+    "x": 280,
+    "y": 340,
+    "w": 160,
+    "h": 84,
+    "c": "ops",
+    "i": "bell"
+   }
+  ],
+  "edges": [
+   [
+    "w",
+    "chk",
+    "next call?"
+   ],
+   [
+    "chk",
+    "gw",
+    "under cap"
+   ],
+   [
+    "gw",
+    "led",
+    "tokens x price"
+   ],
+   [
+    "led",
+    "cnt",
+    "update"
+   ],
+   [
+    "cnt",
+    "chk",
+    "running total"
+   ],
+   [
+    "chk",
+    "stop",
+    "over cap"
+   ],
+   [
+    "led",
+    "al",
+    "soft cap"
+   ]
+  ],
+  "steps": [
+   {
+    "t": "Before the call",
+    "d": "The run asks for one more model call. The cap check adds what it has spent to a worst-case estimate (max output tokens x price).",
+    "hl": [
+     "w",
+     "chk"
+    ]
+   },
+   {
+    "t": "Make the call",
+    "d": "Under the cap, the call goes through the gateway, which counts real input and output tokens.",
+    "hl": [
+     "gw"
+    ]
+   },
+   {
+    "t": "Write it down",
+    "d": "Tokens x price go into a ledger for the run, user, team and tenant, and into fast counters for the next check.",
+    "hl": [
+     "led",
+     "cnt"
+    ]
+   },
+   {
+    "t": "At the cap",
+    "d": "Over a hard cap the run stops or pauses with a clear status the user can see and top up.",
+    "hl": [
+     "stop"
+    ]
+   },
+   {
+    "t": "Before the cap",
+    "d": "A soft cap (say 80%) sends an alert instead of stopping.",
+    "hl": [
+     "al"
+    ]
+   }
+  ]
+ },
+ "numbers": [
+  {
+   "v": "30s / 30m / 30h / 30d",
+   "l": "budget_duration formats for LiteLLM budgets (no duration = never resets)",
+   "s": "https://docs.litellm.ai/docs/proxy/users"
+  },
+  {
+   "v": "5",
+   "l": "budget levels in LiteLLM: proxy, team, team member, user and virtual key (plus customers)",
+   "s": "https://docs.litellm.ai/docs/proxy/users"
+  }
+ ],
+ "tool": "",
+ "choices": [
+  {
+   "t": "Hard or soft cap",
+   "d": "Hard caps stop the run; soft caps alert. Use both: soft at ~80%, hard at 100%."
+  },
+  {
+   "t": "Where to enforce",
+   "d": "At the gateway every call passes through, not inside each agent, so no path can skip it."
+  },
+  {
+   "t": "Fail open or closed",
+   "d": "If the meter's store is down, decide up front. LiteLLM notes budgets fail open without a database; for strict tenants fail closed."
+  }
+ ],
+ "instead": [
+  {
+   "slug": "ai-ai-gateway-model-router-litellm-openrouter-routing-fallback-multi-provider-ai",
+   "why": "The gateway that does the counting"
+  }
+ ],
+ "breaks": [
+  {
+   "t": "Checked after the fact",
+   "d": "The cap is compared at the end of the run, after the money is spent.",
+   "see": "Runs far over budget",
+   "fix": "Check before every call with a worst-case estimate"
+  },
+  {
+   "t": "Race between workers",
+   "d": "Two calls pass the check at the same moment.",
+   "see": "Small overshoots at high concurrency",
+   "fix": "Atomic counters or reserve-then-settle"
+  },
+  {
+   "t": "Prices drift",
+   "d": "A new model price isn't in the table.",
+   "see": "Spend reads 0 for a model",
+   "fix": "Price table per model with a default, reconcile with the provider's usage"
+  }
+ ],
+ "say": [
+  "Every model call goes through one gateway that meters tokens x price per run, user, team and tenant.",
+  "I check the cap before each call with a worst-case estimate, so runs stop at the budget, not after it.",
+  "Soft cap alerts, hard cap stops with a clear status, and we reconcile with the provider's usage daily."
+ ],
+ "followups": [
+  {
+   "q": "How do you stop a runaway agent loop?",
+   "a": "A per-run budget and a max number of model and tool calls, both checked before each call."
+  },
+  {
+   "q": "How do you charge tenants?",
+   "a": "The ledger is the source for usage-based billing, reconciled with provider invoices."
+  }
+ ],
+ "today": "AI gateways (LiteLLM and cloud gateways) ship budgets per key, user, team and customer with reset periods.",
+ "check": [
+  {
+   "q": "When should the cap be checked?",
+   "a": "Before every model call",
+   "d": [
+    "Once a month",
+    "When the run ends",
+    "Only for big models"
+   ],
+   "why": "After the call the money is already spent."
+  },
+  {
+   "q": "Two workers pass the check at once. What fixes it?",
+   "a": "Atomic counters or reserve-then-settle",
+   "d": [
+    "A bigger cap",
+    "A slower model",
+    "Ignoring it"
+   ],
+   "why": "The check and the update must happen together."
+  }
+ ],
+ "sources": [
+  {
+   "t": "LiteLLM - Budgets, rate limits",
+   "u": "https://docs.litellm.ai/docs/proxy/users"
+  }
+ ]
+}
